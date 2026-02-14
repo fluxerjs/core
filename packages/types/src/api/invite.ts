@@ -1,0 +1,23 @@
+import type { Snowflake } from '../common/snowflake.js';
+import type { APIUser } from './user.js';
+import type { APIChannelPartial } from './channel.js';
+
+export interface APIGuildPartial {
+  id: Snowflake;
+  name: string;
+  icon?: string | null;
+  banner?: string | null;
+  splash?: string | null;
+  features?: string[];
+}
+
+export interface APIInvite {
+  code: string;
+  type: number;
+  guild: APIGuildPartial;
+  channel: APIChannelPartial;
+  inviter?: APIUser | null;
+  member_count?: number;
+  presence_count?: number;
+  expires_at?: string | null;
+}

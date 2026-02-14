@@ -1,0 +1,10 @@
+{
+  "name": "fluxer-examples",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@fluxerjs/core": "workspace:*",
+    "@fluxerjs/voice": "workspace:*",
+    "youtube-dl-exec": "^3.1.1"
+  }
+}

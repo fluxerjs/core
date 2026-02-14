@@ -1,0 +1,21 @@
+/** Fluxer gateway close codes (aligned with docs / fluxerapp/fluxer). */
+export const GatewayCloseCodes = {
+  Normal: 1000,
+  GoingAway: 1001,
+  ProtocolError: 1002,
+  UnsupportedData: 1003,
+  NoStatusReceived: 1005,
+  AbnormalClosure: 1006,
+  UnknownError: 4000,
+  UnknownOpcode: 4001,
+  DecodeError: 4002,
+  NotAuthenticated: 4003,
+  AuthenticationFailed: 4004,
+  AlreadyAuthenticated: 4005,
+  InvalidSeq: 4007,
+  RateLimited: 4008,
+  SessionTimeout: 4009,
+  InvalidShard: 4010,
+  ShardingRequired: 4011,
+  InvalidAPIVersion: 4012,
+} as const;

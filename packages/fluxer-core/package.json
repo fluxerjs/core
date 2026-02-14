@@ -1,0 +1,37 @@
+{
+  "name": "@fluxerjs/core",
+  "publishConfig": { "access": "public" },
+  "version": "1.0.4",
+  "description": "A fully-featured SDK for Fluxer bots",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@fluxerjs/rest": "workspace:*",
+    "@fluxerjs/ws": "workspace:*",
+    "@fluxerjs/builders": "workspace:*",
+    "@fluxerjs/collection": "workspace:*",
+    "@fluxerjs/util": "workspace:*",
+    "@fluxerjs/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,70 @@
+import type { Snowflake } from '../common/snowflake.js';
+
+/**
+ * Route builder helpers for REST API.
+ * All routes are relative to /v1
+ */
+export const Routes = {
+  // Channels
+  channel: (id: Snowflake) => `/channels/${id}` as const,
+  channelMessages: (id: Snowflake) => `/channels/${id}/messages` as const,
+  channelMessage: (channelId: Snowflake, messageId: Snowflake) =>
+    `/channels/${channelId}/messages/${messageId}` as const,
+  channelMessageReactions: (channelId: Snowflake, messageId: Snowflake) =>
+    `/channels/${channelId}/messages/${messageId}/reactions` as const,
+  channelMessageReaction: (channelId: Snowflake, messageId: Snowflake, emoji: string) =>
+    `/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}` as const,
+  channelPins: (id: Snowflake) => `/channels/${id}/messages/pins` as const,
+  channelPin: (channelId: Snowflake, messageId: Snowflake) =>
+    `/channels/${channelId}/messages/pins/${messageId}` as const,
+  channelBulkDelete: (id: Snowflake) => `/channels/${id}/messages/bulk-delete` as const,
+  channelWebhooks: (id: Snowflake) => `/channels/${id}/webhooks` as const,
+  channelTyping: (id: Snowflake) => `/channels/${id}/typing` as const,
+  channelInvites: (id: Snowflake) => `/channels/${id}/invites` as const,
+  channelPermission: (channelId: Snowflake, overwriteId: Snowflake) =>
+    `/channels/${channelId}/permissions/${overwriteId}` as const,
+
+  // Guilds
+  guild: (id: Snowflake) => `/guilds/${id}` as const,
+  guildChannels: (id: Snowflake) => `/guilds/${id}/channels` as const,
+  guildMembers: (id: Snowflake) => `/guilds/${id}/members` as const,
+  guildMember: (guildId: Snowflake, userId: Snowflake) =>
+    `/guilds/${guildId}/members/${userId}` as const,
+  guildMemberRole: (guildId: Snowflake, userId: Snowflake, roleId: Snowflake) =>
+    `/guilds/${guildId}/members/${userId}/roles/${roleId}` as const,
+  guildRoles: (id: Snowflake) => `/guilds/${id}/roles` as const,
+  guildRole: (guildId: Snowflake, roleId: Snowflake) =>
+    `/guilds/${guildId}/roles/${roleId}` as const,
+  guildBans: (id: Snowflake) => `/guilds/${id}/bans` as const,
+  guildBan: (guildId: Snowflake, userId: Snowflake) =>
+    `/guilds/${guildId}/bans/${userId}` as const,
+  guildInvites: (id: Snowflake) => `/guilds/${id}/invites` as const,
+  guildAuditLogs: (id: Snowflake) => `/guilds/${id}/audit-logs` as const,
+  guildEmojis: (id: Snowflake) => `/guilds/${id}/emojis` as const,
+  guildEmoji: (guildId: Snowflake, emojiId: Snowflake) =>
+    `/guilds/${guildId}/emojis/${emojiId}` as const,
+  guildStickers: (id: Snowflake) => `/guilds/${id}/stickers` as const,
+  guildSticker: (guildId: Snowflake, stickerId: Snowflake) =>
+    `/guilds/${guildId}/stickers/${stickerId}` as const,
+  guildWebhooks: (id: Snowflake) => `/guilds/${id}/webhooks` as const,
+
+  // Users
+  user: (id: Snowflake) => `/users/${id}` as const,
+  currentUser: () => `/users/@me` as const,
+  userProfile: (id: Snowflake) => `/users/${id}/profile` as const,
+
+  // Gateway
+  gatewayBot: () => `/gateway/bot` as const,
+
+  // Application commands (slash commands)
+  applicationCommands: (applicationId: Snowflake) => `/applications/${applicationId}/commands` as const,
+  applicationCommand: (applicationId: Snowflake, commandId: Snowflake) =>
+    `/applications/${applicationId}/commands/${commandId}` as const,
+  interactionCallback: (interactionId: Snowflake, interactionToken: string) =>
+    `/interactions/${interactionId}/${interactionToken}/callback` as const,
+
+  // OAuth2 / Bot
+  oauth2ApplicationBot: (id: Snowflake) => `/oauth2/applications/${id}/bot` as const,
+  oauth2ApplicationBotResetToken: (id: Snowflake) =>
+    `/oauth2/applications/${id}/bot/reset-token` as const,
+} as const;
