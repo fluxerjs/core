@@ -14,13 +14,15 @@
     "docs:dev": "pnpm --filter @fluxerjs/docs dev",
     "docs:build": "pnpm run generate:docs && pnpm --filter @fluxerjs/docs build",
     "docs:preview": "pnpm --filter @fluxerjs/docs preview",
+    "docs:deploy": "pnpm run docs:build && wrangler deploy",
     "publish:packages": "node scripts/publish-ordered.js",
     "publish:packages:all": "pnpm run build && pnpm -r publish --no-git-checks --filter '!./examples'"
   },
   "devDependencies": {
     "turbo": "^2.3.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "wrangler": "^4.0.0"
   },
   "packageManager": "pnpm@9.14.2",
   "engines": {
