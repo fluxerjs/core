@@ -2,6 +2,7 @@ import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import type { APIChannel, APIChannelPartial } from '@fluxerjs/types';
 import { ChannelType, Routes } from '@fluxerjs/types';
+import type { Webhook } from './Webhook.js';
 
 export abstract class Channel extends Base {
   readonly client: Client;
@@ -37,6 +38,24 @@ export class GuildChannel extends Channel {
     this.name = data.name ?? null;
     this.position = data.position;
     this.parentId = data.parent_id ?? null;
+  }
+
+  /** Create a webhook in this channel. Returns the webhook with token (required for send()). */
+  async createWebhook(options: { name: string; avatar?: string | null }): Promise<Webhook> {
+    const { Webhook } = await import('./Webhook.js');
+    const data = await this.client.rest.post(Routes.channelWebhooks(this.id), {
+      body: options,
+      auth: true,
+    });
+    return new Webhook(this.client, data as import('@fluxerjs/types').APIWebhook);
+  }
+
+  /** Fetch all webhooks in this channel. Returned webhooks do not include the token (cannot send). */
+  async fetchWebhooks(): Promise<Webhook[]> {
+    const { Webhook } = await import('./Webhook.js');
+    const data = await this.client.rest.get(Routes.channelWebhooks(this.id));
+    const list = Array.isArray(data) ? data : Object.values(data ?? {});
+    return list.map((w) => new Webhook(this.client, w));
   }
 }
 

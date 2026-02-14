@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import type { APIGatewayBotResponse } from '@fluxerjs/types';
+import type { APIGatewayBotResponse, GatewayPresenceUpdateData } from '@fluxerjs/types';
 import { WebSocketShard } from './WebSocketShard.js';
 import { getDefaultWebSocket } from './utils/getWebSocket.js';
 
@@ -10,6 +10,7 @@ export interface WebSocketManagerOptions {
   intents: number;
   rest: { get: (route: string) => Promise<unknown> };
   version?: string;
+  presence?: GatewayPresenceUpdateData;
   shardIds?: number[];
   shardCount?: number;
   WebSocket?: WebSocketConstructor;
@@ -57,6 +58,7 @@ export class WebSocketManager extends EventEmitter {
         url: this.gatewayUrl!,
         token: this.options.token,
         intents: this.options.intents,
+        presence: this.options.presence,
         shardId: id,
         numShards: this.shardCount,
         version,

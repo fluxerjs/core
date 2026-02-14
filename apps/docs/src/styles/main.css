@@ -1,0 +1,97 @@
+:root {
+  --bg-primary: #0a0b0e;
+  --bg-secondary: #12141a;
+  --bg-tertiary: #1a1c24;
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --bg-active: rgba(99, 179, 237, 0.08);
+  --text-primary: #e8e9ed;
+  --text-secondary: #9ba0ab;
+  --text-muted: #5f6472;
+  --accent: #63b3ed;
+  --accent-hover: #7dc3f4;
+  --border: #2a2c35;
+  --border-subtle: #22242a;
+  --code-bg: #1a1c23;
+  --radius: 8px;
+  --radius-sm: 4px;
+
+  /* Type signature syntax highlighting */
+  --ts-keyword: #c792ea;
+  --ts-type: #82aaff;
+  --ts-string: #c3e88d;
+  --ts-punct: #5f6472;
+  --ts-ident: #e8e9ed;
+
+  /* Type/badge colors - distinct per kind */
+  --badge-class: #63b3ed;
+  --badge-class-bg: rgba(99, 179, 237, 0.15);
+  --badge-interface: #82aaff;
+  --badge-interface-bg: rgba(130, 170, 255, 0.15);
+  --badge-enum: #c792ea;
+  --badge-enum-bg: rgba(199, 146, 234, 0.15);
+
+  --error: #f87171;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(99, 179, 237, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 179, 237, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 0.9em;
+  background: var(--code-bg);
+  padding: 0.18em 0.45em;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+pre {
+  background: var(--code-bg);
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+}
+
+pre code {
+  padding: 0;
+  background: none;
+  border: none;
+}

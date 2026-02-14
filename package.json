@@ -1,6 +1,6 @@
 {
   "name": "fluxer-core-monorepo",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "description": "@fluxerjs SDK monorepo",
   "scripts": {
@@ -9,6 +9,11 @@
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules",
     "generate:types": "pnpm exec tsx scripts/generate-types.ts",
+    "generate:docs": "pnpm exec tsx scripts/generate-docs.ts",
+    "docs:generate": "pnpm run build && pnpm run generate:docs",
+    "docs:dev": "pnpm --filter @fluxerjs/docs dev",
+    "docs:build": "pnpm run generate:docs && pnpm --filter @fluxerjs/docs build",
+    "docs:preview": "pnpm --filter @fluxerjs/docs preview",
     "publish:packages": "node scripts/publish-ordered.js",
     "publish:packages:all": "pnpm run build && pnpm -r publish --no-git-checks --filter '!./examples'"
   },

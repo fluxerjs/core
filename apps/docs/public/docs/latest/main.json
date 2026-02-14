@@ -1,0 +1,7896 @@
+{
+  "meta": {
+    "generator": "fluxer-docgen",
+    "version": "1",
+    "date": 1771086666409
+  },
+  "package": "@fluxerjs/core",
+  "version": "1.0.5",
+  "packages": [
+    "@fluxerjs/builders",
+    "@fluxerjs/collection",
+    "@fluxerjs/core",
+    "@fluxerjs/rest",
+    "@fluxerjs/types",
+    "@fluxerjs/util",
+    "@fluxerjs/voice",
+    "@fluxerjs/ws"
+  ],
+  "classes": [
+    {
+      "name": "AttachmentBuilder",
+      "constructor": {
+        "params": [
+          {
+            "name": "id",
+            "type": "number",
+            "optional": false
+          },
+          {
+            "name": "filename",
+            "type": "string",
+            "optional": false
+          },
+          {
+            "name": "options",
+            "type": "Partial<AttachmentPayloadOptions>",
+            "optional": true
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "description",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "filename",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "spoiler",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "setDescription",
+          "params": [
+            {
+              "name": "description",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "AttachmentBuilder.ts",
+            "line": 35
+          }
+        },
+        {
+          "name": "setName",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "AttachmentBuilder.ts",
+            "line": 30
+          }
+        },
+        {
+          "name": "setSpoiler",
+          "params": [
+            {
+              "name": "spoiler",
+              "type": "unknown",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "AttachmentBuilder.ts",
+            "line": 40
+          }
+        },
+        {
+          "name": "toJSON",
+          "params": [],
+          "returns": "APIAttachmentPayload",
+          "async": false,
+          "source": {
+            "file": "AttachmentBuilder.ts",
+            "line": 47
+          }
+        }
+      ],
+      "source": {
+        "file": "AttachmentBuilder.ts",
+        "line": 17,
+        "path": "packages/builders/src/messages/AttachmentBuilder.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "Base",
+      "properties": [
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "Base.ts",
+        "line": 3,
+        "path": "packages/fluxer-core/src/structures/Base.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "BitField",
+      "constructor": {
+        "params": [
+          {
+            "name": "bits",
+            "type": "BitFieldResolvable<S>",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "bitfield",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "defaultBit",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "Flags",
+          "type": "Record<string, number>",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "params": [
+            {
+              "name": "bits",
+              "type": "BitFieldResolvable<S>[]",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 34
+          }
+        },
+        {
+          "name": "equals",
+          "params": [
+            {
+              "name": "bitfield",
+              "type": "BitField<S>",
+              "optional": false
+            }
+          ],
+          "returns": "boolean",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 76
+          }
+        },
+        {
+          "name": "freeze",
+          "params": [],
+          "returns": "Readonly<BitField<S>>",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 80
+          }
+        },
+        {
+          "name": "has",
+          "params": [
+            {
+              "name": "bit",
+              "type": "BitFieldResolvable<S>",
+              "optional": false
+            }
+          ],
+          "returns": "boolean",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 29
+          }
+        },
+        {
+          "name": "remove",
+          "params": [
+            {
+              "name": "bits",
+              "type": "BitFieldResolvable<S>[]",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 43
+          }
+        },
+        {
+          "name": "resolve",
+          "params": [
+            {
+              "name": "bit",
+              "type": "BitFieldResolvable<S>",
+              "optional": false
+            }
+          ],
+          "returns": "number",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 20
+          }
+        },
+        {
+          "name": "serialize",
+          "params": [],
+          "returns": "Record<S, boolean>",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 52
+          }
+        },
+        {
+          "name": "toArray",
+          "params": [],
+          "returns": "S[]",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 61
+          }
+        },
+        {
+          "name": "toJSON",
+          "params": [],
+          "returns": "number",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 68
+          }
+        },
+        {
+          "name": "valueOf",
+          "params": [],
+          "returns": "number",
+          "async": false,
+          "source": {
+            "file": "BitField.ts",
+            "line": 72
+          }
+        }
+      ],
+      "source": {
+        "file": "BitField.ts",
+        "line": 6,
+        "path": "packages/util/src/BitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "CategoryChannel",
+      "extends": "GuildChannel",
+      "properties": [],
+      "methods": [],
+      "source": {
+        "file": "Channel.ts",
+        "line": 84,
+        "path": "packages/fluxer-core/src/structures/Channel.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "Channel",
+      "extends": "Base",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIChannelPartial",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "type",
+          "type": "ChannelType",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "params": [
+            {
+              "name": "client",
+              "type": "Client",
+              "optional": false
+            },
+            {
+              "name": "data",
+              "type": "APIChannelPartial | APIChannel",
+              "optional": false
+            }
+          ],
+          "returns": "GuildChannel | TextChannel | null",
+          "async": false,
+          "source": {
+            "file": "Channel.ts",
+            "line": 19
+          }
+        }
+      ],
+      "source": {
+        "file": "Channel.ts",
+        "line": 7,
+        "path": "packages/fluxer-core/src/structures/Channel.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "Client",
+      "extends": "EventEmitter",
+      "constructor": {
+        "params": [
+          {
+            "name": "options",
+            "type": "ClientOptions",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "channels",
+          "type": "Collection<string, Channel>",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "guilds",
+          "type": "Collection<string, Guild>",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "readyAt",
+          "type": "Date | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "rest",
+          "type": "REST",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "user",
+          "type": "ClientUser | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "users",
+          "type": "Collection<string, User>",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "destroy",
+          "params": [],
+          "returns": "Promise<void>",
+          "async": true,
+          "source": {
+            "file": "Client.ts",
+            "line": 277
+          }
+        },
+        {
+          "name": "handleDispatch",
+          "params": [
+            {
+              "name": "payload",
+              "type": "GatewayReceivePayload<unknown>",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "async": true,
+          "source": {
+            "file": "Client.ts",
+            "line": 78
+          }
+        },
+        {
+          "name": "isReady",
+          "params": [],
+          "returns": "boolean",
+          "async": false,
+          "source": {
+            "file": "Client.ts",
+            "line": 290
+          }
+        },
+        {
+          "name": "login",
+          "params": [
+            {
+              "name": "token",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<string>",
+          "async": true,
+          "source": {
+            "file": "Client.ts",
+            "line": 226
+          }
+        },
+        {
+          "name": "sendToGateway",
+          "params": [
+            {
+              "name": "shardId",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "payload",
+              "type": "GatewaySendPayload",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "description": "Send a payload to the gateway (e.g. Voice State Update). Uses shard 0 when single-shard.",
+          "async": false,
+          "source": {
+            "file": "Client.ts",
+            "line": 74
+          }
+        }
+      ],
+      "source": {
+        "file": "Client.ts",
+        "line": 50,
+        "path": "packages/fluxer-core/src/client/Client.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "ClientUser",
+      "extends": "User",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIUserPartial",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "ClientUser.ts",
+        "line": 5,
+        "path": "packages/fluxer-core/src/client/ClientUser.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "Collection",
+      "description": "Extended Map with utility methods for key-value collections.\nSimilar to discord.js Collection.",
+      "extends": "Map",
+      "properties": [],
+      "methods": [
+        {
+          "name": "clone",
+          "params": [],
+          "returns": "Collection<K, V>",
+          "description": "Creates an identical shallow copy of this collection.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 148
+          }
+        },
+        {
+          "name": "concat",
+          "params": [
+            {
+              "name": "collections",
+              "type": "ReadonlyCollection<K, V>[]",
+              "optional": false
+            }
+          ],
+          "returns": "Collection<K, V>",
+          "description": "Combines this collection with others into a new collection.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 155
+          }
+        },
+        {
+          "name": "every",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(value: V, key: K) => boolean",
+              "optional": false
+            }
+          ],
+          "returns": "boolean",
+          "description": "Tests whether all elements pass the test implemented by the provided function.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 106
+          }
+        },
+        {
+          "name": "filter",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(value: V, key: K) => boolean",
+              "optional": false
+            }
+          ],
+          "returns": "Collection<K, V>",
+          "description": "Creates a new collection with all elements that pass the test implemented by the provided function.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 74
+          }
+        },
+        {
+          "name": "find",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(value: V, key: K) => boolean",
+              "optional": false
+            }
+          ],
+          "returns": "V | undefined",
+          "description": "Searches for a single item where the given function returns a truthy value.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 54
+          }
+        },
+        {
+          "name": "findKey",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(value: V, key: K) => boolean",
+              "optional": false
+            }
+          ],
+          "returns": "K | undefined",
+          "description": "Returns the key of the first item where the given function returns a truthy value.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 64
+          }
+        },
+        {
+          "name": "first",
+          "params": [],
+          "returns": "V | undefined",
+          "description": "Obtains the first value(s) in this collection.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 10
+          }
+        },
+        {
+          "name": "first",
+          "params": [
+            {
+              "name": "amount",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "V[]",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 11
+          }
+        },
+        {
+          "name": "first",
+          "params": [
+            {
+              "name": "amount",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "V | V[] | undefined",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 12
+          }
+        },
+        {
+          "name": "last",
+          "params": [],
+          "returns": "V | undefined",
+          "description": "Obtains the last value(s) in this collection.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 23
+          }
+        },
+        {
+          "name": "last",
+          "params": [
+            {
+              "name": "amount",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "V[]",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 24
+          }
+        },
+        {
+          "name": "last",
+          "params": [
+            {
+              "name": "amount",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "V | V[] | undefined",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 25
+          }
+        },
+        {
+          "name": "map",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(value: V, key: K) => T",
+              "optional": false
+            }
+          ],
+          "returns": "T[]",
+          "description": "Creates a new array with the results of calling the provided function on every element.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 85
+          }
+        },
+        {
+          "name": "partition",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(value: V, key: K) => boolean",
+              "optional": false
+            }
+          ],
+          "returns": "[Collection<K, V>, Collection<K, V>]",
+          "description": "Partitions the collection into two collections: one that passes the predicate and one that fails.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 127
+          }
+        },
+        {
+          "name": "random",
+          "params": [],
+          "returns": "V | undefined",
+          "description": "Returns a random value from this collection.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 36
+          }
+        },
+        {
+          "name": "random",
+          "params": [
+            {
+              "name": "amount",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "V[]",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 37
+          }
+        },
+        {
+          "name": "random",
+          "params": [
+            {
+              "name": "amount",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "V | V[] | undefined",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 38
+          }
+        },
+        {
+          "name": "reduce",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(accumulator: T, value: V, key: K) => T",
+              "optional": false
+            },
+            {
+              "name": "initialValue",
+              "type": "T",
+              "optional": false
+            }
+          ],
+          "returns": "T",
+          "description": "Applies a function against an accumulator and each element to reduce the collection to a single value.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 116
+          }
+        },
+        {
+          "name": "some",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(value: V, key: K) => boolean",
+              "optional": false
+            }
+          ],
+          "returns": "boolean",
+          "description": "Tests whether at least one element passes the test implemented by the provided function.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 96
+          }
+        },
+        {
+          "name": "sort",
+          "params": [
+            {
+              "name": "compareFn",
+              "type": "(a: V, b: V, aKey: K, bKey: K) => number",
+              "optional": true
+            }
+          ],
+          "returns": "this",
+          "description": "Sorts the collection in place and returns it.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 166
+          }
+        },
+        {
+          "name": "tap",
+          "params": [
+            {
+              "name": "fn",
+              "type": "(collection: this) => void",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "description": "Invokes the given function and returns this collection (for chaining).",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 140
+          }
+        },
+        {
+          "name": "toJSON",
+          "params": [],
+          "returns": "V[]",
+          "description": "Returns an array of the values in this collection.",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 181
+          }
+        },
+        {
+          "name": "toString",
+          "params": [],
+          "returns": "string",
+          "description": "Returns a string representation of the collection (array of values).",
+          "async": false,
+          "source": {
+            "file": "Collection.ts",
+            "line": 188
+          }
+        }
+      ],
+      "source": {
+        "file": "Collection.ts",
+        "line": 5,
+        "path": "packages/collection/src/Collection.ts"
+      },
+      "package": "@fluxerjs/collection"
+    },
+    {
+      "name": "EmbedBuilder",
+      "properties": [
+        {
+          "name": "data",
+          "type": "Partial<APIEmbed>",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "addFields",
+          "params": [
+            {
+              "name": "fields",
+              "type": "EmbedFieldData[]",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 111
+          }
+        },
+        {
+          "name": "from",
+          "params": [
+            {
+              "name": "data",
+              "type": "APIEmbed",
+              "optional": false
+            }
+          ],
+          "returns": "EmbedBuilder",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 143
+          }
+        },
+        {
+          "name": "setAuthor",
+          "params": [
+            {
+              "name": "options",
+              "type": "EmbedAuthorOptions | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 71
+          }
+        },
+        {
+          "name": "setColor",
+          "params": [
+            {
+              "name": "color",
+              "type": "string | number | [number, number, number] | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 52
+          }
+        },
+        {
+          "name": "setDescription",
+          "params": [
+            {
+              "name": "description",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 41
+          }
+        },
+        {
+          "name": "setFooter",
+          "params": [
+            {
+              "name": "options",
+              "type": "EmbedFooterOptions | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 84
+          }
+        },
+        {
+          "name": "setImage",
+          "params": [
+            {
+              "name": "url",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 96
+          }
+        },
+        {
+          "name": "setThumbnail",
+          "params": [
+            {
+              "name": "url",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 101
+          }
+        },
+        {
+          "name": "setTimestamp",
+          "params": [
+            {
+              "name": "timestamp",
+              "type": "number | Date | null",
+              "optional": true
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 61
+          }
+        },
+        {
+          "name": "setTitle",
+          "params": [
+            {
+              "name": "title",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 35
+          }
+        },
+        {
+          "name": "setURL",
+          "params": [
+            {
+              "name": "url",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 47
+          }
+        },
+        {
+          "name": "setVideo",
+          "params": [
+            {
+              "name": "url",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 106
+          }
+        },
+        {
+          "name": "spliceFields",
+          "params": [
+            {
+              "name": "index",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "deleteCount",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "fields",
+              "type": "EmbedFieldData[]",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 125
+          }
+        },
+        {
+          "name": "toJSON",
+          "params": [],
+          "returns": "APIEmbed",
+          "async": false,
+          "source": {
+            "file": "EmbedBuilder.ts",
+            "line": 137
+          }
+        }
+      ],
+      "source": {
+        "file": "EmbedBuilder.ts",
+        "line": 32,
+        "path": "packages/builders/src/messages/EmbedBuilder.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "FluxerAPIError",
+      "extends": "Error",
+      "constructor": {
+        "params": [
+          {
+            "name": "body",
+            "type": "APIErrorBody",
+            "optional": false
+          },
+          {
+            "name": "statusCode",
+            "type": "number",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "code",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "errors",
+          "type": "{ path: string; message: string; code?: string; }[] | undefined",
+          "readonly": true,
+          "optional": true
+        },
+        {
+          "name": "statusCode",
+          "type": "number",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "FluxerAPIError.ts",
+        "line": 3,
+        "path": "packages/rest/src/errors/FluxerAPIError.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "FluxerError",
+      "extends": "Error",
+      "constructor": {
+        "params": [
+          {
+            "name": "message",
+            "type": "string",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [],
+      "methods": [],
+      "source": {
+        "file": "FluxerError.ts",
+        "line": 1,
+        "path": "packages/fluxer-core/src/errors/FluxerError.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "Guild",
+      "extends": "Base",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIGuild",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "banner",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "channels",
+          "type": "Collection<string, GuildChannel>",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "icon",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "members",
+          "type": "Collection<string, GuildMember>",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "ownerId",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "bannerURL",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ size?: number; }",
+              "optional": true
+            }
+          ],
+          "returns": "string | null",
+          "async": false,
+          "source": {
+            "file": "Guild.ts",
+            "line": 37
+          }
+        },
+        {
+          "name": "fetchWebhooks",
+          "params": [],
+          "returns": "Promise<Webhook[]>",
+          "description": "Fetch all webhooks in this guild. Returned webhooks do not include the token (cannot send).",
+          "async": true,
+          "source": {
+            "file": "Guild.ts",
+            "line": 44
+          }
+        },
+        {
+          "name": "iconURL",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ size?: number; }",
+              "optional": true
+            }
+          ],
+          "returns": "string | null",
+          "async": false,
+          "source": {
+            "file": "Guild.ts",
+            "line": 31
+          }
+        }
+      ],
+      "source": {
+        "file": "Guild.ts",
+        "line": 11,
+        "path": "packages/fluxer-core/src/structures/Guild.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "GuildChannel",
+      "extends": "Channel",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIChannel",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "guildId",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "parentId",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "position",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "createWebhook",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ name: string; avatar?: string | null; }",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<Webhook>",
+          "description": "Create a webhook in this channel. Returns the webhook with token (required for send()).",
+          "async": true,
+          "source": {
+            "file": "Channel.ts",
+            "line": 44
+          }
+        },
+        {
+          "name": "fetchWebhooks",
+          "params": [],
+          "returns": "Promise<Webhook[]>",
+          "description": "Fetch all webhooks in this channel. Returned webhooks do not include the token (cannot send).",
+          "async": true,
+          "source": {
+            "file": "Channel.ts",
+            "line": 54
+          }
+        }
+      ],
+      "source": {
+        "file": "Channel.ts",
+        "line": 29,
+        "path": "packages/fluxer-core/src/structures/Channel.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "GuildMember",
+      "extends": "Base",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIGuildMember & { guild_id?: string; }",
+            "optional": false
+          },
+          {
+            "name": "guild",
+            "type": "Guild",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "communicationDisabledUntil",
+          "type": "Date | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild",
+          "type": "Guild",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "joinedAt",
+          "type": "Date",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "nick",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "roles",
+          "type": "string[]",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "user",
+          "type": "User",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "GuildMember.ts",
+        "line": 7,
+        "path": "packages/fluxer-core/src/structures/GuildMember.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "HTTPError",
+      "extends": "Error",
+      "constructor": {
+        "params": [
+          {
+            "name": "statusCode",
+            "type": "number",
+            "optional": false
+          },
+          {
+            "name": "body",
+            "type": "string | null",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "body",
+          "type": "string | null",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "statusCode",
+          "type": "number",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "HTTPError.ts",
+        "line": 7,
+        "path": "packages/rest/src/errors/HTTPError.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "LinkChannel",
+      "extends": "GuildChannel",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIChannel",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "url",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "Channel.ts",
+        "line": 98,
+        "path": "packages/fluxer-core/src/structures/Channel.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "LiveKitRtcConnection",
+      "extends": "EventEmitter",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "channel",
+            "type": "VoiceChannel",
+            "optional": false
+          },
+          {
+            "name": "_userId",
+            "type": "string",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "audioSource",
+          "type": "AudioSource | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "audioTrack",
+          "type": "LocalAudioTrack | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "channel",
+          "type": "VoiceChannel",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "currentStream",
+          "type": "{ destroy?: () => void; } | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guildId",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "lastServerEndpoint",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "lastServerToken",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "room",
+          "type": "Room | null",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "audioDebug",
+          "params": [
+            {
+              "name": "msg",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "data",
+              "type": "object",
+              "optional": true
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 58
+          }
+        },
+        {
+          "name": "connect",
+          "params": [
+            {
+              "name": "server",
+              "type": "GatewayVoiceServerUpdateDispatchData",
+              "optional": false
+            },
+            {
+              "name": "_state",
+              "type": "GatewayVoiceStateUpdateDispatchData",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "async": true,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 86
+          }
+        },
+        {
+          "name": "debug",
+          "params": [
+            {
+              "name": "msg",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "data",
+              "type": "string | object",
+              "optional": true
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 54
+          }
+        },
+        {
+          "name": "destroy",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 332
+          }
+        },
+        {
+          "name": "disconnect",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 320
+          }
+        },
+        {
+          "name": "emitDisconnect",
+          "params": [
+            {
+              "name": "source",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 64
+          }
+        },
+        {
+          "name": "isConnected",
+          "params": [],
+          "returns": "boolean",
+          "description": "Returns true if the LiveKit room is connected and not destroyed.",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 72
+          }
+        },
+        {
+          "name": "isSameServer",
+          "params": [
+            {
+              "name": "endpoint",
+              "type": "string | null",
+              "optional": false
+            },
+            {
+              "name": "token",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "boolean",
+          "description": "Returns true if we're already connected to the given server (skip migration).",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 77
+          }
+        },
+        {
+          "name": "play",
+          "params": [
+            {
+              "name": "urlOrStream",
+              "type": "string | NodeJS.ReadableStream",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "async": true,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 130
+          }
+        },
+        {
+          "name": "playOpus",
+          "params": [
+            {
+              "name": "_stream",
+              "type": "NodeJS.ReadableStream",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 82
+          }
+        },
+        {
+          "name": "stop",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "LiveKitRtcConnection.ts",
+            "line": 306
+          }
+        }
+      ],
+      "source": {
+        "file": "LiveKitRtcConnection.ts",
+        "line": 29,
+        "path": "packages/voice/src/LiveKitRtcConnection.ts"
+      },
+      "package": "@fluxerjs/voice"
+    },
+    {
+      "name": "Message",
+      "extends": "Base",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIMessage",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "attachments",
+          "type": "Collection<string, APIMessageAttachment>",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "author",
+          "type": "User",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "channel",
+          "type": "Channel",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "channelId",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "editedAt",
+          "type": "Date | null",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "guildId",
+          "type": "string | null",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "pinned",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "delete",
+          "params": [],
+          "returns": "Promise<void>",
+          "async": true,
+          "source": {
+            "file": "Message.ts",
+            "line": 50
+          }
+        },
+        {
+          "name": "edit",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ content?: string; }",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<Message>",
+          "async": true,
+          "source": {
+            "file": "Message.ts",
+            "line": 45
+          }
+        },
+        {
+          "name": "reply",
+          "params": [
+            {
+              "name": "options",
+              "type": "string | { content?: string; embeds?: APIEmbed[]; }",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<Message>",
+          "async": true,
+          "source": {
+            "file": "Message.ts",
+            "line": 37
+          }
+        }
+      ],
+      "source": {
+        "file": "Message.ts",
+        "line": 9,
+        "path": "packages/fluxer-core/src/structures/Message.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "MessageFlagsBitField",
+      "extends": "BitField",
+      "properties": [
+        {
+          "name": "Flags",
+          "type": "{ readonly SuppressEmbeds: number; readonly SuppressNotifications: number; readonly VoiceMessage: number; readonly CompactAttachments: number; }",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "MessageFlagsBitField.ts",
+        "line": 16,
+        "path": "packages/util/src/MessageFlagsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "MessagePayload",
+      "properties": [
+        {
+          "name": "ContentMaxLength",
+          "type": "2000",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": "MessagePayloadData",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "addEmbed",
+          "params": [
+            {
+              "name": "embed",
+              "type": "APIEmbed | EmbedBuilder",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 38
+          }
+        },
+        {
+          "name": "create",
+          "params": [
+            {
+              "name": "contentOrOptions",
+              "type": "string | MessagePayloadData",
+              "optional": true
+            }
+          ],
+          "returns": "MessagePayload",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 82
+          }
+        },
+        {
+          "name": "setAttachments",
+          "params": [
+            {
+              "name": "attachments",
+              "type": "(AttachmentBuilder | { id: number; filename: string; description?: string | null; })[] | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 46
+          }
+        },
+        {
+          "name": "setContent",
+          "params": [
+            {
+              "name": "content",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 22
+          }
+        },
+        {
+          "name": "setEmbeds",
+          "params": [
+            {
+              "name": "embeds",
+              "type": "(APIEmbed | EmbedBuilder)[] | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 28
+          }
+        },
+        {
+          "name": "setFlags",
+          "params": [
+            {
+              "name": "flags",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 73
+          }
+        },
+        {
+          "name": "setReply",
+          "params": [
+            {
+              "name": "reference",
+              "type": "APIMessageReference | { channel_id: string; message_id: string; guild_id?: string | null; } | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 55
+          }
+        },
+        {
+          "name": "setTTS",
+          "params": [
+            {
+              "name": "tts",
+              "type": "boolean",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 68
+          }
+        },
+        {
+          "name": "toJSON",
+          "params": [],
+          "returns": "MessagePayloadData",
+          "async": false,
+          "source": {
+            "file": "MessagePayload.ts",
+            "line": 78
+          }
+        }
+      ],
+      "source": {
+        "file": "MessagePayload.ts",
+        "line": 17,
+        "path": "packages/builders/src/messages/MessagePayload.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "PermissionsBitField",
+      "extends": "BitField",
+      "properties": [
+        {
+          "name": "Flags",
+          "type": "{ readonly CreateInstantInvite: number; readonly KickMembers: number; readonly BanMembers: number; readonly Administrator: number; readonly ManageChannels: number; readonly ManageGuild: number; ... 32 more ...; readonly SendMessagesInThreads: number; }",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "PermissionsBitField.ts",
+        "line": 52,
+        "path": "packages/util/src/PermissionsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "RateLimitError",
+      "extends": "FluxerAPIError",
+      "constructor": {
+        "params": [
+          {
+            "name": "body",
+            "type": "RateLimitErrorBody",
+            "optional": false
+          },
+          {
+            "name": "statusCode",
+            "type": "number",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "global",
+          "type": "boolean",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "retryAfter",
+          "type": "number",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "RateLimitError.ts",
+        "line": 4,
+        "path": "packages/rest/src/errors/RateLimitError.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "RateLimitManager",
+      "properties": [
+        {
+          "name": "buckets",
+          "type": "Map<string, RateLimitState>",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "globalResetAt",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "getBucket",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "RateLimitState | undefined",
+          "async": false,
+          "source": {
+            "file": "RateLimitManager.ts",
+            "line": 15
+          }
+        },
+        {
+          "name": "getGlobalReset",
+          "params": [],
+          "returns": "number",
+          "async": false,
+          "source": {
+            "file": "RateLimitManager.ts",
+            "line": 27
+          }
+        },
+        {
+          "name": "getWaitTime",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "number",
+          "description": "Returns ms to wait before we can send again (0 if no wait).",
+          "async": false,
+          "source": {
+            "file": "RateLimitManager.ts",
+            "line": 32
+          }
+        },
+        {
+          "name": "setBucket",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "limit",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "remaining",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "resetAt",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "RateLimitManager.ts",
+            "line": 19
+          }
+        },
+        {
+          "name": "setGlobalReset",
+          "params": [
+            {
+              "name": "resetAt",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "RateLimitManager.ts",
+            "line": 23
+          }
+        },
+        {
+          "name": "updateFromHeaders",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "headers",
+              "type": "Headers",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "description": "Parse rate limit headers and update state.",
+          "async": false,
+          "source": {
+            "file": "RateLimitManager.ts",
+            "line": 41
+          }
+        }
+      ],
+      "source": {
+        "file": "RateLimitManager.ts",
+        "line": 11,
+        "path": "packages/rest/src/RateLimitManager.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "RequestManager",
+      "constructor": {
+        "params": [
+          {
+            "name": "options",
+            "type": "Partial<RestOptions>",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "options",
+          "type": "RestOptions",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "rateLimiter",
+          "type": "RateLimitManager",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "token",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "buildHeaders",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "options",
+              "type": "RequestOptions",
+              "optional": false
+            }
+          ],
+          "returns": "Record<string, string>",
+          "async": false,
+          "source": {
+            "file": "RequestManager.ts",
+            "line": 55
+          }
+        },
+        {
+          "name": "getRouteHash",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "string",
+          "description": "Hash route for rate limit bucket (use path without ids for grouping).",
+          "async": false,
+          "source": {
+            "file": "RequestManager.ts",
+            "line": 46
+          }
+        },
+        {
+          "name": "request",
+          "params": [
+            {
+              "name": "method",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "options",
+              "type": "RequestOptions",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<T>",
+          "async": true,
+          "source": {
+            "file": "RequestManager.ts",
+            "line": 69
+          }
+        },
+        {
+          "name": "setToken",
+          "params": [
+            {
+              "name": "token",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "RequestManager.ts",
+            "line": 37
+          }
+        },
+        {
+          "name": "waitForRateLimit",
+          "params": [
+            {
+              "name": "routeHash",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "async": true,
+          "source": {
+            "file": "RequestManager.ts",
+            "line": 50
+          }
+        }
+      ],
+      "source": {
+        "file": "RequestManager.ts",
+        "line": 21,
+        "path": "packages/rest/src/RequestManager.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "REST",
+      "extends": "EventEmitter",
+      "constructor": {
+        "params": [
+          {
+            "name": "options",
+            "type": "RESTOptions",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "requestManager",
+          "type": "RequestManager",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "delete",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "options",
+              "type": "{ auth?: boolean; }",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<T>",
+          "async": true,
+          "source": {
+            "file": "REST.ts",
+            "line": 60
+          }
+        },
+        {
+          "name": "get",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "options",
+              "type": "{ auth?: boolean; }",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<T>",
+          "async": true,
+          "source": {
+            "file": "REST.ts",
+            "line": 40
+          }
+        },
+        {
+          "name": "patch",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "options",
+              "type": "{ body?: unknown; auth?: boolean; }",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<T>",
+          "async": true,
+          "source": {
+            "file": "REST.ts",
+            "line": 52
+          }
+        },
+        {
+          "name": "post",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "options",
+              "type": "{ body?: unknown; auth?: boolean; files?: Array<{ name: string; data: Blob | ArrayBuffer | Uint8Array; filename?: string; }>; }",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<T>",
+          "async": true,
+          "source": {
+            "file": "REST.ts",
+            "line": 44
+          }
+        },
+        {
+          "name": "put",
+          "params": [
+            {
+              "name": "route",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "options",
+              "type": "{ body?: unknown; auth?: boolean; }",
+              "optional": true
+            }
+          ],
+          "returns": "Promise<T>",
+          "async": true,
+          "source": {
+            "file": "REST.ts",
+            "line": 56
+          }
+        },
+        {
+          "name": "setToken",
+          "params": [
+            {
+              "name": "token",
+              "type": "string | null",
+              "optional": false
+            }
+          ],
+          "returns": "this",
+          "async": false,
+          "source": {
+            "file": "REST.ts",
+            "line": 30
+          }
+        }
+      ],
+      "source": {
+        "file": "REST.ts",
+        "line": 14,
+        "path": "packages/rest/src/REST.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "SnowflakeUtil",
+      "description": "Utilities for Fluxer snowflake IDs.\nFluxer uses Twitter Snowflakes with a custom epoch.",
+      "properties": [
+        {
+          "name": "EPOCH",
+          "type": "1420070400000n",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "dateFromSnowflake",
+          "params": [
+            {
+              "name": "snowflake",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Date",
+          "description": "Converts a snowflake to a Date.",
+          "async": false,
+          "source": {
+            "file": "SnowflakeUtil.ts",
+            "line": 21
+          }
+        },
+        {
+          "name": "deconstruct",
+          "params": [
+            {
+              "name": "snowflake",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "{ timestamp: number; date: Date; workerId: number; processId: number; increment: number; }",
+          "description": "Deconstructs a snowflake into its components.",
+          "async": false,
+          "source": {
+            "file": "SnowflakeUtil.ts",
+            "line": 36
+          }
+        },
+        {
+          "name": "isValid",
+          "params": [
+            {
+              "name": "snowflake",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "boolean",
+          "description": "Checks if a string is a valid snowflake format (numeric string, 0 or positive).",
+          "async": false,
+          "source": {
+            "file": "SnowflakeUtil.ts",
+            "line": 56
+          }
+        },
+        {
+          "name": "snowflakeFromTimestamp",
+          "params": [
+            {
+              "name": "timestamp",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "string",
+          "description": "Converts a Unix timestamp (ms) to a snowflake string.\nUseful for pagination (before/after).",
+          "async": false,
+          "source": {
+            "file": "SnowflakeUtil.ts",
+            "line": 29
+          }
+        },
+        {
+          "name": "timestampFromSnowflake",
+          "params": [
+            {
+              "name": "snowflake",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "number",
+          "description": "Converts a snowflake to a Unix timestamp in milliseconds.",
+          "async": false,
+          "source": {
+            "file": "SnowflakeUtil.ts",
+            "line": 14
+          }
+        }
+      ],
+      "source": {
+        "file": "SnowflakeUtil.ts",
+        "line": 8,
+        "path": "packages/util/src/SnowflakeUtil.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "TextChannel",
+      "extends": "GuildChannel",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIChannel",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "lastMessageId",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "nsfw",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "rateLimitPerUser",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "topic",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "send",
+          "params": [
+            {
+              "name": "options",
+              "type": "string | { content?: string; embeds?: unknown[]; }",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<Message>",
+          "async": true,
+          "source": {
+            "file": "Channel.ts",
+            "line": 76
+          }
+        }
+      ],
+      "source": {
+        "file": "Channel.ts",
+        "line": 62,
+        "path": "packages/fluxer-core/src/structures/Channel.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "User",
+      "extends": "Base",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIUserPartial",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "avatar",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "bot",
+          "type": "boolean",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "discriminator",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "globalName",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "avatarURL",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ size?: number; extension?: string; }",
+              "optional": true
+            }
+          ],
+          "returns": "string | null",
+          "async": false,
+          "source": {
+            "file": "User.ts",
+            "line": 26
+          }
+        },
+        {
+          "name": "displayAvatarURL",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ size?: number; }",
+              "optional": true
+            }
+          ],
+          "returns": "string",
+          "async": false,
+          "source": {
+            "file": "User.ts",
+            "line": 33
+          }
+        },
+        {
+          "name": "toString",
+          "params": [],
+          "returns": "string",
+          "async": false,
+          "source": {
+            "file": "User.ts",
+            "line": 37
+          }
+        }
+      ],
+      "source": {
+        "file": "User.ts",
+        "line": 6,
+        "path": "packages/fluxer-core/src/structures/User.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "UserFlagsBitField",
+      "extends": "BitField",
+      "properties": [
+        {
+          "name": "Flags",
+          "type": "{ readonly Staff: number; readonly CtpMember: number; readonly Partner: number; readonly BugHunter: number; readonly FriendlyBot: number; readonly FriendlyBotManualApproval: number; ... 24 more ...; readonly StaffHidden: number; }",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "UserFlagsBitField.ts",
+        "line": 45,
+        "path": "packages/util/src/UserFlagsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "VoiceChannel",
+      "extends": "GuildChannel",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIChannel",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "bitrate",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "rtcRegion",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "userLimit",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "methods": [],
+      "source": {
+        "file": "Channel.ts",
+        "line": 85,
+        "path": "packages/fluxer-core/src/structures/Channel.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "VoiceConnection",
+      "extends": "EventEmitter",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "channel",
+            "type": "VoiceChannel",
+            "optional": false
+          },
+          {
+            "name": "userId",
+            "type": "string",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "audioPacketQueue",
+          "type": "Buffer<ArrayBufferLike>[]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "channel",
+          "type": "VoiceChannel",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "currentStream",
+          "type": "{ destroy?: () => void; } | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guildId",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "heartbeatInterval",
+          "type": "NodeJS.Timeout | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "pacingInterval",
+          "type": "NodeJS.Timeout | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "remoteUdpAddress",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "remoteUdpPort",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "secretKey",
+          "type": "Uint8Array<ArrayBufferLike> | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "sequence",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "ssrc",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "udpSocket",
+          "type": "dgram.Socket | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "voiceWs",
+          "type": "VoiceWebSocket | null",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "connect",
+          "params": [
+            {
+              "name": "server",
+              "type": "GatewayVoiceServerUpdateDispatchData",
+              "optional": false
+            },
+            {
+              "name": "state",
+              "type": "GatewayVoiceStateUpdateDispatchData",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "description": "Called when we have both server update and state update.",
+          "async": true,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 94
+          }
+        },
+        {
+          "name": "destroy",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 378
+          }
+        },
+        {
+          "name": "disconnect",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 360
+          }
+        },
+        {
+          "name": "getWebSocketConstructor",
+          "params": [],
+          "returns": "Promise<new (url: string) => VoiceWebSocket>",
+          "async": true,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 183
+          }
+        },
+        {
+          "name": "play",
+          "params": [
+            {
+              "name": "urlOrStream",
+              "type": "string | NodeJS.ReadableStream",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "description": "Play a direct WebM/Opus URL or stream. Fetches the URL (if string), demuxes with prism-media WebmDemuxer,\nand sends Opus packets to the voice connection. No FFmpeg or encoding; input must be WebM with Opus.",
+          "async": true,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 271
+          }
+        },
+        {
+          "name": "playOpus",
+          "params": [
+            {
+              "name": "stream",
+              "type": "NodeJS.ReadableStream",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "description": "Play a stream of raw Opus packets\nUses the same queue and 20ms pacing as play(). Use this for local files (MP3 → PCM → Opus) or other Opus sources.",
+          "async": false,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 231
+          }
+        },
+        {
+          "name": "sendAudioFrame",
+          "params": [
+            {
+              "name": "opusPayload",
+              "type": "Buffer<ArrayBufferLike>",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 329
+          }
+        },
+        {
+          "name": "sendVoiceOp",
+          "params": [
+            {
+              "name": "op",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "d",
+              "type": "unknown",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 192
+          }
+        },
+        {
+          "name": "setupUDP",
+          "params": [
+            {
+              "name": "remoteAddress",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "remotePort",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "onReady",
+              "type": "() => void",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 197
+          }
+        },
+        {
+          "name": "stop",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceConnection.ts",
+            "line": 347
+          }
+        }
+      ],
+      "source": {
+        "file": "VoiceConnection.ts",
+        "line": 54,
+        "path": "packages/voice/src/VoiceConnection.ts"
+      },
+      "package": "@fluxerjs/voice"
+    },
+    {
+      "name": "VoiceManager",
+      "extends": "EventEmitter",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "options",
+            "type": "VoiceManagerOptions",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "connections",
+          "type": "Collection<string, VoiceConnection | LiveKitRtcConnection>",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "pending",
+          "type": "Map<string, { channel: VoiceChannel; resolve: (c: VoiceConnection | LiveKitRtcConnection) => void; reject: (e: Error) => void; server?: GatewayVoiceServerUpdateDispatchData | undefined; state?: GatewayVoiceStateUpdateDispatchData | undefined; }>",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "shardId",
+          "type": "number",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "voiceStates",
+          "type": "VoiceStateMap",
+          "readonly": true,
+          "optional": false,
+          "description": "guild_id -> user_id -> channel_id"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getConnection",
+          "params": [
+            {
+              "name": "guildId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "VoiceConnection | LiveKitRtcConnection | undefined",
+          "async": false,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 206
+          }
+        },
+        {
+          "name": "getVoiceChannelId",
+          "params": [
+            {
+              "name": "guildId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "userId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "string | null",
+          "description": "Get the voice channel ID the user is in, or null.",
+          "async": false,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 58
+          }
+        },
+        {
+          "name": "handleVoiceServerUpdate",
+          "params": [
+            {
+              "name": "data",
+              "type": "GatewayVoiceServerUpdateDispatchData",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 81
+          }
+        },
+        {
+          "name": "handleVoiceStatesSync",
+          "params": [
+            {
+              "name": "data",
+              "type": "{ guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null; }>; }",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 46
+          }
+        },
+        {
+          "name": "handleVoiceStateUpdate",
+          "params": [
+            {
+              "name": "data",
+              "type": "GatewayVoiceStateUpdateDispatchData",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 64
+          }
+        },
+        {
+          "name": "join",
+          "params": [
+            {
+              "name": "channel",
+              "type": "VoiceChannel",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<VoiceConnection | LiveKitRtcConnection>",
+          "description": "Join a voice channel. Resolves when the connection is ready.",
+          "async": true,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 148
+          }
+        },
+        {
+          "name": "leave",
+          "params": [
+            {
+              "name": "guildId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "description": "Leave a guild's voice channel.",
+          "async": false,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 189
+          }
+        },
+        {
+          "name": "registerConnection",
+          "params": [
+            {
+              "name": "guildId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "conn",
+              "type": "VoiceConnection | LiveKitRtcConnection",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 129
+          }
+        },
+        {
+          "name": "tryCompletePending",
+          "params": [
+            {
+              "name": "guildId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "VoiceManager.ts",
+            "line": 134
+          }
+        }
+      ],
+      "source": {
+        "file": "VoiceManager.ts",
+        "line": 20,
+        "path": "packages/voice/src/VoiceManager.ts"
+      },
+      "package": "@fluxerjs/voice"
+    },
+    {
+      "name": "Webhook",
+      "description": "Represents a Discord/Fluxer webhook. Supports creating, fetching, sending, and deleting.\nThe token is only available when the webhook was created; fetched webhooks cannot send messages.",
+      "extends": "Base",
+      "constructor": {
+        "params": [
+          {
+            "name": "client",
+            "type": "Client",
+            "optional": false
+          },
+          {
+            "name": "data",
+            "type": "APIWebhook & { token?: string | null; }",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "avatar",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "channelId",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "client",
+          "type": "Client",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "guildId",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "token",
+          "type": "string | null",
+          "readonly": true,
+          "optional": false,
+          "description": "Present only when webhook was created via createWebhook(); not returned when fetching."
+        }
+      ],
+      "methods": [
+        {
+          "name": "delete",
+          "params": [],
+          "returns": "Promise<void>",
+          "description": "Delete this webhook. Requires bot token with Manage Webhooks permission.",
+          "async": true,
+          "source": {
+            "file": "Webhook.ts",
+            "line": 40
+          }
+        },
+        {
+          "name": "fetch",
+          "params": [
+            {
+              "name": "client",
+              "type": "Client",
+              "optional": false
+            },
+            {
+              "name": "webhookId",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<Webhook>",
+          "description": "Fetch a webhook by ID using bot auth. The returned webhook will not have a token (cannot send).",
+          "async": true,
+          "source": {
+            "file": "Webhook.ts",
+            "line": 62
+          }
+        },
+        {
+          "name": "fromToken",
+          "params": [
+            {
+              "name": "client",
+              "type": "Client",
+              "optional": false
+            },
+            {
+              "name": "webhookId",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "token",
+              "type": "string",
+              "optional": false
+            },
+            {
+              "name": "options",
+              "type": "{ channelId?: string; guildId?: string; name?: string; }",
+              "optional": true
+            }
+          ],
+          "returns": "Webhook",
+          "description": "Create a Webhook instance from an ID and token (e.g. from a stored webhook URL).\nUseful when you have the token from a previous createWebhook() call.",
+          "async": false,
+          "source": {
+            "file": "Webhook.ts",
+            "line": 71
+          }
+        },
+        {
+          "name": "send",
+          "params": [
+            {
+              "name": "options",
+              "type": "string | WebhookSendOptions",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "description": "Send a message via this webhook. Requires the webhook token (only present when created, not when fetched).",
+          "async": true,
+          "source": {
+            "file": "Webhook.ts",
+            "line": 48
+          }
+        }
+      ],
+      "source": {
+        "file": "Webhook.ts",
+        "line": 18,
+        "path": "packages/fluxer-core/src/structures/Webhook.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "WebSocketManager",
+      "extends": "EventEmitter",
+      "constructor": {
+        "params": [
+          {
+            "name": "options",
+            "type": "WebSocketManagerOptions",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "gatewayUrl",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "WebSocketManagerOptions",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "shardCount",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "shards",
+          "type": "Map<number, WebSocketShard>",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "connect",
+          "params": [],
+          "returns": "Promise<void>",
+          "async": true,
+          "source": {
+            "file": "WebSocketManager.ts",
+            "line": 30
+          }
+        },
+        {
+          "name": "destroy",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketManager.ts",
+            "line": 84
+          }
+        },
+        {
+          "name": "getShardCount",
+          "params": [],
+          "returns": "number",
+          "async": false,
+          "source": {
+            "file": "WebSocketManager.ts",
+            "line": 90
+          }
+        },
+        {
+          "name": "send",
+          "params": [
+            {
+              "name": "shardId",
+              "type": "number",
+              "optional": false
+            },
+            {
+              "name": "payload",
+              "type": "GatewaySendPayload",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketManager.ts",
+            "line": 80
+          }
+        }
+      ],
+      "source": {
+        "file": "WebSocketManager.ts",
+        "line": 19,
+        "path": "packages/ws/src/WebSocketManager.ts"
+      },
+      "package": "@fluxerjs/ws"
+    },
+    {
+      "name": "WebSocketShard",
+      "extends": "EventEmitter",
+      "constructor": {
+        "params": [
+          {
+            "name": "options",
+            "type": "WebSocketShardOptions",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "destroying",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "heartbeatAt",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "heartbeatInterval",
+          "type": "number | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "lastHeartbeatAck",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false,
+          "description": "True until we send a heartbeat; then false until we get HeartbeatAck. Avoids closing before first heartbeat."
+        },
+        {
+          "name": "options",
+          "type": "WebSocketShardOptions",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "reconnectDelayMs",
+          "type": "number",
+          "readonly": false,
+          "optional": false,
+          "description": "Current reconnect delay in ms; resets on successful connect."
+        },
+        {
+          "name": "reconnectTimeout",
+          "type": "number | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "seq",
+          "type": "number | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "sessionId",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readonly": true,
+          "optional": false
+        },
+        {
+          "name": "ws",
+          "type": "WebSocketLike | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "WS",
+          "type": "WebSocketConstructor",
+          "readonly": true,
+          "optional": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "connect",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketShard.ts",
+            "line": 85
+          }
+        },
+        {
+          "name": "debug",
+          "params": [
+            {
+              "name": "message",
+              "type": "string",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketShard.ts",
+            "line": 154
+          }
+        },
+        {
+          "name": "destroy",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketShard.ts",
+            "line": 250
+          }
+        },
+        {
+          "name": "handleHello",
+          "params": [
+            {
+              "name": "data",
+              "type": "GatewayHelloData",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketShard.ts",
+            "line": 195
+          }
+        },
+        {
+          "name": "handlePayload",
+          "params": [
+            {
+              "name": "payload",
+              "type": "GatewayReceivePayload<unknown>",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketShard.ts",
+            "line": 158
+          }
+        },
+        {
+          "name": "send",
+          "params": [
+            {
+              "name": "payload",
+              "type": "GatewaySendPayload",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketShard.ts",
+            "line": 245
+          }
+        },
+        {
+          "name": "startHeartbeat",
+          "params": [
+            {
+              "name": "interval",
+              "type": "number",
+              "optional": false
+            }
+          ],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketShard.ts",
+            "line": 225
+          }
+        },
+        {
+          "name": "stopHeartbeat",
+          "params": [],
+          "returns": "void",
+          "async": false,
+          "source": {
+            "file": "WebSocketShard.ts",
+            "line": 238
+          }
+        }
+      ],
+      "source": {
+        "file": "WebSocketShard.ts",
+        "line": 45,
+        "path": "packages/ws/src/WebSocketShard.ts"
+      },
+      "package": "@fluxerjs/ws"
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "APIApplicationCommandInteraction",
+      "description": "Minimal application command interaction (slash command) payload from the gateway.",
+      "properties": [
+        {
+          "name": "application_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "data",
+          "type": "{ id?: string; name: string; type?: number; options?: Array<{ name: string; type: number; value?: unknown; }>; }",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "member",
+          "type": "unknown",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "token",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "type",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "user",
+          "type": "unknown",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "interaction.ts",
+        "line": 2,
+        "path": "packages/types/src/api/interaction.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIAttachmentPayload",
+      "properties": [
+        {
+          "name": "description",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "filename",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "AttachmentBuilder.ts",
+        "line": 11,
+        "path": "packages/builders/src/messages/AttachmentBuilder.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "APIBan",
+      "properties": [
+        {
+          "name": "reason",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "user",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "ban.ts",
+        "line": 4,
+        "path": "packages/types/src/api/ban.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIChannel",
+      "properties": [
+        {
+          "name": "bitrate",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "guild_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "last_message_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "last_pin_timestamp",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "nicks",
+          "type": "Record<string, string>",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "nsfw",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "owner_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "parent_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "permission_overwrites",
+          "type": "APIChannelOverwrite[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "position",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "rate_limit_per_user",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "recipients",
+          "type": "APIUserPartial[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "rtc_region",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "topic",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "url",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "user_limit",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "channel.ts",
+        "line": 35,
+        "path": "packages/types/src/api/channel.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIChannelOverwrite",
+      "properties": [
+        {
+          "name": "allow",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "deny",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "type",
+          "type": "OverwriteType",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "channel.ts",
+        "line": 20,
+        "path": "packages/types/src/api/channel.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIChannelPartial",
+      "properties": [
+        {
+          "name": "icon",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "parent_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "type",
+          "type": "ChannelType",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "channel.ts",
+        "line": 27,
+        "path": "packages/types/src/api/channel.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIEmbed",
+      "properties": [
+        {
+          "name": "audio",
+          "type": "APIEmbedMedia | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "author",
+          "type": "APIEmbedAuthor | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "color",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "fields",
+          "type": "APIEmbedField[] | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "footer",
+          "type": "APIEmbedFooter | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "image",
+          "type": "APIEmbedMedia | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "nsfw",
+          "type": "boolean | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "provider",
+          "type": "APIEmbedAuthor | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "thumbnail",
+          "type": "APIEmbedMedia | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "timestamp",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "title",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "type",
+          "type": "EmbedType",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "url",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "video",
+          "type": "APIEmbedMedia | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "embed.ts",
+        "line": 29,
+        "path": "packages/types/src/api/embed.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIEmbedAuthor",
+      "properties": [
+        {
+          "name": "icon_url",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "proxy_icon_url",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "embed.ts",
+        "line": 1,
+        "path": "packages/types/src/api/embed.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIEmbedField",
+      "properties": [
+        {
+          "name": "inline",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "embed.ts",
+        "line": 21,
+        "path": "packages/types/src/api/embed.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIEmbedFooter",
+      "properties": [
+        {
+          "name": "icon_url",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "proxy_icon_url",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "embed.ts",
+        "line": 8,
+        "path": "packages/types/src/api/embed.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIEmbedMedia",
+      "properties": [
+        {
+          "name": "height",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "proxy_url",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "embed.ts",
+        "line": 14,
+        "path": "packages/types/src/api/embed.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIEmoji",
+      "properties": [
+        {
+          "name": "animated",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "emoji.ts",
+        "line": 4,
+        "path": "packages/types/src/api/emoji.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIEmojiWithUser",
+      "properties": [
+        {
+          "name": "user",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "emoji.ts",
+        "line": 10,
+        "path": "packages/types/src/api/emoji.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIErrorBody",
+      "properties": [
+        {
+          "name": "code",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "errors",
+          "type": "{ path: string; message: string; code?: string; }[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "errors.ts",
+        "line": 58,
+        "path": "packages/types/src/api/errors.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIGatewayBotResponse",
+      "properties": [
+        {
+          "name": "session_start_limit",
+          "type": "{ total: number; remaining: number; reset_after: number; max_concurrency: number; }",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "shards",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "gateway.ts",
+        "line": 3,
+        "path": "packages/types/src/api/gateway.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIGuild",
+      "properties": [
+        {
+          "name": "afk_channel_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "afk_timeout",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "banner",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "banner_height",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "banner_width",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "default_message_notifications",
+          "type": "DefaultMessageNotifications",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "explicit_content_filter",
+          "type": "GuildExplicitContentFilter",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "features",
+          "type": "GuildFeature[]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "icon",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "mfa_level",
+          "type": "GuildMFALevel",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "nsfw_level",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "owner_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "permissions",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "rules_channel_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "splash",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "system_channel_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "vanity_url_code",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "verification_level",
+          "type": "GuildVerificationLevel",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "guild.ts",
+        "line": 52,
+        "path": "packages/types/src/api/guild.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIGuildMember",
+      "properties": [
+        {
+          "name": "accent_color",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "avatar",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "banner",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "communication_disabled_until",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "deaf",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "joined_at",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "mute",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "nick",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "profile_flags",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "roles",
+          "type": "string[]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "user",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "user.ts",
+        "line": 15,
+        "path": "packages/types/src/api/user.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIGuildPartial",
+      "properties": [
+        {
+          "name": "banner",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "features",
+          "type": "string[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "splash",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "invite.ts",
+        "line": 5,
+        "path": "packages/types/src/api/invite.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIInvite",
+      "properties": [
+        {
+          "name": "channel",
+          "type": "APIChannelPartial",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "code",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "expires_at",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "guild",
+          "type": "APIGuildPartial",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "inviter",
+          "type": "APIUserPartial | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "member_count",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "presence_count",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "type",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "invite.ts",
+        "line": 14,
+        "path": "packages/types/src/api/invite.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIMessage",
+      "properties": [
+        {
+          "name": "attachments",
+          "type": "APIMessageAttachment[] | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "author",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "edited_timestamp",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "embeds",
+          "type": "APIEmbed[] | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "flags",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "mention_everyone",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "mention_roles",
+          "type": "string[] | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "mentions",
+          "type": "APIUserPartial[] | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "message_reference",
+          "type": "APIMessageReference | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "nonce",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "pinned",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "reactions",
+          "type": "APIMessageReaction[] | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "referenced_message",
+          "type": "APIMessage | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "stickers",
+          "type": "APIMessageSticker[] | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "timestamp",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "tts",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "type",
+          "type": "MessageType",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "webhook_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "message.ts",
+        "line": 68,
+        "path": "packages/types/src/api/message.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIMessageAttachment",
+      "properties": [
+        {
+          "name": "content_type",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "duration",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "expired",
+          "type": "boolean | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "expires_at",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "filename",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "height",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "nsfw",
+          "type": "boolean | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "proxy_url",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "url",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "width",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "message.ts",
+        "line": 43,
+        "path": "packages/types/src/api/message.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIMessageReaction",
+      "properties": [
+        {
+          "name": "count",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "emoji",
+          "type": "APIReactionEmoji",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "me",
+          "type": "boolean | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "message.ts",
+        "line": 30,
+        "path": "packages/types/src/api/message.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIMessageReference",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "message_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "type",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "message.ts",
+        "line": 36,
+        "path": "packages/types/src/api/message.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIMessageSticker",
+      "properties": [
+        {
+          "name": "animated",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": "string[]",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "message.ts",
+        "line": 60,
+        "path": "packages/types/src/api/message.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIReactionEmoji",
+      "properties": [
+        {
+          "name": "animated",
+          "type": "boolean | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "message.ts",
+        "line": 24,
+        "path": "packages/types/src/api/message.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIRole",
+      "properties": [
+        {
+          "name": "color",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "hoist",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "hoist_position",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "mentionable",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "permissions",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "position",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "unicode_emoji",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "role.ts",
+        "line": 3,
+        "path": "packages/types/src/api/role.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APISticker",
+      "properties": [
+        {
+          "name": "animated",
+          "type": "boolean",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": "string[]",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "sticker.ts",
+        "line": 4,
+        "path": "packages/types/src/api/sticker.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIStickerWithUser",
+      "properties": [
+        {
+          "name": "user",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "sticker.ts",
+        "line": 12,
+        "path": "packages/types/src/api/sticker.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIUser",
+      "properties": [],
+      "source": {
+        "file": "user.ts",
+        "line": 13,
+        "path": "packages/types/src/api/user.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIUserPartial",
+      "properties": [
+        {
+          "name": "avatar",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "avatar_color",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "discriminator",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "global_name",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "public_flags",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "user.ts",
+        "line": 3,
+        "path": "packages/types/src/api/user.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "APIWebhook",
+      "properties": [
+        {
+          "name": "avatar",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "token",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "user",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "webhook.ts",
+        "line": 9,
+        "path": "packages/types/src/api/webhook.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "AttachmentData",
+      "description": "Attachment data for multipart requests.",
+      "properties": [],
+      "source": {
+        "file": "files.ts",
+        "line": 4,
+        "path": "packages/rest/src/utils/files.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "AttachmentPayload",
+      "properties": [
+        {
+          "name": "data",
+          "type": "AttachmentData",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "filename",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "files.ts",
+        "line": 6,
+        "path": "packages/rest/src/utils/files.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "AttachmentPayloadOptions",
+      "description": "Builder for message attachment metadata (filename, description, spoiler).\nActual file data is passed separately when sending (e.g. FormData).",
+      "properties": [
+        {
+          "name": "description",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "spoiler",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "AttachmentBuilder.ts",
+        "line": 5,
+        "path": "packages/builders/src/messages/AttachmentBuilder.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "BitFieldResolvable",
+      "description": "Data structure that allows efficient storage of multiple flags (bits) in a single number.",
+      "properties": [],
+      "source": {
+        "file": "BitField.ts",
+        "line": 4,
+        "path": "packages/util/src/BitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "ClientEvents",
+      "properties": [
+        {
+          "name": "[Events.ChannelCreate]",
+          "type": "[channel: GuildChannel]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.ChannelDelete]",
+          "type": "[channel: Channel]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.ChannelUpdate]",
+          "type": "[oldChannel: Channel, newChannel: Channel]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.Debug]",
+          "type": "[message: string]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.Error]",
+          "type": "[error: Error]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.GuildCreate]",
+          "type": "[guild: Guild]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.GuildDelete]",
+          "type": "[guild: Guild]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.GuildMemberAdd]",
+          "type": "[member: GuildMember]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.GuildMemberRemove]",
+          "type": "[member: GuildMember]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.GuildMemberUpdate]",
+          "type": "[oldMember: GuildMember, newMember: GuildMember]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.GuildUpdate]",
+          "type": "[oldGuild: Guild, newGuild: Guild]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.InteractionCreate]",
+          "type": "[interaction: APIApplicationCommandInteraction]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.MessageCreate]",
+          "type": "[message: Message]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.MessageDelete]",
+          "type": "[message: Message | { id: string; channelId: string; }]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.MessageReactionAdd]",
+          "type": "[data: GatewayMessageReactionAddDispatchData]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.MessageReactionRemove]",
+          "type": "[data: GatewayMessageReactionRemoveDispatchData]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.MessageReactionRemoveAll]",
+          "type": "[data: GatewayMessageReactionRemoveAllDispatchData]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.MessageReactionRemoveEmoji]",
+          "type": "[data: GatewayMessageReactionRemoveEmojiDispatchData]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.MessageUpdate]",
+          "type": "[oldMessage: Message | null, newMessage: Message]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.Ready]",
+          "type": "[]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.VoiceServerUpdate]",
+          "type": "[data: GatewayVoiceServerUpdateDispatchData]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.VoiceStatesSync]",
+          "type": "[data: { guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null; }>; }]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "[Events.VoiceStateUpdate]",
+          "type": "[data: GatewayVoiceStateUpdateDispatchData]",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "Client.ts",
+        "line": 24,
+        "path": "packages/fluxer-core/src/client/Client.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "ClientOptions",
+      "properties": [
+        {
+          "name": "intents",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "presence",
+          "type": "GatewayPresenceUpdateData",
+          "readonly": false,
+          "optional": true,
+          "description": "Initial presence (status, custom_status, etc.) sent on identify. Can also update via PresenceUpdate after connect."
+        },
+        {
+          "name": "rest",
+          "type": "Partial<RESTOptions | undefined>",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "WebSocket",
+          "type": "new (url: string) => { send(data: string | ArrayBufferLike): void; close(code?: number): void; readyState: number; addEventListener?(type: string, listener: (e: unknown) => void): void; on?(event: string, cb: (data?: unknown) => void): void; }",
+          "readonly": false,
+          "optional": true,
+          "description": "Optional WebSocket constructor (e.g. `require('ws')` in Node for compatibility)"
+        }
+      ],
+      "source": {
+        "file": "Options.ts",
+        "line": 4,
+        "path": "packages/fluxer-core/src/util/Options.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "EmbedAuthorOptions",
+      "properties": [
+        {
+          "name": "iconURL",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "EmbedBuilder.ts",
+        "line": 15,
+        "path": "packages/builders/src/messages/EmbedBuilder.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "EmbedFieldData",
+      "properties": [
+        {
+          "name": "inline",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "EmbedBuilder.ts",
+        "line": 26,
+        "path": "packages/builders/src/messages/EmbedBuilder.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "EmbedFooterOptions",
+      "properties": [
+        {
+          "name": "iconURL",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "EmbedBuilder.ts",
+        "line": 21,
+        "path": "packages/builders/src/messages/EmbedBuilder.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "EmbedType",
+      "properties": [],
+      "source": {
+        "file": "embed.ts",
+        "line": 27,
+        "path": "packages/types/src/api/embed.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayChannelCreateDispatchData",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 134,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayChannelDeleteDispatchData",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 136,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayChannelUpdateDispatchData",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 135,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayCustomStatus",
+      "description": "Custom status object (Fluxer uses this root object rather than Discord-style activities array).",
+      "properties": [
+        {
+          "name": "emoji_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "emoji_name",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "text",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 33,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayDispatchEventName",
+      "properties": [],
+      "source": {
+        "file": "events.ts",
+        "line": 47,
+        "path": "packages/types/src/gateway/events.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildCreateDispatchData",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 127,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildDeleteDispatchData",
+      "properties": [
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "unavailable",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 129,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildMemberAddDispatchData",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 138,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildMemberRemoveDispatchData",
+      "properties": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "user",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 149,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildMemberUpdateDispatchData",
+      "properties": [
+        {
+          "name": "avatar",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "communication_disabled_until",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "joined_at",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "nick",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "premium_since",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "roles",
+          "type": "string[]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "user",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 139,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildRoleCreateDispatchData",
+      "properties": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": "APIRole",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 154,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildRoleDeleteDispatchData",
+      "properties": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "role_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 162,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildRoleUpdateDispatchData",
+      "properties": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "role",
+          "type": "APIRole",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 158,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayGuildUpdateDispatchData",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 128,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayHelloData",
+      "description": "// Incoming (gateway -> client)",
+      "properties": [
+        {
+          "name": "heartbeat_interval",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 64,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayIdentifyData",
+      "description": "// Outgoing (client -> gateway)",
+      "properties": [
+        {
+          "name": "compress",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "intents",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "large_threshold",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "presence",
+          "type": "GatewayPresenceUpdateData",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "properties",
+          "type": "{ os: string; browser: string; device: string; }",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "shard",
+          "type": "[shardId: number, numShards: number]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "token",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 12,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayMessageCreateDispatchData",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 77,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayMessageDeleteBulkDispatchData",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "ids",
+          "type": "string[]",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 85,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayMessageDeleteDispatchData",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 79,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayMessageReactionAddDispatchData",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "emoji",
+          "type": "GatewayReactionEmoji",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "message_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 98,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayMessageReactionRemoveAllDispatchData",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "message_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 121,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayMessageReactionRemoveDispatchData",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "emoji",
+          "type": "GatewayReactionEmoji",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "message_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 106,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayMessageReactionRemoveEmojiDispatchData",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "emoji",
+          "type": "GatewayReactionEmoji",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "message_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 114,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayMessageUpdateDispatchData",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 78,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayPresenceUpdateData",
+      "properties": [
+        {
+          "name": "activities",
+          "type": "{ name: string; type: number; url?: string | null; }[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "afk",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "custom_status",
+          "type": "GatewayCustomStatus | null",
+          "readonly": false,
+          "optional": true,
+          "description": "Custom status; set text (and optionally emoji) for bots. Passable on identify and via presence update."
+        },
+        {
+          "name": "since",
+          "type": "number | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "status",
+          "type": "\"online\" | \"idle\" | \"dnd\" | \"invisible\"",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 39,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayReactionEmoji",
+      "description": "Emoji data sent with reaction events (id is null for unicode emoji).",
+      "properties": [
+        {
+          "name": "animated",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 92,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayReadyDispatchData",
+      "properties": [
+        {
+          "name": "application",
+          "type": "{ id: Snowflake; flags: number; }",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guilds",
+          "type": "(APIGuild & { unavailable?: boolean; })[]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "session_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "shard",
+          "type": "[number, number]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "user",
+          "type": "APIUserPartial",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "v",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 68,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayReceivePayload",
+      "properties": [
+        {
+          "name": "d",
+          "type": "T",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "op",
+          "type": "GatewayOpcodes",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "s",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "t",
+          "type": "GatewayDispatchEventName",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 189,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayResumeData",
+      "properties": [
+        {
+          "name": "seq",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "session_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "token",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 26,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewaySendPayload",
+      "properties": [],
+      "source": {
+        "file": "payloads.ts",
+        "line": 55,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayVoiceServerUpdateDispatchData",
+      "description": "Incoming voice server update (gateway -> client).",
+      "properties": [
+        {
+          "name": "endpoint",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "token",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 183,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayVoiceStateUpdateData",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "self_deaf",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "self_mute",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 48,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayVoiceStateUpdateDispatchData",
+      "description": "Incoming voice state update (gateway -> client).",
+      "properties": [
+        {
+          "name": "channel_id",
+          "type": "string | null",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "deaf",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "guild_id",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "member",
+          "type": "APIGuildMember & { guild_id?: Snowflake; }",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "mute",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "self_deaf",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "self_mute",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "self_video",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "session_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "suppress",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "payloads.ts",
+        "line": 168,
+        "path": "packages/types/src/gateway/payloads.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GuildFeature",
+      "properties": [],
+      "source": {
+        "file": "guild.ts",
+        "line": 27,
+        "path": "packages/types/src/api/guild.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "LiveKitRtcConnectionEvents",
+      "description": "LiveKit-specific: emitted when server sends leave (token expiry, server policy, etc.). Emitted before disconnect.",
+      "properties": [],
+      "source": {
+        "file": "LiveKitRtcConnection.ts",
+        "line": 27,
+        "path": "packages/voice/src/LiveKitRtcConnection.ts"
+      },
+      "package": "@fluxerjs/voice"
+    },
+    {
+      "name": "MessageFlagsResolvable",
+      "properties": [],
+      "source": {
+        "file": "MessageFlagsBitField.ts",
+        "line": 20,
+        "path": "packages/util/src/MessageFlagsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "MessageFlagsString",
+      "properties": [],
+      "source": {
+        "file": "MessageFlagsBitField.ts",
+        "line": 14,
+        "path": "packages/util/src/MessageFlagsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "MessagePayloadData",
+      "properties": [
+        {
+          "name": "attachments",
+          "type": "{ id: number; filename: string; description?: string | null; }[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "content",
+          "type": "string | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "embeds",
+          "type": "APIEmbed[] | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "flags",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "message_reference",
+          "type": "APIMessageReference | null",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "tts",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "MessagePayload.ts",
+        "line": 5,
+        "path": "packages/builders/src/messages/MessagePayload.ts"
+      },
+      "package": "@fluxerjs/builders"
+    },
+    {
+      "name": "PermissionResolvable",
+      "properties": [],
+      "source": {
+        "file": "PermissionsBitField.ts",
+        "line": 56,
+        "path": "packages/util/src/PermissionsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "PermissionString",
+      "properties": [],
+      "source": {
+        "file": "PermissionsBitField.ts",
+        "line": 50,
+        "path": "packages/util/src/PermissionsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "RateLimitErrorBody",
+      "properties": [
+        {
+          "name": "code",
+          "type": "\"RATE_LIMITED\"",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "global",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "retry_after",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "errors.ts",
+        "line": 64,
+        "path": "packages/types/src/api/errors.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "RateLimitState",
+      "description": "Tracks rate limit state per bucket (route hash).\nDelays requests when limit is exceeded.",
+      "properties": [
+        {
+          "name": "limit",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "remaining",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "resetAt",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "RateLimitManager.ts",
+        "line": 5,
+        "path": "packages/rest/src/RateLimitManager.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "ReadonlyCollection",
+      "description": "Read-only view of a Collection (e.g. for method return types).",
+      "properties": [],
+      "source": {
+        "file": "Collection.ts",
+        "line": 196,
+        "path": "packages/collection/src/Collection.ts"
+      },
+      "package": "@fluxerjs/collection"
+    },
+    {
+      "name": "RequestOptions",
+      "properties": [
+        {
+          "name": "auth",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "body",
+          "type": "unknown",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "files",
+          "type": "{ name: string; data: Blob | ArrayBuffer | Uint8Array; filename?: string; }[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "headers",
+          "type": "Record<string, string>",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "RequestManager.ts",
+        "line": 5,
+        "path": "packages/rest/src/RequestManager.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "RestOptions",
+      "properties": [
+        {
+          "name": "api",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "authPrefix",
+          "type": "\"Bot\" | \"Bearer\"",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "retries",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "timeout",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "userAgent",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "RequestManager.ts",
+        "line": 12,
+        "path": "packages/rest/src/RequestManager.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "RESTOptions",
+      "properties": [
+        {
+          "name": "api",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "authPrefix",
+          "type": "\"Bot\" | \"Bearer\"",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "retries",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "timeout",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "userAgent",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "REST.ts",
+        "line": 5,
+        "path": "packages/rest/src/REST.ts"
+      },
+      "package": "@fluxerjs/rest"
+    },
+    {
+      "name": "Snowflake",
+      "description": "Snowflake ID type - 64-bit unsigned integer as string.\nFluxer uses Twitter Snowflakes with epoch 1420070400000 (first second of 2015).",
+      "properties": [],
+      "source": {
+        "file": "snowflake.ts",
+        "line": 5,
+        "path": "packages/types/src/common/snowflake.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "UserFlagsResolvable",
+      "properties": [],
+      "source": {
+        "file": "UserFlagsBitField.ts",
+        "line": 49,
+        "path": "packages/util/src/UserFlagsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "UserFlagsString",
+      "properties": [],
+      "source": {
+        "file": "UserFlagsBitField.ts",
+        "line": 43,
+        "path": "packages/util/src/UserFlagsBitField.ts"
+      },
+      "package": "@fluxerjs/util"
+    },
+    {
+      "name": "VoiceConnectionEvents",
+      "properties": [
+        {
+          "name": "disconnect",
+          "type": "[]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "error",
+          "type": "[err: Error]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "ready",
+          "type": "[]",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "VoiceConnection.ts",
+        "line": 48,
+        "path": "packages/voice/src/VoiceConnection.ts"
+      },
+      "package": "@fluxerjs/voice"
+    },
+    {
+      "name": "VoiceConnectionLike",
+      "description": "Union of connection types (Discord-style or LiveKit).",
+      "properties": [],
+      "source": {
+        "file": "index.ts",
+        "line": 10,
+        "path": "packages/voice/src/index.ts"
+      },
+      "package": "@fluxerjs/voice"
+    },
+    {
+      "name": "VoiceManagerOptions",
+      "properties": [
+        {
+          "name": "shardId",
+          "type": "number",
+          "readonly": false,
+          "optional": true,
+          "description": "Gateway shard ID to use for voice (default 0)."
+        }
+      ],
+      "source": {
+        "file": "VoiceManager.ts",
+        "line": 15,
+        "path": "packages/voice/src/VoiceManager.ts"
+      },
+      "package": "@fluxerjs/voice"
+    },
+    {
+      "name": "VoiceStateMap",
+      "description": "Maps guild_id -> user_id -> channel_id (null if not in voice).",
+      "properties": [],
+      "source": {
+        "file": "VoiceManager.ts",
+        "line": 13,
+        "path": "packages/voice/src/VoiceManager.ts"
+      },
+      "package": "@fluxerjs/voice"
+    },
+    {
+      "name": "WebhookSendOptions",
+      "properties": [
+        {
+          "name": "avatar_url",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "embeds",
+          "type": "Record<string, unknown>[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "tts",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "Webhook.ts",
+        "line": 6,
+        "path": "packages/fluxer-core/src/structures/Webhook.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "WebSocketConstructor",
+      "properties": [],
+      "source": {
+        "file": "WebSocketShard.ts",
+        "line": 19,
+        "path": "packages/ws/src/WebSocketShard.ts"
+      },
+      "package": "@fluxerjs/ws"
+    },
+    {
+      "name": "WebSocketLike",
+      "properties": [],
+      "source": {
+        "file": "WebSocketShard.ts",
+        "line": 12,
+        "path": "packages/ws/src/WebSocketShard.ts"
+      },
+      "package": "@fluxerjs/ws"
+    },
+    {
+      "name": "WebSocketManagerOptions",
+      "properties": [
+        {
+          "name": "intents",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "presence",
+          "type": "GatewayPresenceUpdateData",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "rest",
+          "type": "{ get: (route: string) => Promise<unknown>; }",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "shardCount",
+          "type": "number",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "shardIds",
+          "type": "number[]",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "token",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "WebSocket",
+          "type": "WebSocketConstructor",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "WebSocketManager.ts",
+        "line": 8,
+        "path": "packages/ws/src/WebSocketManager.ts"
+      },
+      "package": "@fluxerjs/ws"
+    },
+    {
+      "name": "WebSocketShardEvents",
+      "properties": [
+        {
+          "name": "close",
+          "type": "[code: number]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "debug",
+          "type": "[message: string]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "dispatch",
+          "type": "[payload: GatewayReceivePayload<unknown>]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "error",
+          "type": "[error: Error]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "ready",
+          "type": "[payload: unknown]",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "resumed",
+          "type": "[]",
+          "readonly": false,
+          "optional": false
+        }
+      ],
+      "source": {
+        "file": "WebSocketShard.ts",
+        "line": 33,
+        "path": "packages/ws/src/WebSocketShard.ts"
+      },
+      "package": "@fluxerjs/ws"
+    },
+    {
+      "name": "WebSocketShardOptions",
+      "properties": [
+        {
+          "name": "intents",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "numShards",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "presence",
+          "type": "GatewayPresenceUpdateData",
+          "readonly": false,
+          "optional": true
+        },
+        {
+          "name": "shardId",
+          "type": "number",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "token",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "readonly": false,
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "readonly": false,
+          "optional": true,
+          "description": "Gateway API version (e.g. \"1\" for Fluxer). Defaults to \"1\" when not set."
+        },
+        {
+          "name": "WebSocket",
+          "type": "WebSocketConstructor",
+          "readonly": false,
+          "optional": true
+        }
+      ],
+      "source": {
+        "file": "WebSocketShard.ts",
+        "line": 21,
+        "path": "packages/ws/src/WebSocketShard.ts"
+      },
+      "package": "@fluxerjs/ws"
+    }
+  ],
+  "enums": [
+    {
+      "name": "APIErrorCode",
+      "description": "API error codes returned by the Fluxer API.\nSubset of commonly used codes for bot development.",
+      "members": [
+        {
+          "name": "Unauthorized",
+          "value": "UNAUTHORIZED"
+        },
+        {
+          "name": "Forbidden",
+          "value": "FORBIDDEN"
+        },
+        {
+          "name": "MissingAuthorization",
+          "value": "MISSING_AUTHORIZATION"
+        },
+        {
+          "name": "InvalidAuthToken",
+          "value": "INVALID_AUTH_TOKEN"
+        },
+        {
+          "name": "InvalidToken",
+          "value": "INVALID_TOKEN"
+        },
+        {
+          "name": "TwoFactorRequired",
+          "value": "TWO_FACTOR_REQUIRED"
+        },
+        {
+          "name": "SudoModeRequired",
+          "value": "SUDO_MODE_REQUIRED"
+        },
+        {
+          "name": "NotFound",
+          "value": "NOT_FOUND"
+        },
+        {
+          "name": "UnknownUser",
+          "value": "UNKNOWN_USER"
+        },
+        {
+          "name": "UnknownGuild",
+          "value": "UNKNOWN_GUILD"
+        },
+        {
+          "name": "UnknownChannel",
+          "value": "UNKNOWN_CHANNEL"
+        },
+        {
+          "name": "UnknownMessage",
+          "value": "UNKNOWN_MESSAGE"
+        },
+        {
+          "name": "UnknownRole",
+          "value": "UNKNOWN_ROLE"
+        },
+        {
+          "name": "UnknownEmoji",
+          "value": "UNKNOWN_EMOJI"
+        },
+        {
+          "name": "UnknownSticker",
+          "value": "UNKNOWN_STICKER"
+        },
+        {
+          "name": "UnknownWebhook",
+          "value": "UNKNOWN_WEBHOOK"
+        },
+        {
+          "name": "UnknownInvite",
+          "value": "UNKNOWN_INVITE"
+        },
+        {
+          "name": "BadRequest",
+          "value": "BAD_REQUEST"
+        },
+        {
+          "name": "ValidationError",
+          "value": "VALIDATION_ERROR"
+        },
+        {
+          "name": "InvalidRequest",
+          "value": "INVALID_REQUEST"
+        },
+        {
+          "name": "InvalidFormBody",
+          "value": "INVALID_FORM_BODY"
+        },
+        {
+          "name": "RateLimited",
+          "value": "RATE_LIMITED"
+        },
+        {
+          "name": "SlowmodeRateLimited",
+          "value": "SLOWMODE_RATE_LIMITED"
+        },
+        {
+          "name": "InternalServerError",
+          "value": "INTERNAL_SERVER_ERROR"
+        },
+        {
+          "name": "BadGateway",
+          "value": "BAD_GATEWAY"
+        },
+        {
+          "name": "GatewayTimeout",
+          "value": "GATEWAY_TIMEOUT"
+        },
+        {
+          "name": "ServiceUnavailable",
+          "value": "SERVICE_UNAVAILABLE"
+        },
+        {
+          "name": "BotsCannotSendFriendRequests",
+          "value": "BOTS_CANNOT_SEND_FRIEND_REQUESTS"
+        },
+        {
+          "name": "BotAlreadyInGuild",
+          "value": "BOT_ALREADY_IN_GUILD"
+        },
+        {
+          "name": "BotApplicationNotFound",
+          "value": "BOT_APPLICATION_NOT_FOUND"
+        },
+        {
+          "name": "BotIsPrivate",
+          "value": "BOT_IS_PRIVATE"
+        },
+        {
+          "name": "NotABotApplication",
+          "value": "NOT_A_BOT_APPLICATION"
+        },
+        {
+          "name": "CannotSendEmptyMessage",
+          "value": "CANNOT_SEND_EMPTY_MESSAGE"
+        },
+        {
+          "name": "FileSizeTooLarge",
+          "value": "FILE_SIZE_TOO_LARGE"
+        },
+        {
+          "name": "MaxEmojis",
+          "value": "MAX_EMOJIS"
+        },
+        {
+          "name": "MaxStickers",
+          "value": "MAX_STICKERS"
+        },
+        {
+          "name": "MaxWebhooks",
+          "value": "MAX_WEBHOOKS"
+        }
+      ],
+      "source": {
+        "file": "errors.ts",
+        "line": 5,
+        "path": "packages/types/src/api/errors.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "ChannelType",
+      "description": "Channel type enum (Fluxer/Discord compatible)",
+      "members": [
+        {
+          "name": "GuildText",
+          "value": 0
+        },
+        {
+          "name": "DM",
+          "value": 1
+        },
+        {
+          "name": "GuildVoice",
+          "value": 2
+        },
+        {
+          "name": "GroupDM",
+          "value": 3
+        },
+        {
+          "name": "GuildCategory",
+          "value": 4
+        },
+        {
+          "name": "GuildLink",
+          "value": 5
+        }
+      ],
+      "source": {
+        "file": "channel.ts",
+        "line": 5,
+        "path": "packages/types/src/api/channel.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "DefaultMessageNotifications",
+      "members": [
+        {
+          "name": "AllMessages",
+          "value": 0
+        },
+        {
+          "name": "OnlyMentions",
+          "value": 1
+        }
+      ],
+      "source": {
+        "file": "guild.ts",
+        "line": 22,
+        "path": "packages/types/src/api/guild.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GatewayOpcodes",
+      "description": "Gateway opcodes (Discord-compatible).",
+      "members": [
+        {
+          "name": "Dispatch",
+          "value": 0
+        },
+        {
+          "name": "Heartbeat",
+          "value": 1
+        },
+        {
+          "name": "Identify",
+          "value": 2
+        },
+        {
+          "name": "PresenceUpdate",
+          "value": 3
+        },
+        {
+          "name": "VoiceStateUpdate",
+          "value": 4
+        },
+        {
+          "name": "Resume",
+          "value": 6
+        },
+        {
+          "name": "Reconnect",
+          "value": 7
+        },
+        {
+          "name": "RequestGuildMembers",
+          "value": 8
+        },
+        {
+          "name": "InvalidSession",
+          "value": 9
+        },
+        {
+          "name": "Hello",
+          "value": 10
+        },
+        {
+          "name": "HeartbeatAck",
+          "value": 11
+        }
+      ],
+      "source": {
+        "file": "opcodes.ts",
+        "line": 5,
+        "path": "packages/types/src/gateway/opcodes.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GuildExplicitContentFilter",
+      "members": [
+        {
+          "name": "Disabled",
+          "value": 0
+        },
+        {
+          "name": "MembersWithoutRoles",
+          "value": 1
+        },
+        {
+          "name": "AllMembers",
+          "value": 2
+        }
+      ],
+      "source": {
+        "file": "guild.ts",
+        "line": 16,
+        "path": "packages/types/src/api/guild.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GuildMFALevel",
+      "members": [
+        {
+          "name": "None",
+          "value": 0
+        },
+        {
+          "name": "Elevated",
+          "value": 1
+        }
+      ],
+      "source": {
+        "file": "guild.ts",
+        "line": 11,
+        "path": "packages/types/src/api/guild.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "GuildVerificationLevel",
+      "members": [
+        {
+          "name": "None",
+          "value": 0
+        },
+        {
+          "name": "Low",
+          "value": 1
+        },
+        {
+          "name": "Medium",
+          "value": 2
+        },
+        {
+          "name": "High",
+          "value": 3
+        },
+        {
+          "name": "VeryHigh",
+          "value": 4
+        }
+      ],
+      "source": {
+        "file": "guild.ts",
+        "line": 3,
+        "path": "packages/types/src/api/guild.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "MessageFlags",
+      "members": [
+        {
+          "name": "SuppressEmbeds",
+          "value": 4
+        },
+        {
+          "name": "SuppressNotifications",
+          "value": 4096
+        },
+        {
+          "name": "VoiceMessage",
+          "value": 8192
+        },
+        {
+          "name": "CompactAttachments",
+          "value": 131072
+        }
+      ],
+      "source": {
+        "file": "message.ts",
+        "line": 17,
+        "path": "packages/types/src/api/message.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "MessageType",
+      "members": [
+        {
+          "name": "Default",
+          "value": 0
+        },
+        {
+          "name": "RecipientAdd",
+          "value": 1
+        },
+        {
+          "name": "RecipientRemove",
+          "value": 2
+        },
+        {
+          "name": "Call",
+          "value": 3
+        },
+        {
+          "name": "ChannelNameChange",
+          "value": 4
+        },
+        {
+          "name": "ChannelIconChange",
+          "value": 5
+        },
+        {
+          "name": "ChannelPinnedMessage",
+          "value": 6
+        },
+        {
+          "name": "UserJoin",
+          "value": 7
+        },
+        {
+          "name": "Reply",
+          "value": 19
+        }
+      ],
+      "source": {
+        "file": "message.ts",
+        "line": 5,
+        "path": "packages/types/src/api/message.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "OverwriteType",
+      "description": "Permission overwrite type",
+      "members": [
+        {
+          "name": "Role",
+          "value": 0
+        },
+        {
+          "name": "Member",
+          "value": 1
+        }
+      ],
+      "source": {
+        "file": "channel.ts",
+        "line": 15,
+        "path": "packages/types/src/api/channel.ts"
+      },
+      "package": "@fluxerjs/types"
+    },
+    {
+      "name": "WebhookType",
+      "members": [
+        {
+          "name": "Incoming",
+          "value": 1
+        },
+        {
+          "name": "ChannelFollower",
+          "value": 2
+        }
+      ],
+      "source": {
+        "file": "webhook.ts",
+        "line": 4,
+        "path": "packages/types/src/api/webhook.ts"
+      },
+      "package": "@fluxerjs/types"
+    }
+  ]
+}

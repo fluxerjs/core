@@ -1,7 +1,7 @@
 {
   "name": "@fluxerjs/builders",
   "publishConfig": { "access": "public" },
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Builders for Fluxer messages and embeds",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

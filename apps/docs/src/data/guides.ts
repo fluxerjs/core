@@ -1,0 +1,447 @@
+/**
+ * Guide content for the docs site.
+ * Each guide is a separate page.
+ */
+
+export interface GuideSection {
+  title?: string;
+  description?: string;
+  code?: string;
+  language?: 'javascript' | 'bash';
+}
+
+export interface Guide {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  category: 'getting-started' | 'webhooks' | 'voice' | 'sending-messages' | 'events' | 'other';
+  sections: GuideSection[];
+}
+
+export const guides: Guide[] = [
+  {
+    id: 'installation',
+    slug: 'installation',
+    title: 'Installation',
+    description: 'Install the package and configure your bot token.',
+    category: 'getting-started',
+    sections: [
+      {
+        code: `npm install @fluxerjs/core
+
+# Run your bot (Node 18+)
+FLUXER_BOT_TOKEN=your_token node your-bot.js`,
+        language: 'bash',
+      },
+    ],
+  },
+  {
+    id: 'basic-bot',
+    slug: 'basic-bot',
+    title: 'Basic Bot',
+    description: 'A minimal bot that responds to !ping with Pong.',
+    category: 'getting-started',
+    sections: [
+      {
+        code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.Ready, () => console.log('Ready!'));
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!ping') {
+    await message.reply('Pong!');
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'embeds',
+    slug: 'embeds',
+    title: 'Embeds',
+    description: 'Send rich embeds with EmbedBuilder.',
+    category: 'sending-messages',
+    sections: [
+      {
+        code: `import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!embed') {
+    const embed = new EmbedBuilder()
+      .setTitle('Hello!')
+      .setDescription('This is a Fluxer embed.')
+      .setColor(0x5865f2)
+      .addFields(
+        { name: 'Field 1', value: 'Value 1', inline: true },
+        { name: 'Field 2', value: 'Value 2', inline: true }
+      )
+      .setFooter({ text: 'Powered by Fluxer.js' })
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed.toJSON()] });
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'webhooks',
+    slug: 'webhooks',
+    title: 'Webhooks',
+    description: 'A complete guide to Discord webhooks—sending messages without a gateway, creating webhooks, and managing them.',
+    category: 'webhooks',
+    sections: [
+      {
+        title: 'What are Webhooks?',
+        description:
+          'Webhooks let you send messages to a channel using a URL (ID + token). You can use them in scripts, CI pipelines, or anywhere you need to post without a full bot connection. No gateway, no events—just REST.',
+      },
+      {
+        title: 'Webhooks Without a Bot',
+        description:
+          'A Client with intents: 0 is enough. No need to connect to the gateway or handle events. Ideal for scripts or one-off sends.',
+        code: `import { Client, Webhook } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+const webhook = Webhook.fromToken(client, webhookId, webhookToken);
+await webhook.send('Message from a script!');`,
+        language: 'javascript',
+      },
+      {
+        title: 'Creating a Webhook',
+        description:
+          'Create a webhook on a text channel. Requires Manage Webhooks permission. The token is returned only when creating—store it securely. It will never be returned when listing or fetching.',
+        code: `import { Client } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+await client.login(process.env.FLUXER_BOT_TOKEN);
+
+const channel = client.channels.get(channelId);
+if (!channel?.createWebhook) throw new Error('Channel does not support webhooks');
+
+const webhook = await channel.createWebhook({ name: 'My Webhook' });
+console.log(webhook.id, webhook.token); // Store token—it won't be returned when listing`,
+        language: 'javascript',
+      },
+      {
+        title: 'Sending Messages',
+        description: 'Send text, embeds, or both. You can override the username and avatar for each message.',
+        code: `import { Client, Webhook, EmbedBuilder } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+const webhook = Webhook.fromToken(client, webhookId, webhookToken);
+
+await webhook.send({
+  content: 'Hello from webhook!',
+  embeds: [
+    new EmbedBuilder()
+      .setTitle('Webhook Message')
+      .setColor(0x5865f2)
+      .setTimestamp()
+      .toJSON(),
+  ],
+  username: 'Custom Name',
+  avatar_url: 'https://example.com/avatar.png',
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Simple text only',
+        code: `await webhook.send('Plain text message');`,
+        language: 'javascript',
+      },
+      {
+        title: 'Fetching & Listing Webhooks',
+        description:
+          'Fetch by ID or list channel/guild webhooks. Requires a logged-in bot. Fetched webhooks have no token and cannot send—only manage (delete).',
+        code: `import { Client, Webhook } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+await client.login(process.env.FLUXER_BOT_TOKEN);
+
+// Fetch single webhook (no token)
+const webhook = await Webhook.fetch(client, webhookId);
+
+// List channel webhooks
+const channel = client.channels.get(channelId);
+const channelWebhooks = await channel?.fetchWebhooks() ?? [];
+
+// List guild webhooks
+const guild = client.guilds.get(guildId);
+const guildWebhooks = await guild?.fetchWebhooks() ?? [];`,
+        language: 'javascript',
+      },
+      {
+        title: 'Deleting a Webhook',
+        code: `const webhook = await Webhook.fetch(client, webhookId);
+await webhook.delete();`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'voice',
+    slug: 'voice',
+    title: 'Voice',
+    description: 'Join voice channels and play audio with @fluxerjs/voice. Supports WebM/Opus streams—no FFmpeg required.',
+    category: 'voice',
+    sections: [
+      {
+        title: 'Installation',
+        description: 'Add the voice package alongside the core library.',
+        code: `pnpm add @fluxerjs/voice @fluxerjs/core`,
+        language: 'bash',
+      },
+      {
+        title: 'Setup',
+        description:
+          'Create a VoiceManager before login so it receives VoiceStatesSync from READY/GUILD_CREATE. This lets the manager see users already in voice when the bot starts.',
+        code: `import { Client, Events, VoiceChannel } from '@fluxerjs/core';
+import { getVoiceManager } from '@fluxerjs/voice';
+
+const client = new Client({ intents: 0 });
+getVoiceManager(client); // Must be before login
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Join a Voice Channel',
+        description:
+          'Get the user\'s voice channel with getVoiceChannelId, then join. The connection resolves when ready.',
+        code: `const voiceManager = getVoiceManager(client);
+const voiceChannelId = voiceManager.getVoiceChannelId(guildId, userId);
+if (!voiceChannelId) {
+  return; // User not in voice
+}
+
+const channel = client.channels.get(voiceChannelId);
+if (!channel || !(channel instanceof VoiceChannel)) {
+  return;
+}
+
+const connection = await voiceManager.join(channel);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Play Audio',
+        description:
+          'Play a WebM/Opus URL or stream. The voice package does not use FFmpeg—input must be WebM with Opus. Use yt-dlp or similar to get direct stream URLs from YouTube.',
+        code: `// URL (fetched and demuxed automatically)
+await connection.play('https://example.com/audio.webm');
+
+// Or a Node.js ReadableStream of Opus
+await connection.play(opusStream);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Getting Stream URLs from YouTube',
+        description: 'Use youtube-dl-exec or yt-dlp to extract a WebM/Opus URL.',
+        code: `import youtubedl from 'youtube-dl-exec';
+
+const result = await youtubedl(videoUrl, {
+  getUrl: true,
+  f: 'bestaudio[ext=webm][acodec=opus]/bestaudio[ext=webm]/bestaudio',
+}, { timeout: 15000 });
+
+const streamUrl = String(result ?? '').trim();
+await connection.play(streamUrl);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Stop and Leave',
+        description: 'Stop playback and disconnect from the guild\'s voice channel.',
+        code: `const connection = voiceManager.getConnection(guildId);
+if (connection) {
+  connection.stop();
+  voiceManager.leave(guildId);
+}`,
+        language: 'javascript',
+      },
+      {
+        title: 'LiveKit and serverLeave',
+        description:
+          'If using LiveKit, the server may emit serverLeave. Listen and reconnect if needed.',
+        code: `connection.on?.('serverLeave', async () => {
+  try {
+    const conn = await voiceManager.join(channel);
+    await conn.play(streamUrl);
+  } catch (e) {
+    console.error('Auto-reconnect failed:', e);
+  }
+});`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'events',
+    slug: 'events',
+    title: 'Events',
+    description: 'Listen to gateway events with client.on. Handle messages, guild updates, voice state changes, and more.',
+    category: 'events',
+    sections: [
+      {
+        title: 'Basic Usage',
+        description: 'Use client.on(Events.X, handler) to subscribe to events. Handlers receive event-specific payloads.',
+        code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.Ready, () => {
+  console.log('Bot is ready!');
+});
+
+client.on(Events.MessageCreate, async (message) => {
+  console.log(message.content);
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Common Events',
+        description: 'Essential events for most bots.',
+        code: `// Bot finished loading
+client.on(Events.Ready, () => {});
+
+// New message (DM or guild)
+client.on(Events.MessageCreate, async (message) => {});
+
+// Reaction events
+client.on(Events.MessageReactionAdd, (data) => {});
+client.on(Events.MessageReactionRemove, (data) => {});
+
+// Guild joined/left/updated
+client.on(Events.GuildCreate, (guild) => {});
+client.on(Events.GuildDelete, (guild) => {});
+
+// Channel created/updated/deleted
+client.on(Events.ChannelCreate, (channel) => {});
+client.on(Events.ChannelDelete, (channel) => {});
+
+// Member joined/left/updated
+client.on(Events.GuildMemberAdd, (member) => {});
+client.on(Events.GuildMemberRemove, (member) => {});
+
+// Voice state changed (for @fluxerjs/voice)
+client.on(Events.VoiceStateUpdate, (data) => {});
+client.on(Events.VoiceServerUpdate, (data) => {});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Reaction Events',
+        description:
+          'Listen for when users add or remove reactions. The payload includes message_id, channel_id, user_id, and emoji (name and optional id for custom emojis). Use MessageReactionRemoveAll and MessageReactionRemoveEmoji for moderator actions.',
+        code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageReactionAdd, (data) => {
+  const { message_id, channel_id, user_id, emoji } = data;
+  const emojiStr = emoji.id ? \`<:\${emoji.name}:\${emoji.id}>\` : emoji.name;
+  console.log(\`User \${user_id} reacted with \${emojiStr} on message \${message_id}\`);
+
+  // Filter for specific message (e.g. poll) or emoji
+  if (data.emoji.name === '👍') {
+    console.log('Someone voted yes!');
+  }
+});
+
+client.on(Events.MessageReactionRemove, (data) => {
+  const { message_id, user_id, emoji } = data;
+  console.log(\`User \${user_id} removed \${emoji.name} from message \${message_id}\`);
+});
+
+client.on(Events.MessageReactionRemoveAll, (data) => {
+  console.log(\`All reactions cleared from message \${data.message_id}\`);
+});
+
+client.on(Events.MessageReactionRemoveEmoji, (data) => {
+  console.log(\`All \${data.emoji.name} reactions removed from message \${data.message_id}\`);
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Error Handling',
+        code: `client.on(Events.Error, (err) => {
+  console.error('Client error:', err);
+});`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'prefix-commands',
+    slug: 'prefix-commands',
+    title: 'Prefix Commands',
+    description: 'Handle !commands by listening to MessageCreate and parsing the content.',
+    category: 'events',
+    sections: [
+      {
+        title: 'Basic Structure',
+        description: 'Check for a prefix, split args, and dispatch to command handlers.',
+        code: `import { Client, Events } from '@fluxerjs/core';
+
+const PREFIX = '!';
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot || !message.content) return;
+  if (!message.content.startsWith(PREFIX)) return;
+
+  const args = message.content.slice(PREFIX.length).trim().split(/\\s+/);
+  const command = args.shift()?.toLowerCase();
+
+  if (command === 'ping') {
+    await message.reply('Pong!');
+  }
+  if (command === 'hello') {
+    const name = args[0] ?? 'there';
+    await message.reply(\`Hello, \${name}!\`);
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Guild-Only Commands',
+        code: `if (!message.guildId) {
+  await message.reply('This command only works in a server.');
+  return;
+}`,
+        language: 'javascript',
+      },
+    ],
+  },
+];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  'getting-started': 'Getting Started',
+  'webhooks': 'Webhooks',
+  'voice': 'Voice',
+  'sending-messages': 'Sending Messages',
+  'events': 'Events',
+  'other': 'Other',
+};
+
+export function getCategoryLabel(cat?: string): string {
+  return (cat && CATEGORY_LABELS[cat]) ?? 'Guides';
+}
+
+export function getGuideBySlug(slug: string): Guide | undefined {
+  return guides.find((g) => g.slug === slug);
+}

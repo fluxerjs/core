@@ -7,11 +7,10 @@
  *
  * Usage (from repo root after npm install && npm run build):
  *   FLUXER_BOT_TOKEN=your_token node examples/ping-bot.js
- * Optional: FLUXER_BOT_STATUS=online|idle|dnd|invisible
  */
 
 import youtubedl from 'youtube-dl-exec';
-import { Client, Events, EmbedBuilder, Routes, VoiceChannel, GatewayOpcodes } from '@fluxerjs/core';
+import { Client, Events, EmbedBuilder, Routes, VoiceChannel } from '@fluxerjs/core';
 import { getVoiceManager } from '@fluxerjs/voice';
 
 /** Fixed non‑copyrighted track; we get a direct WebM/Opus URL so the voice package can play without FFmpeg. */
@@ -34,9 +33,6 @@ async function getStreamUrl(url) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PREFIX = '!';
-
-/** Bot presence status: one of 'online' | 'idle' | 'dnd' | 'invisible'. */
-const BOT_STATUS = process.env.FLUXER_BOT_STATUS ?? 'online';
 
 /** Per-guild play state for auto-reconnect when LiveKit server sends leave. */
 const playState = new Map();
@@ -416,7 +412,13 @@ if (!token) {
   process.exit(1);
 }
 
-const client = new Client({ intents: 0 });
+const client = new Client({
+  intents: 0,
+  presence: {
+    status: 'online',
+    custom_status: { text: 'Watching the server' },
+  },
+});
 
 // Create VoiceManager before login so it receives VoiceStatesSync from READY/GUILD_CREATE
 // and can see users who were already in a voice channel when the bot started.
@@ -425,11 +427,6 @@ getVoiceManager(client);
 client.on(Events.Ready, () => {
   console.log(`Logged in as ${client.user?.username}`);
   console.log(`Serving ${client.guilds.size} guild(s)`);
-  const status = ['online', 'idle', 'dnd', 'invisible'].includes(BOT_STATUS) ? BOT_STATUS : 'online';
-  client.sendToGateway(0, {
-    op: GatewayOpcodes.PresenceUpdate,
-    d: { status },
-  });
 });
 
 client.on(Events.MessageCreate, async (message) => {

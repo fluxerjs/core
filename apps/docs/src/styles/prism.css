@@ -1,0 +1,95 @@
+/**
+ * Custom Prism syntax highlighting – matches docs palette
+ */
+
+code[class*='language-'],
+pre[class*='language-'] {
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  tab-size: 2;
+  hyphens: none;
+}
+
+pre[class*='language-'] {
+  padding: 1.25rem 1.5rem;
+  margin: 0;
+  overflow: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+:not(pre) > code[class*='language-'] {
+  padding: 0.2em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
+/* Token colors – tuned for dark theme */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #64748b;
+}
+
+.token.punctuation {
+  color: #94a3b8;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol {
+  color: #fcd34d;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin {
+  color: #6ee7b7;
+}
+
+.token.operator {
+  color: #67e8f9;
+}
+
+.token.entity,
+.token.url {
+  color: #a5b4fc;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #c4b5fd;
+}
+
+.token.function,
+.token.class-name {
+  color: #7dd3fc;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #f9a8d4;
+}
+
+/* Doc links inside code blocks */
+.code-with-links .doc-link {
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+.code-with-links .doc-link:hover {
+  text-decoration: underline;
+}

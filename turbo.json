@@ -11,6 +11,10 @@
     "lint": {},
     "clean": {
       "cache": false
+    },
+    "generate:docs": {
+      "dependsOn": ["build"],
+      "outputs": ["apps/docs/public/docs/**"]
     }
   }
 }

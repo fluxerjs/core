@@ -22,6 +22,7 @@ export interface WebSocketShardOptions {
   url: string;
   token: string;
   intents: number;
+  presence?: import('@fluxerjs/types').GatewayPresenceUpdateData;
   shardId: number;
   numShards: number;
   /** Gateway API version (e.g. "1" for Fluxer). Defaults to "1" when not set. */
@@ -206,18 +207,18 @@ export class WebSocketShard extends EventEmitter {
         } as GatewayResumeData,
       });
     } else {
-      this.send({
-        op: GatewayOpcodes.Identify,
-        d: {
-          token: this.options.token,
-          intents: this.options.intents,
-          properties: {
-            os: process.platform ?? 'unknown',
-            browser: 'fluxer-core.js',
-            device: 'fluxer-core.js',
-          },
-        } as GatewayIdentifyData,
-      });
+      const identify: GatewayIdentifyData = {
+        token: this.options.token,
+        intents: this.options.intents,
+        properties: {
+          os: process.platform ?? 'unknown',
+          browser: 'fluxerjs',
+          device: 'fluxerjs',
+        },  
+      };
+      if (this.options.presence) identify.presence = this.options.presence;
+      console.log('[ws] sending identify payload:', JSON.stringify({ op: 2, d: { ...identify, token: identify.token ? '[REDACTED]' : identify.token } }, null, 2));
+      this.send({ op: GatewayOpcodes.Identify, d: identify });
     }
   }
 

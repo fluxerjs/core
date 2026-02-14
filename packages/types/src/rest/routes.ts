@@ -47,6 +47,8 @@ export const Routes = {
   guildSticker: (guildId: Snowflake, stickerId: Snowflake) =>
     `/guilds/${guildId}/stickers/${stickerId}` as const,
   guildWebhooks: (id: Snowflake) => `/guilds/${id}/webhooks` as const,
+  webhook: (id: Snowflake) => `/webhooks/${id}` as const,
+  webhookExecute: (id: Snowflake, token: string) => `/webhooks/${id}/${token}` as const,
 
   // Users
   user: (id: Snowflake) => `/users/${id}` as const,

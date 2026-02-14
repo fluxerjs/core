@@ -29,9 +29,18 @@ export interface GatewayResumeData {
   seq: number;
 }
 
+/** Custom status object (Fluxer uses this root object rather than Discord-style activities array). */
+export interface GatewayCustomStatus {
+  text?: string | null;
+  emoji_name?: string | null;
+  emoji_id?: string | null;
+}
+
 export interface GatewayPresenceUpdateData {
   since?: number | null;
   activities?: Array<{ name: string; type: number; url?: string | null }>;
+  /** Custom status; set text (and optionally emoji) for bots. Passable on identify and via presence update. */
+  custom_status?: GatewayCustomStatus | null;
   status: 'online' | 'idle' | 'dnd' | 'invisible';
   afk?: boolean;
 }
@@ -75,6 +84,42 @@ export interface GatewayMessageDeleteDispatchData {
 
 export interface GatewayMessageDeleteBulkDispatchData {
   ids: Snowflake[];
+  channel_id: Snowflake;
+  guild_id?: Snowflake;
+}
+
+/** Emoji data sent with reaction events (id is null for unicode emoji). */
+export interface GatewayReactionEmoji {
+  id: Snowflake | null;
+  name: string;
+  animated?: boolean;
+}
+
+export interface GatewayMessageReactionAddDispatchData {
+  message_id: Snowflake;
+  channel_id: Snowflake;
+  user_id: Snowflake;
+  guild_id?: Snowflake;
+  emoji: GatewayReactionEmoji;
+}
+
+export interface GatewayMessageReactionRemoveDispatchData {
+  message_id: Snowflake;
+  channel_id: Snowflake;
+  user_id: Snowflake;
+  guild_id?: Snowflake;
+  emoji: GatewayReactionEmoji;
+}
+
+export interface GatewayMessageReactionRemoveEmojiDispatchData {
+  message_id: Snowflake;
+  channel_id: Snowflake;
+  guild_id?: Snowflake;
+  emoji: GatewayReactionEmoji;
+}
+
+export interface GatewayMessageReactionRemoveAllDispatchData {
+  message_id: Snowflake;
   channel_id: Snowflake;
   guild_id?: Snowflake;
 }

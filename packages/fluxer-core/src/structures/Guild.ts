@@ -5,6 +5,8 @@ import type { APIGuild } from '@fluxerjs/types';
 import type { GuildMember } from './GuildMember.js';
 import type { GuildChannel } from './Channel.js';
 import { CDN_URL } from '../util/Constants.js';
+import { Routes } from '@fluxerjs/types';
+import type { Webhook } from './Webhook.js';
 
 export class Guild extends Base {
   readonly client: Client;
@@ -36,5 +38,13 @@ export class Guild extends Base {
     if (!this.banner) return null;
     const size = options?.size ? `?size=${options.size}` : '';
     return `${CDN_URL}/banners/${this.id}/${this.banner}.png${size}`;
+  }
+
+  /** Fetch all webhooks in this guild. Returned webhooks do not include the token (cannot send). */
+  async fetchWebhooks(): Promise<Webhook[]> {
+    const { Webhook } = await import('./Webhook.js');
+    const data = await this.client.rest.get(Routes.guildWebhooks(this.id));
+    const list = Array.isArray(data) ? data : Object.values(data ?? {});
+    return list.map((w) => new Webhook(this.client, w));
   }
 }

@@ -14,6 +14,10 @@ import type {
   GatewaySendPayload,
   GatewayVoiceStateUpdateDispatchData,
   GatewayVoiceServerUpdateDispatchData,
+  GatewayMessageReactionAddDispatchData,
+  GatewayMessageReactionRemoveDispatchData,
+  GatewayMessageReactionRemoveEmojiDispatchData,
+  GatewayMessageReactionRemoveAllDispatchData,
 } from '@fluxerjs/types';
 import type { APIMessage, APIChannel, APIGuild, APIUser, APIGuildMember, APIApplicationCommandInteraction } from '@fluxerjs/types';
 
@@ -22,6 +26,10 @@ export interface ClientEvents {
   [Events.MessageCreate]: [message: import('../structures/Message.js').Message];
   [Events.MessageUpdate]: [oldMessage: import('../structures/Message.js').Message | null, newMessage: import('../structures/Message.js').Message];
   [Events.MessageDelete]: [message: import('../structures/Message.js').Message | { id: string; channelId: string }];
+  [Events.MessageReactionAdd]: [data: GatewayMessageReactionAddDispatchData];
+  [Events.MessageReactionRemove]: [data: GatewayMessageReactionRemoveDispatchData];
+  [Events.MessageReactionRemoveAll]: [data: GatewayMessageReactionRemoveAllDispatchData];
+  [Events.MessageReactionRemoveEmoji]: [data: GatewayMessageReactionRemoveEmojiDispatchData];
   [Events.InteractionCreate]: [interaction: import('@fluxerjs/types').APIApplicationCommandInteraction];
   [Events.GuildCreate]: [guild: Guild];
   [Events.GuildUpdate]: [oldGuild: Guild, newGuild: Guild];
@@ -84,6 +92,18 @@ export class Client extends EventEmitter {
         }
         case 'MESSAGE_DELETE':
           this.emit(Events.MessageDelete, { id: (d as { id: string }).id, channelId: (d as { channel_id: string }).channel_id });
+          break;
+        case 'MESSAGE_REACTION_ADD':
+          this.emit(Events.MessageReactionAdd, d as GatewayMessageReactionAddDispatchData);
+          break;
+        case 'MESSAGE_REACTION_REMOVE':
+          this.emit(Events.MessageReactionRemove, d as GatewayMessageReactionRemoveDispatchData);
+          break;
+        case 'MESSAGE_REACTION_REMOVE_ALL':
+          this.emit(Events.MessageReactionRemoveAll, d as GatewayMessageReactionRemoveAllDispatchData);
+          break;
+        case 'MESSAGE_REACTION_REMOVE_EMOJI':
+          this.emit(Events.MessageReactionRemoveEmoji, d as GatewayMessageReactionRemoveEmojiDispatchData);
           break;
         case 'GUILD_CREATE': {
           const { Guild } = await import('../structures/Guild.js');
@@ -220,6 +240,7 @@ export class Client extends EventEmitter {
     this._ws = new WebSocketManager({
       token,
       intents,
+      presence: this.options.presence,
       rest: { get: (route: string) => this.rest.get(route) },
       version: this.options.rest?.version ?? '1',
       WebSocket: this.options.WebSocket,

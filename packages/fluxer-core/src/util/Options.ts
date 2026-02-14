@@ -1,8 +1,11 @@
 import type { REST } from '@fluxerjs/rest';
+import type { GatewayPresenceUpdateData } from '@fluxerjs/types';
 
 export interface ClientOptions {
   rest?: Partial<ConstructorParameters<typeof REST>[0]>;
   intents?: number;
+  /** Initial presence (status, custom_status, etc.) sent on identify. Can also update via PresenceUpdate after connect. */
+  presence?: GatewayPresenceUpdateData;
   /** Optional WebSocket constructor (e.g. `require('ws')` in Node for compatibility) */
   WebSocket?: new (url: string) => {
     send(data: string | ArrayBufferLike): void;
