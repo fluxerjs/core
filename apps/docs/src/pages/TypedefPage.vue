@@ -6,7 +6,9 @@
       </span>
       <h1>{{ typedef.name }}</h1>
     </div>
-    <p v-if="typedef.description" class="description"><DocDescription :text="typedef.description" /></p>
+    <p v-if="typedef.description" class="description">
+      <DocDescription :text="typedef.description" />
+    </p>
 
     <a
       v-if="typedef.source?.path"
@@ -33,8 +35,12 @@
         </thead>
         <tbody>
           <tr v-for="m in members" :key="m.name">
-            <td><code>{{ m.name }}</code></td>
-            <td><code>{{ formatValue(m.value) }}</code></td>
+            <td>
+              <code>{{ m.name }}</code>
+            </td>
+            <td>
+              <code>{{ formatValue(m.value) }}</code>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -59,9 +65,12 @@ const route = useRoute();
 const store = useDocsStore();
 
 onMounted(() => Prism.highlightAll());
-watch(() => route.params.typedef, () => {
-  queueMicrotask(() => Prism.highlightAll());
-});
+watch(
+  () => route.params.typedef,
+  () => {
+    queueMicrotask(() => Prism.highlightAll());
+  }
+);
 
 const typedef = computed(() => {
   const doc = store.currentDoc;
@@ -78,11 +87,11 @@ const isInterface = computed(() => typedef.value && 'properties' in typedef.valu
 const isEnum = computed(() => typedef.value && 'members' in typedef.value);
 
 const properties = computed(() =>
-  isInterface.value && typedef.value ? (typedef.value as DocInterface).properties ?? [] : []
+  isInterface.value && typedef.value ? ((typedef.value as DocInterface).properties ?? []) : []
 );
 
 const members = computed(() =>
-  isEnum.value && typedef.value ? (typedef.value as DocEnum).members ?? [] : []
+  isEnum.value && typedef.value ? ((typedef.value as DocEnum).members ?? []) : []
 );
 
 const enumDefinition = computed(() => {

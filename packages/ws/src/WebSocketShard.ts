@@ -58,10 +58,25 @@ export class WebSocketShard extends EventEmitter {
   private reconnectDelayMs = RECONNECT_INITIAL_MS;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
+  private scheduleReconnect(): void {
+    if (this.destroying) return;
+    if (this.reconnectTimeout !== null) return;
+    const delay = Math.min(
+      RECONNECT_MAX_MS,
+      this.reconnectDelayMs * (0.75 + Math.random() * 0.5)
+    );
+    this.reconnectDelayMs = Math.min(RECONNECT_MAX_MS, this.reconnectDelayMs * 1.5);
+    this.debug(`Reconnecting in ${Math.round(delay)}ms…`);
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
+      this.connect();
+    }, delay);
+  }
+
   constructor(options: WebSocketShardOptions) {
     super();
     this.options = options;
-    this.WS = options.WebSocket ?? getDefaultWebSocketSync() as unknown as WebSocketConstructor;
+    this.WS = options.WebSocket ?? (getDefaultWebSocketSync() as unknown as WebSocketConstructor);
     const version = options.version ?? '1';
     const params = new URLSearchParams({ v: version, encoding: 'json' });
     this.url = `${options.url}?${params}`;
@@ -74,11 +89,16 @@ export class WebSocketShard extends EventEmitter {
   get status(): number {
     if (!this.ws) return 0; // Idle
     switch (this.ws.readyState) {
-      case 0: return 1; // Connecting
-      case 1: return 2; // Ready
-      case 2: return 3; // Closing
-      case 3: return 0;
-      default: return 0;
+      case 0:
+        return 1; // Connecting
+      case 1:
+        return 2; // Ready
+      case 2:
+        return 3; // Closing
+      case 3:
+        return 0;
+      default:
+        return 0;
     }
   }
 
@@ -98,27 +118,13 @@ export class WebSocketShard extends EventEmitter {
       }
     };
 
-    const scheduleReconnect = () => {
-      if (this.destroying) return;
-      const delay = Math.min(
-        RECONNECT_MAX_MS,
-        this.reconnectDelayMs * (0.75 + Math.random() * 0.5)
-      );
-      this.reconnectDelayMs = Math.min(RECONNECT_MAX_MS, this.reconnectDelayMs * 1.5);
-      this.debug(`Reconnecting in ${Math.round(delay)}ms…`);
-      this.reconnectTimeout = setTimeout(() => {
-        this.reconnectTimeout = null;
-        this.connect();
-      }, delay);
-    };
-
     const handleClose = (code: number) => {
       this.ws = null;
       this.stopHeartbeat();
       this.emit('close', code);
       this.debug(`Closed: ${code}`);
       if (!this.destroying && shouldReconnectOnClose(code)) {
-        scheduleReconnect();
+        this.scheduleReconnect();
       }
     };
 
@@ -129,7 +135,7 @@ export class WebSocketShard extends EventEmitter {
         this.ws = null;
         this.stopHeartbeat();
         this.debug('Connection error; will retry…');
-        scheduleReconnect();
+        this.scheduleReconnect();
       }
     };
 
@@ -140,7 +146,9 @@ export class WebSocketShard extends EventEmitter {
 
     if (typeof ws.addEventListener === 'function') {
       ws.addEventListener('open', handleOpen);
-      ws.addEventListener('message', (e: unknown) => handleMessage((e as MessageEvent).data as string));
+      ws.addEventListener('message', (e: unknown) =>
+        handleMessage((e as MessageEvent).data as string)
+      );
       ws.addEventListener('close', (e: unknown) => handleClose((e as CloseEvent).code));
       ws.addEventListener('error', () => handleError(new Error('WebSocket error')));
     } else if (typeof ws.on === 'function') {
@@ -214,7 +222,7 @@ export class WebSocketShard extends EventEmitter {
           os: process.platform ?? 'unknown',
           browser: 'fluxerjs',
           device: 'fluxerjs',
-        },  
+        },
       };
       if (this.options.presence) identify.presence = this.options.presence;
       this.send({ op: GatewayOpcodes.Identify, d: identify });
@@ -226,7 +234,9 @@ export class WebSocketShard extends EventEmitter {
     this.lastHeartbeatAck = true; // no heartbeat sent yet → don't treat as missed ack
     this.heartbeatInterval = setInterval(() => {
       if (!this.lastHeartbeatAck && this.seq !== null) {
+        this.debug('Heartbeat ack missed; reconnecting');
         this.ws?.close(1000);
+        if (!this.destroying) this.scheduleReconnect();
         return;
       }
       this.lastHeartbeatAck = false;

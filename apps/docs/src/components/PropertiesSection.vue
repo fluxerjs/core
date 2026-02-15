@@ -1,7 +1,7 @@
 <template>
   <section class="section">
     <h2>Properties</h2>
-    <div v-for="p in properties" :key="p.name" :id="`property-${p.name}`" class="property-item">
+    <div v-for="p in properties" :id="`property-${p.name}`" :key="p.name" class="property-item">
       <div class="property-header">
         <code class="property-name">{{ p.name }}</code>
         <span v-if="p.optional" class="optional-badge">optional</span>
@@ -10,6 +10,15 @@
         <TypeSignature :type="p.type" />
       </div>
       <p v-if="p.description" class="property-desc"><DocDescription :text="p.description" /></p>
+      <div v-if="p.examples?.length" class="property-examples">
+        <CodeBlock
+          v-for="(ex, i) in p.examples"
+          :key="i"
+          :code="ex"
+          language="javascript"
+          :link-types="true"
+        />
+      </div>
     </div>
   </section>
 </template>
@@ -18,6 +27,7 @@
 import type { DocProperty, DocInterfaceProperty } from '../types/doc-schema';
 import DocDescription from './DocDescription.vue';
 import TypeSignature from './TypeSignature.vue';
+import CodeBlock from './CodeBlock.vue';
 
 defineProps<{ properties: (DocProperty | DocInterfaceProperty)[] }>();
 </script>
@@ -81,5 +91,17 @@ defineProps<{ properties: (DocProperty | DocInterfaceProperty)[] }>();
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.property-examples {
+  margin-top: 1rem;
+}
+
+.property-examples :deep(.code-block) {
+  margin-bottom: 0.75rem;
+}
+
+.property-examples :deep(.code-block:last-child) {
+  margin-bottom: 0;
 }
 </style>

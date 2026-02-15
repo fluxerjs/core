@@ -11,7 +11,9 @@ import type { VoiceChannel } from '@fluxerjs/core';
 import { VoiceManager } from './VoiceManager.js';
 
 /** Union of connection types (Discord-style or LiveKit). */
-export type VoiceConnectionLike = import('./VoiceConnection.js').VoiceConnection | import('./LiveKitRtcConnection.js').LiveKitRtcConnection;
+export type VoiceConnectionLike =
+  | import('./VoiceConnection.js').VoiceConnection
+  | import('./LiveKitRtcConnection.js').LiveKitRtcConnection;
 
 /**
  * Create a voice manager and join a voice channel in one call.

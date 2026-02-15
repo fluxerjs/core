@@ -21,7 +21,9 @@ client.on(Events.Ready, () => {
 client.on(Events.MessageReactionAdd, (data) => {
   const { message_id, channel_id, user_id, emoji } = data;
   const emojiStr = emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name;
-  console.log(`Reaction added: user ${user_id} reacted with ${emojiStr} on message ${message_id} in channel ${channel_id}`);
+  console.log(
+    `Reaction added: user ${user_id} reacted with ${emojiStr} on message ${message_id} in channel ${channel_id}`
+  );
 });
 
 // Tip: filter by message_id or emoji for polls, confirmations, etc.:
@@ -37,7 +39,9 @@ client.on(Events.MessageReactionRemove, (data) => {
 
 // When all reactions are removed from a message (moderator action)
 client.on(Events.MessageReactionRemoveAll, (data) => {
-  console.log(`All reactions cleared from message ${data.message_id} in channel ${data.channel_id}`);
+  console.log(
+    `All reactions cleared from message ${data.message_id} in channel ${data.channel_id}`
+  );
 });
 
 // When all reactions of a specific emoji are removed
@@ -54,9 +58,12 @@ if (!token) {
   process.exit(1);
 }
 
-client.login(token).then(() => {
-  console.log('Listening for reactions...');
-}).catch((err) => {
-  console.error('Login failed:', err);
-  process.exit(1);
-});
+client
+  .login(token)
+  .then(() => {
+    console.log('Listening for reactions...');
+  })
+  .catch((err) => {
+    console.error('Login failed:', err);
+    process.exit(1);
+  });

@@ -1,22 +1,37 @@
 <template>
   <div class="app">
+    <a href="#main" class="skip-link">Skip to main content</a>
     <header class="header">
       <router-link to="/" class="logo">Fluxer.js</router-link>
       <nav class="header-nav">
         <router-link to="/v/latest/guides" class="header-link">Guides</router-link>
         <router-link to="/v/latest/docs" class="header-link">Docs</router-link>
+        <router-link to="/changelog" class="header-link">Changelog</router-link>
+        <SearchBar />
         <VersionPicker />
-        <a href="https://github.com/fluxerjs/core" target="_blank" rel="noopener noreferrer" class="header-link">GitHub</a>
-        <a href="https://fluxer.gg/fluxer-js" target="_blank" rel="noopener noreferrer" class="header-link header-link-external">Fluxer</a>
+        <a
+          href="https://github.com/fluxerjs/core"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="header-link"
+          >GitHub</a
+        >
+        <a
+          href="https://fluxer.gg/fluxer-js"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="header-link header-link-external"
+          >Fluxer</a
+        >
       </nav>
     </header>
-    <div class="layout">
+    <main id="main" class="layout" role="main">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
         </transition>
       </router-view>
-    </div>
+    </main>
   </div>
 </template>
 
@@ -27,6 +42,7 @@ import { useDocsStore } from './stores/docs';
 import { useGuidesStore } from './stores/guides';
 import { useVersionStore } from './stores/version';
 import VersionPicker from './components/VersionPicker.vue';
+import SearchBar from './components/SearchBar.vue';
 
 const route = useRoute();
 const docsStore = useDocsStore();
@@ -121,6 +137,26 @@ watch(
   content: ' ↗';
   font-size: 0.75em;
   opacity: 0.6;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 1001;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: var(--bg-primary);
+  font-weight: 600;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: top 0.15s;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 2px solid var(--accent-hover);
+  outline-offset: 2px;
 }
 
 .layout {

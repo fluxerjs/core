@@ -15,7 +15,7 @@ export interface AttachmentPayload {
  */
 export function buildFormData(
   payloadJson: Record<string, unknown>,
-  files?: AttachmentPayload[],
+  files?: AttachmentPayload[]
 ): FormData {
   const form = new FormData();
   form.append('payload_json', JSON.stringify(payloadJson));

@@ -23,54 +23,48 @@ const PREFIX = '!';
 
 const client = new Client({ intents: 0 });
 let rolesMessageId = process.env.REACTION_ROLES_MESSAGE_ID ?? null;
-const rolesChannelId = process.env.REACTION_ROLES_CHANNEL_ID ?? null;
+const _rolesChannelId = process.env.REACTION_ROLES_CHANNEL_ID ?? null;
 
-function getRoleIdForEmoji(emoji) {
-  const key = emoji.id ? `${emoji.name}:${emoji.id}` : emoji.name;
-  return ROLE_EMOJI_MAP[key] ?? ROLE_EMOJI_MAP[emoji.name];
+function getRoleIdForEmoji(reaction) {
+  const key = reaction.emoji.id ? `${reaction.emoji.name}:${reaction.emoji.id}` : reaction.emoji.name;
+  return ROLE_EMOJI_MAP[key] ?? ROLE_EMOJI_MAP[reaction.emoji.name];
 }
 
-async function handleReactionAdd(data) {
-  const { guild_id, user_id, message_id, channel_id, emoji } = data;
-  if (!guild_id || message_id !== rolesMessageId) return;
+async function handleReactionAdd(reaction, user) {
+  if (!reaction.guildId || reaction.messageId !== rolesMessageId) return;
 
-  const roleId = getRoleIdForEmoji(emoji);
+  const roleId = getRoleIdForEmoji(reaction);
   if (!roleId || roleId.startsWith('ROLE_ID_')) return;
 
-  const guild = client.guilds.get(guild_id);
-  if (!guild) return;
-
-  const member = await guild.fetchMember(user_id);
+  const guild = client.guilds.get(reaction.guildId);
+  const member = await guild?.fetchMember(user.id);
   if (!member) return;
 
   if (member.roles.includes(roleId)) return;
 
   try {
     await member.addRole(roleId);
-    console.log(`[reaction-roles] Added role ${roleId} to user ${user_id}`);
+    console.log(`[reaction-roles] Added role ${roleId} to user ${user.id}`);
   } catch (err) {
     console.error('[reaction-roles] Failed to add role:', err.message);
   }
 }
 
-async function handleReactionRemove(data) {
-  const { guild_id, user_id, message_id, emoji } = data;
-  if (!guild_id || message_id !== rolesMessageId) return;
+async function handleReactionRemove(reaction, user) {
+  if (!reaction.guildId || reaction.messageId !== rolesMessageId) return;
 
-  const roleId = getRoleIdForEmoji(emoji);
+  const roleId = getRoleIdForEmoji(reaction);
   if (!roleId || roleId.startsWith('ROLE_ID_')) return;
 
-  const guild = client.guilds.get(guild_id);
-  if (!guild) return;
-
-  const member = await guild.fetchMember(user_id);
+  const guild = client.guilds.get(reaction.guildId);
+  const member = await guild?.fetchMember(user.id);
   if (!member) return;
 
   if (!member.roles.includes(roleId)) return;
 
   try {
     await member.removeRole(roleId);
-    console.log(`[reaction-roles] Removed role ${roleId} from user ${user_id}`);
+    console.log(`[reaction-roles] Removed role ${roleId} from user ${user.id}`);
   } catch (err) {
     console.error('[reaction-roles] Failed to remove role:', err.message);
   }
@@ -91,19 +85,27 @@ client.on(Events.MessageCreate, async (message) => {
       return;
     }
     const emojiList = Object.entries(ROLE_EMOJI_MAP)
-      .map(([emoji, id]) => `${emoji} ${id.startsWith('ROLE_ID_') ? '(configure ROLE_EMOJI_MAP)' : ''}`)
+      .map(
+        ([emoji, id]) => `${emoji} ${id.startsWith('ROLE_ID_') ? '(configure ROLE_EMOJI_MAP)' : ''}`
+      )
       .join('\n');
     const embed = new EmbedBuilder()
       .setTitle('Reaction Roles')
-      .setDescription('React to get a role. Remove your reaction to remove the role.\n\n' + emojiList)
+      .setDescription(
+        'React to get a role. Remove your reaction to remove the role.\n\n' + emojiList
+      )
       .setColor(0x5865f2)
       .setTimestamp();
     const reply = await message.reply({ embeds: [embed.toJSON()] });
     for (const emoji of Object.keys(ROLE_EMOJI_MAP)) {
-      await reply.react(emoji).catch((e) => console.warn('Could not add reaction', emoji, e.message));
+      await reply
+        .react(emoji)
+        .catch((e) => console.warn('Could not add reaction', emoji, e.message));
     }
     rolesMessageId = reply.id;
-    console.log(`[reaction-roles] Set roles message to ${reply.id}. Set REACTION_ROLES_MESSAGE_ID=${reply.id} and REACTION_ROLES_CHANNEL_ID=${message.channelId} to reuse.`);
+    console.log(
+      `[reaction-roles] Set roles message to ${reply.id}. Set REACTION_ROLES_MESSAGE_ID=${reply.id} and REACTION_ROLES_CHANNEL_ID=${message.channelId} to reuse.`
+    );
   }
 });
 

@@ -18,6 +18,7 @@ export interface DocParam {
 export interface DocConstructor {
   params: DocParam[];
   description?: string;
+  examples?: string[];
 }
 
 export interface DocProperty {
@@ -25,6 +26,7 @@ export interface DocProperty {
   type: string;
   readonly?: boolean;
   description?: string;
+  examples?: string[];
   optional?: boolean;
 }
 
@@ -33,6 +35,7 @@ export interface DocMethod {
   params: DocParam[];
   returns: string;
   description?: string;
+  examples?: string[];
   async?: boolean;
   deprecated?: boolean | string;
   source?: DocSource;

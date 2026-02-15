@@ -45,8 +45,9 @@ async function handleWebhookCreate(message, client, args) {
         { name: 'Channel ID', value: `\`${webhook.channelId}\``, inline: true },
         {
           name: 'Send',
-          value: 'Use `!webhook send` with the ID and token to send a message. **Store the token** – it won\'t be returned when listing webhooks.',
-        },
+          value:
+            "Use `!webhook send` with the ID and token to send a message. **Store the token** – it won't be returned when listing webhooks.",
+        }
       )
       .setFooter({ text: 'Use !webhook send <id> <token> [message]' })
       .setTimestamp();
@@ -73,7 +74,9 @@ async function handleWebhookList(message, client, args) {
         : await client.channels.get(message.channelId)?.fetchWebhooks();
 
     if (!webhooks?.length) {
-      await message.reply(`No webhooks in this ${scope === 'guild' ? 'guild' : 'channel'}. Use \`!webhook create\` to create one.`);
+      await message.reply(
+        `No webhooks in this ${scope === 'guild' ? 'guild' : 'channel'}. Use \`!webhook create\` to create one.`
+      );
       return;
     }
 
@@ -87,7 +90,9 @@ async function handleWebhookList(message, client, args) {
       .setTitle(`${scope === 'guild' ? 'Guild' : 'Channel'} Webhooks`)
       .setColor(BRAND_COLOR)
       .addFields(...fields)
-      .setFooter({ text: `Showing ${Math.min(webhooks.length, 10)} of ${webhooks.length} webhooks` })
+      .setFooter({
+        text: `Showing ${Math.min(webhooks.length, 10)} of ${webhooks.length} webhooks`,
+      })
       .setTimestamp();
 
     await message.reply({ embeds: [embed.toJSON()] });
@@ -103,7 +108,9 @@ async function handleWebhookSend(message, client, args) {
   const content = args.slice(2).join(' ');
 
   if (!webhookId || !webhookToken) {
-    await message.reply('Usage: `!webhook send <webhook_id> <webhook_token> [message]`\nYou get the token when creating a webhook; it is not returned when listing.');
+    await message.reply(
+      'Usage: `!webhook send <webhook_id> <webhook_token> [message]`\nYou get the token when creating a webhook; it is not returned when listing.'
+    );
     return;
   }
 
@@ -122,7 +129,7 @@ async function handleWebhookSend(message, client, args) {
                 .setTimestamp()
                 .toJSON(),
             ],
-          },
+          }
     );
 
     await message.reply('Message sent via webhook.');
@@ -207,7 +214,7 @@ client.on(Events.MessageCreate, async (message) => {
             '`!webhook create [channel_id] [name]` – Create a webhook\n' +
             '`!webhook list [channel|guild] [id]` – List webhooks\n' +
             '`!webhook send <id> <token> [message]` – Send via webhook\n' +
-            '`!webhook delete <id>` – Delete a webhook',
+            '`!webhook delete <id>` – Delete a webhook'
         );
     }
   } catch (err) {

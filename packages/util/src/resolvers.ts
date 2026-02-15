@@ -19,24 +19,59 @@ export function resolveColor(color: number | string | [number, number, number]):
 }
 
 /**
- * Parse an emoji string (e.g. :name:123 or unicode) into id and name.
+ * Parse an emoji string into id and name.
+ * Supports: <a?:name:id> (mention), :name: (colons), name:id (API format), unicode.
  */
-export function parseEmoji(emoji: string): { id: string | null; name: string } | null {
-  const custom = /^<a?:\w+:(\d+)>$/;
-  const match = emoji.match(custom);
-  if (match) {
-    const name = emoji.slice(emoji.indexOf(':') + 1, emoji.lastIndexOf(':'));
-    return { id: match[1]!, name };
+export function parseEmoji(emoji: string): { id: string | null; name: string; animated?: boolean } | null {
+  if (emoji == null || typeof emoji !== 'string') return null;
+  const trimmed = emoji.trim();
+  if (trimmed.length === 0) return null;
+  // <a?:name:id> mention format
+  const mention = /^<(a?):(\w+):(\d+)>$/;
+  const mentionMatch = trimmed.match(mention);
+  if (mentionMatch) {
+    return {
+      id: mentionMatch[3],
+      name: mentionMatch[2],
+      animated: mentionMatch[1] === 'a',
+    };
   }
-  if (emoji.length > 0) return { id: null, name: emoji };
-  return null;
+  // name:id API format (custom emoji)
+  const nameId = /^(\w+):(\d{17,19})$/;
+  const nameIdMatch = trimmed.match(nameId);
+  if (nameIdMatch) {
+    return { id: nameIdMatch[2], name: nameIdMatch[1] };
+  }
+  // :name: format (colons, no id - needs guild lookup)
+  const colons = /^:(\w+):$/;
+  const colonsMatch = trimmed.match(colons);
+  if (colonsMatch) {
+    return { id: null, name: colonsMatch[1] };
+  }
+  // Plain name (possibly unicode) - id null
+  return { id: null, name: trimmed };
+}
+
+/**
+ * Parse a role mention string (e.g. <@&123456>) and extract the role ID.
+ * @param arg - String that may contain a role mention
+ * @returns The role ID if valid mention, otherwise null
+ */
+export function parseRoleMention(arg: string): string | null {
+  if (arg == null || typeof arg !== 'string') return null;
+  const match = arg.trim().match(/^<@&(\d{17,19})>$/);
+  return match?.[1] ?? null;
 }
 
 /**
  * Convert emoji to the format used in API (for reactions etc).
  * Custom: "name:id", Unicode: "unicode"
  */
-export function formatEmoji(emoji: { id: string | null; name: string; animated?: boolean }): string {
+export function formatEmoji(emoji: {
+  id: string | null;
+  name: string;
+  animated?: boolean;
+}): string {
   if (emoji.id) {
     const prefix = emoji.animated ? 'a' : '';
     return `${prefix}:${emoji.name}:${emoji.id}`;

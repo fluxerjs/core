@@ -32,6 +32,7 @@ export class SnowflakeUtil {
 
   /**
    * Deconstructs a snowflake into its components.
+   * @throws TypeError If snowflake is not a valid numeric string
    */
   static deconstruct(snowflake: string): {
     timestamp: number;
@@ -40,7 +41,12 @@ export class SnowflakeUtil {
     processId: number;
     increment: number;
   } {
-    const big = BigInt(snowflake);
+    let big: bigint;
+    try {
+      big = BigInt(snowflake);
+    } catch {
+      throw new TypeError('Invalid snowflake: must be a numeric string');
+    }
     return {
       timestamp: Number((big >> 22n) + FLUXER_EPOCH),
       date: new Date(Number((big >> 22n) + FLUXER_EPOCH)),

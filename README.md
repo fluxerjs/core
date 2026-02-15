@@ -43,6 +43,7 @@ pnpm run docs:preview
 ```
 
 **What each command does:**
+
 - `docs:dev` — Start Vite dev server; loads `public/docs/main.json` at runtime
 - `docs:build` — Runs `generate:docs` (merges all packages into one JSON) then builds the site
 - `docs:preview` — Serves the built site for testing

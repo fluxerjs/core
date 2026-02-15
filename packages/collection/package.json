@@ -1,8 +1,23 @@
 {
   "name": "@fluxerjs/collection",
-  "publishConfig": { "access": "public" },
-  "version": "1.0.7",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.8",
   "description": "Extended Map with utility methods for @fluxerjs/core",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fluxerjs/core.git",
+    "directory": "packages/collection"
+  },
+  "bugs": "https://github.com/fluxerjs/core/issues",
+  "homepage": "https://fluxerjs.blstmo.com",
+  "keywords": [
+    "fluxer",
+    "collection",
+    "map"
+  ],
+  "license": "AGPL-3.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -13,13 +28,20 @@
       "require": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "lint": "eslint src --max-warnings 0 --config ../../eslint.config.js",
+    "lint:fix": "eslint src --fix --config ../../eslint.config.js",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "tsup": "^8.3.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitest": "^4.0.18"
   }
 }

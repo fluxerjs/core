@@ -1,8 +1,24 @@
 {
   "name": "@fluxerjs/builders",
-  "publishConfig": { "access": "public" },
-  "version": "1.0.7",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.8",
   "description": "Builders for Fluxer messages and embeds",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fluxerjs/core.git",
+    "directory": "packages/builders"
+  },
+  "bugs": "https://github.com/fluxerjs/core/issues",
+  "homepage": "https://fluxerjs.blstmo.com",
+  "keywords": [
+    "fluxer",
+    "embed",
+    "builder",
+    "sdk"
+  ],
+  "license": "AGPL-3.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -13,10 +29,16 @@
       "require": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "lint": "eslint src --max-warnings 0 --config ../../eslint.config.js",
+    "lint:fix": "eslint src --fix --config ../../eslint.config.js",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
     "@fluxerjs/types": "workspace:*",

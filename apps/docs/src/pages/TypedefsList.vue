@@ -124,7 +124,9 @@ h1 {
   border-radius: var(--radius);
   text-decoration: none;
   color: var(--text-primary);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .type-card:hover {
@@ -157,7 +159,8 @@ h1 {
   overflow: hidden;
 }
 
-.muted, .error {
+.muted,
+.error {
   margin-top: 1rem;
 }
 

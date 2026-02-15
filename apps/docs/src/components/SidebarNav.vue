@@ -7,14 +7,13 @@
           <option v-for="p in packages" :key="p" :value="p">{{ p }}</option>
         </select>
       </div>
-      <input
-        v-model="filter"
-        type="search"
-        placeholder="Filter..."
-        class="sidebar-filter"
-      />
+      <input v-model="filter" type="search" placeholder="Filter..." class="sidebar-filter" />
       <div class="nav-group">
-        <router-link :to="versionedPath('/docs/classes')" class="nav-group-title" active-class="active">
+        <router-link
+          :to="versionedPath('/docs/classes')"
+          class="nav-group-title"
+          active-class="active"
+        >
           Classes
         </router-link>
         <div v-if="filteredClasses.length" class="nav-sublist">
@@ -32,7 +31,11 @@
       </div>
 
       <div class="nav-group">
-        <router-link :to="versionedPath('/docs/typedefs')" class="nav-group-title" active-class="active">
+        <router-link
+          :to="versionedPath('/docs/typedefs')"
+          class="nav-group-title"
+          active-class="active"
+        >
           Interfaces
         </router-link>
         <div v-if="filteredInterfaces.length" class="nav-sublist">
@@ -50,7 +53,11 @@
       </div>
 
       <div class="nav-group">
-        <router-link :to="versionedPath('/docs/typedefs')" class="nav-group-title" active-class="active">
+        <router-link
+          :to="versionedPath('/docs/typedefs')"
+          class="nav-group-title"
+          active-class="active"
+        >
           Enums
         </router-link>
         <div v-if="filteredEnums.length" class="nav-sublist">
@@ -205,7 +212,9 @@ const filteredEnums = computed(() => {
   border-radius: 4px;
   margin-left: -1px;
   border-left: 2px solid transparent;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -27,6 +27,14 @@ export class User extends Base {
     this.bot = !!(data as APIUserPartial & { bot?: boolean }).bot;
   }
 
+  /** Update mutable fields from fresh API data. Used by getOrCreateUser cache. */
+  _patch(data: APIUserPartial): void {
+    this.username = data.username;
+    this.discriminator = data.discriminator;
+    this.globalName = data.global_name ?? null;
+    this.avatar = data.avatar ?? null;
+  }
+
   /**
    * Get the URL for this user's avatar.
    * @param options - Optional `size` and `extension` (default: `png`)
@@ -65,7 +73,9 @@ export class User extends Base {
    * Send a DM to this user.
    * Convenience method that creates the DM channel and sends the message.
    */
-  async send(options: string | { content?: string; embeds?: unknown[] }): Promise<import('./Message.js').Message> {
+  async send(
+    options: string | { content?: string; embeds?: unknown[] }
+  ): Promise<import('./Message.js').Message> {
     const dm = await this.createDM();
     return dm.send(options);
   }

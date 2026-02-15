@@ -1,8 +1,16 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="open" class="search-overlay" @click.self="close">
-        <div class="search-modal">
+      <div
+        v-if="open"
+        class="search-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search documentation"
+        @click.self="close"
+        @keydown="handleKeydown"
+      >
+        <div ref="modalRef" class="search-modal">
           <div class="search-input-wrap">
             <span class="search-icon" aria-hidden>⌘K</span>
             <input
@@ -12,6 +20,7 @@
               placeholder="Search classes, methods, properties..."
               class="search-input"
               autocomplete="off"
+              aria-label="Search documentation"
               @keydown.esc="close"
               @keydown.down.prevent="selectNext"
               @keydown.up.prevent="selectPrev"
@@ -33,9 +42,7 @@
                 <span class="result-name">{{ r.parent ? `${r.parent}.${r.name}` : r.name }}</span>
               </router-link>
             </template>
-            <div v-else class="result-empty">
-              No results for "{{ query }}"
-            </div>
+            <div v-else class="result-empty">No results for "{{ query }}"</div>
           </div>
 
           <div class="search-footer">
@@ -65,13 +72,44 @@ const route = useRoute();
 const index = useSearchIndex(store);
 
 function searchResultTo(r: SearchHit) {
-  const params = { ...(r.path.params ?? {}), version: (route.params.version as string) ?? 'latest' };
+  const params = {
+    ...(r.path.params ?? {}),
+    version: (route.params.version as string) ?? 'latest',
+  };
   return { name: r.path.name, params, hash: r.path.hash ?? '' };
 }
 
 const query = ref('');
 const inputRef = ref<HTMLInputElement | null>(null);
+const modalRef = ref<HTMLElement | null>(null);
 const selectedIndex = ref(0);
+
+function getFocusables(): HTMLElement[] {
+  if (!modalRef.value) return [];
+  const focusables = modalRef.value.querySelectorAll<HTMLElement>(
+    'input:not([disabled]), button:not([disabled]), a[href]'
+  );
+  return Array.from(focusables).filter((el) => (el as HTMLElement).offsetParent !== null);
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Tab') return;
+  const focusables = getFocusables();
+  if (focusables.length <= 1) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (e.shiftKey) {
+    if (document.activeElement === first) {
+      e.preventDefault();
+      last?.focus();
+    }
+  } else {
+    if (document.activeElement === last) {
+      e.preventDefault();
+      first?.focus();
+    }
+  }
+}
 
 const filtered = computed(() => {
   const q = query.value.toLowerCase().trim();
@@ -209,12 +247,24 @@ function close() {
   color: var(--text-muted);
 }
 
-.result-type.type-class { color: var(--accent); }
-.result-type.type-interface { color: var(--badge-interface); }
-.result-type.type-enum { color: var(--badge-enum); }
-.result-type.type-method { color: var(--ts-string); }
-.result-type.type-property { color: var(--ts-type); }
-.result-type.type-member { color: var(--ts-keyword); }
+.result-type.type-class {
+  color: var(--accent);
+}
+.result-type.type-interface {
+  color: var(--badge-interface);
+}
+.result-type.type-enum {
+  color: var(--badge-enum);
+}
+.result-type.type-method {
+  color: var(--ts-string);
+}
+.result-type.type-property {
+  color: var(--ts-type);
+}
+.result-type.type-member {
+  color: var(--ts-keyword);
+}
 
 .result-name {
   font-family: 'JetBrains Mono', ui-monospace, monospace;

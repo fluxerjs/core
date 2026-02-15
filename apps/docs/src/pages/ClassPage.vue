@@ -1,24 +1,48 @@
 <template>
   <div v-if="clazz" class="class-page">
-    <div class="page-header">
-      <span class="kind-badge kind-class">class</span>
-      <h1>{{ clazz.name }}</h1>
-      <span v-if="clazz.deprecated" class="deprecated-badge">deprecated</span>
-    </div>
-    <p v-if="description" class="description"><DocDescription :text="description" /></p>
-    <a
-      v-if="clazz.source?.path"
-      :href="sourceUrl(clazz.source)"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="source-link"
-    >
-      View source
-    </a>
+    <div class="page-content">
+      <div class="page-header">
+        <span class="kind-badge kind-class">class</span>
+        <h1>{{ clazz.name }}</h1>
+        <span v-if="clazz.deprecated" class="deprecated-badge">deprecated</span>
+        <template v-if="clazz.extends">
+          <span class="extends-label">extends</span>
+          <router-link
+            v-if="extendsClassExists"
+            :to="{ name: 'class', params: { version: routeVersion, class: clazz.extends } }"
+            class="extends-link"
+          >
+            {{ clazz.extends }}
+          </router-link>
+          <span v-else class="extends-text">{{ clazz.extends }}</span>
+        </template>
+      </div>
+      <p v-if="description" class="description"><DocDescription :text="description" /></p>
+      <a
+        v-if="clazz.source?.path"
+        :href="sourceUrl(clazz.source)"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="source-link"
+      >
+        View source
+      </a>
 
-    <ConstructorSection v-if="constructor" :constructor="constructor" :class-name="clazz.name" />
-    <PropertiesSection v-if="properties.length" :properties="properties" />
-    <MethodsSection v-if="methods.length" :methods="methods" :parent-name="clazz.name" />
+      <ConstructorSection v-if="constructor" :constructor="constructor" :class-name="clazz.name" />
+      <PropertiesSection v-if="properties.length" :properties="properties" />
+      <MethodsSection v-if="methods.length" :methods="methods" :parent-name="clazz.name" />
+    </div>
+    <nav v-if="tocItems.length" class="on-this-page" aria-label="On this page">
+      <span class="toc-title">On this page</span>
+      <a
+        v-for="item in tocItems"
+        :key="item.id"
+        :href="`#${item.id}`"
+        class="toc-link"
+      >
+        {{ item.label }}
+      </a>
+    </nav>
   </div>
   <div v-else class="not-found">
     <p>Class not found.</p>
@@ -52,6 +76,26 @@ const properties = computed(() => clazz.value?.properties ?? []);
 
 const methods = computed(() => clazz.value?.methods ?? []);
 
+const routeVersion = computed(() => (route.params.version as string) ?? 'latest');
+
+const extendsClassExists = computed(() => {
+  const ext = clazz.value?.extends;
+  if (!ext || !store.currentDoc) return false;
+  return store.currentDoc.classes?.some((c) => c.name === ext) ?? false;
+});
+
+const tocItems = computed(() => {
+  const items: { id: string; label: string }[] = [];
+  if (constructor.value) items.push({ id: 'constructor', label: 'Constructor' });
+  for (const p of properties.value) {
+    items.push({ id: `property-${p.name}`, label: p.name });
+  }
+  for (const m of methods.value) {
+    items.push({ id: `method-${m.name}`, label: `${m.name}()` });
+  }
+  return items;
+});
+
 const GITHUB_BASE = 'https://github.com/fluxerjs/core/blob/main';
 function sourceUrl(source: { file: string; line: number; path?: string }) {
   return `${GITHUB_BASE}/${source.path}#L${source.line}`;
@@ -60,7 +104,49 @@ function sourceUrl(source: { file: string; line: number; path?: string }) {
 
 <style scoped>
 .class-page {
-  max-width: 720px;
+  display: flex;
+  gap: 2rem;
+  max-width: 960px;
+}
+
+.on-this-page {
+  flex-shrink: 0;
+  width: 180px;
+  position: sticky;
+  top: 1.5rem;
+  align-self: flex-start;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.toc-title {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.toc-link {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.toc-link:hover {
+  color: var(--accent);
+}
+
+.page-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .page-header {
@@ -69,6 +155,22 @@ function sourceUrl(source: { file: string; line: number; path?: string }) {
   gap: 0.75rem;
   margin-bottom: 0.5rem;
   flex-wrap: wrap;
+}
+
+.extends-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.extends-link {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.9rem;
+}
+
+.extends-text {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .kind-badge {

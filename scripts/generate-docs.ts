@@ -121,7 +121,17 @@ async function main(): Promise<void> {
 
   // versions.json lists available versions (for version picker)
   const versionsPath = resolve(DOCS_DIR, 'versions.json');
-  const versionsData = { versions: [version], latest: version };
+  let existingVersions: string[] = [];
+  try {
+    const existing = JSON.parse(readFileSync(versionsPath, 'utf-8'));
+    existingVersions = Array.isArray(existing.versions) ? existing.versions : [];
+  } catch {
+    /* ignore */
+  }
+  const allVersions = existingVersions.includes(version)
+    ? existingVersions
+    : [version, ...existingVersions].sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+  const versionsData = { versions: allVersions, latest: version };
   writeFileSync(versionsPath, JSON.stringify(versionsData, null, 2), 'utf-8');
   console.log(`[generate-docs] Versions -> ${versionsPath}`);
 

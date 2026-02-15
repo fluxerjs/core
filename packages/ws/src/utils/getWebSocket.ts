@@ -30,7 +30,7 @@ export function getDefaultWebSocketSync(): WSConstructor {
     }
   }
   throw new Error(
-    'No WebSocket implementation. Use Node 22+, or run with CommonJS. The "ws" package is bundled with @fluxerjs/ws.',
+    'No WebSocket implementation. Use Node 22+, or run with CommonJS. The "ws" package is bundled with @fluxerjs/ws.'
   );
 }
 

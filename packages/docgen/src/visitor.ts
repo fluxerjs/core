@@ -1,13 +1,6 @@
 import * as ts from 'typescript';
 import { relative } from 'path';
-import type {
-  DocClass,
-  DocInterface,
-  DocEnum,
-  DocOutput,
-  DocMeta,
-  DocSource,
-} from './schema.js';
+import type { DocClass, DocInterface, DocEnum, DocSource } from './schema.js';
 import {
   extractConstructor,
   extractProperty,
@@ -30,7 +23,7 @@ function getJSDoc(node: ts.Node): string {
 function getSource(node: ts.Node, repoRoot?: string): DocSource {
   const sourceFile = node.getSourceFile();
   const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-  const fileName = sourceFile.fileName.split(/[/\\]/).pop() || '';
+  const fileName = sourceFile.fileName.split(/[/\\]/).pop() ?? '';
   const result: DocSource = { file: fileName, line: line + 1 };
   if (repoRoot) {
     const rel = relative(repoRoot, sourceFile.fileName);
@@ -41,10 +34,10 @@ function getSource(node: ts.Node, repoRoot?: string): DocSource {
 
 function isExported(node: ts.Node): boolean {
   return !!(
-    (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) ||
-    (node.parent && ts.isSourceFile(node.parent) && (node as ts.Declaration).modifiers?.some(
-      (m) => m.kind === ts.SyntaxKind.ExportKeyword
-    ))
+    ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export ||
+    (node.parent &&
+      ts.isSourceFile(node.parent) &&
+      (node as ts.Declaration).modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword))
   );
 }
 
@@ -67,8 +60,7 @@ export function visitSourceFile(
           description: getDescriptionFromJSDocComment(comment) || undefined,
           extends: node.heritageClauses
             ?.find((c) => c.token === ts.SyntaxKind.ExtendsKeyword)
-            ?.types?.[0]
-            ?.expression?.getText(),
+            ?.types?.[0]?.expression?.getText(),
           constructor: undefined,
           properties: [],
           methods: [],

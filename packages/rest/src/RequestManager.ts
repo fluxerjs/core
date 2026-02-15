@@ -85,10 +85,9 @@ export class RequestManager {
 
     let lastError: Error | null = null;
     for (let attempt = 0; attempt <= this.options.retries; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.options.timeout);
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.options.timeout);
-
         const response = await fetch(url, {
           method,
           headers,
@@ -96,18 +95,22 @@ export class RequestManager {
           signal: controller.signal,
         });
 
-        clearTimeout(timeoutId);
-
         this.rateLimiter.updateFromHeaders(routeHash, response.headers);
 
         if (response.status === 429) {
           const data = (await response.json().catch(() => ({}))) as RateLimitErrorBody;
-          const retryAfter = (data.retry_after ?? parseInt(response.headers.get('Retry-After') ?? '0', 10)) * 1000;
+          const retryAfter =
+            (data.retry_after ?? parseInt(response.headers.get('Retry-After') ?? '0', 10)) * 1000;
           this.rateLimiter.setBucket(routeHash, 1, 0, Date.now() + retryAfter);
           if (data.global) this.rateLimiter.setGlobalReset(Date.now() + retryAfter);
           throw new RateLimitError(
-            { ...data, code: 'RATE_LIMITED', message: data.message ?? 'Rate limited', retry_after: data.retry_after ?? 0 },
-            response.status,
+            {
+              ...data,
+              code: 'RATE_LIMITED',
+              message: data.message ?? 'Rate limited',
+              retry_after: data.retry_after ?? 0,
+            },
+            response.status
           );
         }
 
@@ -125,10 +128,22 @@ export class RequestManager {
         if (response.status === 204 || text.length === 0) return undefined as T;
         return JSON.parse(text) as T;
       } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
+        const wrapped =
+          err instanceof Error
+            ? err
+            : new Error(String(err));
+        lastError =
+          attempt > 0
+            ? new Error(`Retry ${attempt} failed: ${wrapped.message}`, {
+                cause: wrapped,
+              })
+            : wrapped;
         if (err instanceof RateLimitError && attempt < this.options.retries) {
-          await new Promise((r) => setTimeout(r, err.retryAfter * 1000));
-          continue;
+          const retryMs = err.retryAfter * 1000;
+          if (Number.isFinite(retryMs)) {
+            await new Promise((r) => setTimeout(r, retryMs));
+            continue;
+          }
         }
         if (err instanceof FluxerAPIError || err instanceof HTTPError) throw err;
         if (attempt < this.options.retries) {
@@ -136,6 +151,8 @@ export class RequestManager {
           continue;
         }
         throw lastError;
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
     throw lastError ?? new Error('Request failed');

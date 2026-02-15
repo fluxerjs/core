@@ -3,34 +3,50 @@ import { REST } from '@fluxerjs/rest';
 import { WebSocketManager } from '@fluxerjs/ws';
 import { Routes } from '@fluxerjs/types';
 import { Collection } from '@fluxerjs/collection';
+import { ChannelManager } from './ChannelManager.js';
+import { GuildManager } from './GuildManager.js';
 import type { ClientOptions } from '../util/Options.js';
 import type { ClientUser } from './ClientUser.js';
 import type { Guild } from '../structures/Guild.js';
 import type { Channel } from '../structures/Channel.js';
-import type { User } from '../structures/User.js';
+import { FluxerError } from '../errors/FluxerError.js';
 import { Events } from '../util/Events.js';
 import type {
   GatewayReceivePayload,
   GatewaySendPayload,
   GatewayVoiceStateUpdateDispatchData,
   GatewayVoiceServerUpdateDispatchData,
-  GatewayMessageReactionAddDispatchData,
-  GatewayMessageReactionRemoveDispatchData,
   GatewayMessageReactionRemoveEmojiDispatchData,
   GatewayMessageReactionRemoveAllDispatchData,
 } from '@fluxerjs/types';
-import type { APIMessage, APIChannel, APIGuild, APIUser, APIGuildMember, APIApplicationCommandInteraction } from '@fluxerjs/types';
+import type { APIChannel, APIGuild, APIUser, APIUserPartial } from '@fluxerjs/types';
+import { formatEmoji, parseEmoji } from '@fluxerjs/util';
+import { User } from '../structures/User.js';
+import { eventHandlers } from './EventHandlerRegistry.js';
 
 export interface ClientEvents {
   [Events.Ready]: [];
   [Events.MessageCreate]: [message: import('../structures/Message.js').Message];
-  [Events.MessageUpdate]: [oldMessage: import('../structures/Message.js').Message | null, newMessage: import('../structures/Message.js').Message];
-  [Events.MessageDelete]: [message: import('../structures/Message.js').Message | { id: string; channelId: string }];
-  [Events.MessageReactionAdd]: [data: GatewayMessageReactionAddDispatchData];
-  [Events.MessageReactionRemove]: [data: GatewayMessageReactionRemoveDispatchData];
+  [Events.MessageUpdate]: [
+    oldMessage: import('../structures/Message.js').Message | null,
+    newMessage: import('../structures/Message.js').Message,
+  ];
+  [Events.MessageDelete]: [
+    message: import('../structures/PartialMessage.js').PartialMessage,
+  ];
+  [Events.MessageReactionAdd]: [
+    reaction: import('../structures/MessageReaction.js').MessageReaction,
+    user: User,
+  ];
+  [Events.MessageReactionRemove]: [
+    reaction: import('../structures/MessageReaction.js').MessageReaction,
+    user: User,
+  ];
   [Events.MessageReactionRemoveAll]: [data: GatewayMessageReactionRemoveAllDispatchData];
   [Events.MessageReactionRemoveEmoji]: [data: GatewayMessageReactionRemoveEmojiDispatchData];
-  [Events.InteractionCreate]: [interaction: import('@fluxerjs/types').APIApplicationCommandInteraction];
+  [Events.InteractionCreate]: [
+    interaction: import('@fluxerjs/types').APIApplicationCommandInteraction,
+  ];
   [Events.GuildCreate]: [guild: Guild];
   [Events.GuildUpdate]: [oldGuild: Guild, newGuild: Guild];
   [Events.GuildDelete]: [guild: Guild];
@@ -38,11 +54,36 @@ export interface ClientEvents {
   [Events.ChannelUpdate]: [oldChannel: Channel, newChannel: Channel];
   [Events.ChannelDelete]: [channel: Channel];
   [Events.GuildMemberAdd]: [member: import('../structures/GuildMember.js').GuildMember];
-  [Events.GuildMemberUpdate]: [oldMember: import('../structures/GuildMember.js').GuildMember, newMember: import('../structures/GuildMember.js').GuildMember];
+  [Events.GuildMemberUpdate]: [
+    oldMember: import('../structures/GuildMember.js').GuildMember,
+    newMember: import('../structures/GuildMember.js').GuildMember,
+  ];
   [Events.GuildMemberRemove]: [member: import('../structures/GuildMember.js').GuildMember];
   [Events.VoiceStateUpdate]: [data: GatewayVoiceStateUpdateDispatchData];
   [Events.VoiceServerUpdate]: [data: GatewayVoiceServerUpdateDispatchData];
-  [Events.VoiceStatesSync]: [data: { guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null }> }];
+  [Events.VoiceStatesSync]: [
+    data: { guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null }> },
+  ];
+  [Events.MessageDeleteBulk]: [data: import('@fluxerjs/types').GatewayMessageDeleteBulkDispatchData];
+  [Events.GuildBanAdd]: [data: import('@fluxerjs/types').GatewayGuildBanAddDispatchData];
+  [Events.GuildBanRemove]: [data: import('@fluxerjs/types').GatewayGuildBanRemoveDispatchData];
+  [Events.GuildEmojisUpdate]: [data: unknown];
+  [Events.GuildStickersUpdate]: [data: unknown];
+  [Events.GuildIntegrationsUpdate]: [data: unknown];
+  [Events.GuildRoleCreate]: [data: import('@fluxerjs/types').GatewayGuildRoleCreateDispatchData];
+  [Events.GuildRoleUpdate]: [data: import('@fluxerjs/types').GatewayGuildRoleUpdateDispatchData];
+  [Events.GuildRoleDelete]: [data: import('@fluxerjs/types').GatewayGuildRoleDeleteDispatchData];
+  [Events.GuildScheduledEventCreate]: [data: unknown];
+  [Events.GuildScheduledEventUpdate]: [data: unknown];
+  [Events.GuildScheduledEventDelete]: [data: unknown];
+  [Events.ChannelPinsUpdate]: [data: unknown];
+  [Events.InviteCreate]: [data: unknown];
+  [Events.InviteDelete]: [data: unknown];
+  [Events.TypingStart]: [data: import('@fluxerjs/types').GatewayTypingStartDispatchData];
+  [Events.UserUpdate]: [data: import('@fluxerjs/types').GatewayUserUpdateDispatchData];
+  [Events.PresenceUpdate]: [data: unknown];
+  [Events.WebhooksUpdate]: [data: unknown];
+  [Events.Resumed]: [];
   [Events.Error]: [error: Error];
   [Events.Debug]: [message: string];
 }
@@ -50,8 +91,8 @@ export interface ClientEvents {
 /** Main Fluxer bot client. Connects to the gateway, emits events, and provides REST access. */
 export class Client extends EventEmitter {
   readonly rest: REST;
-  readonly guilds = new Collection<string, Guild>();
-  readonly channels = new Collection<string, Channel>();
+  readonly guilds = new GuildManager(this);
+  readonly channels = new ChannelManager(this);
   readonly users = new Collection<string, User>();
   user: ClientUser | null = null;
   readyAt: Date | null = null;
@@ -60,11 +101,105 @@ export class Client extends EventEmitter {
   /** @param options - Token, REST config, WebSocket, presence, etc. */
   constructor(public readonly options: ClientOptions = {}) {
     super();
+    Object.defineProperty(this.channels, 'cache', {
+      get: () => this.channels,
+      configurable: true,
+    });
+    Object.defineProperty(this.guilds, 'cache', {
+      get: () => this.guilds,
+      configurable: true,
+    });
     this.rest = new REST({
       api: options.rest?.api ?? 'https://api.fluxer.app',
       version: options.rest?.version ?? '1',
       ...options.rest,
     });
+  }
+
+  /**
+   * Resolve an emoji argument to the API format (unicode or "name:id").
+   * Supports: <:name:id>, :name:, name:id, { name, id }, unicode.
+   * When id is missing (e.g. :name:), fetches guild emojis if guildId provided.
+   * @param emoji - Emoji string or object
+   * @param guildId - Guild ID for resolving custom emoji by name (required when id is missing)
+   * @returns API-formatted string for reactions
+   */
+  async resolveEmoji(
+    emoji: string | { name: string; id?: string; animated?: boolean },
+    guildId?: string | null
+  ): Promise<string> {
+    if (typeof emoji === 'object' && emoji.id) {
+      return formatEmoji({ name: emoji.name, id: emoji.id as string, animated: emoji.animated });
+    }
+    const parsed = parseEmoji(
+      typeof emoji === 'string' ? emoji : `:${emoji.name}:`
+    );
+    if (!parsed) throw new Error('Invalid emoji');
+    if (parsed.id) return formatEmoji(parsed);
+    if (guildId) {
+      const emojis = await this.rest.get(Routes.guildEmojis(guildId));
+      const list = (Array.isArray(emojis) ? emojis : Object.values(emojis ?? {})) as Array<{
+        id: string;
+        name?: string;
+        animated?: boolean;
+      }>;
+      const found = list.find(
+        (e) => e.name && e.name.toLowerCase() === parsed!.name.toLowerCase()
+      );
+      if (found) return formatEmoji({ ...parsed, id: found.id, animated: found.animated });
+      throw new Error(
+        `Custom emoji ":${parsed.name}:" not found in guild. Use name:id or <:name:id> format.`
+      );
+    }
+    if (/^\w+$/.test(parsed.name)) {
+      throw new Error(
+        `Custom emoji ":${parsed.name}:" requires guild context. Use message.react() in a guild channel, or pass guildId to client.resolveEmoji().`
+      );
+    }
+    return encodeURIComponent(parsed.name);
+  }
+
+  /**
+   * Fetch a message by channel and message ID. Use when you have IDs (e.g. from a DB).
+   * @param channelId - Snowflake of the channel
+   * @param messageId - Snowflake of the message
+   * @returns The message, or null if not found
+   * @deprecated Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.fetch(channelId))?.messages?.fetch(messageId)
+   * @example
+   * const channel = await client.channels.fetch(channelId);
+   * const message = await channel?.messages?.fetch(messageId);
+   */
+  async fetchMessage(
+    channelId: string,
+    messageId: string
+  ): Promise<import('../structures/Message.js').Message | null> {
+    return this.channels.fetchMessage(channelId, messageId);
+  }
+
+  /**
+   * Send a message to any channel by ID. Shorthand for client.channels.send().
+   * Works even when the channel is not cached.
+   */
+  async sendToChannel(
+    channelId: string,
+    payload: string | { content?: string; embeds?: import('@fluxerjs/types').APIEmbed[] }
+  ): Promise<import('../structures/Message.js').Message> {
+    return this.channels.send(channelId, payload);
+  }
+
+  /**
+   * Get or create a User from API data. Caches in client.users.
+   * Updates existing user's username, avatar, etc. when fresh data is provided.
+   */
+  getOrCreateUser(data: APIUserPartial): User {
+    const existing = this.users.get(data.id);
+    if (existing) {
+      existing._patch(data);
+      return existing;
+    }
+    const user = new User(this, data);
+    this.users.set(user.id, user);
+    return user;
   }
 
   /** WebSocket manager. Throws if not logged in. */
@@ -86,145 +221,8 @@ export class Client extends EventEmitter {
     if (payload.op !== 0 || !payload.t) return;
     const { t: event, d } = payload;
     try {
-      switch (event) {
-        case 'MESSAGE_CREATE': {
-          const { Message } = await import('../structures/Message.js');
-          this.emit(Events.MessageCreate, new Message(this, d as APIMessage));
-          break;
-        }
-        case 'MESSAGE_UPDATE': {
-          const { Message } = await import('../structures/Message.js');
-          this.emit(Events.MessageUpdate, null, new Message(this, d as APIMessage));
-          break;
-        }
-        case 'MESSAGE_DELETE':
-          this.emit(Events.MessageDelete, { id: (d as { id: string }).id, channelId: (d as { channel_id: string }).channel_id });
-          break;
-        case 'MESSAGE_REACTION_ADD':
-          this.emit(Events.MessageReactionAdd, d as GatewayMessageReactionAddDispatchData);
-          break;
-        case 'MESSAGE_REACTION_REMOVE':
-          this.emit(Events.MessageReactionRemove, d as GatewayMessageReactionRemoveDispatchData);
-          break;
-        case 'MESSAGE_REACTION_REMOVE_ALL':
-          this.emit(Events.MessageReactionRemoveAll, d as GatewayMessageReactionRemoveAllDispatchData);
-          break;
-        case 'MESSAGE_REACTION_REMOVE_EMOJI':
-          this.emit(Events.MessageReactionRemoveEmoji, d as GatewayMessageReactionRemoveEmojiDispatchData);
-          break;
-        case 'GUILD_CREATE': {
-          const { Guild } = await import('../structures/Guild.js');
-          const { Channel } = await import('../structures/Channel.js');
-          const guild = new Guild(this, d as APIGuild);
-          this.guilds.set(guild.id, guild);
-          const g = d as APIGuild & { channels?: APIChannel[]; voice_states?: Array<{ user_id: string; channel_id: string | null }> };
-          for (const ch of g.channels ?? []) {
-            const channel = Channel.from(this, ch);
-            if (channel) this.channels.set(channel.id, channel);
-          }
-          this.emit(Events.GuildCreate, guild);
-          if (g.voice_states?.length) {
-            this.emit(Events.VoiceStatesSync, { guildId: guild.id, voiceStates: g.voice_states });
-          }
-          break;
-        }
-        case 'GUILD_UPDATE': {
-          const { Guild } = await import('../structures/Guild.js');
-          const g = d as APIGuild;
-          const old = this.guilds.get(g.id);
-          const updated = new Guild(this, g);
-          this.guilds.set(updated.id, updated);
-          this.emit(Events.GuildUpdate, old ?? updated, updated);
-          break;
-        }
-        case 'GUILD_DELETE': {
-          const g = d as { id: string };
-          const guild = this.guilds.get(g.id);
-          if (guild) {
-            this.guilds.delete(g.id);
-            this.emit(Events.GuildDelete, guild);
-          }
-          break;
-        }
-        case 'CHANNEL_CREATE': {
-          const { Channel } = await import('../structures/Channel.js');
-          const ch = Channel.from(this, d as APIChannel);
-          if (ch) {
-            this.channels.set(ch.id, ch);
-            this.emit(Events.ChannelCreate, ch as import('../structures/Channel.js').GuildChannel);
-          }
-          break;
-        }
-        case 'CHANNEL_UPDATE': {
-          const { Channel } = await import('../structures/Channel.js');
-          const ch = d as APIChannel;
-          const oldCh = this.channels.get(ch.id);
-          const newCh = Channel.from(this, ch);
-          if (newCh) {
-            this.channels.set(newCh.id, newCh);
-            this.emit(Events.ChannelUpdate, oldCh ?? newCh, newCh);
-          }
-          break;
-        }
-        case 'CHANNEL_DELETE': {
-          const ch = d as { id: string };
-          const channel = this.channels.get(ch.id);
-          if (channel) {
-            this.channels.delete(ch.id);
-            this.emit(Events.ChannelDelete, channel);
-          }
-          break;
-        }
-        case 'GUILD_MEMBER_ADD': {
-          const { GuildMember } = await import('../structures/GuildMember.js');
-          const data = d as APIGuildMember & { guild_id: string };
-          const guild = this.guilds.get(data.guild_id);
-          if (guild) {
-            const member = new GuildMember(this, data, guild);
-            guild.members.set(member.id, member);
-            this.emit(Events.GuildMemberAdd, member);
-          }
-          break;
-        }
-        case 'GUILD_MEMBER_UPDATE': {
-          const { GuildMember } = await import('../structures/GuildMember.js');
-          const data = d as APIGuildMember & { guild_id: string };
-          const guild = this.guilds.get(data.guild_id);
-          if (guild) {
-            const oldM = guild.members.get(data.user.id);
-            const newM = new GuildMember(this, data, guild);
-            guild.members.set(newM.id, newM);
-            this.emit(Events.GuildMemberUpdate, oldM ?? newM, newM);
-          }
-          break;
-        }
-        case 'GUILD_MEMBER_REMOVE': {
-          const data = d as { guild_id: string; user: APIUser };
-          const guild = this.guilds.get(data.guild_id);
-          if (guild) {
-            const member = guild.members.get(data.user.id);
-            if (member) {
-              guild.members.delete(data.user.id);
-              this.emit(Events.GuildMemberRemove, member);
-            }
-          }
-          break;
-        }
-        case 'INTERACTION_CREATE': {
-          this.emit(Events.InteractionCreate, d as APIApplicationCommandInteraction);
-          break;
-        }
-        case 'VOICE_STATE_UPDATE': {
-          this.emit(Events.VoiceStateUpdate, d as GatewayVoiceStateUpdateDispatchData);
-          break;
-        }
-        case 'VOICE_SERVER_UPDATE': {
-          this.emit(Events.VoiceServerUpdate, d as GatewayVoiceServerUpdateDispatchData);
-          break;
-        }
-        default:
-          break;
-      }
+      const handler = eventHandlers.get(event);
+      if (handler) await handler(this, d);
     } catch (err) {
       this.emit(Events.Error, err instanceof Error ? err : new Error(String(err)));
     }
@@ -235,14 +233,18 @@ export class Client extends EventEmitter {
    * @param token - Bot token (e.g. from FLUXER_BOT_TOKEN)
    */
   async login(token: string): Promise<string> {
+    if (this._ws) {
+      throw new FluxerError(
+        'Client is already logged in. Call destroy() first.'
+      );
+    }
     this.rest.setToken(token);
     let intents = this.options.intents ?? 0;
     if (intents !== 0) {
       if (typeof process !== 'undefined' && process.emitWarning) {
-        process.emitWarning(
-          'Fluxer does not support intents yet. Value has been set to 0.',
-          { type: 'FluxerIntents' },
-        );
+        process.emitWarning('Fluxer does not support intents yet. Value has been set to 0.', {
+          type: 'FluxerIntents',
+        });
       } else {
         console.warn('Fluxer does not support intents yet. Value has been set to 0.');
       }
@@ -257,28 +259,43 @@ export class Client extends EventEmitter {
       WebSocket: this.options.WebSocket,
     });
     this._ws.on('dispatch', ({ payload }: { payload: GatewayReceivePayload }) => {
-      this.handleDispatch(payload);
+      this.handleDispatch(payload).catch((err: unknown) =>
+        this.emit(Events.Error, err instanceof Error ? err : new Error(String(err)))
+      );
     });
-    this._ws.on('ready', async ({ data }: { data: { user: APIUser; guilds: Array<APIGuild & { unavailable?: boolean }> } }) => {
-      const { ClientUser } = await import('./ClientUser.js');
-      const { Guild } = await import('../structures/Guild.js');
-      const { Channel } = await import('../structures/Channel.js');
-      this.user = new ClientUser(this, data.user);
-      for (const g of data.guilds ?? []) {
-        const guild = new Guild(this, g);
-        this.guilds.set(guild.id, guild);
-        const withCh = g as APIGuild & { channels?: APIChannel[]; voice_states?: Array<{ user_id: string; channel_id: string | null }> };
-        for (const ch of withCh.channels ?? []) {
-          const channel = Channel.from(this, ch);
-          if (channel) this.channels.set(channel.id, channel);
+    this._ws.on(
+      'ready',
+      async ({
+        data,
+      }: {
+        data: { user: APIUser; guilds: Array<APIGuild & { unavailable?: boolean }> };
+      }) => {
+        const { ClientUser } = await import('./ClientUser.js');
+        const { Guild } = await import('../structures/Guild.js');
+        const { Channel } = await import('../structures/Channel.js');
+        this.user = new ClientUser(this, data.user);
+        for (const g of data.guilds ?? []) {
+          const guild = new Guild(this, g);
+          this.guilds.set(guild.id, guild);
+          const withCh = g as APIGuild & {
+            channels?: APIChannel[];
+            voice_states?: Array<{ user_id: string; channel_id: string | null }>;
+          };
+          for (const ch of withCh.channels ?? []) {
+            const channel = Channel.from(this, ch);
+            if (channel) this.channels.set(channel.id, channel);
+          }
+          if (withCh.voice_states?.length) {
+            this.emit(Events.VoiceStatesSync, {
+              guildId: guild.id,
+              voiceStates: withCh.voice_states,
+            });
+          }
         }
-        if (withCh.voice_states?.length) {
-          this.emit(Events.VoiceStatesSync, { guildId: guild.id, voiceStates: withCh.voice_states });
-        }
+        this.readyAt = new Date();
+        this.emit(Events.Ready);
       }
-      this.readyAt = new Date();
-      this.emit(Events.Ready);
-    });
+    );
     this._ws.on('error', ({ error }: { error: Error }) => this.emit(Events.Error, error));
     this._ws.on('debug', (msg: string) => this.emit(Events.Debug, msg));
     await this._ws.connect();

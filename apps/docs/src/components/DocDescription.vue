@@ -15,10 +15,7 @@ const formatted = computed(() => {
   const t = props.text?.trim();
   if (!t) return '';
   // Escape HTML
-  let s = t
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  let s = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   // Backticks → inline code (non-greedy, handle multiple)
   s = s.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
   // Newlines → <br>

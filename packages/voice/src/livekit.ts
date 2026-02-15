@@ -11,8 +11,7 @@ export function isLiveKitEndpoint(
 ): boolean {
   if (!endpoint || typeof endpoint !== 'string') return false;
   const s = endpoint.trim();
-  if (s.includes('access_token=') || (s.includes('/rtc') && s.includes('?')))
-    return true;
+  if (s.includes('access_token=') || (s.includes('/rtc') && s.includes('?'))) return true;
   // Gateway may send only host (e.g. ferret.iad.fluxer.media) + token
   if (token && !s.includes('?')) return true;
   return false;
@@ -24,7 +23,11 @@ export function isLiveKitEndpoint(
  * Removes trailing slashes and /rtc path to avoid 404 (SDK adds /rtc itself).
  */
 export function buildLiveKitUrlForRtcSdk(endpoint: string): string {
-  const base = endpoint.replace(/^(wss|ws|https?):\/\//i, '').replace(/^\/+/, '').split('/')[0] ?? endpoint;
+  const base =
+    endpoint
+      .replace(/^(wss|ws|https?):\/\//i, '')
+      .replace(/^\/+/, '')
+      .split('/')[0] ?? endpoint;
   const scheme = /^wss?:\/\//i.test(endpoint) ? (endpoint.startsWith('wss') ? 'wss' : 'ws') : 'wss';
   return `${scheme}://${base.replace(/\/+$/, '')}`;
 }

@@ -1,12 +1,7 @@
 <template>
   <section class="section">
     <h2>Methods</h2>
-    <div
-      v-for="m in methods"
-      :key="m.name"
-      :id="`method-${m.name}`"
-      class="method-item"
-    >
+    <div v-for="m in methods" :id="`method-${m.name}`" :key="m.name" class="method-item">
       <div class="method-header">
         <code class="method-name">{{ m.name }}</code>
         <span v-if="m.deprecated" class="deprecated-badge">deprecated</span>
@@ -15,7 +10,19 @@
         <TypeSignature :type="methodSignature(m)" />
       </div>
       <p v-if="m.description" class="method-desc"><DocDescription :text="m.description" /></p>
+      <p v-if="typeof m.deprecated === 'string'" class="method-deprecated">
+        Deprecated: {{ m.deprecated }}
+      </p>
       <ParamsTable v-if="m.params?.length" :params="m.params" />
+      <div v-if="m.examples?.length" class="method-examples">
+        <CodeBlock
+          v-for="(ex, i) in m.examples"
+          :key="i"
+          :code="ex"
+          language="javascript"
+          :link-types="true"
+        />
+      </div>
     </div>
   </section>
 </template>
@@ -25,11 +32,14 @@ import type { DocMethod } from '../types/doc-schema';
 import DocDescription from './DocDescription.vue';
 import ParamsTable from './ParamsTable.vue';
 import TypeSignature from './TypeSignature.vue';
+import CodeBlock from './CodeBlock.vue';
 
 defineProps<{ methods: DocMethod[]; parentName?: string }>();
 
 function methodSignature(m: DocMethod) {
-  const paramsStr = (m.params ?? []).map((p) => `${p.name}${p.optional ? '?' : ''}: ${p.type}`).join(', ');
+  const paramsStr = (m.params ?? [])
+    .map((p) => `${p.name}${p.optional ? '?' : ''}: ${p.type}`)
+    .join(', ');
   return `(${paramsStr}): ${m.returns}`;
 }
 </script>
@@ -94,5 +104,25 @@ function methodSignature(m: DocMethod) {
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.method-deprecated {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-style: italic;
+  margin-top: 0.35rem;
+}
+
+.method-examples {
+  margin-top: 1rem;
+}
+
+.method-examples :deep(.code-block) {
+  margin-bottom: 0.75rem;
+}
+
+.method-examples :deep(.code-block:last-child) {
+  margin-bottom: 0;
 }
 </style>

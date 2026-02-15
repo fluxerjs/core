@@ -1,5 +1,5 @@
 <template>
-  <div class="code-block" ref="blockRef">
+  <div ref="blockRef" class="code-block">
     <div class="code-header">
       <span v-if="title" class="code-title">{{ title }}</span>
       <button type="button" class="copy-btn" :class="{ copied }" @click="copy">
@@ -45,7 +45,8 @@ function getKnownTypes(): { name: string; path: string }[] {
   if (!doc) return [];
   const out: { name: string; path: string }[] = [];
   for (const c of doc.classes ?? []) out.push({ name: c.name, path: `/docs/classes/${c.name}` });
-  for (const i of doc.interfaces ?? []) out.push({ name: i.name, path: `/docs/typedefs/${i.name}` });
+  for (const i of doc.interfaces ?? [])
+    out.push({ name: i.name, path: `/docs/typedefs/${i.name}` });
   for (const e of doc.enums ?? []) out.push({ name: e.name, path: `/docs/typedefs/${e.name}` });
   return out.sort((a, b) => b.name.length - a.name.length); // longer first to avoid partial matches
 }
@@ -56,7 +57,10 @@ function addLinks(html: string): string {
   const tokenClasses = ['class-name', 'constant', 'variable']; // class-name for Client/EmbedBuilder, constant for Events
   for (const { name, path } of types) {
     for (const tok of tokenClasses) {
-      const re = new RegExp(`(<span class="[^"]*token[^"]*${escapeRegex(tok)}[^"]*"[^>]*)>${escapeRegex(name)}</span>`, 'g');
+      const re = new RegExp(
+        `(<span class="[^"]*token[^"]*${escapeRegex(tok)}[^"]*"[^>]*)>${escapeRegex(name)}</span>`,
+        'g'
+      );
       out = out.replace(re, `$1><a href="${path}" class="doc-link">${name}</a></span>`);
     }
   }
@@ -77,7 +81,10 @@ function dedent(code: string): string {
       return m ? m[1].length : 0;
     })
   );
-  return lines.map((l) => (l.length >= minIndent ? l.slice(minIndent) : l)).join('\n').trim();
+  return lines
+    .map((l) => (l.length >= minIndent ? l.slice(minIndent) : l))
+    .join('\n')
+    .trim();
 }
 
 function normalizedCode(): string {

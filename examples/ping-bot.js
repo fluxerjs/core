@@ -26,30 +26,39 @@ const YTDLP_FORMAT = 'bestaudio[ext=webm][acodec=opus]/bestaudio[ext=webm]/besta
 const DEFAULT_VIDEO_URL = 'https://www.w3schools.com/html/mov_bbb.mp4';
 
 /** yt-dlp format for MP4 video (prefer 1080p, then 720p, 360p, then best). */
-const YTDLP_VIDEO_FORMAT = 'best[height<=1080][ext=mp4]/best[height<=1080]/22/18/best[ext=mp4]/best';
+const YTDLP_VIDEO_FORMAT =
+  'best[height<=1080][ext=mp4]/best[height<=1080]/22/18/best[ext=mp4]/best';
 
 /** Regex for YouTube and similar sites that yt-dlp supports for video extraction. */
 const YOUTUBE_LIKE = /youtube\.com|youtu\.be|yt\.be/i;
 
 async function getStreamUrl(url) {
-  const result = await youtubedl(url, {
-    getUrl: true,
-    f: YTDLP_FORMAT,
-    formatSort: 'acodec:opus',
-    noWarnings: true,
-    noPlaylist: true,
-  }, { timeout: 15000 });
+  const result = await youtubedl(
+    url,
+    {
+      getUrl: true,
+      f: YTDLP_FORMAT,
+      formatSort: 'acodec:opus',
+      noWarnings: true,
+      noPlaylist: true,
+    },
+    { timeout: 15000 }
+  );
   return String(result ?? '').trim();
 }
 
 /** Get a direct MP4 video URL from YouTube or similar. Returns null on failure. */
 async function getVideoUrl(url) {
-  const result = await youtubedl(url, {
-    getUrl: true,
-    f: YTDLP_VIDEO_FORMAT,
-    noWarnings: true,
-    noPlaylist: true,
-  }, { timeout: 20000 });
+  const result = await youtubedl(
+    url,
+    {
+      getUrl: true,
+      f: YTDLP_VIDEO_FORMAT,
+      noWarnings: true,
+      noPlaylist: true,
+    },
+    { timeout: 20000 }
+  );
   return String(result ?? '').trim() || null;
 }
 
@@ -125,9 +134,7 @@ commands.set('ping', {
     const embed = new EmbedBuilder()
       .setTitle('Pong!')
       .setColor(BRAND_COLOR)
-      .addFields(
-        { name: 'API Latency', value: `\`${apiLatency}ms\``, inline: true },
-      )
+      .addFields({ name: 'API Latency', value: `\`${apiLatency}ms\``, inline: true })
       .setFooter({ text: 'Fluxer Bot' })
       .setTimestamp();
 
@@ -151,7 +158,7 @@ commands.set('info', {
         { name: 'Channels', value: `${client.channels.size}`, inline: true },
         { name: 'Uptime', value: formatUptime(uptime), inline: true },
         { name: 'API Latency', value: `${apiLatency}ms`, inline: true },
-        { name: 'Node.js', value: process.version, inline: true },
+        { name: 'Node.js', value: process.version, inline: true }
       )
       .setFooter({ text: 'Powered by @fluxerjs/core' })
       .setTimestamp();
@@ -161,11 +168,13 @@ commands.set('info', {
 });
 
 commands.set('userinfo', {
-  description: 'Show a user\'s profile (mention or user ID); no arg = yourself',
+  description: "Show a user's profile (mention or user ID); no arg = yourself",
   async execute(message, client, args) {
     const userId = resolveUserId(args[0], message.author.id);
     if (!userId) {
-      await message.reply('Provide a user mention (`@user`) or a user ID. Example: `!userinfo @Someone` or `!userinfo 123456789012345678`');
+      await message.reply(
+        'Provide a user mention (`@user`) or a user ID. Example: `!userinfo @Someone` or `!userinfo 123456789012345678`'
+      );
       return;
     }
     let userData;
@@ -173,7 +182,9 @@ commands.set('userinfo', {
     try {
       userData = await client.rest.get(Routes.user(userId));
     } catch {
-      await message.reply('Could not fetch that user. They may not exist or the ID may be invalid.');
+      await message.reply(
+        'Could not fetch that user. They may not exist or the ID may be invalid.'
+      );
       return;
     }
     try {
@@ -185,32 +196,56 @@ commands.set('userinfo', {
       ? `https://fluxerusercontent.com/avatars/${userData.id}/${userData.avatar}.png?size=256`
       : null;
     const profile = profileData?.user_profile;
-    const accentColor = (profile && (profile.accent_color ?? profile.banner_color) != null)
-      ? Number(profile.accent_color ?? profile.banner_color)
-      : userData.avatar_color != null
-        ? Number(userData.avatar_color)
-        : BRAND_COLOR;
+    const accentColor =
+      profile && (profile.accent_color ?? profile.banner_color) != null
+        ? Number(profile.accent_color ?? profile.banner_color)
+        : userData.avatar_color != null
+          ? Number(userData.avatar_color)
+          : BRAND_COLOR;
     const embed = new EmbedBuilder()
       .setTitle('User profile')
       .setColor(accentColor)
       .setThumbnail(avatarUrl)
       .addFields(
         { name: 'Username', value: userData.username ?? '—', inline: true },
-        { name: 'Display name', value: userData.global_name ?? userData.username ?? '—', inline: true },
+        {
+          name: 'Display name',
+          value: userData.global_name ?? userData.username ?? '—',
+          inline: true,
+        },
         { name: 'ID', value: `\`${userData.id}\``, inline: true },
         { name: 'Bot', value: userData.bot ? 'Yes' : 'No', inline: true },
         { name: 'Discriminator', value: userData.discriminator ?? '—', inline: true },
-        { name: 'Avatar color', value: userData.avatar_color != null ? `#${Number(userData.avatar_color).toString(16).padStart(6, '0')}` : '—', inline: true },
+        {
+          name: 'Avatar color',
+          value:
+            userData.avatar_color != null
+              ? `#${Number(userData.avatar_color).toString(16).padStart(6, '0')}`
+              : '—',
+          inline: true,
+        }
       )
       .setFooter({ text: `Requested by ${message.author.username}` })
       .setTimestamp();
     if (profile && typeof profile === 'object') {
       const extra = [];
-      if (profile.pronouns != null && profile.pronouns !== '') extra.push({ name: 'Pronouns', value: String(profile.pronouns).slice(0, 40), inline: true });
-      if (profile.bio != null && profile.bio !== '') extra.push({ name: 'Bio', value: String(profile.bio).slice(0, 1024) || '—' });
-      if (profile.banner != null && profile.banner !== '') extra.push({ name: 'Banner', value: 'Set', inline: true });
+      if (profile.pronouns != null && profile.pronouns !== '')
+        extra.push({
+          name: 'Pronouns',
+          value: String(profile.pronouns).slice(0, 40),
+          inline: true,
+        });
+      if (profile.bio != null && profile.bio !== '')
+        extra.push({ name: 'Bio', value: String(profile.bio).slice(0, 1024) || '—' });
+      if (profile.banner != null && profile.banner !== '')
+        extra.push({ name: 'Banner', value: 'Set', inline: true });
       const accent = profile.accent_color ?? profile.banner_color;
-      if (accent != null) extra.push({ name: 'Accent color', value: `#${Number(accent).toString(16).padStart(6, '0')}`, inline: true });
+      if (accent != null)
+        extra.push({
+          name: 'Accent color',
+          value: `#${Number(accent).toString(16).padStart(6, '0')}`,
+          inline: true,
+        });
       if (extra.length) embed.addFields(...extra);
     }
     try {
@@ -228,11 +263,13 @@ const EXPLICIT_CONTENT_FILTERS = ['Disabled', 'Members without roles', 'All memb
 const DEFAULT_NOTIFICATION_LEVELS = ['All messages', 'Only mentions'];
 
 commands.set('serverinfo', {
-  description: 'Show this server\'s details',
+  description: "Show this server's details",
   async execute(message, client, args) {
     const guildId = args[0] ?? message.guildId;
     if (!guildId) {
-      await message.reply('Use this command in a server or provide a guild ID: `!serverinfo [guild_id]`');
+      await message.reply(
+        'Use this command in a server or provide a guild ID: `!serverinfo [guild_id]`'
+      );
       return;
     }
     let data;
@@ -252,25 +289,68 @@ commands.set('serverinfo', {
       .addFields(
         { name: 'ID', value: `\`${data.id}\``, inline: true },
         { name: 'Owner ID', value: `\`${data.owner_id ?? '—'}\``, inline: true },
-        { name: 'Verification', value: VERIFICATION_LEVELS[data.verification_level] ?? String(data.verification_level), inline: true },
-        { name: 'MFA level', value: MFA_LEVELS[data.mfa_level] ?? String(data.mfa_level), inline: true },
-        { name: 'AFK timeout', value: data.afk_timeout != null ? `${data.afk_timeout}s` : '—', inline: true },
+        {
+          name: 'Verification',
+          value: VERIFICATION_LEVELS[data.verification_level] ?? String(data.verification_level),
+          inline: true,
+        },
+        {
+          name: 'MFA level',
+          value: MFA_LEVELS[data.mfa_level] ?? String(data.mfa_level),
+          inline: true,
+        },
+        {
+          name: 'AFK timeout',
+          value: data.afk_timeout != null ? `${data.afk_timeout}s` : '—',
+          inline: true,
+        },
         { name: 'NSFW level', value: String(data.nsfw_level ?? 0), inline: true },
-        { name: 'Explicit content filter', value: EXPLICIT_CONTENT_FILTERS[data.explicit_content_filter] ?? String(data.explicit_content_filter ?? 0), inline: true },
-        { name: 'Default notifications', value: DEFAULT_NOTIFICATION_LEVELS[data.default_message_notifications] ?? '—', inline: true },
-        { name: 'Vanity URL', value: data.vanity_url_code ? `/${data.vanity_url_code}` : '—', inline: true },
-        { name: 'System channel ID', value: data.system_channel_id ? `\`${data.system_channel_id}\`` : '—', inline: true },
-        { name: 'Rules channel ID', value: data.rules_channel_id ? `\`${data.rules_channel_id}\`` : '—', inline: true },
-        { name: 'AFK channel ID', value: data.afk_channel_id ? `\`${data.afk_channel_id}\`` : '—', inline: true },
-        { name: 'Features', value: data.features?.length ? data.features.join(', ') : '—' },
+        {
+          name: 'Explicit content filter',
+          value:
+            EXPLICIT_CONTENT_FILTERS[data.explicit_content_filter] ??
+            String(data.explicit_content_filter ?? 0),
+          inline: true,
+        },
+        {
+          name: 'Default notifications',
+          value: DEFAULT_NOTIFICATION_LEVELS[data.default_message_notifications] ?? '—',
+          inline: true,
+        },
+        {
+          name: 'Vanity URL',
+          value: data.vanity_url_code ? `/${data.vanity_url_code}` : '—',
+          inline: true,
+        },
+        {
+          name: 'System channel ID',
+          value: data.system_channel_id ? `\`${data.system_channel_id}\`` : '—',
+          inline: true,
+        },
+        {
+          name: 'Rules channel ID',
+          value: data.rules_channel_id ? `\`${data.rules_channel_id}\`` : '—',
+          inline: true,
+        },
+        {
+          name: 'AFK channel ID',
+          value: data.afk_channel_id ? `\`${data.afk_channel_id}\`` : '—',
+          inline: true,
+        },
+        { name: 'Features', value: data.features?.length ? data.features.join(', ') : '—' }
       )
       .setFooter({ text: `Requested by ${message.author.username}` })
       .setTimestamp();
-    if (data.banner) embed.setImage(`https://fluxerusercontent.com/banners/${data.id}/${data.banner}.png?size=512`);
+    if (data.banner)
+      embed.setImage(
+        `https://fluxerusercontent.com/banners/${data.id}/${data.banner}.png?size=512`
+      );
     try {
       await message.reply({ embeds: [embed.toJSON()] });
     } catch {
-      await message.reply(`Server: **${data.name}** (ID: \`${data.id}\`). Could not send embed.`).catch(() => {});
+      await message
+        .reply(`Server: **${data.name}** (ID: \`${data.id}\`). Could not send embed.`)
+        .catch(() => {});
     }
   },
 });
@@ -284,7 +364,7 @@ function resolveRoleIdOrName(arg) {
 }
 
 commands.set('roleinfo', {
-  description: 'Show a role\'s details (role ID, mention, or name)',
+  description: "Show a role's details (role ID, mention, or name)",
   async execute(message, client, args) {
     const guildId = message.guildId;
     if (!guildId) {
@@ -293,7 +373,9 @@ commands.set('roleinfo', {
     }
     const resolved = resolveRoleIdOrName(args[0]);
     if (!resolved) {
-      await message.reply('Provide a role ID, role mention (`@Role`), or role name. Example: `!roleinfo Moderator`');
+      await message.reply(
+        'Provide a role ID, role mention (`@Role`), or role name. Example: `!roleinfo Moderator`'
+      );
       return;
     }
     let roles;
@@ -304,11 +386,16 @@ commands.set('roleinfo', {
       return;
     }
     const roleList = Array.isArray(roles) ? roles : Object.values(roles ?? {});
-    const role = roleList.find((r) =>
-      resolved.type === 'id' ? r.id === resolved.value : (r.name && r.name.toLowerCase() === resolved.value.toLowerCase())
-    ) ?? null;
+    const role =
+      roleList.find((r) =>
+        resolved.type === 'id'
+          ? r.id === resolved.value
+          : r.name && r.name.toLowerCase() === resolved.value.toLowerCase()
+      ) ?? null;
     if (!role) {
-      await message.reply(resolved.type === 'id' ? 'No role found with that ID.' : 'No role found with that name.');
+      await message.reply(
+        resolved.type === 'id' ? 'No role found with that ID.' : 'No role found with that name.'
+      );
       return;
     }
     const color = role.color != null && role.color !== 0 ? role.color : BRAND_COLOR;
@@ -320,19 +407,32 @@ commands.set('roleinfo', {
         { name: 'ID', value: `\`${role.id}\``, inline: true },
         { name: 'Name', value: role.name ?? '—', inline: true },
         { name: 'Position', value: String(role.position ?? 0), inline: true },
-        { name: 'Color', value: role.color != null && role.color !== 0 ? `#${Number(role.color).toString(16).padStart(6, '0')}` : 'Default', inline: true },
+        {
+          name: 'Color',
+          value:
+            role.color != null && role.color !== 0
+              ? `#${Number(role.color).toString(16).padStart(6, '0')}`
+              : 'Default',
+          inline: true,
+        },
         { name: 'Hoist', value: role.hoist ? 'Yes' : 'No', inline: true },
         { name: 'Mentionable', value: role.mentionable ? 'Yes' : 'No', inline: true },
         { name: 'Unicode emoji', value: role.unicode_emoji ?? '—', inline: true },
-        { name: 'Hoist position', value: role.hoist_position != null ? String(role.hoist_position) : '—', inline: true },
-        { name: 'Permissions', value: permStr },
+        {
+          name: 'Hoist position',
+          value: role.hoist_position != null ? String(role.hoist_position) : '—',
+          inline: true,
+        },
+        { name: 'Permissions', value: permStr }
       )
       .setFooter({ text: `Requested by ${message.author.username}` })
       .setTimestamp();
     try {
       await message.reply({ embeds: [embed.toJSON()] });
     } catch {
-      await message.reply(`Role: **${role.name}** (ID: \`${role.id}\`). Could not send embed.`).catch(() => {});
+      await message
+        .reply(`Role: **${role.name}** (ID: \`${role.id}\`). Could not send embed.`)
+        .catch(() => {});
     }
   },
 });
@@ -343,7 +443,7 @@ commands.set('dm', {
     try {
       await message.author.send('You requested a DM! This is a direct message from the bot.');
       await message.reply('Check your DMs! 📬');
-    } catch (err) {
+    } catch {
       await message.reply('Could not DM you. You may have DMs disabled.').catch(() => {});
     }
   },
@@ -363,8 +463,10 @@ commands.set('dmuser', {
       const user = new User(client, userData);
       await user.send(text);
       await message.reply(`Sent DM to **${user.globalName ?? user.username}**.`);
-    } catch (err) {
-      await message.reply('Could not send DM. The user may not exist or may have DMs disabled.').catch(() => {});
+    } catch {
+      await message
+        .reply('Could not send DM. The user may not exist or may have DMs disabled.')
+        .catch(() => {});
     }
   },
 });
@@ -396,11 +498,13 @@ commands.set('editembed', {
 
     const updatedEmbed = new EmbedBuilder()
       .setTitle('Edited Embed')
-      .setDescription('The Fluxer API supports editing message embeds via `message.edit({ embeds: [...] })`.')
+      .setDescription(
+        'The Fluxer API supports editing message embeds via `message.edit({ embeds: [...] })`.'
+      )
       .setColor(0x57f287)
       .addFields(
         { name: 'Original', value: 'First state', inline: true },
-        { name: 'Edited', value: 'Updated state', inline: true },
+        { name: 'Edited', value: 'Updated state', inline: true }
       )
       .setFooter({ text: 'Embed was successfully edited' })
       .setTimestamp();
@@ -445,7 +549,7 @@ commands.set('play', {
       return;
     }
     const channel = client.channels.get(voiceChannelId);
-    if (!channel || !(channel instanceof VoiceChannel)) {
+    if (!(channel instanceof VoiceChannel)) {
       await message.reply('Could not find that voice channel.');
       return;
     }
@@ -493,13 +597,15 @@ commands.set('playvideo', {
       return;
     }
     const channel = client.channels.get(voiceChannelId);
-    if (!channel || !(channel instanceof VoiceChannel)) {
+    if (!(channel instanceof VoiceChannel)) {
       await message.reply('Could not find that voice channel.');
       return;
     }
     const inputUrl = args[0]?.trim() || DEFAULT_VIDEO_URL;
     if (!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
-      await message.reply('Provide a valid URL: YouTube link or direct MP4. Example: `!playvideo https://youtube.com/watch?v=...`');
+      await message.reply(
+        'Provide a valid URL: YouTube link or direct MP4. Example: `!playvideo https://youtube.com/watch?v=...`'
+      );
       return;
     }
     try {
@@ -508,14 +614,18 @@ commands.set('playvideo', {
         await message.reply('Fetching video URL from YouTube...').catch(() => {});
         const resolved = await getVideoUrl(inputUrl);
         if (!resolved) {
-          await message.reply('Could not get video URL. Is youtube-dl-exec installed?').catch(() => {});
+          await message
+            .reply('Could not get video URL. Is youtube-dl-exec installed?')
+            .catch(() => {});
           return;
         }
         videoUrl = resolved;
       }
       const connection = await voiceManager.join(channel);
       if (!(connection instanceof LiveKitRtcConnection)) {
-        await message.reply('Video requires LiveKit voice (this server may use a different voice backend).');
+        await message.reply(
+          'Video requires LiveKit voice (this server may use a different voice backend).'
+        );
         return;
       }
       if (!connection.isConnected()) {
@@ -610,8 +720,19 @@ client.on(Events.Debug, (msg) => console.log('[debug]', msg));
 
 // Optional: log voice gateway events when VOICE_DEBUG=1 (helps diagnose connection timeouts)
 if (process.env.VOICE_DEBUG === '1' || process.env.VOICE_DEBUG === 'true') {
-  client.on(Events.VoiceStateUpdate, (d) => console.log('[voice] VoiceStateUpdate', { guild_id: d.guild_id, user_id: d.user_id, channel_id: d.channel_id }));
-  client.on(Events.VoiceServerUpdate, (d) => console.log('[voice] VoiceServerUpdate', { guild_id: d.guild_id, endpoint: d.endpoint ? 'present' : 'null' }));
+  client.on(Events.VoiceStateUpdate, (d) =>
+    console.log('[voice] VoiceStateUpdate', {
+      guild_id: d.guild_id,
+      user_id: d.user_id,
+      channel_id: d.channel_id,
+    })
+  );
+  client.on(Events.VoiceServerUpdate, (d) =>
+    console.log('[voice] VoiceServerUpdate', {
+      guild_id: d.guild_id,
+      endpoint: d.endpoint ? 'present' : 'null',
+    })
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

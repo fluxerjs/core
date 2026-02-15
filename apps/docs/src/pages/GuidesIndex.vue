@@ -4,17 +4,19 @@
       <h1>Guides</h1>
       <p class="lead">Learn how to build bots with Fluxer.js. Pick a guide to get started.</p>
     </div>
-    <div class="guide-cards">
-      <router-link
-        v-for="g in guides"
-        :key="g.id"
-        :to="versionedPath(`/guides/${g.slug}`)"
-        class="guide-card"
-      >
-        <span class="guide-card-category">{{ getCategoryLabel(g.category) }}</span>
-        <h2 class="guide-card-title">{{ g.title }}</h2>
-        <p class="guide-card-desc">{{ g.description }}</p>
-      </router-link>
+    <div v-for="(items, cat) in groupedGuides" :key="cat" class="guide-group">
+      <h2 class="group-title">{{ getCategoryLabel(cat) }}</h2>
+      <div class="guide-cards">
+        <router-link
+          v-for="g in items"
+          :key="g.id"
+          :to="versionedPath(`/guides/${g.slug}`)"
+          class="guide-card"
+        >
+          <h3 class="guide-card-title">{{ g.title }}</h3>
+          <p class="guide-card-desc">{{ g.description }}</p>
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -24,10 +26,20 @@ import { computed } from 'vue';
 import { getCategoryLabel } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
+import type { Guide } from '../data/guides';
 
 const guidesStore = useGuidesStore();
 const { path: versionedPath } = useVersionedPath();
-const guides = computed(() => guidesStore.guides);
+
+const groupedGuides = computed(() => {
+  const groups: Record<string, Guide[]> = {};
+  for (const g of guidesStore.guides) {
+    const cat = g.category;
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(g);
+  }
+  return groups;
+});
 </script>
 
 <style scoped>
@@ -48,6 +60,23 @@ const guides = computed(() => guidesStore.guides);
   line-height: 1.6;
 }
 
+.guide-group {
+  margin-bottom: 2rem;
+}
+
+.guide-group:last-child {
+  margin-bottom: 0;
+}
+
+.group-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
 .guide-cards {
   display: grid;
   gap: 1rem;
@@ -61,21 +90,14 @@ const guides = computed(() => guidesStore.guides);
   border-radius: var(--radius);
   text-decoration: none;
   color: var(--text-primary);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .guide-card:hover {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
-}
-
-.guide-card-category {
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--badge-enum);
-  margin-bottom: 0.5rem;
 }
 
 .guide-card-title {

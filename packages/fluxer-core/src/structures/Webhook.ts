@@ -54,7 +54,9 @@ export class Webhook extends Base {
    */
   async send(options: string | WebhookSendOptions): Promise<void> {
     if (!this.token) {
-      throw new Error('Webhook token is required to send. The token is only returned when creating a webhook; fetched webhooks cannot send.');
+      throw new Error(
+        'Webhook token is required to send. The token is only returned when creating a webhook; fetched webhooks cannot send.'
+      );
     }
     const body = typeof options === 'string' ? { content: options } : options;
     await this.client.rest.post(Routes.webhookExecute(this.id, this.token), {
@@ -85,7 +87,7 @@ export class Webhook extends Base {
     client: Client,
     webhookId: string,
     token: string,
-    options?: { channelId?: string; guildId?: string; name?: string },
+    options?: { channelId?: string; guildId?: string; name?: string }
   ): Webhook {
     return new Webhook(client, {
       id: webhookId,

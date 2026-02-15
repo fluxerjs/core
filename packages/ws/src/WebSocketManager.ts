@@ -40,7 +40,7 @@ export class WebSocketManager extends EventEmitter {
     }
 
     try {
-      const gateway = await this.options.rest.get('/gateway/bot') as APIGatewayBotResponse;
+      const gateway = (await this.options.rest.get('/gateway/bot')) as APIGatewayBotResponse;
       this.gatewayUrl = gateway.url;
       this.shardCount = this.options.shardCount ?? gateway.shards;
     } catch (err) {
@@ -73,7 +73,14 @@ export class WebSocketManager extends EventEmitter {
       shard.on('debug', (msg) => this.emit('debug', msg));
 
       this.shards.set(id, shard);
-      shard.connect();
+      try {
+        shard.connect();
+      } catch (err) {
+        this.emit('error', {
+          shardId: id,
+          error: err instanceof Error ? err : new Error(String(err)),
+        });
+      }
     }
   }
 

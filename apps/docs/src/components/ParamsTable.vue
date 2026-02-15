@@ -9,7 +9,9 @@
     </thead>
     <tbody>
       <tr v-for="p in params" :key="p.name">
-        <td><code class="param-name">{{ p.name }}{{ p.optional ? '?' : '' }}</code></td>
+        <td>
+          <code class="param-name">{{ p.name }}{{ p.optional ? '?' : '' }}</code>
+        </td>
         <td><TypeSignature :type="p.type" /></td>
         <td class="param-desc">
           <DocDescription v-if="p.description" :text="p.description" />

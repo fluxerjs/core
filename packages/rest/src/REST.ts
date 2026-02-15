@@ -47,7 +47,14 @@ export class REST extends EventEmitter {
   }
 
   /** Send a POST request. */
-  async post<T>(route: string, options?: { body?: unknown; auth?: boolean; files?: Array<{ name: string; data: Blob | ArrayBuffer | Uint8Array; filename?: string }> }): Promise<T> {
+  async post<T>(
+    route: string,
+    options?: {
+      body?: unknown;
+      auth?: boolean;
+      files?: Array<{ name: string; data: Blob | ArrayBuffer | Uint8Array; filename?: string }>;
+    }
+  ): Promise<T> {
     return this.requestManager.request<T>('POST', route, {
       body: options?.body,
       auth: options?.auth,
@@ -57,12 +64,18 @@ export class REST extends EventEmitter {
 
   /** Send a PATCH request. */
   async patch<T>(route: string, options?: { body?: unknown; auth?: boolean }): Promise<T> {
-    return this.requestManager.request<T>('PATCH', route, { body: options?.body, auth: options?.auth });
+    return this.requestManager.request<T>('PATCH', route, {
+      body: options?.body,
+      auth: options?.auth,
+    });
   }
 
   /** Send a PUT request. */
   async put<T>(route: string, options?: { body?: unknown; auth?: boolean }): Promise<T> {
-    return this.requestManager.request<T>('PUT', route, { body: options?.body, auth: options?.auth });
+    return this.requestManager.request<T>('PUT', route, {
+      body: options?.body,
+      auth: options?.auth,
+    });
   }
 
   /** Send a DELETE request. */

@@ -1,7 +1,15 @@
 /**
  * Data structure that allows efficient storage of multiple flags (bits) in a single number.
+ *
+ * Note: JavaScript bitwise operations (|, &, ^, <<, >>) operate on 32-bit signed integers.
+ * Flags with values exceeding 2^30 may exhibit unexpected behavior. For permission-style
+ * bitfields with more than 30 bits, consider using BigInt-based implementations.
  */
-export type BitFieldResolvable<S extends string> = S | number | BitField<S> | (S | number | BitField<S>)[];
+export type BitFieldResolvable<S extends string> =
+  | S
+  | number
+  | BitField<S>
+  | (S | number | BitField<S>)[];
 
 export class BitField<S extends string> {
   static Flags: Record<string, number> = {};

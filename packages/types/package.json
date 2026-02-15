@@ -1,8 +1,23 @@
 {
   "name": "@fluxerjs/types",
-  "publishConfig": { "access": "public" },
-  "version": "1.0.7",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.8",
   "description": "TypeScript types for the Fluxer API",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fluxerjs/core.git",
+    "directory": "packages/types"
+  },
+  "bugs": "https://github.com/fluxerjs/core/issues",
+  "homepage": "https://fluxerjs.blstmo.com",
+  "keywords": [
+    "fluxer",
+    "types",
+    "api"
+  ],
+  "license": "AGPL-3.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -13,10 +28,16 @@
       "require": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "lint": "eslint src --max-warnings 0 --config ../../eslint.config.js",
+    "lint:fix": "eslint src --fix --config ../../eslint.config.js",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "devDependencies": {
     "tsup": "^8.3.0",

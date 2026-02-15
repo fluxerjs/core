@@ -1,5 +1,12 @@
 <template>
   <article v-if="guide" class="guide-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <router-link :to="versionedPath('/guides')">Guides</router-link>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-category">{{ getCategoryLabel(guide.category) }}</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">{{ guide.title }}</span>
+    </nav>
     <div class="guide-header">
       <span class="guide-category">{{ getCategoryLabel(guide.category) }}</span>
       <h1 class="guide-title">{{ guide.title }}</h1>
@@ -20,10 +27,18 @@
     </template>
 
     <nav class="guide-nav">
-      <router-link v-if="prevGuide" :to="versionedPath(`/guides/${prevGuide.slug}`)" class="guide-nav-link guide-prev">
+      <router-link
+        v-if="prevGuide"
+        :to="versionedPath(`/guides/${prevGuide.slug}`)"
+        class="guide-nav-link guide-prev"
+      >
         ← {{ prevGuide.title }}
       </router-link>
-      <router-link v-if="nextGuide" :to="versionedPath(`/guides/${nextGuide.slug}`)" class="guide-nav-link guide-next">
+      <router-link
+        v-if="nextGuide"
+        :to="versionedPath(`/guides/${nextGuide.slug}`)"
+        class="guide-nav-link guide-next"
+      >
         {{ nextGuide.title }} →
       </router-link>
     </nav>
@@ -69,6 +84,29 @@ const nextGuide = computed(() => {
 </script>
 
 <style scoped>
+.breadcrumbs {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.breadcrumbs a {
+  color: var(--text-secondary);
+}
+
+.breadcrumbs a:hover {
+  color: var(--accent);
+}
+
+.breadcrumb-sep {
+  margin: 0 0.4rem;
+  opacity: 0.6;
+}
+
+.breadcrumb-current {
+  color: var(--text-primary);
+}
+
 .guide-header {
   margin-bottom: 2rem;
 }

@@ -38,7 +38,7 @@ function cleanDescription(s: string): string {
 function getDescriptionFromJSDoc(comment: string): string {
   const parsed = parseJSDoc(comment);
   if (!parsed) return '';
-  return cleanDescription(parsed.description || '');
+  return cleanDescription(parsed.description ?? '');
 }
 
 function getParamDescriptions(comment: string): Map<string, string> {
@@ -48,19 +48,19 @@ function getParamDescriptions(comment: string): Map<string, string> {
   for (const tag of parsed.tags) {
     if (tag.title === 'param' && 'name' in tag) {
       const name = (tag as doctrine.type.ParameterTag).name;
-      const desc = (tag as doctrine.type.ParameterTag).description || '';
+      const desc = (tag as doctrine.type.ParameterTag).description ?? '';
       if (name) map.set(name.replace(/^\[|\]$/g, ''), cleanDescription(desc));
     }
   }
   return map;
 }
 
-function getReturnsFromJSDoc(comment: string): string | undefined {
+function _getReturnsFromJSDoc(comment: string): string | undefined {
   const parsed = parseJSDoc(comment);
   if (!parsed?.tags) return undefined;
   const tag = parsed.tags.find((t) => t.title === 'returns');
   if (tag && tag.type === 'ReturnTag') {
-    return ((tag as doctrine.type.ReturnTag).description || '').trim();
+    return ((tag as doctrine.type.ReturnTag).description ?? '').trim();
   }
   return undefined;
 }
@@ -70,7 +70,7 @@ function getExamplesFromJSDoc(comment: string): string[] {
   if (!parsed?.tags) return [];
   return parsed.tags
     .filter((t) => t.title === 'example')
-    .map((t) => ((t as doctrine.type.Tag).description || '').trim())
+    .map((t) => ((t as doctrine.type.Tag).description ?? '').trim())
     .filter(Boolean);
 }
 
@@ -90,7 +90,7 @@ export function getDescriptionFromJSDocComment(comment: string): string {
 function getSource(node: ts.Node): DocSource | undefined {
   const sourceFile = node.getSourceFile();
   const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-  const fileName = sourceFile.fileName.split(/[/\\]/).pop() || '';
+  const fileName = sourceFile.fileName.split(/[/\\]/).pop() ?? '';
   return { file: fileName, line: line + 1 };
 }
 
@@ -109,9 +109,12 @@ export function extractConstructor(
     return { name, type, optional, description };
   });
 
+  const examples = getExamplesFromJSDoc(comment);
+
   return {
     params,
     description: getDescriptionFromJSDoc(comment) || undefined,
+    examples: examples.length ? examples : undefined,
   };
 }
 
@@ -131,8 +134,16 @@ export function extractProperty(
   );
   const optional = !!(node as ts.PropertySignature).questionToken;
   const description = getDescriptionFromJSDoc(comment) || undefined;
+  const examples = getExamplesFromJSDoc(comment);
 
-  return { name, type, readonly, optional, description };
+  return {
+    name,
+    type,
+    readonly,
+    optional,
+    description,
+    examples: examples.length ? examples : undefined,
+  };
 }
 
 export function extractMethod(
@@ -145,7 +156,7 @@ export function extractMethod(
   const comment = getJSDoc(node);
   const paramDescs = getParamDescriptions(comment);
 
-  const params: DocParam[] = (node.parameters || []).map((p) => {
+  const params: DocParam[] = (node.parameters ?? []).map((p) => {
     const pname = (p.name as ts.Identifier).getText();
     const type = p.type ? formatTypeNode(checker, p.type) : 'unknown';
     const optional = !!p.questionToken;
@@ -156,7 +167,10 @@ export function extractMethod(
   const returnType = node.type
     ? formatTypeNode(checker, node.type)
     : (node as ts.MethodDeclaration).body
-      ? formatTypeFromType(checker, checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)!))
+      ? formatTypeFromType(
+          checker,
+          checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)!)
+        )
       : 'void';
 
   const async = !!(node as ts.MethodDeclaration).modifiers?.some(
@@ -164,12 +178,14 @@ export function extractMethod(
   );
 
   const deprecated = getDeprecatedFromJSDoc(comment);
+  const examples = getExamplesFromJSDoc(comment);
 
   return {
     name,
     params,
     returns: returnType,
     description: getDescriptionFromJSDoc(comment) || undefined,
+    examples: examples.length ? examples : undefined,
     async,
     deprecated,
     source: getSource(node),

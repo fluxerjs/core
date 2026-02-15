@@ -64,7 +64,10 @@ export type GatewaySendPayload =
   | { op: GatewayOpcodes.Heartbeat; d: number | null }
   | { op: GatewayOpcodes.PresenceUpdate; d: GatewayPresenceUpdateData }
   | { op: GatewayOpcodes.VoiceStateUpdate; d: GatewayVoiceStateUpdateData }
-  | { op: GatewayOpcodes.RequestGuildMembers; d: { guild_id: Snowflake; query?: string; limit: number } };
+  | {
+      op: GatewayOpcodes.RequestGuildMembers;
+      d: { guild_id: Snowflake; query?: string; limit: number };
+    };
 
 // Incoming (gateway -> client)
 export interface GatewayHelloData {
@@ -156,6 +159,24 @@ export interface GatewayGuildMemberRemoveDispatchData {
   guild_id: Snowflake;
   user: APIUser;
 }
+
+export interface GatewayGuildBanAddDispatchData {
+  guild_id: Snowflake;
+  user: APIUser;
+  reason?: string | null;
+}
+export interface GatewayGuildBanRemoveDispatchData {
+  guild_id: Snowflake;
+  user: APIUser;
+}
+export interface GatewayTypingStartDispatchData {
+  channel_id: Snowflake;
+  user_id: Snowflake;
+  timestamp: number;
+  guild_id?: Snowflake;
+  member?: APIGuildMember & { guild_id?: Snowflake };
+}
+export type GatewayUserUpdateDispatchData = APIUser;
 
 export interface GatewayGuildRoleCreateDispatchData {
   guild_id: Snowflake;

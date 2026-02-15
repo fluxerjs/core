@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from './pages/Home.vue';
+import Changelog from './pages/Changelog.vue';
+import NotFound from './pages/NotFound.vue';
 import VersionLayout from './pages/VersionLayout.vue';
 import GuidesLayout from './pages/GuidesLayout.vue';
 import GuidesIndex from './pages/GuidesIndex.vue';
@@ -12,6 +14,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: Home },
+    { path: '/changelog', name: 'changelog', component: Changelog },
     { path: '/guides', redirect: '/v/latest/guides' },
     { path: '/docs', redirect: '/v/latest/docs' },
     {
@@ -31,15 +34,28 @@ const router = createRouter({
           path: 'docs',
           component: DocsLayout,
           children: [
-            { path: '', name: 'docs', redirect: (to) => ({ name: 'classes', params: { ...to.params } }) },
-            { path: 'classes', name: 'classes', component: () => import('./pages/ClassesList.vue') },
+            {
+              path: '',
+              name: 'docs',
+              redirect: (to) => ({ name: 'classes', params: { ...to.params } }),
+            },
+            {
+              path: 'classes',
+              name: 'classes',
+              component: () => import('./pages/ClassesList.vue'),
+            },
             { path: 'classes/:class', name: 'class', component: ClassPage },
-            { path: 'typedefs', name: 'typedefs', component: () => import('./pages/TypedefsList.vue') },
+            {
+              path: 'typedefs',
+              name: 'typedefs',
+              component: () => import('./pages/TypedefsList.vue'),
+            },
             { path: 'typedefs/:typedef', name: 'typedef', component: TypedefPage },
           ],
         },
       ],
     },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound },
   ],
 });
 

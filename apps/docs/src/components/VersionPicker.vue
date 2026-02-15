@@ -1,5 +1,5 @@
 <template>
-  <div v-if="availableVersions.length > 0" class="version-picker" ref="containerRef">
+  <div v-if="availableVersions.length > 0" ref="containerRef" class="version-picker">
     <button
       type="button"
       class="version-trigger"
@@ -45,7 +45,7 @@ const open = ref(false);
 const containerRef = ref<HTMLElement | null>(null);
 
 function handleClickOutside(e: MouseEvent) {
-  if (open.value && containerRef.value && !containerRef.value.contains(e.target as Node)) {
+  if (open.value && !containerRef.value?.contains(e.target as Node)) {
     open.value = false;
   }
 }
@@ -68,7 +68,9 @@ const versionOptions = computed(() => {
 });
 
 function handleBlur() {
-  setTimeout(() => { open.value = false; }, 150);
+  setTimeout(() => {
+    open.value = false;
+  }, 150);
 }
 
 function selectVersion(newVersion: string) {
@@ -106,7 +108,10 @@ function selectVersion(newVersion: string) {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .version-trigger:hover {
@@ -152,7 +157,9 @@ function selectVersion(newVersion: string) {
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
 }
 
 .version-option:hover {
@@ -167,7 +174,9 @@ function selectVersion(newVersion: string) {
 
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 .dropdown-enter-from,
 .dropdown-leave-to {

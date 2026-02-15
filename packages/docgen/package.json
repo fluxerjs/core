@@ -1,13 +1,17 @@
 {
   "name": "@fluxerjs/docgen",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "lint": "eslint src --max-warnings 0 --config ../../eslint.config.js",
+    "lint:fix": "eslint src --fix --config ../../eslint.config.js",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
     "doctrine": "^3.0.0",

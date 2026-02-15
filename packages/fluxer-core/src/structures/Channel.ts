@@ -1,4 +1,5 @@
 import type { Client } from '../client/Client.js';
+import { MessageManager } from '../client/MessageManager.js';
 import { Base } from './Base.js';
 import type { APIChannel, APIChannelPartial } from '@fluxerjs/types';
 import { ChannelType, Routes } from '@fluxerjs/types';
@@ -6,6 +7,21 @@ import type { Webhook } from './Webhook.js';
 
 /** Base class for all channel types. */
 export abstract class Channel extends Base {
+  /** Whether this channel has a send method (TextChannel, DMChannel). */
+  isSendable(): this is TextChannel | DMChannel {
+    return 'send' in this;
+  }
+
+  /** Whether this channel is a DM or Group DM. */
+  isDM(): boolean {
+    return this.type === ChannelType.DM || this.type === ChannelType.GroupDM;
+  }
+
+  /** Whether this channel is voice-based (VoiceChannel). */
+  isVoice(): boolean {
+    return 'bitrate' in this;
+  }
+
   /** Create a DM channel from API data (type DM or GroupDM). */
   static createDM(client: Client, data: APIChannelPartial): DMChannel {
     return new DMChannel(client, data);
@@ -27,13 +43,31 @@ export abstract class Channel extends Base {
    * @param client - The client instance
    * @param data - Channel data from the API
    */
-  static from(client: Client, data: APIChannel | APIChannelPartial): GuildChannel | TextChannel | null {
+  static from(
+    client: Client,
+    data: APIChannel | APIChannelPartial
+  ): GuildChannel | TextChannel | null {
     const type = data.type ?? 0;
     if (type === ChannelType.GuildText) return new TextChannel(client, data as APIChannel);
     if (type === ChannelType.GuildCategory) return new CategoryChannel(client, data as APIChannel);
     if (type === ChannelType.GuildVoice) return new VoiceChannel(client, data as APIChannel);
-    if (type === ChannelType.GuildLink || type === ChannelType.GuildLinkExtended) return new LinkChannel(client, data as APIChannel);
+    if (type === ChannelType.GuildLink || type === ChannelType.GuildLinkExtended)
+      return new LinkChannel(client, data as APIChannel);
     return new GuildChannel(client, data as APIChannel);
+  }
+
+  /**
+   * Create a channel from API data, including DM and GroupDM.
+   * Used by ChannelManager.fetch() for GET /channels/{id}.
+   */
+  static fromOrCreate(
+    client: Client,
+    data: APIChannel | APIChannelPartial
+  ): TextChannel | DMChannel | GuildChannel | null {
+    const type = data.type ?? 0;
+    if (type === ChannelType.DM || type === ChannelType.GroupDM)
+      return Channel.createDM(client, data);
+    return Channel.from(client, data);
   }
 }
 
@@ -95,11 +129,28 @@ export class TextChannel extends GuildChannel {
    * Send a message to this channel.
    * @param options - Text content or object with `content` and/or `embeds`
    */
-  async send(options: string | { content?: string; embeds?: unknown[] }): Promise<import('./Message.js').Message> {
+  async send(
+    options: string | { content?: string; embeds?: unknown[] }
+  ): Promise<import('./Message.js').Message> {
     const body = typeof options === 'string' ? { content: options } : options;
     const { Message } = await import('./Message.js');
     const data = await this.client.rest.post(Routes.channelMessages(this.id), { body });
     return new Message(this.client, data as import('@fluxerjs/types').APIMessage);
+  }
+
+  /** Message manager for this channel. Use channel.messages.fetch(messageId). */
+  get messages(): MessageManager {
+    return new MessageManager(this.client, this.id);
+  }
+
+  /**
+   * Fetch a message by ID from this channel.
+   * @param messageId - Snowflake of the message
+   * @returns The message, or null if not found
+   * @deprecated Use channel.messages.fetch(messageId) instead.
+   */
+  async fetchMessage(messageId: string): Promise<import('./Message.js').Message | null> {
+    return this.client.channels.fetchMessage(this.id, messageId);
   }
 }
 
@@ -131,17 +182,35 @@ export class DMChannel extends Channel {
 
   constructor(client: Client, data: APIChannelPartial) {
     super(client, data);
-    this.lastMessageId = (data as APIChannel & { last_message_id?: string | null }).last_message_id ?? null;
+    this.lastMessageId =
+      (data as APIChannel & { last_message_id?: string | null }).last_message_id ?? null;
   }
 
   /**
    * Send a message to this DM channel.
    * @param options - Text content or object with `content` and/or `embeds`
    */
-  async send(options: string | { content?: string; embeds?: unknown[] }): Promise<import('./Message.js').Message> {
+  async send(
+    options: string | { content?: string; embeds?: unknown[] }
+  ): Promise<import('./Message.js').Message> {
     const body = typeof options === 'string' ? { content: options } : options;
     const { Message } = await import('./Message.js');
     const data = await this.client.rest.post(Routes.channelMessages(this.id), { body });
     return new Message(this.client, data as import('@fluxerjs/types').APIMessage);
+  }
+
+  /** Message manager for this channel. Use channel.messages.fetch(messageId). */
+  get messages(): MessageManager {
+    return new MessageManager(this.client, this.id);
+  }
+
+  /**
+   * Fetch a message by ID from this DM channel.
+   * @param messageId - Snowflake of the message
+   * @returns The message, or null if not found
+   * @deprecated Use channel.messages.fetch(messageId) instead.
+   */
+  async fetchMessage(messageId: string): Promise<import('./Message.js').Message | null> {
+    return this.client.channels.fetchMessage(this.id, messageId);
   }
 }

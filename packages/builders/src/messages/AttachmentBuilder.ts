@@ -24,6 +24,9 @@ export class AttachmentBuilder {
 
   /** @param id - Index of the attachment (0-based). Must match the FormData part order. */
   constructor(id: number, filename: string, options?: Partial<AttachmentPayloadOptions>) {
+    if (!filename?.trim()) {
+      throw new Error('Filename is required');
+    }
     this.id = id;
     this.filename = options?.spoiler ? `SPOILER_${filename}` : filename;
     this.description = options?.description ?? undefined;
@@ -32,6 +35,9 @@ export class AttachmentBuilder {
 
   /** Set the displayed filename. */
   setName(name: string): this {
+    if (!name?.trim()) {
+      throw new Error('Filename is required');
+    }
     this.filename = this.spoiler ? `SPOILER_${name}` : name;
     return this;
   }
@@ -45,8 +51,10 @@ export class AttachmentBuilder {
   /** Mark the attachment as a spoiler (blurred until clicked). */
   setSpoiler(spoiler = true): this {
     this.spoiler = spoiler;
-    if (spoiler && !this.filename.startsWith('SPOILER_')) this.filename = `SPOILER_${this.filename}`;
-    else if (!spoiler && this.filename.startsWith('SPOILER_')) this.filename = this.filename.slice(8);
+    if (spoiler && !this.filename.startsWith('SPOILER_'))
+      this.filename = `SPOILER_${this.filename}`;
+    else if (!spoiler && this.filename.startsWith('SPOILER_'))
+      this.filename = this.filename.slice(8);
     return this;
   }
 

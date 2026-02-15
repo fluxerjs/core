@@ -1,7 +1,10 @@
 import { EventEmitter } from 'events';
 import type { Client } from '@fluxerjs/core';
 import type { VoiceChannel } from '@fluxerjs/core';
-import type { GatewayVoiceServerUpdateDispatchData, GatewayVoiceStateUpdateDispatchData } from '@fluxerjs/types';
+import type {
+  GatewayVoiceServerUpdateDispatchData,
+  GatewayVoiceStateUpdateDispatchData,
+} from '@fluxerjs/types';
 import * as nacl from 'tweetnacl';
 import * as dgram from 'dgram';
 /** Minimal WebSocket type for voice (ws module). */
@@ -15,7 +18,14 @@ interface VoiceWebSocket {
   removeAllListeners(event?: string): void;
 }
 
-const VOICE_WS_OPCODES = { Identify: 0, SelectProtocol: 1, Ready: 2, Heartbeat: 3, SessionDescription: 4, Speaking: 5 } as const;
+const VOICE_WS_OPCODES = {
+  Identify: 0,
+  SelectProtocol: 1,
+  Ready: 2,
+  Heartbeat: 3,
+  SessionDescription: 4,
+  Speaking: 5,
+} as const;
 const VOICE_VERSION = 4;
 const CHANNELS = 2;
 /** RTP timestamp increment per 20ms Opus frame (48kHz equivalent). */
@@ -94,7 +104,10 @@ export class VoiceConnection extends EventEmitter {
   }
 
   /** Called when we have both server update and state update. */
-  async connect(server: GatewayVoiceServerUpdateDispatchData, state: GatewayVoiceStateUpdateDispatchData): Promise<void> {
+  async connect(
+    server: GatewayVoiceServerUpdateDispatchData,
+    state: GatewayVoiceStateUpdateDispatchData
+  ): Promise<void> {
     this._token = server.token;
     const raw = (server.endpoint ?? '').trim();
     this._sessionId = state.session_id;
@@ -113,7 +126,11 @@ export class VoiceConnection extends EventEmitter {
       wsUrl = `wss://${normalized}?v=${VOICE_VERSION}`;
     }
     // Host only (for UDP address fallback in Ready handler)
-    const hostPart = raw.replace(/^(wss|ws|https?):\/\//i, '').replace(/^\/+/, '').split('/')[0] ?? '';
+    const hostPart =
+      raw
+        .replace(/^(wss|ws|https?):\/\//i, '')
+        .replace(/^\/+/, '')
+        .split('/')[0] ?? '';
     this._endpoint = hostPart.split('?')[0] || hostPart;
     const WS = await this.getWebSocketConstructor();
     this.voiceWs = new WS(wsUrl);
@@ -206,6 +223,10 @@ export class VoiceConnection extends EventEmitter {
     discovery.writeUInt32BE(this.ssrc, 6);
     socket.send(discovery, 0, discovery.length, remotePort, remoteAddress, () => {
       socket.once('message', (msg: Buffer) => {
+        if (msg.length < 70) {
+          this.emit('error', new Error('UDP discovery response too short'));
+          return;
+        }
         const len = msg.readUInt16BE(4);
         let ourIp = '';
         let i = 10;
@@ -382,6 +403,10 @@ export class VoiceConnection extends EventEmitter {
 
   /** Disconnect and remove all listeners. */
   destroy(): void {
+    if (this.currentStream) {
+      if (typeof this.currentStream.destroy === 'function') this.currentStream.destroy();
+      this.currentStream = null;
+    }
     this.disconnect();
     this.removeAllListeners();
   }

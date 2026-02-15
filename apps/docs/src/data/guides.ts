@@ -61,6 +61,155 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
     ],
   },
   {
+    id: 'sending-without-reply',
+    slug: 'sending-without-reply',
+    title: 'Sending Without Reply',
+    description:
+      'Send messages to the same channel or to specific channels. Covers message.send(), message.sendTo(), client.channels.send(), and client.channels.fetch().',
+    category: 'sending-messages',
+    sections: [
+      {
+        title: 'message.send() vs message.reply()',
+        description:
+          'message.reply() sends a message that references another message (shows as a "reply" in Discord). message.send() sends to the same channel with no reference—a regular standalone message.',
+      },
+      {
+        title: 'Sending to the same channel',
+        description:
+          'Use message.send() when you want to post in the channel without replying. Same signature as reply(): pass a string or object with content and/or embeds.',
+        code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!hello') {
+    await message.send('Hello! This is a regular message, not a reply.');
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Sending to a specific channel (e.g. logging)',
+        description:
+          'Use message.sendTo(channelId, payload) to send to another channel—handy for logging, announcements, or forwarding. You only need the target channel ID.',
+        code: `import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID; // Your log channel's snowflake
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!report' && message.guildId && LOG_CHANNEL_ID) {
+    const embed = new EmbedBuilder()
+      .setTitle('User report')
+      .setDescription(message.content)
+      .addFields(
+        { name: 'Author', value: message.author.username, inline: true },
+        { name: 'Channel', value: \`<#\${message.channelId}>\`, inline: true }
+      )
+      .setTimestamp();
+
+    await message.sendTo(LOG_CHANNEL_ID, { embeds: [embed.toJSON()] });
+    await message.send('Report logged.');
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'client.channels.send() — send by channel ID',
+        description:
+          'Use client.channels.send(channelId, payload) when you have a channel ID. Works even if the channel is not cached. No need to fetch first when you only need to send.',
+        code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+const ANNOUNCE_CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID;
+
+client.on(Events.Ready, async () => {
+  if (ANNOUNCE_CHANNEL_ID) {
+    await client.channels.send(ANNOUNCE_CHANNEL_ID, 'Bot is online!');
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'client.channels.fetch() — get channel by ID',
+        description:
+          'Fetch a channel by ID from the API (or cache). Use channel.isSendable() before sending. For sending when you only have an ID, prefer client.channels.send() which skips the fetch.',
+        code: `import { Client } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+await client.login(process.env.FLUXER_BOT_TOKEN);
+
+// Fetch channel (from API if not cached)
+const channel = await client.channels.fetch(channelId);
+if (channel?.isSendable()) {
+  await channel.send('Hello!');
+}
+// Or for webhooks: if (channel?.createWebhook) { ... }`,
+        language: 'javascript',
+      },
+      {
+        title: 'fetch message by id',
+        description:
+          'Use channel.messages.fetch(messageId) when you have the channel. For IDs-only, fetch the channel first.',
+        code: `// When you have the channel
+const message = await channel.messages.fetch(messageId);
+if (message) {
+  await message.edit({ content: 'Updated!' });
+  await message.react('👍');
+}
+
+// When you only have IDs (e.g. from sqlite)
+const ch = await client.channels.fetch(channelId);
+const msg = await ch?.messages?.fetch(messageId);
+if (msg) await msg.delete();
+
+// When channel is cached
+const m = client.channels.get(channelId);
+if (m?.isSendable()) {
+  const mes = await m.messages.fetch(messageId);
+  if (mes) await mes.edit({ content: 'Edited!' });
+}
+
+// Refresh a stale message instance
+const updated = await message.fetch();
+if (updated) console.log(updated.content);`,
+        language: 'javascript',
+      },
+      {
+        title: 'message.channel and message.guild',
+        description:
+          'Access the channel or guild from a message. Resolved from cache; null if not cached (e.g. DM channel).',
+        code: `client.on(Events.MessageCreate, async (message) => {
+  const channel = message.channel;   // TextChannel or DMChannel | null
+  const guild = message.guild;       // Guild | null (null for DMs)
+  if (message.channel?.isSendable()) {
+    await message.channel.send('Same channel, different API');
+  }
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Quick reference',
+        code: `// Same channel, no reply
+await message.send('Pong!');
+
+// Reply to the message
+await message.reply('Pong!');
+
+// Send to a specific channel
+await message.sendTo(logChannelId, 'User joined!');
+await client.channels.send(channelId, 'New update available!');`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
     id: 'embeds',
     slug: 'embeds',
     title: 'Embeds',
@@ -115,7 +264,8 @@ await reply.edit({ content: 'Updated message!' });`,
       },
       {
         title: 'Edit Embeds',
-        description: 'Replace or update embeds on an existing message. Pass an array of EmbedBuilder instances or APIEmbed objects.',
+        description:
+          'Replace or update embeds on an existing message. Pass an array of EmbedBuilder instances or APIEmbed objects.',
         code: `import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
 
 const client = new Client({ intents: 0 });
@@ -165,12 +315,14 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
     id: 'reactions',
     slug: 'reactions',
     title: 'Reactions',
-    description: 'Add, remove, and listen for message reactions with Message.react(), removeReaction(), and reaction events.',
+    description:
+      'Add, remove, and listen for message reactions with Message.react(), removeReaction(), and reaction events.',
     category: 'sending-messages',
     sections: [
       {
         title: 'Add a Reaction',
-        description: 'Use message.react() to add an emoji reaction as the bot. Pass a unicode emoji string or custom emoji { name, id }.',
+        description:
+          'Use message.react() to add an emoji reaction as the bot. Pass a unicode emoji string or custom emoji { name, id }.',
         code: `const reply = await message.reply('React to this!');
 await reply.react('👍');
 await reply.react({ name: 'customemoji', id: '123456789012345678' });`,
@@ -178,7 +330,8 @@ await reply.react({ name: 'customemoji', id: '123456789012345678' });`,
       },
       {
         title: 'Remove Reactions',
-        description: 'Remove the bot\'s reaction with removeReaction(emoji). Remove a specific user\'s reaction with removeReaction(emoji, userId). Clear all reactions with removeAllReactions() or removeReactionEmoji(emoji).',
+        description:
+          "Remove the bot's reaction with removeReaction(emoji). Remove a specific user's reaction with removeReaction(emoji, userId). Clear all reactions with removeAllReactions() or removeReactionEmoji(emoji).",
         code: `// Remove the bot's reaction
 await message.removeReaction('👍');
 
@@ -194,31 +347,32 @@ await message.removeAllReactions();`,
       },
       {
         title: 'Listen for Reactions',
-        description: 'Handle MessageReactionAdd and MessageReactionRemove to react when users add or remove emoji. Use MessageReactionRemoveAll and MessageReactionRemoveEmoji for moderator actions.',
-        code: `client.on(Events.MessageReactionAdd, async (data) => {
-  const { message_id, user_id, emoji } = data;
-  if (emoji.name === '👍') {
-    console.log(\`User \${user_id} voted yes on message \${message_id}\`);
-    // Optionally: add your own reaction, or fetch the message and modify it
+        description:
+          'MessageReactionAdd and MessageReactionRemove emit (reaction, user). Use reaction.emoji, reaction.messageId, reaction.channelId, reaction.guildId, or reaction.fetchMessage() to get the full message.',
+        code: `client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  if (reaction.emoji.name === '👍') {
+    console.log(\`User \${user.id} voted yes on message \${reaction.messageId}\`);
+    const message = await reaction.fetchMessage();
+    if (message) await message.react('✅');
   }
 });
 
-client.on(Events.MessageReactionRemove, (data) => {
-  const { message_id, user_id, emoji } = data;
-  console.log(\`User \${user_id} removed \${emoji.name} from message \${message_id}\`);
+client.on(Events.MessageReactionRemove, (reaction, user) => {
+  console.log(\`User \${user.id} removed \${reaction.emoji.name} from message \${reaction.messageId}\`);
 });`,
         language: 'javascript',
       },
       {
         title: 'Reaction Roles Example',
-        description: 'See examples/reaction-roles-bot.js for a full bot that assigns roles when users react to a message. Uses message.react(), Guild.fetchMember(), and GuildMember.addRole()/removeRole().',
+        description:
+          'See examples/reaction-roles-bot.js for a full bot that assigns roles when users react to a message. Uses (reaction, user), Guild.fetchMember(), and GuildMember.addRole()/removeRole().',
         code: `// Simplified reaction-roles logic
-client.on(Events.MessageReactionAdd, async (data) => {
-  if (data.message_id !== rolesMessageId) return;
-  const roleId = ROLE_EMOJI_MAP[data.emoji.name];
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  if (!reaction.guildId || reaction.messageId !== rolesMessageId) return;
+  const roleId = ROLE_EMOJI_MAP[reaction.emoji.name];
   if (!roleId) return;
-  const guild = client.guilds.get(data.guild_id);
-  const member = await guild?.fetchMember(data.user_id);
+  const guild = client.guilds.get(reaction.guildId);
+  const member = await guild?.fetchMember(user.id);
   if (member && !member.roles.includes(roleId)) await member.addRole(roleId);
 });`,
         language: 'javascript',
@@ -229,7 +383,8 @@ client.on(Events.MessageReactionAdd, async (data) => {
     id: 'webhooks',
     slug: 'webhooks',
     title: 'Webhooks',
-    description: 'A complete guide to Discord webhooks—sending messages without a gateway, creating webhooks, and managing them.',
+    description:
+      'A complete guide to Discord webhooks—sending messages without a gateway, creating webhooks, and managing them.',
     category: 'webhooks',
     sections: [
       {
@@ -266,7 +421,8 @@ console.log(webhook.id, webhook.token); // Store token—it won't be returned wh
       },
       {
         title: 'Sending Messages',
-        description: 'Send text, embeds, or both. You can override the username and avatar for each message.',
+        description:
+          'Send text, embeds, or both. You can override the username and avatar for each message.',
         code: `import { Client, Webhook, EmbedBuilder } from '@fluxerjs/core';
 
 const client = new Client({ intents: 0 });
@@ -324,7 +480,8 @@ await webhook.delete();`,
     id: 'voice',
     slug: 'voice',
     title: 'Voice',
-    description: 'Join voice channels and play audio with @fluxerjs/voice. Supports WebM/Opus streams—no FFmpeg required.',
+    description:
+      'Join voice channels and play audio with @fluxerjs/voice. Supports WebM/Opus streams—no FFmpeg required.',
     category: 'voice',
     sections: [
       {
@@ -349,17 +506,13 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
       {
         title: 'Join a Voice Channel',
         description:
-          'Get the user\'s voice channel with getVoiceChannelId, then join. The connection resolves when ready.',
+          "Get the user's voice channel with getVoiceChannelId, then join. The connection resolves when ready.",
         code: `const voiceManager = getVoiceManager(client);
 const voiceChannelId = voiceManager.getVoiceChannelId(guildId, userId);
-if (!voiceChannelId) {
-  return; // User not in voice
-}
+if (!voiceChannelId) return; // User not in voice
 
 const channel = client.channels.get(voiceChannelId);
-if (!channel || !(channel instanceof VoiceChannel)) {
-  return;
-}
+if (!(channel instanceof VoiceChannel)) return;
 
 const connection = await voiceManager.join(channel);`,
         language: 'javascript',
@@ -391,12 +544,10 @@ await connection.play(streamUrl);`,
       },
       {
         title: 'Stop and Leave',
-        description: 'Stop playback and disconnect from the guild\'s voice channel.',
+        description: "Stop playback and disconnect from the guild's voice channel.",
         code: `const connection = voiceManager.getConnection(guildId);
-if (connection) {
-  connection.stop();
-  voiceManager.leave(guildId);
-}`,
+connection?.stop();
+if (connection) voiceManager.leave(guildId);`,
         language: 'javascript',
       },
       {
@@ -419,12 +570,14 @@ if (connection) {
     id: 'events',
     slug: 'events',
     title: 'Events',
-    description: 'Listen to gateway events with client.on. Handle messages, guild updates, voice state changes, and more.',
+    description:
+      'Listen to gateway events with client.on. Handle messages, guild updates, voice state changes, and more.',
     category: 'events',
     sections: [
       {
         title: 'Basic Usage',
-        description: 'Use client.on(Events.X, handler) to subscribe to events. Handlers receive event-specific payloads.',
+        description:
+          'Use client.on(Events.X, handler) to subscribe to events. Handlers receive event-specific payloads.',
         code: `import { Client, Events } from '@fluxerjs/core';
 
 const client = new Client({ intents: 0 });
@@ -562,11 +715,11 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
 
 const CATEGORY_LABELS: Record<string, string> = {
   'getting-started': 'Getting Started',
-  'webhooks': 'Webhooks',
-  'voice': 'Voice',
+  webhooks: 'Webhooks',
+  voice: 'Voice',
   'sending-messages': 'Sending Messages',
-  'events': 'Events',
-  'other': 'Other',
+  events: 'Events',
+  other: 'Other',
 };
 
 export function getCategoryLabel(cat?: string): string {

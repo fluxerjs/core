@@ -44,4 +44,5 @@ export const GatewayDispatchEvents = {
   WebhooksUpdate: 'WEBHOOKS_UPDATE',
 } as const;
 
-export type GatewayDispatchEventName = (typeof GatewayDispatchEvents)[keyof typeof GatewayDispatchEvents];
+export type GatewayDispatchEventName =
+  (typeof GatewayDispatchEvents)[keyof typeof GatewayDispatchEvents];

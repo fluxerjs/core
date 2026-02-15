@@ -36,8 +36,7 @@ export const Routes = {
   guildRole: (guildId: Snowflake, roleId: Snowflake) =>
     `/guilds/${guildId}/roles/${roleId}` as const,
   guildBans: (id: Snowflake) => `/guilds/${id}/bans` as const,
-  guildBan: (guildId: Snowflake, userId: Snowflake) =>
-    `/guilds/${guildId}/bans/${userId}` as const,
+  guildBan: (guildId: Snowflake, userId: Snowflake) => `/guilds/${guildId}/bans/${userId}` as const,
   guildInvites: (id: Snowflake) => `/guilds/${id}/invites` as const,
   guildAuditLogs: (id: Snowflake) => `/guilds/${id}/audit-logs` as const,
   guildEmojis: (id: Snowflake) => `/guilds/${id}/emojis` as const,
@@ -60,10 +59,12 @@ export const Routes = {
   gatewayBot: () => `/gateway/bot` as const,
 
   // Streams (voice channel screen share preview)
-  streamPreview: (streamKey: string) => `/streams/${encodeURIComponent(streamKey)}/preview` as const,
+  streamPreview: (streamKey: string) =>
+    `/streams/${encodeURIComponent(streamKey)}/preview` as const,
 
   // Application commands (slash commands)
-  applicationCommands: (applicationId: Snowflake) => `/applications/${applicationId}/commands` as const,
+  applicationCommands: (applicationId: Snowflake) =>
+    `/applications/${applicationId}/commands` as const,
   applicationCommand: (applicationId: Snowflake, commandId: Snowflake) =>
     `/applications/${applicationId}/commands/${commandId}` as const,
   interactionCallback: (interactionId: Snowflake, interactionToken: string) =>

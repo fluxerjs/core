@@ -4,7 +4,10 @@ import type { VoiceChannel } from '@fluxerjs/core';
 import { Events } from '@fluxerjs/core';
 import { GatewayOpcodes, Routes } from '@fluxerjs/types';
 import { thumbnail } from './streamPreviewPlaceholder.js';
-import type { GatewayVoiceServerUpdateDispatchData, GatewayVoiceStateUpdateDispatchData } from '@fluxerjs/types';
+import type {
+  GatewayVoiceServerUpdateDispatchData,
+  GatewayVoiceStateUpdateDispatchData,
+} from '@fluxerjs/types';
 import { VoiceConnection } from './VoiceConnection.js';
 import { LiveKitRtcConnection } from './LiveKitRtcConnection.js';
 import { isLiveKitEndpoint } from './livekit.js';
@@ -48,12 +51,25 @@ export class VoiceManager extends EventEmitter {
     super();
     this.client = client;
     this.shardId = options.shardId ?? 0;
-    this.client.on(Events.VoiceStateUpdate, (data: GatewayVoiceStateUpdateDispatchData) => this.handleVoiceStateUpdate(data));
-    this.client.on(Events.VoiceServerUpdate, (data: GatewayVoiceServerUpdateDispatchData) => this.handleVoiceServerUpdate(data));
-    this.client.on(Events.VoiceStatesSync, (data: { guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null }> }) => this.handleVoiceStatesSync(data));
+    this.client.on(Events.VoiceStateUpdate, (data: GatewayVoiceStateUpdateDispatchData) =>
+      this.handleVoiceStateUpdate(data)
+    );
+    this.client.on(Events.VoiceServerUpdate, (data: GatewayVoiceServerUpdateDispatchData) =>
+      this.handleVoiceServerUpdate(data)
+    );
+    this.client.on(
+      Events.VoiceStatesSync,
+      (data: {
+        guildId: string;
+        voiceStates: Array<{ user_id: string; channel_id: string | null }>;
+      }) => this.handleVoiceStatesSync(data)
+    );
   }
 
-  private handleVoiceStatesSync(data: { guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null }> }): void {
+  private handleVoiceStatesSync(data: {
+    guildId: string;
+    voiceStates: Array<{ user_id: string; channel_id: string | null }>;
+  }): void {
     let guildMap = this.voiceStates.get(data.guildId);
     if (!guildMap) {
       guildMap = new Map();
@@ -78,7 +94,10 @@ export class VoiceManager extends EventEmitter {
   private handleVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatchData): void {
     const guildId = data.guild_id ?? '';
     if (!guildId) return;
-    this.client.emit?.('debug', `[VoiceManager] VoiceStateUpdate guild=${guildId} user=${data.user_id} channel=${data.channel_id ?? 'null'} (bot=${this.client.user?.id})`);
+    this.client.emit?.(
+      'debug',
+      `[VoiceManager] VoiceStateUpdate guild=${guildId} user=${data.user_id} channel=${data.channel_id ?? 'null'} (bot=${this.client.user?.id})`
+    );
     let guildMap = this.voiceStates.get(guildId);
     if (!guildMap) {
       guildMap = new Map();
@@ -92,7 +111,10 @@ export class VoiceManager extends EventEmitter {
       this.storeConnectionId(guildId, data.connection_id);
     }
     if (pending && isBot) {
-      this.client.emit?.('debug', `[VoiceManager] VoiceStateUpdate for bot - completing pending guild ${guildId}`);
+      this.client.emit?.(
+        'debug',
+        `[VoiceManager] VoiceStateUpdate for bot - completing pending guild ${guildId}`
+      );
       pending.state = data;
       this.tryCompletePending(guildId);
     }
@@ -104,9 +126,21 @@ export class VoiceManager extends EventEmitter {
     const pending = this.pending.get(guildId);
     if (pending) {
       const hasToken = !!(data.token && data.token.length > 0);
-      this.client.emit?.('debug', `[VoiceManager] VoiceServerUpdate guild=${guildId} endpoint=${data.endpoint ?? 'null'} token=${hasToken ? 'yes' : 'NO'}`);
+      this.client.emit?.(
+        'debug',
+        `[VoiceManager] VoiceServerUpdate guild=${guildId} endpoint=${data.endpoint ?? 'null'} token=${hasToken ? 'yes' : 'NO'}`
+      );
       pending.server = data;
       this.tryCompletePending(guildId);
+      return;
+    }
+
+    const userId = this.client.user?.id;
+    if (!userId) {
+      this.client.emit?.(
+        'debug',
+        '[VoiceManager] Client user not available. Ensure the client is logged in.'
+      );
       return;
     }
 
@@ -114,7 +148,10 @@ export class VoiceManager extends EventEmitter {
     if (!conn) return;
 
     if (!data.endpoint || !data.token) {
-      this.client.emit?.('debug', `[VoiceManager] Voice server endpoint null for guild ${guildId}; disconnecting until new allocation`);
+      this.client.emit?.(
+        'debug',
+        `[VoiceManager] Voice server endpoint null for guild ${guildId}; disconnecting until new allocation`
+      );
       conn.destroy();
       this.connections.delete(guildId);
       return;
@@ -127,19 +164,22 @@ export class VoiceManager extends EventEmitter {
     }
 
     const channel = conn.channel;
-    this.client.emit?.('debug', `[VoiceManager] Voice server migration for guild ${guildId}; reconnecting`);
+    this.client.emit?.(
+      'debug',
+      `[VoiceManager] Voice server migration for guild ${guildId}; reconnecting`
+    );
     conn.destroy();
     this.connections.delete(guildId);
     this.storeConnectionId(guildId, data.connection_id);
 
     const ConnClass = LiveKitRtcConnection;
-    const newConn = new ConnClass(this.client, channel, this.client.user!.id);
+    const newConn = new ConnClass(this.client, channel, userId);
     this.registerConnection(guildId, newConn);
 
     const state: GatewayVoiceStateUpdateDispatchData = {
       guild_id: guildId,
       channel_id: channel.id,
-      user_id: this.client.user!.id,
+      user_id: userId,
       session_id: '',
     };
 
@@ -172,7 +212,10 @@ export class VoiceManager extends EventEmitter {
   }
 
   /** Upload a placeholder stream preview so the preview URL returns 200 instead of 404. */
-  private async uploadStreamPreview(guildId: string, conn: VoiceConnection | LiveKitRtcConnection): Promise<void> {
+  private async uploadStreamPreview(
+    guildId: string,
+    conn: VoiceConnection | LiveKitRtcConnection
+  ): Promise<void> {
     const connectionId = this.connectionIds.get(guildId);
     if (!connectionId) return;
 
@@ -193,20 +236,35 @@ export class VoiceManager extends EventEmitter {
 
     if (!useLiveKit && !hasState) return;
     if (useLiveKit && !hasState) {
-      this.client.emit?.('debug', `[VoiceManager] Proceeding with VoiceServerUpdate only (LiveKit does not require VoiceStateUpdate)`);
+      this.client.emit?.(
+        'debug',
+        `[VoiceManager] Proceeding with VoiceServerUpdate only (LiveKit does not require VoiceStateUpdate)`
+      );
+    }
+
+    const userId = this.client.user?.id;
+    if (!userId) {
+      this.client.emit?.(
+        'debug',
+        '[VoiceManager] Client user not available. Ensure the client is logged in.'
+      );
+      return;
     }
 
     const state: GatewayVoiceStateUpdateDispatchData = pending.state ?? {
       guild_id: guildId,
       channel_id: pending.channel.id,
-      user_id: this.client.user!.id,
+      user_id: userId,
       session_id: '',
     };
 
-    this.storeConnectionId(guildId, pending.server.connection_id ?? (state as { connection_id?: string }).connection_id);
+    this.storeConnectionId(
+      guildId,
+      pending.server.connection_id ?? (state as { connection_id?: string }).connection_id
+    );
     this.pending.delete(guildId);
     const ConnClass = useLiveKit ? LiveKitRtcConnection : VoiceConnection;
-    const conn = new ConnClass(this.client, pending.channel, this.client.user!.id);
+    const conn = new ConnClass(this.client, pending.channel, userId);
     this.registerConnection(guildId, conn);
     conn.connect(pending.server, state).then(
       () => pending.resolve(conn),
@@ -230,7 +288,10 @@ export class VoiceManager extends EventEmitter {
       this.connections.delete(channel.guildId);
     }
     return new Promise((resolve, reject) => {
-      this.client.emit?.('debug', `[VoiceManager] Requesting voice join guild=${channel.guildId} channel=${channel.id}`);
+      this.client.emit?.(
+        'debug',
+        `[VoiceManager] Requesting voice join guild=${channel.guildId} channel=${channel.id}`
+      );
       const timeout = setTimeout(() => {
         if (this.pending.has(channel.guildId)) {
           this.pending.delete(channel.guildId);
@@ -305,14 +366,22 @@ export class VoiceManager extends EventEmitter {
    */
   updateVoiceState(
     guildId: string,
-    partial: { self_stream?: boolean; self_video?: boolean; self_mute?: boolean; self_deaf?: boolean }
+    partial: {
+      self_stream?: boolean;
+      self_video?: boolean;
+      self_mute?: boolean;
+      self_deaf?: boolean;
+    }
   ): void {
     const conn = this.connections.get(guildId);
     if (!conn) return;
 
     const connectionId = this.connectionIds.get(guildId);
     if (!connectionId) {
-      this.client.emit?.('debug', `[VoiceManager] Skipping voice state sync: no connection_id for guild ${guildId}`);
+      this.client.emit?.(
+        'debug',
+        `[VoiceManager] Skipping voice state sync: no connection_id for guild ${guildId}`
+      );
       return;
     }
 

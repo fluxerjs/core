@@ -1,12 +1,25 @@
 export { Client, type ClientEvents } from './client/Client.js';
+export { ChannelManager } from './client/ChannelManager.js';
+export { MessageManager } from './client/MessageManager.js';
 export { ClientUser } from './client/ClientUser.js';
 export { Base } from './structures/Base.js';
 export { User } from './structures/User.js';
 export { Guild } from './structures/Guild.js';
-export { Channel, GuildChannel, TextChannel, VoiceChannel, CategoryChannel, LinkChannel, DMChannel } from './structures/Channel.js';
+export {
+  Channel,
+  GuildChannel,
+  TextChannel,
+  VoiceChannel,
+  CategoryChannel,
+  LinkChannel,
+  DMChannel,
+} from './structures/Channel.js';
 export { Message, type MessageEditOptions } from './structures/Message.js';
+export type { PartialMessage } from './structures/PartialMessage.js';
+export { MessageReaction } from './structures/MessageReaction.js';
 export { Webhook, type WebhookSendOptions } from './structures/Webhook.js';
 export { GuildMember } from './structures/GuildMember.js';
+export { Role } from './structures/Role.js';
 export { Events } from './util/Events.js';
 export { FluxerError } from './errors/FluxerError.js';
 export { ErrorCodes } from './errors/ErrorCodes.js';

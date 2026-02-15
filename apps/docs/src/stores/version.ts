@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 const STORAGE_KEY = 'fluxer-docs-version';
 
@@ -36,7 +36,7 @@ export const useVersionStore = defineStore('version', () => {
       if (!res.ok) throw new Error('Failed to load versions');
       const data = (await res.json()) as VersionsManifest;
       availableVersions.value = data.versions ?? [];
-      latestVersion.value = data.latest ?? (data.versions?.[0] ?? '1.0.7');
+      latestVersion.value = data.latest ?? data.versions?.[0] ?? '1.0.7';
       versionsLoaded.value = true;
 
       // Restore saved preference

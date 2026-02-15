@@ -1,7 +1,22 @@
 export { BitField, type BitFieldResolvable } from './BitField.js';
 export { SnowflakeUtil, FLUXER_EPOCH } from './SnowflakeUtil.js';
-export { PermissionsBitField, PermissionFlags, type PermissionString, type PermissionResolvable } from './PermissionsBitField.js';
-export { MessageFlagsBitField, MessageFlagsBits, type MessageFlagsString, type MessageFlagsResolvable } from './MessageFlagsBitField.js';
-export { UserFlagsBitField, UserFlagsBits, type UserFlagsString, type UserFlagsResolvable } from './UserFlagsBitField.js';
+export {
+  PermissionsBitField,
+  PermissionFlags,
+  type PermissionString,
+  type PermissionResolvable,
+} from './PermissionsBitField.js';
+export {
+  MessageFlagsBitField,
+  MessageFlagsBits,
+  type MessageFlagsString,
+  type MessageFlagsResolvable,
+} from './MessageFlagsBitField.js';
+export {
+  UserFlagsBitField,
+  UserFlagsBits,
+  type UserFlagsString,
+  type UserFlagsResolvable,
+} from './UserFlagsBitField.js';
 export { formatColor, escapeMarkdown, formatTimestamp, truncate } from './formatters.js';
-export { resolveColor, parseEmoji, formatEmoji } from './resolvers.js';
+export { resolveColor, parseEmoji, formatEmoji, parseRoleMention } from './resolvers.js';

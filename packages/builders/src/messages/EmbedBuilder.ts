@@ -1,4 +1,4 @@
-import type { APIEmbed, APIEmbedAuthor, APIEmbedFooter, APIEmbedField, APIEmbedMedia } from '@fluxerjs/types';
+import type { APIEmbed, APIEmbedAuthor, APIEmbedFooter } from '@fluxerjs/types';
 import { resolveColor } from '@fluxerjs/util';
 
 const EMBED_MAX = {
@@ -38,20 +38,25 @@ export class EmbedBuilder {
 
   /** Set the embed title. Max 256 characters. */
   setTitle(title: string | null): this {
-    if (title !== null && title.length > EMBED_MAX.title) throw new RangeError(`Title must be ≤${EMBED_MAX.title} characters`);
+    if (title !== null && title.length > EMBED_MAX.title)
+      throw new RangeError(`Title must be ≤${EMBED_MAX.title} characters`);
     this.data.title = title ?? undefined;
     return this;
   }
 
   /** Set the embed description. Max 4096 characters. */
   setDescription(description: string | null): this {
-    if (description !== null && description.length > EMBED_MAX.description) throw new RangeError(`Description must be ≤${EMBED_MAX.description} characters`);
+    if (description !== null && description.length > EMBED_MAX.description)
+      throw new RangeError(`Description must be ≤${EMBED_MAX.description} characters`);
     this.data.description = description ?? undefined;
     return this;
   }
 
   /** Set the embed URL (title becomes a link). */
   setURL(url: string | null): this {
+    if (url != null && url !== '' && !URL.canParse(url)) {
+      throw new Error('Invalid embed URL');
+    }
     this.data.url = url ?? undefined;
     return this;
   }
@@ -150,8 +155,16 @@ export class EmbedBuilder {
 
   /** Convert to API embed format for `reply`, `send`, or `edit`. */
   toJSON(): APIEmbed {
-    const totalLength = [this.data.title, this.data.description, ...(this.data.fields ?? []).flatMap((f) => [f.name, f.value]), this.data.footer?.text].filter(Boolean).join('').length;
-    if (totalLength > EMBED_MAX.total) throw new RangeError(`Embed total length must be ≤${EMBED_MAX.total}`);
+    const totalLength = [
+      this.data.title,
+      this.data.description,
+      ...(this.data.fields ?? []).flatMap((f) => [f.name, f.value]),
+      this.data.footer?.text,
+    ]
+      .filter(Boolean)
+      .join('').length;
+    if (totalLength > EMBED_MAX.total)
+      throw new RangeError(`Embed total length must be ≤${EMBED_MAX.total}`);
     return { ...this.data, type: this.data.type ?? 'rich' } as APIEmbed;
   }
 

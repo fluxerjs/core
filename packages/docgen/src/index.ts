@@ -7,13 +7,10 @@
 import * as ts from 'typescript';
 import { resolve, dirname } from 'path';
 import { mkdirSync, writeFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import type { DocOutput, DocMeta } from './schema.js';
+import type { DocOutput } from './schema.js';
 
 export type { DocOutput, DocClass, DocInterface, DocEnum } from './schema.js';
 import { visitSourceFile } from './visitor.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export interface DocgenOptions {
   entryPoints: string[];
@@ -41,7 +38,9 @@ export function generateDocs(options: DocgenOptions): DocOutput {
 
   const rootPath = dirname(configPath);
   const program = ts.createProgram(
-    parsedConfig.fileNames.length ? parsedConfig.fileNames : entryPoints.map((e) => resolve(rootPath, e)),
+    parsedConfig.fileNames.length
+      ? parsedConfig.fileNames
+      : entryPoints.map((e) => resolve(rootPath, e)),
     parsedConfig.options
   );
 

@@ -7,8 +7,10 @@
  * TOC byte: config (0-4), s (5), c (6-7). c=0: 1 frame; c=1: 2 frames + 1 length byte; c=2: 2 frames CBR + padding; c=3: N frames + (N-1) length bytes.
  * Returns { frames: Uint8Array[], consumed } or null if not enough data.
  */
-export function parseOpusPacketBoundaries(buffer: Uint8Array): { frames: Uint8Array[]; consumed: number } | null {
-  if (buffer.length < 1) return null;
+export function parseOpusPacketBoundaries(
+  buffer: Uint8Array
+): { frames: Uint8Array[]; consumed: number } | null {
+  if (buffer.length < 2) return null;
   const toc = buffer[0];
   const c = toc & 3; // frame count code
   const tocSingle = (toc & 0xfc) | 0; // same config/s, one frame

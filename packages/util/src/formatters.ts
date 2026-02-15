@@ -18,7 +18,10 @@ export function escapeMarkdown(text: string): string {
  * @param timestamp - Unix timestamp in seconds
  * @param style - t, T, d, D, f, F, R, etc.
  */
-export function formatTimestamp(timestamp: number, style?: 't' | 'T' | 'd' | 'D' | 'f' | 'F' | 'R'): string {
+export function formatTimestamp(
+  timestamp: number,
+  style?: 't' | 'T' | 'd' | 'D' | 'f' | 'F' | 'R'
+): string {
   const suffix = style ? `:${style}` : '';
   return `<t:${Math.floor(timestamp / 1000)}${suffix}>`;
 }

@@ -95,7 +95,9 @@ const groupedGuides = computed(() => {
   color: var(--text-secondary);
   text-decoration: none;
   border-left: 2px solid transparent;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .guide-nav-link:hover {

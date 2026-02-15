@@ -3,18 +3,31 @@
     <div class="hero">
       <h1>Fluxer.js</h1>
       <p class="lead">SDK for building bots on Fluxer.</p>
+      <router-link to="/v/latest/guides/basic-bot" class="cta-link">Get started — your first bot</router-link>
       <nav class="hero-nav">
-        <router-link to="/guides" class="nav-link">Guides</router-link>
-        <router-link to="/docs" class="nav-link">Docs</router-link>
-        <a href="https://github.com/fluxerjs/core" target="_blank" rel="noopener noreferrer" class="nav-link">GitHub</a>
-        <a href="https://fluxer.gg/fluxer-js" target="_blank" rel="noopener noreferrer" class="nav-link nav-link-external">Fluxer</a>
+        <router-link to="/v/latest/guides" class="nav-link">Guides</router-link>
+        <router-link to="/v/latest/docs" class="nav-link">Docs</router-link>
+        <router-link to="/changelog" class="nav-link">Changelog</router-link>
+        <a
+          href="https://github.com/fluxerjs/core"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="nav-link"
+          >GitHub</a
+        >
+        <a
+          href="https://fluxer.gg/fluxer-js"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="nav-link nav-link-external"
+          >Fluxer</a
+        >
       </nav>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .home {
@@ -38,7 +51,25 @@
 .lead {
   font-size: 1.25rem;
   color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.cta-link {
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 0.5rem 1rem;
   margin-bottom: 2rem;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cta-link:hover {
+  background: var(--accent);
+  color: var(--bg-primary);
 }
 
 .hero-nav {
@@ -56,7 +87,9 @@
   text-decoration: none;
   padding: 0.5rem 0;
   border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .nav-link:hover {

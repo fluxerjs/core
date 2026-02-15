@@ -8,3 +8,9 @@ coverage
 .turbo
 .DS_Store
 openapi.json
+.cl*
+.cu*
+.wrangler
+
+# Changelog maintained in apps/docs/src/data/changelog.ts only
+**/CHANGELOG.md

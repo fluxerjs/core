@@ -33,7 +33,8 @@ export class RateLimitManager {
     const now = Date.now();
     const globalWait = this.globalResetAt > now ? this.globalResetAt - now : 0;
     const bucket = this.buckets.get(route);
-    const bucketWait = bucket && bucket.remaining <= 0 && bucket.resetAt > now ? bucket.resetAt - now : 0;
+    const bucketWait =
+      bucket && bucket.remaining <= 0 && bucket.resetAt > now ? bucket.resetAt - now : 0;
     return Math.max(globalWait, bucketWait);
   }
 
@@ -43,13 +44,16 @@ export class RateLimitManager {
     const remaining = headers.get('X-RateLimit-Remaining');
     const reset = headers.get('X-RateLimit-Reset');
     if (limit !== null && remaining !== null && reset !== null) {
-      const resetAt = parseInt(reset, 10) * 1000;
-      this.setBucket(route, parseInt(limit, 10), parseInt(remaining, 10), resetAt);
+      const resetMs = parseInt(reset, 10);
+      if (!Number.isNaN(resetMs)) {
+        const resetAt = resetMs * 1000;
+        this.setBucket(route, parseInt(limit, 10), parseInt(remaining, 10), resetAt);
+      }
     }
     const retryAfter = headers.get('Retry-After');
     if (retryAfter !== null) {
       const sec = parseInt(retryAfter, 10);
-      const resetAt = Date.now() + (isNaN(sec) ? 0 : sec * 1000);
+      const resetAt = Date.now() + (Number.isNaN(sec) ? 0 : sec * 1000);
       this.setBucket(route, 1, 0, resetAt);
     }
   }

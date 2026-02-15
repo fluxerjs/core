@@ -23,7 +23,8 @@ export class MessagePayload {
 
   /** Set message text. Max 2000 characters. */
   setContent(content: string | null): this {
-    if (content !== null && content.length > CONTENT_MAX) throw new RangeError(`Content must be ≤${CONTENT_MAX} characters`);
+    if (content !== null && content.length > CONTENT_MAX)
+      throw new RangeError(`Content must be ≤${CONTENT_MAX} characters`);
     this.data.content = content ?? undefined;
     return this;
   }
@@ -49,17 +50,28 @@ export class MessagePayload {
   }
 
   /** Set attachment metadata (for files sent with the request). */
-  setAttachments(attachments: Array<AttachmentBuilder | { id: number; filename: string; description?: string | null }> | null): this {
+  setAttachments(
+    attachments: Array<
+      AttachmentBuilder | { id: number; filename: string; description?: string | null }
+    > | null
+  ): this {
     if (!attachments?.length) {
       this.data.attachments = undefined;
       return this;
     }
-    this.data.attachments = attachments.map((a) => (a instanceof AttachmentBuilder ? a.toJSON() : a));
+    this.data.attachments = attachments.map((a) =>
+      a instanceof AttachmentBuilder ? a.toJSON() : a
+    );
     return this;
   }
 
   /** Set reply reference (creates a reply to another message). */
-  setReply(reference: { channel_id: string; message_id: string; guild_id?: string | null } | APIMessageReference | null): this {
+  setReply(
+    reference:
+      | { channel_id: string; message_id: string; guild_id?: string | null }
+      | APIMessageReference
+      | null
+  ): this {
     if (!reference) {
       this.data.message_reference = undefined;
       return this;
@@ -95,10 +107,13 @@ export class MessagePayload {
     if (typeof contentOrOptions === 'string') {
       payload.setContent(contentOrOptions);
     } else if (contentOrOptions && typeof contentOrOptions === 'object') {
-      if (contentOrOptions.content !== undefined) payload.setContent(contentOrOptions.content ?? null);
+      if (contentOrOptions.content !== undefined)
+        payload.setContent(contentOrOptions.content ?? null);
       if (contentOrOptions.embeds?.length) payload.setEmbeds(contentOrOptions.embeds);
-      if (contentOrOptions.attachments?.length) payload.setAttachments(contentOrOptions.attachments);
-      if (contentOrOptions.message_reference) payload.setReply(contentOrOptions.message_reference as APIMessageReference);
+      if (contentOrOptions.attachments?.length)
+        payload.setAttachments(contentOrOptions.attachments);
+      if (contentOrOptions.message_reference)
+        payload.setReply(contentOrOptions.message_reference as APIMessageReference);
       if (contentOrOptions.tts !== undefined) payload.setTTS(contentOrOptions.tts);
       if (contentOrOptions.flags !== undefined) payload.setFlags(contentOrOptions.flags);
     }

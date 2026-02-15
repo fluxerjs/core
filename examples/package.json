@@ -2,6 +2,10 @@
   "name": "fluxer-examples",
   "private": true,
   "type": "module",
+  "scripts": {
+    "lint": "eslint . --max-warnings 0 --config ../eslint.config.js",
+    "lint:fix": "eslint . --fix --config ../eslint.config.js"
+  },
   "dependencies": {
     "@fluxerjs/core": "workspace:*",
     "@fluxerjs/voice": "workspace:*",

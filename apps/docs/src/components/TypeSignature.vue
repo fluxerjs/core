@@ -23,12 +23,35 @@ const route = useRoute();
 const store = useDocsStore();
 const versionPrefix = computed(() => `/v/${(route.params.version as string) ?? 'latest'}`);
 
-const KEYWORDS = new Set(['string', 'number', 'boolean', 'void', 'any', 'unknown', 'object', 'null', 'undefined', 'never', 'true', 'false', 'Promise', 'Record', 'Map', 'Set', 'Array']);
-const PUNCT = /^[<>\{\}\[\]\(\)|&,:;?.]$/;
+const KEYWORDS = new Set([
+  'string',
+  'number',
+  'boolean',
+  'void',
+  'any',
+  'unknown',
+  'object',
+  'null',
+  'undefined',
+  'never',
+  'true',
+  'false',
+  'Promise',
+  'Record',
+  'Map',
+  'Set',
+  'Array',
+]);
+const PUNCT = new Set('<>{}[]()|&,:;?.');
 
 const parts = computed(() => {
   const type = props.type ?? '';
-  const out: { kind: string; text: string; link?: { path: string }; linkKind?: 'class' | 'interface' | 'enum' }[] = [];
+  const out: {
+    kind: string;
+    text: string;
+    link?: { path: string };
+    linkKind?: 'class' | 'interface' | 'enum';
+  }[] = [];
   const doc = store.currentDoc;
   const classNames = new Set((doc?.classes ?? []).map((c) => c.name));
   const interfaceNames = new Set((doc?.interfaces ?? []).map((i) => i.name));
@@ -44,7 +67,7 @@ const parts = computed(() => {
       continue;
     }
     const punct = rest[0];
-    if (PUNCT.test(punct)) {
+    if (punct && PUNCT.has(punct)) {
       out.push({ kind: 'punct', text: punct });
       i += 1;
       continue;
@@ -52,15 +75,43 @@ const parts = computed(() => {
     const ident = rest.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*/)?.[0];
     if (ident) {
       const lower = ident.toLowerCase();
-      const isKeyword = KEYWORDS.has(ident) || ['string', 'number', 'boolean', 'void', 'any', 'unknown', 'object', 'null', 'undefined', 'never'].includes(lower);
+      const isKeyword =
+        KEYWORDS.has(ident) ||
+        [
+          'string',
+          'number',
+          'boolean',
+          'void',
+          'any',
+          'unknown',
+          'object',
+          'null',
+          'undefined',
+          'never',
+        ].includes(lower);
       if (isKeyword) {
         out.push({ kind: 'keyword', text: ident });
       } else if (classNames.has(ident)) {
-        out.push({ kind: 'type', text: ident, link: { path: `${versionPrefix.value}/docs/classes/${ident}` }, linkKind: 'class' });
+        out.push({
+          kind: 'type',
+          text: ident,
+          link: { path: `${versionPrefix.value}/docs/classes/${ident}` },
+          linkKind: 'class',
+        });
       } else if (interfaceNames.has(ident)) {
-        out.push({ kind: 'type', text: ident, link: { path: `${versionPrefix.value}/docs/typedefs/${ident}` }, linkKind: 'interface' });
+        out.push({
+          kind: 'type',
+          text: ident,
+          link: { path: `${versionPrefix.value}/docs/typedefs/${ident}` },
+          linkKind: 'interface',
+        });
       } else if (enumNames.has(ident)) {
-        out.push({ kind: 'type', text: ident, link: { path: `${versionPrefix.value}/docs/typedefs/${ident}` }, linkKind: 'enum' });
+        out.push({
+          kind: 'type',
+          text: ident,
+          link: { path: `${versionPrefix.value}/docs/typedefs/${ident}` },
+          linkKind: 'enum',
+        });
       } else {
         out.push({ kind: 'ident', text: ident });
       }
