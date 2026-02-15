@@ -16,7 +16,7 @@
     "generate:docs": "pnpm exec tsx scripts/generate-docs.ts",
     "docs:generate": "pnpm run build && pnpm run generate:docs",
     "docs:dev": "pnpm --filter @fluxerjs/docs dev",
-    "docs:build": "pnpm run generate:docs && pnpm --filter @fluxerjs/docs build",
+    "docs:build": "pnpm run build && pnpm run generate:docs && pnpm --filter @fluxerjs/docs build",
     "docs:preview": "pnpm --filter @fluxerjs/docs preview",
     "docs:deploy": "pnpm run docs:build && wrangler deploy",
     "publish:packages": "node scripts/publish-ordered.js",
