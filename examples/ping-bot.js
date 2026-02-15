@@ -1,21 +1,35 @@
 /**
  * Fluxer Example Bot
  *
- * Demonstrates prefix commands, embeds, voice join, and music playback.
- * Voice: !play (joins your VC and plays a fixed WebM/Opus track via youtube-dl-exec). No FFmpeg.
- * !stop stops and leaves.
+ * Demonstrates prefix commands, embeds, DMs, voice join, audio, and video playback.
+ * DMs: !dm (DM yourself), !dmuser @user [message] (DM another user).
+ * Voice: !play (joins your VC and plays WebM/Opus audio via youtube-dl-exec). No FFmpeg.
+ * Video: !playvideo [url] (streams MP4 in your VC; supports YouTube links or direct MP4; default demo).
+ *   Set FLUXER_VIDEO_FFMPEG=1 to use FFmpeg decoding (recommended on macOS; avoids node-webcodecs crashes).
+ * !stop stops playback and leaves.
  *
  * Usage (from repo root after npm install && npm run build):
  *   FLUXER_BOT_TOKEN=your_token node examples/ping-bot.js
+ *
+ * Optional env: FLUXER_API_URL for custom API base; VOICE_DEBUG=1 for voice connection logs.
  */
 
 import youtubedl from 'youtube-dl-exec';
-import { Client, Events, EmbedBuilder, Routes, VoiceChannel } from '@fluxerjs/core';
-import { getVoiceManager } from '@fluxerjs/voice';
+import { Client, Events, EmbedBuilder, Routes, User, VoiceChannel } from '@fluxerjs/core';
+import { getVoiceManager, LiveKitRtcConnection } from '@fluxerjs/voice';
 
 /** Fixed non‑copyrighted track; we get a direct WebM/Opus URL so the voice package can play without FFmpeg. */
 const PLAY_URL = 'https://www.youtube.com/watch?v=eVTXPUF4Oz4';
 const YTDLP_FORMAT = 'bestaudio[ext=webm][acodec=opus]/bestaudio[ext=webm]/bestaudio';
+
+/** Default MP4 video URL for !playvideo (short public domain clip). Must be direct MP4 (H.264). */
+const DEFAULT_VIDEO_URL = 'https://www.w3schools.com/html/mov_bbb.mp4';
+
+/** yt-dlp format for MP4 video (prefer 1080p, then 720p, 360p, then best). */
+const YTDLP_VIDEO_FORMAT = 'best[height<=1080][ext=mp4]/best[height<=1080]/22/18/best[ext=mp4]/best';
+
+/** Regex for YouTube and similar sites that yt-dlp supports for video extraction. */
+const YOUTUBE_LIKE = /youtube\.com|youtu\.be|yt\.be/i;
 
 async function getStreamUrl(url) {
   const result = await youtubedl(url, {
@@ -26,6 +40,17 @@ async function getStreamUrl(url) {
     noPlaylist: true,
   }, { timeout: 15000 });
   return String(result ?? '').trim();
+}
+
+/** Get a direct MP4 video URL from YouTube or similar. Returns null on failure. */
+async function getVideoUrl(url) {
+  const result = await youtubedl(url, {
+    getUrl: true,
+    f: YTDLP_VIDEO_FORMAT,
+    noWarnings: true,
+    noPlaylist: true,
+  }, { timeout: 20000 });
+  return String(result ?? '').trim() || null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -312,6 +337,48 @@ commands.set('roleinfo', {
   },
 });
 
+commands.set('dm', {
+  description: 'DM yourself (demo of user.send)',
+  async execute(message) {
+    try {
+      await message.author.send('You requested a DM! This is a direct message from the bot.');
+      await message.reply('Check your DMs! 📬');
+    } catch (err) {
+      await message.reply('Could not DM you. You may have DMs disabled.').catch(() => {});
+    }
+  },
+});
+
+commands.set('dmuser', {
+  description: 'DM a user: !dmuser @user [message]',
+  async execute(message, client, args) {
+    const userId = resolveUserId(args[0], null);
+    if (!userId) {
+      await message.reply('Provide a user mention or ID. Example: `!dmuser @Someone Hello!`');
+      return;
+    }
+    const text = args.slice(1).join(' ') || 'Hello from the bot!';
+    try {
+      const userData = await client.rest.get(Routes.user(userId));
+      const user = new User(client, userData);
+      await user.send(text);
+      await message.reply(`Sent DM to **${user.globalName ?? user.username}**.`);
+    } catch (err) {
+      await message.reply('Could not send DM. The user may not exist or may have DMs disabled.').catch(() => {});
+    }
+  },
+});
+
+commands.set('react', {
+  description: 'Reply with a message and add reactions',
+  async execute(message) {
+    const reply = await message.reply('React below! 👇');
+    await reply.react('👍');
+    await reply.react('❤️');
+    await reply.react('🎉');
+  },
+});
+
 commands.set('editembed', {
   description: 'Demonstrate editing an existing message embed',
   async execute(message) {
@@ -411,8 +478,61 @@ commands.set('play', {
   },
 });
 
+commands.set('playvideo', {
+  description: 'Stream video in your VC (!playvideo [YouTube URL or MP4 URL])',
+  async execute(message, client, args) {
+    const guildId = message.guildId;
+    if (!guildId) {
+      await message.reply('This command only works in a server.');
+      return;
+    }
+    const voiceManager = getVoiceManager(client);
+    const voiceChannelId = voiceManager.getVoiceChannelId(guildId, message.author.id);
+    if (!voiceChannelId) {
+      await message.reply('Join a voice channel first.');
+      return;
+    }
+    const channel = client.channels.get(voiceChannelId);
+    if (!channel || !(channel instanceof VoiceChannel)) {
+      await message.reply('Could not find that voice channel.');
+      return;
+    }
+    const inputUrl = args[0]?.trim() || DEFAULT_VIDEO_URL;
+    if (!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
+      await message.reply('Provide a valid URL: YouTube link or direct MP4. Example: `!playvideo https://youtube.com/watch?v=...`');
+      return;
+    }
+    try {
+      let videoUrl = inputUrl;
+      if (YOUTUBE_LIKE.test(inputUrl)) {
+        await message.reply('Fetching video URL from YouTube...').catch(() => {});
+        const resolved = await getVideoUrl(inputUrl);
+        if (!resolved) {
+          await message.reply('Could not get video URL. Is youtube-dl-exec installed?').catch(() => {});
+          return;
+        }
+        videoUrl = resolved;
+      }
+      const connection = await voiceManager.join(channel);
+      if (!(connection instanceof LiveKitRtcConnection)) {
+        await message.reply('Video requires LiveKit voice (this server may use a different voice backend).');
+        return;
+      }
+      if (!connection.isConnected()) {
+        await message.reply('Voice connection not ready. Try again in a moment.');
+        return;
+      }
+      await connection.playVideo(videoUrl, { source: 'screenshare' });
+      await message.reply(`Streaming video in your voice channel. Use \`${PREFIX}stop\` to leave.`);
+    } catch (err) {
+      console.error('Playvideo error:', err);
+      await message.reply('Failed to join or stream video.').catch(() => {});
+    }
+  },
+});
+
 commands.set('stop', {
-  description: 'Stop playback and leave voice channel',
+  description: 'Stop audio/video playback and leave voice channel',
   async execute(message, client) {
     const guildId = message.guildId;
     if (!guildId) {
@@ -444,6 +564,7 @@ if (!token) {
 
 const client = new Client({
   intents: 0,
+  rest: process.env.FLUXER_API_URL ? { api: process.env.FLUXER_API_URL } : undefined,
   presence: {
     status: 'online',
     custom_status: { text: 'Watching the server' },
@@ -486,6 +607,12 @@ client.on(Events.MessageCreate, async (message) => {
 
 client.on(Events.Error, (err) => console.error('Client error:', err));
 client.on(Events.Debug, (msg) => console.log('[debug]', msg));
+
+// Optional: log voice gateway events when VOICE_DEBUG=1 (helps diagnose connection timeouts)
+if (process.env.VOICE_DEBUG === '1' || process.env.VOICE_DEBUG === 'true') {
+  client.on(Events.VoiceStateUpdate, (d) => console.log('[voice] VoiceStateUpdate', { guild_id: d.guild_id, user_id: d.user_id, channel_id: d.channel_id }));
+  client.on(Events.VoiceServerUpdate, (d) => console.log('[voice] VoiceServerUpdate', { guild_id: d.guild_id, endpoint: d.endpoint ? 'present' : 'null' }));
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Start

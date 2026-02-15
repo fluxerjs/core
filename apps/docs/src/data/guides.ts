@@ -162,6 +162,70 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
     ],
   },
   {
+    id: 'reactions',
+    slug: 'reactions',
+    title: 'Reactions',
+    description: 'Add, remove, and listen for message reactions with Message.react(), removeReaction(), and reaction events.',
+    category: 'sending-messages',
+    sections: [
+      {
+        title: 'Add a Reaction',
+        description: 'Use message.react() to add an emoji reaction as the bot. Pass a unicode emoji string or custom emoji { name, id }.',
+        code: `const reply = await message.reply('React to this!');
+await reply.react('👍');
+await reply.react({ name: 'customemoji', id: '123456789012345678' });`,
+        language: 'javascript',
+      },
+      {
+        title: 'Remove Reactions',
+        description: 'Remove the bot\'s reaction with removeReaction(emoji). Remove a specific user\'s reaction with removeReaction(emoji, userId). Clear all reactions with removeAllReactions() or removeReactionEmoji(emoji).',
+        code: `// Remove the bot's reaction
+await message.removeReaction('👍');
+
+// Remove a specific user's reaction (requires moderator permissions)
+await message.removeReaction('👍', userId);
+
+// Remove all reactions of one emoji from the message
+await message.removeReactionEmoji('👍');
+
+// Remove all reactions from the message
+await message.removeAllReactions();`,
+        language: 'javascript',
+      },
+      {
+        title: 'Listen for Reactions',
+        description: 'Handle MessageReactionAdd and MessageReactionRemove to react when users add or remove emoji. Use MessageReactionRemoveAll and MessageReactionRemoveEmoji for moderator actions.',
+        code: `client.on(Events.MessageReactionAdd, async (data) => {
+  const { message_id, user_id, emoji } = data;
+  if (emoji.name === '👍') {
+    console.log(\`User \${user_id} voted yes on message \${message_id}\`);
+    // Optionally: add your own reaction, or fetch the message and modify it
+  }
+});
+
+client.on(Events.MessageReactionRemove, (data) => {
+  const { message_id, user_id, emoji } = data;
+  console.log(\`User \${user_id} removed \${emoji.name} from message \${message_id}\`);
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Reaction Roles Example',
+        description: 'See examples/reaction-roles-bot.js for a full bot that assigns roles when users react to a message. Uses message.react(), Guild.fetchMember(), and GuildMember.addRole()/removeRole().',
+        code: `// Simplified reaction-roles logic
+client.on(Events.MessageReactionAdd, async (data) => {
+  if (data.message_id !== rolesMessageId) return;
+  const roleId = ROLE_EMOJI_MAP[data.emoji.name];
+  if (!roleId) return;
+  const guild = client.guilds.get(data.guild_id);
+  const member = await guild?.fetchMember(data.user_id);
+  if (member && !member.roles.includes(roleId)) await member.addRole(roleId);
+});`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
     id: 'webhooks',
     slug: 'webhooks',
     title: 'Webhooks',

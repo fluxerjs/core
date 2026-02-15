@@ -1,17 +1,31 @@
 import type { Snowflake } from '../common/snowflake.js';
 
+/**
+ * Partial user object returned by the API (messages, members, webhooks, etc.).
+ * @see GET /users/{id} - Returns id, username, discriminator, global_name, avatar, avatar_color, flags
+ * @see GET /users/@me - Returns full user with bot, email, premium fields, etc.
+ */
 export interface APIUserPartial {
   id: Snowflake;
   username: string;
   discriminator: string;
   global_name?: string | null;
   avatar?: string | null;
+  /** RGB color as number (e.g. 7577782) */
   avatar_color?: number | null;
+  /** Public/user flags bitfield */
+  flags?: number | null;
+  /** @deprecated Use flags. Discord compat. */
   public_flags?: number | null;
+  /** Present when author is a bot */
+  bot?: boolean;
 }
 
 export type APIUser = APIUserPartial;
 
+/**
+ * Guild member from GET /guilds/{guild_id}/members or GET /guilds/{guild_id}/members/{user_id}
+ */
 export interface APIGuildMember {
   user: APIUserPartial;
   nick?: string | null;

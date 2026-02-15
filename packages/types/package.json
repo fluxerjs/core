@@ -1,7 +1,7 @@
 {
   "name": "@fluxerjs/types",
   "publishConfig": { "access": "public" },
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "TypeScript types for the Fluxer API",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

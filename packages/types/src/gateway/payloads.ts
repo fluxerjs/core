@@ -50,6 +50,12 @@ export interface GatewayVoiceStateUpdateData {
   channel_id: Snowflake | null;
   self_mute?: boolean;
   self_deaf?: boolean;
+  /** Whether the user has video enabled (e.g. camera). */
+  self_video?: boolean;
+  /** Whether the user is screen sharing / streaming. */
+  self_stream?: boolean;
+  /** Connection ID from VoiceServerUpdate; required for updates when already in channel. */
+  connection_id?: string | null;
 }
 
 export type GatewaySendPayload =
@@ -171,11 +177,15 @@ export interface GatewayVoiceStateUpdateDispatchData {
   user_id: Snowflake;
   member?: APIGuildMember & { guild_id?: Snowflake };
   session_id: string;
+  /** Connection ID for voice session (Fluxer). */
+  connection_id?: string | null;
   deaf?: boolean;
   mute?: boolean;
   self_deaf?: boolean;
   self_mute?: boolean;
   self_video?: boolean;
+  /** Whether the user is screen sharing / streaming. */
+  self_stream?: boolean;
   suppress?: boolean;
 }
 
@@ -184,6 +194,8 @@ export interface GatewayVoiceServerUpdateDispatchData {
   token: string;
   guild_id: Snowflake;
   endpoint: string | null;
+  /** Connection ID for subsequent voice state updates (Fluxer). */
+  connection_id?: string | null;
 }
 
 export interface GatewayReceivePayload<T = unknown> {

@@ -53,10 +53,14 @@ export const Routes = {
   // Users
   user: (id: Snowflake) => `/users/${id}` as const,
   currentUser: () => `/users/@me` as const,
+  userMeChannels: () => `/users/@me/channels` as const,
   userProfile: (id: Snowflake) => `/users/${id}/profile` as const,
 
   // Gateway
   gatewayBot: () => `/gateway/bot` as const,
+
+  // Streams (voice channel screen share preview)
+  streamPreview: (streamKey: string) => `/streams/${encodeURIComponent(streamKey)}/preview` as const,
 
   // Application commands (slash commands)
   applicationCommands: (applicationId: Snowflake) => `/applications/${applicationId}/commands` as const,

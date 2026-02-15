@@ -6,7 +6,7 @@
       </span>
       <h1>{{ typedef.name }}</h1>
     </div>
-    <p v-if="typedef.description" class="description">{{ typedef.description }}</p>
+    <p v-if="typedef.description" class="description"><DocDescription :text="typedef.description" /></p>
 
     <a
       v-if="typedef.source?.path"
@@ -51,6 +51,7 @@ import { useRoute } from 'vue-router';
 import { useDocsStore } from '../stores/docs';
 import type { DocInterface, DocEnum } from '../types/doc-schema';
 import { onMounted, watch } from 'vue';
+import DocDescription from '../components/DocDescription.vue';
 import PropertiesSection from '../components/PropertiesSection.vue';
 import Prism from 'prismjs';
 

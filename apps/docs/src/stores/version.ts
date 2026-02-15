@@ -36,7 +36,7 @@ export const useVersionStore = defineStore('version', () => {
       if (!res.ok) throw new Error('Failed to load versions');
       const data = (await res.json()) as VersionsManifest;
       availableVersions.value = data.versions ?? [];
-      latestVersion.value = data.latest ?? (data.versions?.[0] ?? '1.0.6');
+      latestVersion.value = data.latest ?? (data.versions?.[0] ?? '1.0.7');
       versionsLoaded.value = true;
 
       // Restore saved preference
@@ -50,8 +50,8 @@ export const useVersionStore = defineStore('version', () => {
       }
     } catch {
       // Fallback when versions.json doesn't exist (e.g. dev before first generate)
-      availableVersions.value = ['1.0.6'];
-      latestVersion.value = '1.0.6';
+      availableVersions.value = ['1.0.7'];
+      latestVersion.value = '1.0.7';
       currentVersion.value = 'latest';
       versionsLoaded.value = true;
     }

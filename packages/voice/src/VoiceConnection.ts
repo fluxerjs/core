@@ -51,6 +51,7 @@ export interface VoiceConnectionEvents {
   disconnect: [];
 }
 
+/** Voice connection using Discord's UDP-based protocol. Emits `ready`, `error`, `disconnect`. */
 export class VoiceConnection extends EventEmitter {
   readonly client: Client;
   readonly channel: VoiceChannel;
@@ -82,10 +83,12 @@ export class VoiceConnection extends EventEmitter {
     this._userId = userId;
   }
 
+  /** Discord voice session ID. */
   get sessionId(): string | null {
     return this._sessionId;
   }
 
+  /** Whether audio is currently playing. */
   get playing(): boolean {
     return this._playing;
   }
@@ -344,6 +347,7 @@ export class VoiceConnection extends EventEmitter {
     }
   }
 
+  /** Stop playback and clear the queue. */
   stop(): void {
     this._playing = false;
     this.audioPacketQueue = [];
@@ -357,6 +361,7 @@ export class VoiceConnection extends EventEmitter {
     }
   }
 
+  /** Disconnect from voice (closes WebSocket and UDP). */
   disconnect(): void {
     this._destroyed = true;
     this.stop();
@@ -375,6 +380,7 @@ export class VoiceConnection extends EventEmitter {
     this.emit('disconnect');
   }
 
+  /** Disconnect and remove all listeners. */
   destroy(): void {
     this.disconnect();
     this.removeAllListeners();

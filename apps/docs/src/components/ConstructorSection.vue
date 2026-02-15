@@ -4,6 +4,7 @@
     <div class="signature-wrap">
       <TypeSignature :type="signatureText" />
     </div>
+    <p v-if="props.constructor.description" class="constructor-desc"><DocDescription :text="props.constructor.description" /></p>
     <ParamsTable v-if="params.length" :params="params" />
   </section>
 </template>
@@ -11,6 +12,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { DocConstructor } from '../types/doc-schema';
+import DocDescription from './DocDescription.vue';
 import ParamsTable from './ParamsTable.vue';
 import TypeSignature from './TypeSignature.vue';
 
@@ -46,5 +48,12 @@ const signatureText = computed(() => {
 
 .signature-wrap :deep(.type-sig) {
   font-size: 0.9rem;
+}
+
+.constructor-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 0.5rem;
 }
 </style>

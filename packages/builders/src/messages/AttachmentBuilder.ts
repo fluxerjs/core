@@ -8,18 +8,21 @@ export interface AttachmentPayloadOptions {
   spoiler?: boolean;
 }
 
+/** API format for an attachment in a message payload. */
 export interface APIAttachmentPayload {
   id: number;
   filename: string;
   description?: string | null;
 }
 
+/** Builder for attachment metadata (filename, description, spoiler). Actual file data is passed separately when sending. */
 export class AttachmentBuilder {
   public readonly id: number;
   public filename: string;
   public description?: string | null;
   public spoiler: boolean;
 
+  /** @param id - Index of the attachment (0-based). Must match the FormData part order. */
   constructor(id: number, filename: string, options?: Partial<AttachmentPayloadOptions>) {
     this.id = id;
     this.filename = options?.spoiler ? `SPOILER_${filename}` : filename;
@@ -27,16 +30,19 @@ export class AttachmentBuilder {
     this.spoiler = options?.spoiler ?? false;
   }
 
+  /** Set the displayed filename. */
   setName(name: string): this {
     this.filename = this.spoiler ? `SPOILER_${name}` : name;
     return this;
   }
 
+  /** Set the attachment description (alt text). */
   setDescription(description: string | null): this {
     this.description = description ?? undefined;
     return this;
   }
 
+  /** Mark the attachment as a spoiler (blurred until clicked). */
   setSpoiler(spoiler = true): this {
     this.spoiler = spoiler;
     if (spoiler && !this.filename.startsWith('SPOILER_')) this.filename = `SPOILER_${this.filename}`;
@@ -44,6 +50,7 @@ export class AttachmentBuilder {
     return this;
   }
 
+  /** Convert to API format for MessagePayload. */
   toJSON(): APIAttachmentPayload {
     return {
       id: this.id,

@@ -49,6 +49,9 @@ export type GuildFeature =
   | 'MT_MESSAGE_SCHEDULING'
   | 'MT_EXPRESSION_PACKS';
 
+/**
+ * Guild from GET /guilds/{id} or gateway GUILD_CREATE
+ */
 export interface APIGuild {
   id: Snowflake;
   name: string;
@@ -57,9 +60,16 @@ export interface APIGuild {
   banner_width?: number | null;
   banner_height?: number | null;
   splash?: string | null;
+  splash_width?: number | null;
+  splash_height?: number | null;
+  splash_card_alignment?: number;
+  embed_splash?: string | null;
+  embed_splash_width?: number | null;
+  embed_splash_height?: number | null;
   vanity_url_code?: string | null;
   owner_id: Snowflake;
   system_channel_id?: Snowflake | null;
+  system_channel_flags?: number;
   rules_channel_id?: Snowflake | null;
   afk_channel_id?: Snowflake | null;
   afk_timeout: number;
@@ -69,5 +79,7 @@ export interface APIGuild {
   nsfw_level: number;
   explicit_content_filter: GuildExplicitContentFilter;
   default_message_notifications: DefaultMessageNotifications;
+  disabled_operations?: number;
+  message_history_cutoff?: string | null;
   permissions?: string | null;
 }

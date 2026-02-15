@@ -47,6 +47,7 @@ export interface ClientEvents {
   [Events.Debug]: [message: string];
 }
 
+/** Main Fluxer bot client. Connects to the gateway, emits events, and provides REST access. */
 export class Client extends EventEmitter {
   readonly rest: REST;
   readonly guilds = new Collection<string, Guild>();
@@ -56,6 +57,7 @@ export class Client extends EventEmitter {
   readyAt: Date | null = null;
   private _ws: WebSocketManager | null = null;
 
+  /** @param options - Token, REST config, WebSocket, presence, etc. */
   constructor(public readonly options: ClientOptions = {}) {
     super();
     this.rest = new REST({
@@ -65,12 +67,17 @@ export class Client extends EventEmitter {
     });
   }
 
+  /** WebSocket manager. Throws if not logged in. */
   get ws(): WebSocketManager {
     if (!this._ws) throw new Error('Client is not logged in');
     return this._ws;
   }
 
-  /** Send a payload to the gateway (e.g. Voice State Update). Uses shard 0 when single-shard. */
+  /**
+   * Send a payload to the gateway (e.g. Voice State Update).
+   * @param shardId - Shard ID (use 0 for single-shard)
+   * @param payload - Gateway payload to send
+   */
   sendToGateway(shardId: number, payload: GatewaySendPayload): void {
     this.ws.send(shardId, payload);
   }
@@ -223,6 +230,10 @@ export class Client extends EventEmitter {
     }
   }
 
+  /**
+   * Connect to the Fluxer gateway and authenticate.
+   * @param token - Bot token (e.g. from FLUXER_BOT_TOKEN)
+   */
   async login(token: string): Promise<string> {
     this.rest.setToken(token);
     let intents = this.options.intents ?? 0;
@@ -274,6 +285,7 @@ export class Client extends EventEmitter {
     return token;
   }
 
+  /** Disconnect from the gateway and clear cached data. */
   async destroy(): Promise<void> {
     if (this._ws) {
       this._ws.destroy();
@@ -287,6 +299,7 @@ export class Client extends EventEmitter {
     this.users.clear();
   }
 
+  /** Returns true if the client has received Ready and `user` is set. */
   isReady(): this is Client & { user: NonNullable<Client['user']> } {
     return this.readyAt !== null && this.user !== null;
   }

@@ -33,6 +33,7 @@ export interface APIMessageReaction {
   me?: boolean | null;
 }
 
+/** Reply/forward reference from GET /channels/{id}/messages (type 0 = reply) */
 export interface APIMessageReference {
   channel_id: Snowflake;
   message_id: Snowflake;
@@ -65,6 +66,9 @@ export interface APIMessageSticker {
   animated?: boolean;
 }
 
+/**
+ * Message from GET /channels/{id}/messages, POST /channels/{id}/messages, PATCH, or gateway MESSAGE_CREATE
+ */
 export interface APIMessage {
   id: Snowflake;
   channel_id: Snowflake;

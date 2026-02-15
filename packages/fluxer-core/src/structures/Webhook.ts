@@ -3,11 +3,17 @@ import { Base } from './Base.js';
 import type { APIWebhook } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 
+/** Options for sending a message via webhook. */
 export interface WebhookSendOptions {
+  /** Message text content */
   content?: string;
+  /** Embed objects (use EmbedBuilder.toJSON()) */
   embeds?: Array<Record<string, unknown>>;
+  /** Override the webhook's default username */
   username?: string;
+  /** Override the webhook's default avatar URL */
   avatar_url?: string;
+  /** Text-to-speech */
   tts?: boolean;
 }
 
@@ -25,6 +31,7 @@ export class Webhook extends Base {
   /** Present only when webhook was created via createWebhook(); not returned when fetching. */
   readonly token: string | null;
 
+  /** @param data - API webhook from POST /channels/{id}/webhooks (has token) or GET /webhooks/{id} (no token) */
   constructor(client: Client, data: APIWebhook & { token?: string | null }) {
     super();
     this.client = client;
@@ -57,7 +64,10 @@ export class Webhook extends Base {
   }
 
   /**
-   * Fetch a webhook by ID using bot auth. The returned webhook will not have a token (cannot send).
+   * Fetch a webhook by ID using bot auth.
+   * @param client - The client instance
+   * @param webhookId - The webhook ID
+   * @returns Webhook without token (cannot send)
    */
   static async fetch(client: Client, webhookId: string): Promise<Webhook> {
     const data = await client.rest.get(Routes.webhook(webhookId));
@@ -66,7 +76,10 @@ export class Webhook extends Base {
 
   /**
    * Create a Webhook instance from an ID and token (e.g. from a stored webhook URL).
-   * Useful when you have the token from a previous createWebhook() call.
+   * @param client - The client instance
+   * @param webhookId - The webhook ID
+   * @param token - The webhook token (from createWebhook or stored)
+   * @param options - Optional channelId, guildId, name for display
    */
   static fromToken(
     client: Client,

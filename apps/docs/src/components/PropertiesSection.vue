@@ -9,13 +9,14 @@
       <div v-if="p.type" class="property-type-wrap">
         <TypeSignature :type="p.type" />
       </div>
-      <p v-if="p.description" class="property-desc">{{ p.description }}</p>
+      <p v-if="p.description" class="property-desc"><DocDescription :text="p.description" /></p>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import type { DocProperty, DocInterfaceProperty } from '../types/doc-schema';
+import DocDescription from './DocDescription.vue';
 import TypeSignature from './TypeSignature.vue';
 
 defineProps<{ properties: (DocProperty | DocInterfaceProperty)[] }>();

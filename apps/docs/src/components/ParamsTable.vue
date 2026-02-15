@@ -11,7 +11,10 @@
       <tr v-for="p in params" :key="p.name">
         <td><code class="param-name">{{ p.name }}{{ p.optional ? '?' : '' }}</code></td>
         <td><TypeSignature :type="p.type" /></td>
-        <td class="param-desc">{{ p.description ?? '-' }}</td>
+        <td class="param-desc">
+          <DocDescription v-if="p.description" :text="p.description" />
+          <span v-else>-</span>
+        </td>
       </tr>
     </tbody>
   </table>
@@ -19,6 +22,7 @@
 
 <script setup lang="ts">
 import type { DocParam } from '../types/doc-schema';
+import DocDescription from './DocDescription.vue';
 import TypeSignature from './TypeSignature.vue';
 
 defineProps<{ params: DocParam[] }>();

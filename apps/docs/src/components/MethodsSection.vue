@@ -14,7 +14,7 @@
       <div class="method-sig-wrap">
         <TypeSignature :type="methodSignature(m)" />
       </div>
-      <p v-if="m.description" class="method-desc">{{ m.description }}</p>
+      <p v-if="m.description" class="method-desc"><DocDescription :text="m.description" /></p>
       <ParamsTable v-if="m.params?.length" :params="m.params" />
     </div>
   </section>
@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import type { DocMethod } from '../types/doc-schema';
+import DocDescription from './DocDescription.vue';
 import ParamsTable from './ParamsTable.vue';
 import TypeSignature from './TypeSignature.vue';
 

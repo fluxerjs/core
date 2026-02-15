@@ -29,9 +29,9 @@ const DOCS_DIR = resolve(root, 'apps/docs/public/docs');
 function getVersion(): string {
   try {
     const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf-8'));
-    return pkg.version ?? '1.0.6';
+    return pkg.version ?? '1.0.7';
   } catch {
-    return '1.0.6';
+    return '1.0.7';
   }
 }
 

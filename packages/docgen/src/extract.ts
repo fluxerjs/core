@@ -28,10 +28,17 @@ function parseJSDoc(comment: string): doctrine.Annotation | null {
   }
 }
 
+function cleanDescription(s: string): string {
+  return s
+    .replace(/\s*\/\s*$/, '')
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    .trim();
+}
+
 function getDescriptionFromJSDoc(comment: string): string {
   const parsed = parseJSDoc(comment);
   if (!parsed) return '';
-  return (parsed.description || '').trim();
+  return cleanDescription(parsed.description || '');
 }
 
 function getParamDescriptions(comment: string): Map<string, string> {
@@ -39,10 +46,10 @@ function getParamDescriptions(comment: string): Map<string, string> {
   const map = new Map<string, string>();
   if (!parsed?.tags) return map;
   for (const tag of parsed.tags) {
-    if (tag.title === 'param' && tag.type === 'ParameterTag') {
+    if (tag.title === 'param' && 'name' in tag) {
       const name = (tag as doctrine.type.ParameterTag).name;
       const desc = (tag as doctrine.type.ParameterTag).description || '';
-      if (name) map.set(name.replace(/^\[|\]$/g, ''), desc.trim());
+      if (name) map.set(name.replace(/^\[|\]$/g, ''), cleanDescription(desc));
     }
   }
   return map;

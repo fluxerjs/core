@@ -5,7 +5,7 @@
       <h1>{{ clazz.name }}</h1>
       <span v-if="clazz.deprecated" class="deprecated-badge">deprecated</span>
     </div>
-    <p v-if="description" class="description">{{ description }}</p>
+    <p v-if="description" class="description"><DocDescription :text="description" /></p>
     <a
       v-if="clazz.source?.path"
       :href="sourceUrl(clazz.source)"
@@ -30,6 +30,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDocsStore } from '../stores/docs';
 import ConstructorSection from '../components/ConstructorSection.vue';
+import DocDescription from '../components/DocDescription.vue';
 import PropertiesSection from '../components/PropertiesSection.vue';
 import MethodsSection from '../components/MethodsSection.vue';
 

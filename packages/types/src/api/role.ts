@@ -1,5 +1,9 @@
 import type { Snowflake } from '../common/snowflake.js';
 
+/**
+ * Role from GET /guilds/{id}/roles
+ * permissions is bitfield as string (e.g. "8933636165185")
+ */
 export interface APIRole {
   id: Snowflake;
   name: string;

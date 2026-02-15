@@ -12,43 +12,51 @@ const EMBED_MAX = {
   total: 6000,
 };
 
+/** Author field for an embed. */
 export interface EmbedAuthorOptions {
   name: string;
   iconURL?: string;
   url?: string;
 }
 
+/** Footer field for an embed. */
 export interface EmbedFooterOptions {
   text: string;
   iconURL?: string;
 }
 
+/** A single embed field (name, value, optional inline). */
 export interface EmbedFieldData {
   name: string;
   value: string;
   inline?: boolean;
 }
 
+/** Builder for creating rich embeds. Use `toJSON()` when passing to `reply`, `send`, or `edit`. */
 export class EmbedBuilder {
   public readonly data: Partial<APIEmbed> = {};
 
+  /** Set the embed title. Max 256 characters. */
   setTitle(title: string | null): this {
     if (title !== null && title.length > EMBED_MAX.title) throw new RangeError(`Title must be ≤${EMBED_MAX.title} characters`);
     this.data.title = title ?? undefined;
     return this;
   }
 
+  /** Set the embed description. Max 4096 characters. */
   setDescription(description: string | null): this {
     if (description !== null && description.length > EMBED_MAX.description) throw new RangeError(`Description must be ≤${EMBED_MAX.description} characters`);
     this.data.description = description ?? undefined;
     return this;
   }
 
+  /** Set the embed URL (title becomes a link). */
   setURL(url: string | null): this {
     this.data.url = url ?? undefined;
     return this;
   }
 
+  /** Set the embed color. Number (hex), hex string, or `[r,g,b]` array. */
   setColor(color: number | string | [number, number, number] | null): this {
     if (color === null) {
       this.data.color = undefined;
@@ -58,6 +66,7 @@ export class EmbedBuilder {
     return this;
   }
 
+  /** Set the embed timestamp. Omit for current time. */
   setTimestamp(timestamp?: Date | number | null): this {
     if (timestamp === undefined || timestamp === null) {
       this.data.timestamp = undefined;
@@ -68,6 +77,7 @@ export class EmbedBuilder {
     return this;
   }
 
+  /** Set the embed author (name, optional icon URL and link). */
   setAuthor(options: EmbedAuthorOptions | null): this {
     if (!options) {
       this.data.author = undefined;
@@ -81,6 +91,7 @@ export class EmbedBuilder {
     return this;
   }
 
+  /** Set the embed footer (text, optional icon URL). */
   setFooter(options: EmbedFooterOptions | null): this {
     if (!options) {
       this.data.footer = undefined;
@@ -93,11 +104,13 @@ export class EmbedBuilder {
     return this;
   }
 
+  /** Set the embed image URL. */
   setImage(url: string | null): this {
     this.data.image = url ? { url } : undefined;
     return this;
   }
 
+  /** Set the embed thumbnail URL. */
   setThumbnail(url: string | null): this {
     this.data.thumbnail = url ? { url } : undefined;
     return this;
@@ -108,6 +121,7 @@ export class EmbedBuilder {
     return this;
   }
 
+  /** Add one or more fields. Max 25 fields. */
   addFields(...fields: EmbedFieldData[]): this {
     const current = (this.data.fields ?? []).slice();
     for (const f of fields) {
@@ -134,12 +148,14 @@ export class EmbedBuilder {
     return this;
   }
 
+  /** Convert to API embed format for `reply`, `send`, or `edit`. */
   toJSON(): APIEmbed {
     const totalLength = [this.data.title, this.data.description, ...(this.data.fields ?? []).flatMap((f) => [f.name, f.value]), this.data.footer?.text].filter(Boolean).join('').length;
     if (totalLength > EMBED_MAX.total) throw new RangeError(`Embed total length must be ≤${EMBED_MAX.total}`);
     return { ...this.data, type: this.data.type ?? 'rich' } as APIEmbed;
   }
 
+  /** Create an EmbedBuilder from an existing API embed. */
   static from(data: APIEmbed): EmbedBuilder {
     const b = new EmbedBuilder();
     b.data.title = data.title ?? undefined;
