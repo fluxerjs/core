@@ -146,7 +146,6 @@ const filteredEnums = computed(() => {
   flex-direction: column;
 }
 
-
 .sidebar-select-wrap {
   margin: 0 var(--sidebar-padding-x) 0.75rem;
 }

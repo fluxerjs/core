@@ -97,6 +97,11 @@ export interface APIGuildAuditLogEntry {
 /** Response from GET /guilds/{id}/audit-logs */
 export interface APIGuildAuditLog {
   audit_log_entries: APIGuildAuditLogEntry[];
-  users: Array<{ id: Snowflake; username?: string; discriminator?: string; avatar?: string | null }>;
+  users: Array<{
+    id: Snowflake;
+    username?: string;
+    discriminator?: string;
+    avatar?: string | null;
+  }>;
   webhooks: Array<{ id: Snowflake; name?: string; avatar?: string | null }>;
 }

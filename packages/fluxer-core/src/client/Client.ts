@@ -78,9 +78,7 @@ export interface ClientEvents {
   [Events.GuildScheduledEventDelete]: [data: unknown];
   [Events.ChannelPinsUpdate]: [data: unknown];
   [Events.InviteCreate]: [invite: import('../structures/Invite.js').Invite];
-  [Events.InviteDelete]: [
-    data: import('@fluxerjs/types').GatewayInviteDeleteDispatchData,
-  ];
+  [Events.InviteDelete]: [data: import('@fluxerjs/types').GatewayInviteDeleteDispatchData];
   [Events.TypingStart]: [data: import('@fluxerjs/types').GatewayTypingStartDispatchData];
   [Events.UserUpdate]: [data: import('@fluxerjs/types').GatewayUserUpdateDispatchData];
   [Events.PresenceUpdate]: [data: unknown];

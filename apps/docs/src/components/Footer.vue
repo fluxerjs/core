@@ -22,9 +22,7 @@
           Fluxer
         </a>
       </nav>
-      <p class="footer-copy">
-        Fluxer.js v{{ version }} · SDK for Fluxer bots
-      </p>
+      <p class="footer-copy">Fluxer.js v{{ version }} · SDK for Fluxer bots</p>
     </div>
   </footer>
 </template>

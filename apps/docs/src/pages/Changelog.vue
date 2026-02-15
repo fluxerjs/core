@@ -100,7 +100,9 @@ watch(
 
 watch(selectedVersion, (v) => {
   const base = { ...route.query } as Record<string, string>;
-  const next = v ? { ...base, version: v } : Object.fromEntries(Object.entries(base).filter(([k]) => k !== 'version'));
+  const next = v
+    ? { ...base, version: v }
+    : Object.fromEntries(Object.entries(base).filter(([k]) => k !== 'version'));
   router.replace({ query: next });
 });
 

@@ -152,9 +152,12 @@ export class TextChannel extends GuildChannel {
     const data = (await this.client.rest.get(Routes.channelPins(this.id))) as
       | { items?: Array<{ message?: import('@fluxerjs/types').APIMessage }> }
       | import('@fluxerjs/types').APIMessage[];
-    const list = Array.isArray(data) ? data : data?.items ?? [];
+    const list = Array.isArray(data) ? data : (data?.items ?? []);
     return list.map((item: unknown) => {
-      const msg = typeof item === 'object' && item && 'message' in item ? (item as { message: import('@fluxerjs/types').APIMessage }).message : (item as import('@fluxerjs/types').APIMessage);
+      const msg =
+        typeof item === 'object' && item && 'message' in item
+          ? (item as { message: import('@fluxerjs/types').APIMessage }).message
+          : (item as import('@fluxerjs/types').APIMessage);
       return new Message(this.client, msg);
     });
   }
@@ -229,9 +232,12 @@ export class DMChannel extends Channel {
     const data = (await this.client.rest.get(Routes.channelPins(this.id))) as
       | { items?: Array<{ message?: import('@fluxerjs/types').APIMessage }> }
       | import('@fluxerjs/types').APIMessage[];
-    const list = Array.isArray(data) ? data : data?.items ?? [];
+    const list = Array.isArray(data) ? data : (data?.items ?? []);
     return list.map((item: unknown) => {
-      const msg = typeof item === 'object' && item && 'message' in item ? (item as { message: import('@fluxerjs/types').APIMessage }).message : (item as import('@fluxerjs/types').APIMessage);
+      const msg =
+        typeof item === 'object' && item && 'message' in item
+          ? (item as { message: import('@fluxerjs/types').APIMessage }).message
+          : (item as import('@fluxerjs/types').APIMessage);
       return new Message(this.client, msg);
     });
   }

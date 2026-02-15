@@ -57,25 +57,19 @@ export class Webhook extends Base {
    * @param options - Fields to update (name, avatar, channel_id when using bot auth)
    * @returns This webhook instance with updated fields
    */
-  async edit(
-    options: APIWebhookUpdateRequest | APIWebhookTokenUpdateRequest
-  ): Promise<Webhook> {
+  async edit(options: APIWebhookUpdateRequest | APIWebhookTokenUpdateRequest): Promise<Webhook> {
     const body: Record<string, unknown> = {};
     if (options.name !== undefined) body.name = options.name;
     if (options.avatar !== undefined) body.avatar = options.avatar;
-    if (
-      'channel_id' in options &&
-      options.channel_id !== undefined &&
-      !this.token
-    ) {
+    if ('channel_id' in options && options.channel_id !== undefined && !this.token) {
       body.channel_id = options.channel_id;
     }
 
     if (this.token) {
-      const data = await this.client.rest.patch(
-        Routes.webhookExecute(this.id, this.token),
-        { body, auth: false }
-      );
+      const data = await this.client.rest.patch(Routes.webhookExecute(this.id, this.token), {
+        body,
+        auth: false,
+      });
       const w = data as APIWebhook;
       this.name = w.name ?? this.name;
       this.avatar = w.avatar ?? null;

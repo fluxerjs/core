@@ -39,7 +39,9 @@
                 @click="close"
               >
                 <span :class="['result-type', 'type-' + r.type]">{{ typeLabel(r.type) }}</span>
-                <span class="result-name">{{ r.type === 'guide' ? r.name : (r.parent ? `${r.parent}.${r.name}` : r.name) }}</span>
+                <span class="result-name">{{
+                  r.type === 'guide' ? r.name : r.parent ? `${r.parent}.${r.name}` : r.name
+                }}</span>
               </router-link>
             </template>
             <div v-else class="result-empty">No results for "{{ query }}"</div>

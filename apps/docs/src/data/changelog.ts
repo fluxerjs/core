@@ -26,21 +26,15 @@ export const changelogEntries: ChangelogEntry[] = [
       },
       {
         title: 'Invite metadata',
-        items: [
-          'APIInvite and Invite class — temporary, createdAt, uses, maxUses, maxAge',
-        ],
+        items: ['APIInvite and Invite class — temporary, createdAt, uses, maxUses, maxAge'],
       },
       {
         title: 'Audit log types',
-        items: [
-          'APIGuildAuditLog and APIGuildAuditLogEntry — types for guild audit log responses',
-        ],
+        items: ['APIGuildAuditLog and APIGuildAuditLogEntry — types for guild audit log responses'],
       },
       {
         title: 'Docs',
-        items: [
-          'Webhooks guide — Editing a Webhook section with token vs bot auth examples',
-        ],
+        items: ['Webhooks guide — Editing a Webhook section with token vs bot auth examples'],
       },
     ],
   },

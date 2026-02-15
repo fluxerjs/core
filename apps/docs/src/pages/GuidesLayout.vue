@@ -66,7 +66,12 @@ const { path: versionedPath } = useVersionedPath();
 const filter = ref('');
 const sidebarOpen = ref(false);
 
-watch(() => route.path, () => { sidebarOpen.value = false; });
+watch(
+  () => route.path,
+  () => {
+    sidebarOpen.value = false;
+  }
+);
 
 const groupedGuides = computed(() => {
   const groups: Record<string, import('../data/guides').Guide[]> = {};
@@ -171,7 +176,9 @@ const filteredGroupedGuides = computed(() => {
   cursor: pointer;
   font-size: 1.25rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s;
 }
 
 .sidebar-toggle:hover {

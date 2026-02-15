@@ -2,12 +2,7 @@ import { parseRoleMention } from '@fluxerjs/util';
 import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import { Collection } from '@fluxerjs/collection';
-import type {
-  APIGuild,
-  APIGuildAuditLog,
-  APIGuildMember,
-  APIRole,
-} from '@fluxerjs/types';
+import type { APIGuild, APIGuildAuditLog, APIGuildMember, APIRole } from '@fluxerjs/types';
 import { GuildMember } from './GuildMember.js';
 import { Role } from './Role.js';
 import type { GuildChannel } from './Channel.js';
@@ -131,8 +126,7 @@ export class Guild extends Base {
     if (options?.before) params.set('before', options.before);
     if (options?.after) params.set('after', options.after);
     if (options?.userId) params.set('user_id', options.userId);
-    if (options?.actionType != null)
-      params.set('action_type', String(options.actionType));
+    if (options?.actionType != null) params.set('action_type', String(options.actionType));
     const qs = params.toString();
     const url = Routes.guildAuditLogs(this.id) + (qs ? `?${qs}` : '');
     return this.client.rest.get(url) as Promise<APIGuildAuditLog>;

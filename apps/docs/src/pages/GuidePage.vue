@@ -15,10 +15,7 @@
       </div>
 
       <template v-for="(section, i) in guide.sections" :key="i">
-        <section
-          class="guide-section"
-          :id="sectionId(section, i)"
-        >
+        <section class="guide-section" :id="sectionId(section, i)">
           <h2 v-if="section.title" class="section-title">{{ section.title }}</h2>
           <p v-if="section.description" class="section-desc">{{ section.description }}</p>
           <CodeBlock
@@ -31,30 +28,25 @@
       </template>
 
       <nav class="guide-nav">
-      <router-link
-        v-if="prevGuide"
-        :to="versionedPath(`/guides/${prevGuide.slug}`)"
-        class="guide-nav-link guide-prev"
-      >
-        ← {{ prevGuide.title }}
-      </router-link>
-      <router-link
-        v-if="nextGuide"
-        :to="versionedPath(`/guides/${nextGuide.slug}`)"
-        class="guide-nav-link guide-next"
-      >
-        {{ nextGuide.title }} →
-      </router-link>
-    </nav>
+        <router-link
+          v-if="prevGuide"
+          :to="versionedPath(`/guides/${prevGuide.slug}`)"
+          class="guide-nav-link guide-prev"
+        >
+          ← {{ prevGuide.title }}
+        </router-link>
+        <router-link
+          v-if="nextGuide"
+          :to="versionedPath(`/guides/${nextGuide.slug}`)"
+          class="guide-nav-link guide-next"
+        >
+          {{ nextGuide.title }} →
+        </router-link>
+      </nav>
     </div>
     <nav v-if="tocItems.length" class="guide-toc" aria-label="On this page">
       <span class="toc-title">On this page</span>
-      <a
-        v-for="item in tocItems"
-        :key="item.id"
-        :href="`#${item.id}`"
-        class="toc-link"
-      >
+      <a v-for="item in tocItems" :key="item.id" :href="`#${item.id}`" class="toc-link">
         {{ item.label }}
       </a>
     </nav>

@@ -51,7 +51,7 @@ export class Invite extends Base {
    * @returns The guild, or null if not cached
    */
   getGuild(): Guild | null {
-    return this.guild?.id ? this.client.guilds.get(this.guild.id) ?? null : null;
+    return this.guild?.id ? (this.client.guilds.get(this.guild.id) ?? null) : null;
   }
 
   /**

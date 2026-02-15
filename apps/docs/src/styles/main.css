@@ -101,7 +101,10 @@
   text-decoration: none;
   border-left: 2px solid transparent;
   margin-left: 2px;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .sidebar-base .sidebar-link:hover {
@@ -122,9 +125,15 @@
 }
 
 /* Type-specific accent colors in docs sidebar */
-.sidebar-base .sidebar-link-class { --sidebar-type-color: var(--badge-class); }
-.sidebar-base .sidebar-link-interface { --sidebar-type-color: var(--badge-interface); }
-.sidebar-base .sidebar-link-enum { --sidebar-type-color: var(--badge-enum); }
+.sidebar-base .sidebar-link-class {
+  --sidebar-type-color: var(--badge-class);
+}
+.sidebar-base .sidebar-link-interface {
+  --sidebar-type-color: var(--badge-interface);
+}
+.sidebar-base .sidebar-link-enum {
+  --sidebar-type-color: var(--badge-enum);
+}
 
 .sidebar-base .sidebar-link-class::before,
 .sidebar-base .sidebar-link-interface::before,
