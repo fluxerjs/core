@@ -61,10 +61,7 @@ export class WebSocketShard extends EventEmitter {
   private scheduleReconnect(): void {
     if (this.destroying) return;
     if (this.reconnectTimeout !== null) return;
-    const delay = Math.min(
-      RECONNECT_MAX_MS,
-      this.reconnectDelayMs * (0.75 + Math.random() * 0.5)
-    );
+    const delay = Math.min(RECONNECT_MAX_MS, this.reconnectDelayMs * (0.75 + Math.random() * 0.5));
     this.reconnectDelayMs = Math.min(RECONNECT_MAX_MS, this.reconnectDelayMs * 1.5);
     this.debug(`Reconnecting in ${Math.round(delay)}ms…`);
     this.reconnectTimeout = setTimeout(() => {

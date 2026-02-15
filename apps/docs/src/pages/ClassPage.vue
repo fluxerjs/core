@@ -34,12 +34,7 @@
     </div>
     <nav v-if="tocItems.length" class="on-this-page" aria-label="On this page">
       <span class="toc-title">On this page</span>
-      <a
-        v-for="item in tocItems"
-        :key="item.id"
-        :href="`#${item.id}`"
-        class="toc-link"
-      >
+      <a v-for="item in tocItems" :key="item.id" :href="`#${item.id}`" class="toc-link">
         {{ item.label }}
       </a>
     </nav>

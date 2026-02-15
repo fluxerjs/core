@@ -31,9 +31,7 @@ export interface ClientEvents {
     oldMessage: import('../structures/Message.js').Message | null,
     newMessage: import('../structures/Message.js').Message,
   ];
-  [Events.MessageDelete]: [
-    message: import('../structures/PartialMessage.js').PartialMessage,
-  ];
+  [Events.MessageDelete]: [message: import('../structures/PartialMessage.js').PartialMessage];
   [Events.MessageReactionAdd]: [
     reaction: import('../structures/MessageReaction.js').MessageReaction,
     user: User,
@@ -64,7 +62,9 @@ export interface ClientEvents {
   [Events.VoiceStatesSync]: [
     data: { guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null }> },
   ];
-  [Events.MessageDeleteBulk]: [data: import('@fluxerjs/types').GatewayMessageDeleteBulkDispatchData];
+  [Events.MessageDeleteBulk]: [
+    data: import('@fluxerjs/types').GatewayMessageDeleteBulkDispatchData,
+  ];
   [Events.GuildBanAdd]: [data: import('@fluxerjs/types').GatewayGuildBanAddDispatchData];
   [Events.GuildBanRemove]: [data: import('@fluxerjs/types').GatewayGuildBanRemoveDispatchData];
   [Events.GuildEmojisUpdate]: [data: unknown];
@@ -131,9 +131,7 @@ export class Client extends EventEmitter {
     if (typeof emoji === 'object' && emoji.id) {
       return formatEmoji({ name: emoji.name, id: emoji.id as string, animated: emoji.animated });
     }
-    const parsed = parseEmoji(
-      typeof emoji === 'string' ? emoji : `:${emoji.name}:`
-    );
+    const parsed = parseEmoji(typeof emoji === 'string' ? emoji : `:${emoji.name}:`);
     if (!parsed) throw new Error('Invalid emoji');
     if (parsed.id) return formatEmoji(parsed);
     if (guildId) {
@@ -143,9 +141,7 @@ export class Client extends EventEmitter {
         name?: string;
         animated?: boolean;
       }>;
-      const found = list.find(
-        (e) => e.name && e.name.toLowerCase() === parsed!.name.toLowerCase()
-      );
+      const found = list.find((e) => e.name && e.name.toLowerCase() === parsed!.name.toLowerCase());
       if (found) return formatEmoji({ ...parsed, id: found.id, animated: found.animated });
       throw new Error(
         `Custom emoji ":${parsed.name}:" not found in guild. Use name:id or <:name:id> format.`
@@ -234,9 +230,7 @@ export class Client extends EventEmitter {
    */
   async login(token: string): Promise<string> {
     if (this._ws) {
-      throw new FluxerError(
-        'Client is already logged in. Call destroy() first.'
-      );
+      throw new FluxerError('Client is already logged in. Call destroy() first.');
     }
     this.rest.setToken(token);
     let intents = this.options.intents ?? 0;

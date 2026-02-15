@@ -36,7 +36,7 @@ export class Message extends Base {
 
   /** Guild where this message was sent. Resolved from cache; null for DMs or if not cached. */
   get guild(): Guild | null {
-    return this.guildId ? this.client.guilds.get(this.guildId) ?? null : null;
+    return this.guildId ? (this.client.guilds.get(this.guildId) ?? null) : null;
   }
 
   /** @param data - API message from POST/PATCH /channels/{id}/messages or gateway MESSAGE_CREATE */
@@ -62,9 +62,7 @@ export class Message extends Base {
    * await message.send('Pong!');
    * await message.send({ embeds: [embed.toJSON()] });
    */
-  async send(
-    options: string | { content?: string; embeds?: APIEmbed[] }
-  ): Promise<Message> {
+  async send(options: string | { content?: string; embeds?: APIEmbed[] }): Promise<Message> {
     const body = typeof options === 'string' ? { content: options } : options;
     const data = await this.client.rest.post(Routes.channelMessages(this.channelId), { body });
     return new Message(this.client, data as APIMessage);

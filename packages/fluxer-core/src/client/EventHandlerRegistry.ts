@@ -79,7 +79,10 @@ handlers.set('MESSAGE_REACTION_REMOVE_ALL', async (client, d) => {
 });
 
 handlers.set('MESSAGE_REACTION_REMOVE_EMOJI', async (client, d) => {
-  client.emit(Events.MessageReactionRemoveEmoji, d as GatewayMessageReactionRemoveEmojiDispatchData);
+  client.emit(
+    Events.MessageReactionRemoveEmoji,
+    d as GatewayMessageReactionRemoveEmojiDispatchData
+  );
 });
 
 handlers.set('GUILD_CREATE', async (client, d) => {
@@ -124,10 +127,7 @@ handlers.set('CHANNEL_CREATE', async (client, d) => {
   const ch = Channel.from(client, d as APIChannel);
   if (ch) {
     client.channels.set(ch.id, ch);
-    client.emit(
-      Events.ChannelCreate,
-      ch as import('../structures/Channel.js').GuildChannel
-    );
+    client.emit(Events.ChannelCreate, ch as import('../structures/Channel.js').GuildChannel);
   }
 });
 

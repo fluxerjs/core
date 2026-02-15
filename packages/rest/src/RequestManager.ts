@@ -128,10 +128,7 @@ export class RequestManager {
         if (response.status === 204 || text.length === 0) return undefined as T;
         return JSON.parse(text) as T;
       } catch (err) {
-        const wrapped =
-          err instanceof Error
-            ? err
-            : new Error(String(err));
+        const wrapped = err instanceof Error ? err : new Error(String(err));
         lastError =
           attempt > 0
             ? new Error(`Retry ${attempt} failed: ${wrapped.message}`, {

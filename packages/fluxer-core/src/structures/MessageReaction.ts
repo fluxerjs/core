@@ -38,7 +38,7 @@ export class MessageReaction extends Base {
 
   /** Guild where this reaction was added. Resolved from cache; null for DMs or if not cached. */
   get guild(): Guild | null {
-    return this.guildId ? this.client.guilds.get(this.guildId) ?? null : null;
+    return this.guildId ? (this.client.guilds.get(this.guildId) ?? null) : null;
   }
 
   /**

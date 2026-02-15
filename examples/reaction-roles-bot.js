@@ -26,7 +26,9 @@ let rolesMessageId = process.env.REACTION_ROLES_MESSAGE_ID ?? null;
 const _rolesChannelId = process.env.REACTION_ROLES_CHANNEL_ID ?? null;
 
 function getRoleIdForEmoji(reaction) {
-  const key = reaction.emoji.id ? `${reaction.emoji.name}:${reaction.emoji.id}` : reaction.emoji.name;
+  const key = reaction.emoji.id
+    ? `${reaction.emoji.name}:${reaction.emoji.id}`
+    : reaction.emoji.name;
   return ROLE_EMOJI_MAP[key] ?? ROLE_EMOJI_MAP[reaction.emoji.name];
 }
 

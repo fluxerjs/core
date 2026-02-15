@@ -3,7 +3,9 @@
     <div class="hero">
       <h1>Fluxer.js</h1>
       <p class="lead">SDK for building bots on Fluxer.</p>
-      <router-link to="/v/latest/guides/basic-bot" class="cta-link">Get started — your first bot</router-link>
+      <router-link to="/v/latest/guides/basic-bot" class="cta-link"
+        >Get started — your first bot</router-link
+      >
       <nav class="hero-nav">
         <router-link to="/v/latest/guides" class="nav-link">Guides</router-link>
         <router-link to="/v/latest/docs" class="nav-link">Docs</router-link>
@@ -64,7 +66,9 @@
   border: 2px solid var(--accent);
   border-radius: var(--radius);
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .cta-link:hover {

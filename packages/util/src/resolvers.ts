@@ -22,7 +22,9 @@ export function resolveColor(color: number | string | [number, number, number]):
  * Parse an emoji string into id and name.
  * Supports: <a?:name:id> (mention), :name: (colons), name:id (API format), unicode.
  */
-export function parseEmoji(emoji: string): { id: string | null; name: string; animated?: boolean } | null {
+export function parseEmoji(
+  emoji: string
+): { id: string | null; name: string; animated?: boolean } | null {
   if (emoji == null || typeof emoji !== 'string') return null;
   const trimmed = emoji.trim();
   if (trimmed.length === 0) return null;

@@ -86,9 +86,7 @@ export class Guild extends Base {
     if (cached) return cached.id;
     const roles = await this.client.rest.get(Routes.guildRoles(this.id));
     const list = (Array.isArray(roles) ? roles : Object.values(roles ?? {})) as Array<APIRole>;
-    const role = list.find(
-      (r) => !!(r.name && r.name.toLowerCase() === arg.trim().toLowerCase())
-    );
+    const role = list.find((r) => !!(r.name && r.name.toLowerCase() === arg.trim().toLowerCase()));
     if (role) {
       this.roles.set(role.id, new Role(this.client, role, this.id));
       return role.id;

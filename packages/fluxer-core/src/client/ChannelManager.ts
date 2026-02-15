@@ -47,7 +47,10 @@ export class ChannelManager extends Collection<string, Channel> {
    * const channel = await client.channels.fetch(channelId);
    * const message = await channel?.messages?.fetch(messageId);
    */
-  async fetchMessage(channelId: string, messageId: string): Promise<import('../structures/Message.js').Message | null> {
+  async fetchMessage(
+    channelId: string,
+    messageId: string
+  ): Promise<import('../structures/Message.js').Message | null> {
     try {
       const { Message } = await import('../structures/Message.js');
       const data = await this.client.rest.get<import('@fluxerjs/types').APIMessage>(

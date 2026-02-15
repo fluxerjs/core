@@ -130,7 +130,9 @@ async function main(): Promise<void> {
   }
   const allVersions = existingVersions.includes(version)
     ? existingVersions
-    : [version, ...existingVersions].sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+    : [version, ...existingVersions].sort((a, b) =>
+        b.localeCompare(a, undefined, { numeric: true })
+      );
   const versionsData = { versions: allVersions, latest: version };
   writeFileSync(versionsPath, JSON.stringify(versionsData, null, 2), 'utf-8');
   console.log(`[generate-docs] Versions -> ${versionsPath}`);

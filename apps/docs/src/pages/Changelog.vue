@@ -181,7 +181,9 @@ async function copyLink(hash: string) {
   padding: 0.2em 0.4em;
   border-radius: var(--radius-sm);
   opacity: 0.6;
-  transition: opacity 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
 }
 
 .copy-link-btn:hover {
