@@ -1,10 +1,11 @@
 import { computed, type ComputedRef } from 'vue';
 import type { DocOutput } from '../types/doc-schema';
+import type { Guide } from '../data/guides';
 
 export interface SearchHit {
   id: string;
   name: string;
-  type: 'class' | 'interface' | 'enum' | 'method' | 'property' | 'member';
+  type: 'class' | 'interface' | 'enum' | 'method' | 'property' | 'member' | 'guide';
   path: { name: string; params?: Record<string, string>; hash?: string };
   parent?: string;
 }
@@ -82,4 +83,27 @@ function buildIndex(doc: DocOutput | null): SearchHit[] {
 
 export function useSearchIndex(doc: { currentDoc: DocOutput | null }): ComputedRef<SearchHit[]> {
   return computed(() => buildIndex(doc.currentDoc));
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  'getting-started': 'Getting Started',
+  webhooks: 'Webhooks',
+  voice: 'Voice',
+  'sending-messages': 'Sending Messages',
+  events: 'Events',
+  other: 'Other',
+};
+
+export function useGuidesSearchIndex(guides: { guides: Guide[] }): ComputedRef<SearchHit[]> {
+  return computed(() => {
+    const list = guides.guides;
+    if (!list?.length) return [];
+    return list.map((g) => ({
+      id: `guide-${g.slug}`,
+      name: g.title,
+      type: 'guide' as const,
+      path: { name: 'guide', params: { slug: g.slug } },
+      parent: CATEGORY_LABELS[g.category] ?? g.category,
+    }));
+  });
 }

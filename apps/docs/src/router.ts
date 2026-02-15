@@ -17,6 +17,7 @@ const router = createRouter({
     { path: '/changelog', name: 'changelog', component: Changelog },
     { path: '/guides', redirect: '/v/latest/guides' },
     { path: '/docs', redirect: '/v/latest/docs' },
+    { path: '/v/:version/changelog', redirect: '/changelog' },
     {
       path: '/v/:version',
       component: VersionLayout,

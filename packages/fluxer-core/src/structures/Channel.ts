@@ -144,6 +144,22 @@ export class TextChannel extends GuildChannel {
   }
 
   /**
+   * Fetch pinned messages in this channel.
+   * @returns Pinned messages
+   */
+  async fetchPinnedMessages(): Promise<import('./Message.js').Message[]> {
+    const { Message } = await import('./Message.js');
+    const data = (await this.client.rest.get(Routes.channelPins(this.id))) as
+      | { items?: Array<{ message?: import('@fluxerjs/types').APIMessage }> }
+      | import('@fluxerjs/types').APIMessage[];
+    const list = Array.isArray(data) ? data : data?.items ?? [];
+    return list.map((item: unknown) => {
+      const msg = typeof item === 'object' && item && 'message' in item ? (item as { message: import('@fluxerjs/types').APIMessage }).message : (item as import('@fluxerjs/types').APIMessage);
+      return new Message(this.client, msg);
+    });
+  }
+
+  /**
    * Fetch a message by ID from this channel.
    * @param messageId - Snowflake of the message
    * @returns The message, or null if not found
@@ -202,6 +218,22 @@ export class DMChannel extends Channel {
   /** Message manager for this channel. Use channel.messages.fetch(messageId). */
   get messages(): MessageManager {
     return new MessageManager(this.client, this.id);
+  }
+
+  /**
+   * Fetch pinned messages in this DM channel.
+   * @returns Pinned messages
+   */
+  async fetchPinnedMessages(): Promise<import('./Message.js').Message[]> {
+    const { Message } = await import('./Message.js');
+    const data = (await this.client.rest.get(Routes.channelPins(this.id))) as
+      | { items?: Array<{ message?: import('@fluxerjs/types').APIMessage }> }
+      | import('@fluxerjs/types').APIMessage[];
+    const list = Array.isArray(data) ? data : data?.items ?? [];
+    return list.map((item: unknown) => {
+      const msg = typeof item === 'object' && item && 'message' in item ? (item as { message: import('@fluxerjs/types').APIMessage }).message : (item as import('@fluxerjs/types').APIMessage);
+      return new Message(this.client, msg);
+    });
   }
 
   /**

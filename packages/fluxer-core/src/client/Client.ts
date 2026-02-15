@@ -65,8 +65,8 @@ export interface ClientEvents {
   [Events.MessageDeleteBulk]: [
     data: import('@fluxerjs/types').GatewayMessageDeleteBulkDispatchData,
   ];
-  [Events.GuildBanAdd]: [data: import('@fluxerjs/types').GatewayGuildBanAddDispatchData];
-  [Events.GuildBanRemove]: [data: import('@fluxerjs/types').GatewayGuildBanRemoveDispatchData];
+  [Events.GuildBanAdd]: [ban: import('../structures/GuildBan.js').GuildBan];
+  [Events.GuildBanRemove]: [ban: import('../structures/GuildBan.js').GuildBan];
   [Events.GuildEmojisUpdate]: [data: unknown];
   [Events.GuildStickersUpdate]: [data: unknown];
   [Events.GuildIntegrationsUpdate]: [data: unknown];
@@ -77,8 +77,10 @@ export interface ClientEvents {
   [Events.GuildScheduledEventUpdate]: [data: unknown];
   [Events.GuildScheduledEventDelete]: [data: unknown];
   [Events.ChannelPinsUpdate]: [data: unknown];
-  [Events.InviteCreate]: [data: unknown];
-  [Events.InviteDelete]: [data: unknown];
+  [Events.InviteCreate]: [invite: import('../structures/Invite.js').Invite];
+  [Events.InviteDelete]: [
+    data: import('@fluxerjs/types').GatewayInviteDeleteDispatchData,
+  ];
   [Events.TypingStart]: [data: import('@fluxerjs/types').GatewayTypingStartDispatchData];
   [Events.UserUpdate]: [data: import('@fluxerjs/types').GatewayUserUpdateDispatchData];
   [Events.PresenceUpdate]: [data: unknown];

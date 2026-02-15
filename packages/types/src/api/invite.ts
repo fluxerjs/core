@@ -20,4 +20,9 @@ export interface APIInvite {
   member_count?: number;
   presence_count?: number;
   expires_at?: string | null;
+  temporary?: boolean;
+  created_at?: string;
+  uses?: number;
+  max_uses?: number;
+  max_age?: number;
 }

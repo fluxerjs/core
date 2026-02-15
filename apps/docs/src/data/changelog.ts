@@ -11,6 +11,40 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.0.9',
+    date: '2026-02-15',
+    sections: [
+      {
+        title: 'OpenAPI gap fixes',
+        items: [
+          'Fixed pin/unpin route path — channelPinMessage() uses /channels/{id}/pins/{messageId} (was /messages/pins/...)',
+          'Message.pin() and Message.unpin() — pin or unpin a message',
+          'TextChannel.fetchPinnedMessages() and DMChannel.fetchPinnedMessages() — fetch pinned messages',
+          'Webhook.edit(options) — edit webhook name, avatar, and (with bot auth) channel_id; APIWebhookUpdateRequest and APIWebhookTokenUpdateRequest types',
+          'Guild.fetchAuditLogs(options?) — fetch guild audit logs with limit, before, after, userId, actionType filters',
+        ],
+      },
+      {
+        title: 'Invite metadata',
+        items: [
+          'APIInvite and Invite class — temporary, createdAt, uses, maxUses, maxAge',
+        ],
+      },
+      {
+        title: 'Audit log types',
+        items: [
+          'APIGuildAuditLog and APIGuildAuditLogEntry — types for guild audit log responses',
+        ],
+      },
+      {
+        title: 'Docs',
+        items: [
+          'Webhooks guide — Editing a Webhook section with token vs bot auth examples',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.0.8',
     date: '2026-02-15',
     sections: [

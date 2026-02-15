@@ -15,6 +15,12 @@ export class GuildMember extends Base {
   readonly roles: string[];
   readonly joinedAt: Date;
   communicationDisabledUntil: Date | null;
+  readonly mute: boolean;
+  readonly deaf: boolean;
+  readonly avatar: string | null;
+  readonly banner: string | null;
+  readonly accentColor: number | null;
+  readonly profileFlags: number | null;
 
   /** @param data - API guild member from GET /guilds/{id}/members or GET /guilds/{id}/members/{user_id} */
   constructor(client: Client, data: APIGuildMember & { guild_id?: string }, guild: Guild) {
@@ -29,6 +35,12 @@ export class GuildMember extends Base {
     this.communicationDisabledUntil = data.communication_disabled_until
       ? new Date(data.communication_disabled_until)
       : null;
+    this.mute = data.mute ?? false;
+    this.deaf = data.deaf ?? false;
+    this.avatar = data.avatar ?? null;
+    this.banner = data.banner ?? null;
+    this.accentColor = data.accent_color ?? null;
+    this.profileFlags = data.profile_flags ?? null;
   }
 
   /** Nickname, or global name, or username. */

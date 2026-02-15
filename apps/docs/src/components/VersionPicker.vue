@@ -81,6 +81,11 @@ function selectVersion(newVersion: string) {
 
   const version = route.params.version as string | undefined;
   const path = route.path;
+  // Changelog is never versioned - stay on /changelog or go to versioned guides
+  if (path === '/changelog') {
+    router.push(`/v/${newVersion}/guides`);
+    return;
+  }
   if (version !== undefined && path.startsWith('/v/')) {
     const newPath = path.replace(/^\/v\/[^/]+/, `/v/${newVersion}`);
     router.replace(newPath);
@@ -99,8 +104,10 @@ function selectVersion(newVersion: string) {
 .version-trigger {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
+  gap: 0.35rem;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 0.6rem;
   font-size: 0.85rem;
   font-weight: 500;
   background: var(--bg-tertiary);

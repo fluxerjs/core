@@ -38,6 +38,26 @@ export interface APIMessageReference {
   channel_id: Snowflake;
   message_id: Snowflake;
   guild_id?: Snowflake | null;
+  /** 0 = reply, 1 = forward */
+  type?: number;
+}
+
+/** Call metadata for call-type messages */
+export interface APIMessageCall {
+  participants: string[];
+  ended_timestamp?: string | null;
+}
+
+/** Snapshot of a forwarded message */
+export interface APIMessageSnapshot {
+  content?: string | null;
+  timestamp: string;
+  edited_timestamp?: string | null;
+  mentions?: string[] | null;
+  mention_roles?: Snowflake[] | null;
+  embeds?: APIEmbed[] | null;
+  attachments?: APIMessageAttachment[] | null;
+  stickers?: APIMessageSticker[] | null;
   type?: number;
 }
 
@@ -47,13 +67,21 @@ export interface APIMessageAttachment {
   title?: string | null;
   description?: string | null;
   content_type?: string | null;
+  /** Hash of attachment content for integrity */
+  content_hash?: string | null;
   size: number;
   url?: string | null;
   proxy_url?: string | null;
   width?: number | null;
   height?: number | null;
+  /** Base64 placeholder for lazy loading */
+  placeholder?: string | null;
+  /** MessageAttachmentFlags bitfield */
+  flags?: number | null;
   nsfw?: boolean | null;
   duration?: number | null;
+  /** Base64 audio waveform for voice messages */
+  waveform?: string | null;
   expires_at?: string | null;
   expired?: boolean | null;
 }
@@ -90,6 +118,10 @@ export interface APIMessage {
   stickers?: APIMessageSticker[] | null;
   reactions?: APIMessageReaction[] | null;
   message_reference?: APIMessageReference | null;
-  referenced_message?: APIMessage | null;
+  /** Snapshots of forwarded messages */
+  message_snapshots?: APIMessageSnapshot[] | null;
   nonce?: string | null;
+  /** Call info when type is Call */
+  call?: APIMessageCall | null;
+  referenced_message?: APIMessage | null;
 }

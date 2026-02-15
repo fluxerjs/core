@@ -28,23 +28,24 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 <style scoped>
 .search-trigger-wrap {
-  flex: 1;
-  max-width: 280px;
+  flex: 0 0 auto;
+  width: 140px;
   display: flex;
-  justify-content: flex-end;
 }
 
 .search-trigger {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   width: 100%;
-  padding: 0.5rem 0.9rem;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 0.6rem;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition:
     border-color 0.15s,

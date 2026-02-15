@@ -1,8 +1,17 @@
 import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import { Collection } from '@fluxerjs/collection';
-import type { APIMessage, APIMessageAttachment, APIEmbed } from '@fluxerjs/types';
-import { Routes } from '@fluxerjs/types';
+import type {
+  APIMessage,
+  APIMessageAttachment,
+  APIMessageReaction,
+  APIMessageSticker,
+  APIMessageReference,
+  APIMessageSnapshot,
+  APIMessageCall,
+  APIEmbed,
+} from '@fluxerjs/types';
+import { MessageType, Routes } from '@fluxerjs/types';
 import { EmbedBuilder } from '@fluxerjs/builders';
 import type { User } from './User.js';
 import type { Channel } from './Channel.js';
@@ -28,6 +37,17 @@ export class Message extends Base {
   readonly editedAt: Date | null;
   pinned: boolean;
   readonly attachments: Collection<string, APIMessageAttachment>;
+  readonly type: MessageType;
+  readonly flags: number;
+  readonly mentionEveryone: boolean;
+  readonly tts: boolean;
+  readonly embeds: APIEmbed[];
+  readonly stickers: APIMessageSticker[];
+  readonly reactions: APIMessageReaction[];
+  readonly messageReference: APIMessageReference | null;
+  readonly messageSnapshots: APIMessageSnapshot[];
+  readonly call: APIMessageCall | null;
+  readonly referencedMessage: Message | null;
 
   /** Channel where this message was sent. Resolved from cache; null if not cached (e.g. DM channel not in cache). */
   get channel(): Channel | null {
@@ -53,6 +73,19 @@ export class Message extends Base {
     this.pinned = data.pinned;
     this.attachments = new Collection();
     for (const a of data.attachments ?? []) this.attachments.set(a.id, a);
+    this.type = (data.type ?? MessageType.Default) as MessageType;
+    this.flags = data.flags ?? 0;
+    this.mentionEveryone = data.mention_everyone ?? false;
+    this.tts = data.tts ?? false;
+    this.embeds = data.embeds ?? [];
+    this.stickers = data.stickers ?? [];
+    this.reactions = data.reactions ?? [];
+    this.messageReference = data.message_reference ?? null;
+    this.messageSnapshots = data.message_snapshots ?? [];
+    this.call = data.call ?? null;
+    this.referencedMessage = data.referenced_message
+      ? new Message(client, data.referenced_message)
+      : null;
   }
 
   /**
@@ -141,6 +174,18 @@ export class Message extends Base {
   /** Delete this message. */
   async delete(): Promise<void> {
     await this.client.rest.delete(Routes.channelMessage(this.channelId, this.id));
+  }
+
+  /** Pin this message to the channel. Requires Manage Messages permission. */
+  async pin(): Promise<void> {
+    await this.client.rest.put(Routes.channelPinMessage(this.channelId, this.id));
+    this.pinned = true;
+  }
+
+  /** Unpin this message from the channel. Requires Manage Messages permission. */
+  async unpin(): Promise<void> {
+    await this.client.rest.delete(Routes.channelPinMessage(this.channelId, this.id));
+    this.pinned = false;
   }
 
   /**

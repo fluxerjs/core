@@ -6,7 +6,7 @@
         class="search-overlay"
         role="dialog"
         aria-modal="true"
-        aria-label="Search documentation"
+        :aria-label="searchContextLabel"
         @click.self="close"
         @keydown="handleKeydown"
       >
@@ -17,10 +17,10 @@
               ref="inputRef"
               v-model="query"
               type="search"
-              placeholder="Search classes, methods, properties..."
+              :placeholder="searchPlaceholder"
               class="search-input"
               autocomplete="off"
-              aria-label="Search documentation"
+              :aria-label="searchContextLabel"
               @keydown.esc="close"
               @keydown.down.prevent="selectNext"
               @keydown.up.prevent="selectPrev"
@@ -39,7 +39,7 @@
                 @click="close"
               >
                 <span :class="['result-type', 'type-' + r.type]">{{ typeLabel(r.type) }}</span>
-                <span class="result-name">{{ r.parent ? `${r.parent}.${r.name}` : r.name }}</span>
+                <span class="result-name">{{ r.type === 'guide' ? r.name : (r.parent ? `${r.parent}.${r.name}` : r.name) }}</span>
               </router-link>
             </template>
             <div v-else class="result-empty">No results for "{{ query }}"</div>
@@ -60,16 +60,55 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useDocsStore } from '../stores/docs';
-import { useSearchIndex } from '../composables/useSearchIndex';
+import { useGuidesStore } from '../stores/guides';
+import { useSearchIndex, useGuidesSearchIndex } from '../composables/useSearchIndex';
 import type { SearchHit } from '../composables/useSearchIndex';
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ (e: 'close'): void }>();
 
-const store = useDocsStore();
+const docsStore = useDocsStore();
+const guidesStore = useGuidesStore();
 const router = useRouter();
 const route = useRoute();
-const index = useSearchIndex(store);
+
+const docsIndex = useSearchIndex(docsStore);
+const guidesIndex = useGuidesSearchIndex(guidesStore);
+
+const searchContext = computed(() => {
+  const path = route.path;
+  if (path.includes('/guides')) return 'guides';
+  if (path.includes('/docs')) return 'docs';
+  return 'all';
+});
+
+const searchPlaceholder = computed(() => {
+  switch (searchContext.value) {
+    case 'guides':
+      return 'Search guides...';
+    case 'docs':
+      return 'Search classes, methods, properties...';
+    default:
+      return 'Search docs and guides...';
+  }
+});
+
+const searchContextLabel = computed(() => {
+  switch (searchContext.value) {
+    case 'guides':
+      return 'Search guides';
+    case 'docs':
+      return 'Search API documentation';
+    default:
+      return 'Search documentation';
+  }
+});
+
+const index = computed(() => {
+  if (searchContext.value === 'guides') return guidesIndex.value;
+  if (searchContext.value === 'docs') return docsIndex.value;
+  return [...docsIndex.value, ...guidesIndex.value];
+});
 
 function searchResultTo(r: SearchHit) {
   const params = {
@@ -144,6 +183,7 @@ function typeLabel(t: SearchHit['type']): string {
     method: 'Method',
     property: 'Prop',
     member: 'Member',
+    guide: 'Guide',
   };
   return map[t] ?? t;
 }
@@ -264,6 +304,9 @@ function close() {
 }
 .result-type.type-member {
   color: var(--ts-keyword);
+}
+.result-type.type-guide {
+  color: var(--accent);
 }
 
 .result-name {

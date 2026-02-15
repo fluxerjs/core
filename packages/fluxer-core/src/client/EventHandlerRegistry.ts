@@ -18,6 +18,8 @@ import type {
   GatewayMessageDeleteBulkDispatchData,
   GatewayGuildBanAddDispatchData,
   GatewayGuildBanRemoveDispatchData,
+  GatewayInviteCreateDispatchData,
+  GatewayInviteDeleteDispatchData,
   GatewayGuildRoleCreateDispatchData,
   GatewayGuildRoleUpdateDispatchData,
   GatewayGuildRoleDeleteDispatchData,
@@ -203,11 +205,17 @@ handlers.set('MESSAGE_DELETE_BULK', async (client, d) => {
 });
 
 handlers.set('GUILD_BAN_ADD', async (client, d) => {
-  client.emit(Events.GuildBanAdd, d as GatewayGuildBanAddDispatchData);
+  const data = d as GatewayGuildBanAddDispatchData;
+  const { GuildBan } = await import('../structures/GuildBan.js');
+  const ban = new GuildBan(client, data, data.guild_id);
+  client.emit(Events.GuildBanAdd, ban);
 });
 
 handlers.set('GUILD_BAN_REMOVE', async (client, d) => {
-  client.emit(Events.GuildBanRemove, d as GatewayGuildBanRemoveDispatchData);
+  const data = d as GatewayGuildBanRemoveDispatchData;
+  const { GuildBan } = await import('../structures/GuildBan.js');
+  const ban = new GuildBan(client, { ...data, reason: null }, data.guild_id);
+  client.emit(Events.GuildBanRemove, ban);
 });
 
 handlers.set('GUILD_EMOJIS_UPDATE', async (client, d) => {
@@ -266,11 +274,13 @@ handlers.set('CHANNEL_PINS_UPDATE', async (client, d) => {
 });
 
 handlers.set('INVITE_CREATE', async (client, d) => {
-  client.emit(Events.InviteCreate, d);
+  const data = d as GatewayInviteCreateDispatchData;
+  const { Invite } = await import('../structures/Invite.js');
+  client.emit(Events.InviteCreate, new Invite(client, data));
 });
 
 handlers.set('INVITE_DELETE', async (client, d) => {
-  client.emit(Events.InviteDelete, d);
+  client.emit(Events.InviteDelete, d as GatewayInviteDeleteDispatchData);
 });
 
 handlers.set('TYPING_START', async (client, d) => {

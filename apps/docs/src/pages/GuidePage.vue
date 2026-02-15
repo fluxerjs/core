@@ -1,32 +1,36 @@
 <template>
   <article v-if="guide" class="guide-page">
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <router-link :to="versionedPath('/guides')">Guides</router-link>
-      <span class="breadcrumb-sep">/</span>
-      <span class="breadcrumb-category">{{ getCategoryLabel(guide.category) }}</span>
-      <span class="breadcrumb-sep">/</span>
-      <span class="breadcrumb-current">{{ guide.title }}</span>
-    </nav>
-    <div class="guide-header">
-      <span class="guide-category">{{ getCategoryLabel(guide.category) }}</span>
-      <h1 class="guide-title">{{ guide.title }}</h1>
-      <p class="guide-desc">{{ guide.description }}</p>
-    </div>
+    <div class="guide-content">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <router-link :to="versionedPath('/guides')">Guides</router-link>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-category">{{ getCategoryLabel(guide.category) }}</span>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">{{ guide.title }}</span>
+      </nav>
+      <div class="guide-header">
+        <span class="guide-category">{{ getCategoryLabel(guide.category) }}</span>
+        <h1 class="guide-title">{{ guide.title }}</h1>
+        <p class="guide-desc">{{ guide.description }}</p>
+      </div>
 
-    <template v-for="(section, i) in guide.sections" :key="i">
-      <section class="guide-section">
-        <h2 v-if="section.title" class="section-title">{{ section.title }}</h2>
-        <p v-if="section.description" class="section-desc">{{ section.description }}</p>
-        <CodeBlock
-          v-if="section.code"
-          :code="section.code"
-          :language="section.language ?? 'javascript'"
-          :link-types="section.language !== 'bash'"
-        />
-      </section>
-    </template>
+      <template v-for="(section, i) in guide.sections" :key="i">
+        <section
+          class="guide-section"
+          :id="sectionId(section, i)"
+        >
+          <h2 v-if="section.title" class="section-title">{{ section.title }}</h2>
+          <p v-if="section.description" class="section-desc">{{ section.description }}</p>
+          <CodeBlock
+            v-if="section.code"
+            :code="section.code"
+            :language="section.language ?? 'javascript'"
+            :link-types="section.language !== 'bash'"
+          />
+        </section>
+      </template>
 
-    <nav class="guide-nav">
+      <nav class="guide-nav">
       <router-link
         v-if="prevGuide"
         :to="versionedPath(`/guides/${prevGuide.slug}`)"
@@ -41,6 +45,18 @@
       >
         {{ nextGuide.title }} →
       </router-link>
+    </nav>
+    </div>
+    <nav v-if="tocItems.length" class="guide-toc" aria-label="On this page">
+      <span class="toc-title">On this page</span>
+      <a
+        v-for="item in tocItems"
+        :key="item.id"
+        :href="`#${item.id}`"
+        class="toc-link"
+      >
+        {{ item.label }}
+      </a>
     </nav>
   </article>
   <div v-else class="not-found">
@@ -80,6 +96,25 @@ const nextGuide = computed(() => {
   const guides = guidesStore.guides;
   const i = guideIndex.value;
   return i >= 0 && i < guides.length - 1 ? guides[i + 1] : null;
+});
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+}
+
+function sectionId(section: { title?: string }, i: number): string {
+  if (section.title) return `section-${slugify(section.title)}-${i}`;
+  return `section-${i}`;
+}
+
+const tocItems = computed(() => {
+  if (!guide.value) return [];
+  return guide.value.sections
+    .map((s, i) => (s.title ? { id: sectionId(s, i), label: s.title } : null))
+    .filter((x): x is { id: string; label: string } => x !== null);
 });
 </script>
 
@@ -166,6 +201,52 @@ const nextGuide = computed(() => {
 
 .guide-nav-link:hover {
   text-decoration: underline;
+}
+
+.guide-page {
+  display: flex;
+  gap: 2rem;
+  max-width: 1000px;
+}
+
+.guide-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.guide-toc {
+  flex-shrink: 0;
+  width: 200px;
+  position: sticky;
+  top: 1.5rem;
+  align-self: flex-start;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.guide-toc .toc-title {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.guide-toc .toc-link {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.guide-toc .toc-link:hover {
+  color: var(--accent);
 }
 
 .not-found {

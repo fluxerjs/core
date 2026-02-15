@@ -1,6 +1,10 @@
 import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { APIWebhook } from '@fluxerjs/types';
+import type {
+  APIWebhook,
+  APIWebhookUpdateRequest,
+  APIWebhookTokenUpdateRequest,
+} from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 
 /** Options for sending a message via webhook. */
@@ -25,7 +29,7 @@ export class Webhook extends Base {
   readonly client: Client;
   readonly id: string;
   readonly guildId: string;
-  readonly channelId: string;
+  channelId: string;
   name: string;
   avatar: string | null;
   /** Present only when webhook was created via createWebhook(); not returned when fetching. */
@@ -46,6 +50,47 @@ export class Webhook extends Base {
   /** Delete this webhook. Requires bot token with Manage Webhooks permission. */
   async delete(): Promise<void> {
     await this.client.rest.delete(Routes.webhook(this.id), { auth: true });
+  }
+
+  /**
+   * Edit this webhook. With token: name and avatar only. Without token (bot auth): name, avatar, and channel_id.
+   * @param options - Fields to update (name, avatar, channel_id when using bot auth)
+   * @returns This webhook instance with updated fields
+   */
+  async edit(
+    options: APIWebhookUpdateRequest | APIWebhookTokenUpdateRequest
+  ): Promise<Webhook> {
+    const body: Record<string, unknown> = {};
+    if (options.name !== undefined) body.name = options.name;
+    if (options.avatar !== undefined) body.avatar = options.avatar;
+    if (
+      'channel_id' in options &&
+      options.channel_id !== undefined &&
+      !this.token
+    ) {
+      body.channel_id = options.channel_id;
+    }
+
+    if (this.token) {
+      const data = await this.client.rest.patch(
+        Routes.webhookExecute(this.id, this.token),
+        { body, auth: false }
+      );
+      const w = data as APIWebhook;
+      this.name = w.name ?? this.name;
+      this.avatar = w.avatar ?? null;
+      return this;
+    }
+
+    const data = await this.client.rest.patch(Routes.webhook(this.id), {
+      body,
+      auth: true,
+    });
+    const w = data as APIWebhook;
+    this.name = w.name ?? this.name;
+    this.avatar = w.avatar ?? null;
+    this.channelId = w.channel_id ?? this.channelId;
+    return this;
   }
 
   /**

@@ -5,6 +5,7 @@ import type { APIGuild } from '../api/guild.js';
 import type { APIMessage } from '../api/message.js';
 import type { APIGuildMember } from '../api/user.js';
 import type { APIRole } from '../api/role.js';
+import type { APIInvite } from '../api/invite.js';
 import { GatewayOpcodes } from './opcodes.js';
 import type { GatewayDispatchEventName } from './events.js';
 
@@ -169,6 +170,17 @@ export interface GatewayGuildBanRemoveDispatchData {
   guild_id: Snowflake;
   user: APIUser;
 }
+
+/** Invite payload for INVITE_CREATE (has full invite data). */
+export type GatewayInviteCreateDispatchData = APIInvite;
+
+/** Invite payload for INVITE_DELETE (code + channel/guild only). */
+export interface GatewayInviteDeleteDispatchData {
+  code: string;
+  channel_id: Snowflake;
+  guild_id?: Snowflake;
+}
+
 export interface GatewayTypingStartDispatchData {
   channel_id: Snowflake;
   user_id: Snowflake;

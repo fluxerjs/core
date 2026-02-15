@@ -3,10 +3,30 @@
     <div class="changelog-hero">
       <h1>Changelog</h1>
       <p class="lead">Release history and changes for Fluxer.js SDK.</p>
+      <div class="version-filter" role="group" aria-label="Filter by version">
+        <button
+          type="button"
+          class="filter-pill"
+          :class="{ active: selectedVersion === null }"
+          @click="selectedVersion = null"
+        >
+          All versions
+        </button>
+        <button
+          v-for="v in versions"
+          :key="v"
+          type="button"
+          class="filter-pill"
+          :class="{ active: selectedVersion === v }"
+          @click="selectedVersion = v"
+        >
+          v{{ v }}
+        </button>
+      </div>
     </div>
     <div class="changelog-entries">
       <article
-        v-for="entry in changelog"
+        v-for="entry in filteredChangelog"
         :id="`v${entry.version}`"
         :key="entry.version"
         class="changelog-entry"
@@ -54,9 +74,41 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { changelogEntries } from '../data/changelog';
 
-const changelog = changelogEntries;
+const route = useRoute();
+const router = useRouter();
+
+const versions = changelogEntries.map((e) => e.version);
+
+// Sync with ?version= query param
+const initVersion = (() => {
+  const v = route.query.version as string | undefined;
+  return v && versions.includes(v) ? v : null;
+})();
+const selectedVersion = ref<string | null>(initVersion);
+
+watch(
+  () => route.query.version as string | undefined,
+  (v) => {
+    selectedVersion.value = v && versions.includes(v) ? v : null;
+  },
+  { immediate: true }
+);
+
+watch(selectedVersion, (v) => {
+  const base = { ...route.query } as Record<string, string>;
+  const next = v ? { ...base, version: v } : Object.fromEntries(Object.entries(base).filter(([k]) => k !== 'version'));
+  router.replace({ query: next });
+});
+
+const filteredChangelog = computed(() =>
+  selectedVersion.value
+    ? changelogEntries.filter((e) => e.version === selectedVersion.value)
+    : changelogEntries
+);
 
 function sectionSlug(title: string): string {
   return title
@@ -106,6 +158,40 @@ async function copyLink(hash: string) {
   font-size: 1rem;
   color: var(--text-secondary);
   line-height: 1.6;
+}
+
+.version-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.filter-pill {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.filter-pill:hover {
+  color: var(--text-primary);
+  border-color: var(--border);
+  background: var(--bg-hover);
+}
+
+.filter-pill.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .changelog-entries {

@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Shared utilities for @fluxerjs/core",
   "repository": {
     "type": "git",

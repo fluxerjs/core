@@ -2,7 +2,12 @@ import { parseRoleMention } from '@fluxerjs/util';
 import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import { Collection } from '@fluxerjs/collection';
-import type { APIGuild, APIGuildMember, APIRole } from '@fluxerjs/types';
+import type {
+  APIGuild,
+  APIGuildAuditLog,
+  APIGuildMember,
+  APIRole,
+} from '@fluxerjs/types';
 import { GuildMember } from './GuildMember.js';
 import { Role } from './Role.js';
 import type { GuildChannel } from './Channel.js';
@@ -108,6 +113,29 @@ export class Guild extends Base {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Fetch guild audit logs. Requires View Audit Log permission.
+   * @param options - Optional limit, before, after, user_id, action_type for filtering
+   */
+  async fetchAuditLogs(options?: {
+    limit?: number;
+    before?: string;
+    after?: string;
+    userId?: string;
+    actionType?: number;
+  }): Promise<APIGuildAuditLog> {
+    const params = new URLSearchParams();
+    if (options?.limit != null) params.set('limit', String(options.limit));
+    if (options?.before) params.set('before', options.before);
+    if (options?.after) params.set('after', options.after);
+    if (options?.userId) params.set('user_id', options.userId);
+    if (options?.actionType != null)
+      params.set('action_type', String(options.actionType));
+    const qs = params.toString();
+    const url = Routes.guildAuditLogs(this.id) + (qs ? `?${qs}` : '');
+    return this.client.rest.get(url) as Promise<APIGuildAuditLog>;
   }
 
   /** Fetch all webhooks in this guild. Returned webhooks do not include the token (cannot send). */

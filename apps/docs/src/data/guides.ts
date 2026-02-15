@@ -384,7 +384,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
     slug: 'webhooks',
     title: 'Webhooks',
     description:
-      'A complete guide to Discord webhooks—sending messages without a gateway, creating webhooks, and managing them.',
+      'A complete guide to Discord webhooks—sending messages without a gateway, creating, editing, and managing webhooks.',
     category: 'webhooks',
     sections: [
       {
@@ -450,7 +450,7 @@ await webhook.send({
       {
         title: 'Fetching & Listing Webhooks',
         description:
-          'Fetch by ID or list channel/guild webhooks. Requires a logged-in bot. Fetched webhooks have no token and cannot send—only manage (delete).',
+          'Fetch by ID or list channel/guild webhooks. Requires a logged-in bot. Fetched webhooks have no token and cannot send—but you can edit or delete them with bot auth.',
         code: `import { Client, Webhook } from '@fluxerjs/core';
 
 const client = new Client({ intents: 0 });
@@ -466,6 +466,28 @@ const channelWebhooks = await channel?.fetchWebhooks() ?? [];
 // List guild webhooks
 const guild = client.guilds.get(guildId);
 const guildWebhooks = await guild?.fetchWebhooks() ?? [];`,
+        language: 'javascript',
+      },
+      {
+        title: 'Editing a Webhook',
+        description:
+          'Use webhook.edit() to change name, avatar, or (with bot auth) channel. With a token (e.g. from createWebhook or fromToken), you can update name and avatar. Without a token (fetched webhook), bot auth lets you also change the target channel.',
+        code: `import { Client, Webhook } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+await client.login(process.env.FLUXER_BOT_TOKEN);
+
+// With token (name and avatar only)
+const webhook = Webhook.fromToken(client, webhookId, webhookToken);
+await webhook.edit({ name: 'New Name', avatar: null });
+// avatar: null clears the webhook avatar
+
+// With bot auth (fetched webhook — can also move to another channel)
+const fetched = await Webhook.fetch(client, webhookId);
+await fetched.edit({
+  name: 'Updated Name',
+  channel_id: newChannelId,  // move webhook to different channel
+});`,
         language: 'javascript',
       },
       {

@@ -1,15 +1,37 @@
 <template>
   <div class="guides-layout">
-    <aside class="guides-sidebar">
-      <h3 class="guides-sidebar-title">Guides</h3>
+    <button
+      type="button"
+      class="sidebar-toggle"
+      aria-label="Toggle navigation menu"
+      @click="sidebarOpen = !sidebarOpen"
+    >
+      <span class="toggle-icon">{{ sidebarOpen ? '✕' : '☰' }}</span>
+    </button>
+    <div
+      v-if="sidebarOpen"
+      class="sidebar-backdrop"
+      aria-hidden="true"
+      @click="sidebarOpen = false"
+    />
+    <aside class="guides-sidebar sidebar-base" :class="{ 'is-open': sidebarOpen }">
+      <h3 class="sidebar-title">Guides</h3>
+      <div class="sidebar-filter-wrap">
+        <input
+          v-model="filter"
+          type="search"
+          placeholder="Search guides..."
+          class="sidebar-filter"
+        />
+      </div>
       <nav class="guides-nav">
-        <div v-for="(items, cat) in groupedGuides" :key="cat" class="guide-group">
-          <span class="guide-group-label">{{ getCategoryLabel(cat) }}</span>
+        <div v-for="(items, cat) in filteredGroupedGuides" :key="cat" class="guide-group">
+          <span class="sidebar-group-label">{{ getCategoryLabel(cat) }}</span>
           <router-link
             v-for="g in items"
             :key="g.id"
             :to="versionedPath(`/guides/${g.slug}`)"
-            class="guide-nav-link"
+            class="sidebar-link"
             active-class="active"
           >
             {{ g.title }}
@@ -18,23 +40,33 @@
       </nav>
     </aside>
     <main class="guides-content">
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <div class="guides-content-scroll">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </div>
+      <Footer class="content-footer" />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import Footer from '../components/Footer.vue';
 import { getCategoryLabel } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
 
+const route = useRoute();
 const guidesStore = useGuidesStore();
 const { path: versionedPath } = useVersionedPath();
+const filter = ref('');
+const sidebarOpen = ref(false);
+
+watch(() => route.path, () => { sidebarOpen.value = false; });
 
 const groupedGuides = computed(() => {
   const groups: Record<string, import('../data/guides').Guide[]> = {};
@@ -45,6 +77,23 @@ const groupedGuides = computed(() => {
   }
   return groups;
 });
+
+const filteredGroupedGuides = computed(() => {
+  const q = filter.value.toLowerCase().trim();
+  if (!q) return groupedGuides.value;
+
+  const filtered: Record<string, import('../data/guides').Guide[]> = {};
+  for (const [cat, items] of Object.entries(groupedGuides.value)) {
+    const matched = items.filter(
+      (g) =>
+        g.title.toLowerCase().includes(q) ||
+        g.description.toLowerCase().includes(q) ||
+        getCategoryLabel(cat).toLowerCase().includes(q)
+    );
+    if (matched.length) filtered[cat] = matched;
+  }
+  return filtered;
+});
 </script>
 
 <style scoped>
@@ -52,69 +101,98 @@ const groupedGuides = computed(() => {
   display: flex;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .guides-sidebar {
-  width: 220px;
-  flex-shrink: 0;
-  padding: 1.5rem 0;
-  border-right: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
+  /* Shared styles from .sidebar-base in main.css */
 }
 
-.guides-sidebar-title {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+.guides-sidebar .sidebar-filter-wrap {
+  margin: 0 var(--sidebar-padding-x) 1rem;
+}
+
+.guides-sidebar .sidebar-filter {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem var(--sidebar-padding-x);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.guides-sidebar .sidebar-filter::placeholder {
   color: var(--text-muted);
-  padding: 0 1.25rem;
-  margin-bottom: 1rem;
+}
+
+.guides-sidebar .sidebar-filter:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .guide-group {
-  margin-bottom: 1.25rem;
-}
-
-.guide-group-label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  padding: 0 1.25rem 0.4rem;
-}
-
-.guide-nav-link {
-  display: block;
-  padding: 0.35rem 1.25rem;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  border-left: 2px solid transparent;
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-
-.guide-nav-link:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
-}
-
-.guide-nav-link.active {
-  color: var(--accent);
-  border-left-color: var(--accent);
-  background: var(--bg-active);
+  margin-bottom: 0.5rem;
 }
 
 .guides-content {
   flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.guides-content-scroll {
+  flex: 1;
   padding: 2rem 2.5rem;
-  max-width: 720px;
+  max-width: 1280px;
+  min-width: 0;
+}
+
+.content-footer {
+  flex-shrink: 0;
+}
+
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  z-index: 99;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.sidebar-toggle:hover {
+  background: var(--accent-hover);
+  transform: scale(1.05);
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 900px) {
+  .sidebar-toggle,
+  .sidebar-backdrop {
+    display: block;
+  }
 }
 
 .fade-enter-active,

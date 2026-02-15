@@ -15,8 +15,12 @@ export const Routes = {
   channelMessageReaction: (channelId: Snowflake, messageId: Snowflake, emoji: string) =>
     `/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}` as const,
   channelPins: (id: Snowflake) => `/channels/${id}/messages/pins` as const,
+  /** Use channelPinMessage for PUT/DELETE pin operations. */
   channelPin: (channelId: Snowflake, messageId: Snowflake) =>
     `/channels/${channelId}/messages/pins/${messageId}` as const,
+  /** Pin/unpin: PUT or DELETE /channels/{id}/pins/{messageId}. Use for pin and unpin operations. */
+  channelPinMessage: (channelId: Snowflake, messageId: Snowflake) =>
+    `/channels/${channelId}/pins/${messageId}` as const,
   channelBulkDelete: (id: Snowflake) => `/channels/${id}/messages/bulk-delete` as const,
   channelWebhooks: (id: Snowflake) => `/channels/${id}/webhooks` as const,
   channelTyping: (id: Snowflake) => `/channels/${id}/typing` as const,
@@ -38,6 +42,7 @@ export const Routes = {
   guildBans: (id: Snowflake) => `/guilds/${id}/bans` as const,
   guildBan: (guildId: Snowflake, userId: Snowflake) => `/guilds/${guildId}/bans/${userId}` as const,
   guildInvites: (id: Snowflake) => `/guilds/${id}/invites` as const,
+  invite: (code: string) => `/invites/${encodeURIComponent(code)}` as const,
   guildAuditLogs: (id: Snowflake) => `/guilds/${id}/audit-logs` as const,
   guildEmojis: (id: Snowflake) => `/guilds/${id}/emojis` as const,
   guildEmoji: (guildId: Snowflake, emojiId: Snowflake) =>

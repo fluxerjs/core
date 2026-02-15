@@ -1,6 +1,7 @@
 <template>
   <nav class="sidebar-nav">
     <div v-if="store.currentDoc" class="nav-content">
+      <h3 class="sidebar-title">API Reference</h3>
       <div v-if="packages.length" class="sidebar-select-wrap">
         <select v-model="selectedPackage" class="sidebar-select">
           <option value="">All packages</option>
@@ -9,19 +10,15 @@
       </div>
       <input v-model="filter" type="search" placeholder="Filter..." class="sidebar-filter" />
       <div class="nav-group">
-        <router-link
-          :to="versionedPath('/docs/classes')"
-          class="nav-group-title"
-          active-class="active"
-        >
+        <router-link :to="versionedPath('/docs/classes')" class="sidebar-group-label link">
           Classes
         </router-link>
-        <div v-if="filteredClasses.length" class="nav-sublist">
+        <div v-if="filteredClasses.length" class="sidebar-sublist">
           <router-link
             v-for="c in filteredClasses"
             :key="c.name"
             :to="versionedPath(`/docs/classes/${c.name}`)"
-            class="nav-sublink"
+            class="sidebar-link sidebar-link-class"
             active-class="active"
             :title="c.name"
           >
@@ -31,19 +28,15 @@
       </div>
 
       <div class="nav-group">
-        <router-link
-          :to="versionedPath('/docs/typedefs')"
-          class="nav-group-title"
-          active-class="active"
-        >
+        <router-link :to="versionedPath('/docs/typedefs')" class="sidebar-group-label link">
           Interfaces
         </router-link>
-        <div v-if="filteredInterfaces.length" class="nav-sublist">
+        <div v-if="filteredInterfaces.length" class="sidebar-sublist">
           <router-link
             v-for="i in filteredInterfaces"
             :key="i.name"
             :to="versionedPath(`/docs/typedefs/${i.name}`)"
-            class="nav-sublink nav-sublink-interface"
+            class="sidebar-link sidebar-link-interface"
             active-class="active"
             :title="i.name"
           >
@@ -53,19 +46,15 @@
       </div>
 
       <div class="nav-group">
-        <router-link
-          :to="versionedPath('/docs/typedefs')"
-          class="nav-group-title"
-          active-class="active"
-        >
+        <router-link :to="versionedPath('/docs/typedefs')" class="sidebar-group-label link">
           Enums
         </router-link>
-        <div v-if="filteredEnums.length" class="nav-sublist">
+        <div v-if="filteredEnums.length" class="sidebar-sublist">
           <router-link
             v-for="e in filteredEnums"
             :key="e.name"
             :to="versionedPath(`/docs/typedefs/${e.name}`)"
-            class="nav-sublink nav-sublink-enum"
+            class="sidebar-link sidebar-link-enum"
             active-class="active"
             :title="e.name"
           >
@@ -128,8 +117,8 @@ const filteredEnums = computed(() => {
 }
 
 .sidebar-filter {
-  margin: 0 0.75rem 0.75rem 0;
-  padding: 0.5rem 0.75rem;
+  margin: 0 var(--sidebar-padding-x) 1rem;
+  padding: 0.5rem var(--sidebar-padding-x);
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -157,33 +146,9 @@ const filteredEnums = computed(() => {
   flex-direction: column;
 }
 
-.nav-group-title {
-  padding: 0.4rem 1rem;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.nav-group-title:hover {
-  color: var(--text-secondary);
-}
-
-.nav-group-title.active {
-  color: var(--accent);
-}
-
-.nav-sublist {
-  padding-left: 0.75rem;
-  margin-top: 0.25rem;
-  border-left: 1px solid var(--border);
-  margin-left: 0.75rem;
-}
 
 .sidebar-select-wrap {
-  margin: 0 0.75rem 0.75rem 0;
+  margin: 0 var(--sidebar-padding-x) 0.75rem;
 }
 
 .sidebar-select {
@@ -202,33 +167,11 @@ const filteredEnums = computed(() => {
   border-color: var(--accent);
 }
 
-.nav-sublink {
-  display: block;
-  padding: 0.35rem 0.5rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 0.8rem;
+.sidebar-nav :deep(.sidebar-link) {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  border-radius: 4px;
-  margin-left: -1px;
-  border-left: 2px solid transparent;
-  transition:
-    color 0.15s,
-    background 0.15s;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.nav-sublink:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
-}
-
-.nav-sublink.active {
-  color: var(--accent);
-  border-left-color: var(--accent);
-  background: var(--bg-active);
 }
 
 .nav-placeholder {

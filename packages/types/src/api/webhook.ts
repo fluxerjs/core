@@ -19,3 +19,16 @@ export interface APIWebhook {
   token?: string;
   user: APIUser;
 }
+
+/** Request body for PATCH /webhooks/{id} (bot auth). All fields optional. */
+export interface APIWebhookUpdateRequest {
+  name?: string;
+  avatar?: string | null;
+  channel_id?: Snowflake;
+}
+
+/** Request body for PATCH /webhooks/{id}/{token} (token auth). All fields optional. */
+export interface APIWebhookTokenUpdateRequest {
+  name?: string;
+  avatar?: string | null;
+}

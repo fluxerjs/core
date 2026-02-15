@@ -5,7 +5,7 @@
  */
 
 import { resolve, dirname } from 'path';
-import { mkdirSync, writeFileSync, readFileSync, unlinkSync } from 'fs';
+import { mkdirSync, writeFileSync, readFileSync, unlinkSync, readdirSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { generateDocs } from '@fluxerjs/docgen';
 import type { DocOutput } from '@fluxerjs/docgen';
@@ -119,23 +119,20 @@ async function main(): Promise<void> {
   writeFileSync(resolve(latestDir, 'main.json'), jsonStr, 'utf-8');
   console.log(`[generate-docs] Latest -> ${latestDir}/main.json`);
 
-  // versions.json lists available versions (for version picker)
+  // versions.json — derive from actual v* folders so we never lose older versions
   const versionsPath = resolve(DOCS_DIR, 'versions.json');
-  let existingVersions: string[] = [];
-  try {
-    const existing = JSON.parse(readFileSync(versionsPath, 'utf-8'));
-    existingVersions = Array.isArray(existing.versions) ? existing.versions : [];
-  } catch {
-    /* ignore */
-  }
-  const allVersions = existingVersions.includes(version)
-    ? existingVersions
-    : [version, ...existingVersions].sort((a, b) =>
-        b.localeCompare(a, undefined, { numeric: true })
-      );
+  const dirEntries = readdirSync(DOCS_DIR, { withFileTypes: true });
+  const versionDirs = dirEntries
+    .filter((e) => e.isDirectory() && /^v\d+\.\d+\.\d+$/.test(e.name))
+    .map((e) => e.name.slice(1)); // strip leading "v"
+  const hasCurrent = versionDirs.includes(version);
+  const allVersions = hasCurrent
+    ? [...new Set([version, ...versionDirs])]
+    : [version, ...versionDirs];
+  allVersions.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
   const versionsData = { versions: allVersions, latest: version };
   writeFileSync(versionsPath, JSON.stringify(versionsData, null, 2), 'utf-8');
-  console.log(`[generate-docs] Versions -> ${versionsPath}`);
+  console.log(`[generate-docs] Versions -> ${versionsPath} (${allVersions.length} versions)`);
 
   // Guides per version (same content for now; override per version in data/ if needed later)
   const guidesPath = pathToFileURL(resolve(root, 'apps/docs/src/data/guides.ts')).href;

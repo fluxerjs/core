@@ -83,3 +83,20 @@ export interface APIGuild {
   message_history_cutoff?: string | null;
   permissions?: string | null;
 }
+
+/** Audit log entry from GET /guilds/{id}/audit-logs */
+export interface APIGuildAuditLogEntry {
+  id: string;
+  action_type: number;
+  user_id?: Snowflake | null;
+  target_id?: Snowflake | null;
+  reason?: string | null;
+  changes?: Array<{ key: string; old_value?: unknown; new_value?: unknown }>;
+}
+
+/** Response from GET /guilds/{id}/audit-logs */
+export interface APIGuildAuditLog {
+  audit_log_entries: APIGuildAuditLogEntry[];
+  users: Array<{ id: Snowflake; username?: string; discriminator?: string; avatar?: string | null }>;
+  webhooks: Array<{ id: Snowflake; name?: string; avatar?: string | null }>;
+}

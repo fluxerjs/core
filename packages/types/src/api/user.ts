@@ -19,6 +19,8 @@ export interface APIUserPartial {
   public_flags?: number | null;
   /** Present when author is a bot */
   bot?: boolean;
+  /** Whether this is an official system user */
+  system?: boolean;
 }
 
 export type APIUser = APIUserPartial;

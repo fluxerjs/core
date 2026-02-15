@@ -31,6 +31,125 @@
   --badge-enum-bg: rgba(199, 146, 234, 0.15);
 
   --error: #f87171;
+
+  /* Sidebar - shared across docs and guides */
+  --sidebar-width: 260px;
+  --sidebar-padding-x: 1rem;
+  --sidebar-accent-stripe: 3px;
+}
+
+/* Shared sidebar base */
+.sidebar-base {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  min-height: 0;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 1.25rem 0;
+  border-left: var(--sidebar-accent-stripe) solid var(--accent);
+}
+
+.sidebar-base .sidebar-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  padding: 0 var(--sidebar-padding-x) 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-base .sidebar-group-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 1rem var(--sidebar-padding-x) 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.sidebar-base .sidebar-group-label:first-of-type {
+  margin-top: 0;
+  padding-top: 0.5rem;
+}
+
+.sidebar-base .sidebar-group-label.link {
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.sidebar-base .sidebar-group-label.link:hover {
+  color: var(--accent);
+}
+
+.sidebar-base .sidebar-group-label.link.active {
+  color: var(--accent);
+}
+
+.sidebar-base .sidebar-link {
+  display: block;
+  padding: 0.4rem var(--sidebar-padding-x);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  margin-left: 2px;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.sidebar-base .sidebar-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.sidebar-base .sidebar-link.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--bg-active);
+}
+
+.sidebar-base .sidebar-sublist {
+  padding-left: 0.5rem;
+  margin-left: calc(var(--sidebar-padding-x) - 2px);
+  border-left: 1px solid var(--border);
+}
+
+/* Type-specific accent colors in docs sidebar */
+.sidebar-base .sidebar-link-class { --sidebar-type-color: var(--badge-class); }
+.sidebar-base .sidebar-link-interface { --sidebar-type-color: var(--badge-interface); }
+.sidebar-base .sidebar-link-enum { --sidebar-type-color: var(--badge-enum); }
+
+.sidebar-base .sidebar-link-class::before,
+.sidebar-base .sidebar-link-interface::before,
+.sidebar-base .sidebar-link-enum::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--sidebar-type-color);
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.sidebar-base .sidebar-link-class:hover,
+.sidebar-base .sidebar-link-interface:hover,
+.sidebar-base .sidebar-link-enum:hover {
+  color: var(--sidebar-type-color);
+}
+
+.sidebar-base .sidebar-link-class.active,
+.sidebar-base .sidebar-link-interface.active,
+.sidebar-base .sidebar-link-enum.active {
+  color: var(--sidebar-type-color);
+  border-left-color: var(--sidebar-type-color);
 }
 
 * {
@@ -98,4 +217,45 @@ pre code {
   padding: 0;
   background: none;
   border: none;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 900px) {
+  .sidebar-base,
+  .guides-sidebar,
+  .docs-layout .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .sidebar-base.is-open,
+  .guides-sidebar.is-open,
+  .docs-layout .sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .guide-toc,
+  .on-this-page {
+    display: none !important;
+  }
+
+  .guide-page,
+  .class-page {
+    flex-direction: column;
+  }
+
+  .guides-content-scroll,
+  .content-scroll {
+    padding: 1.25rem 1rem !important;
+  }
+
+  .guide-page {
+    max-width: 100%;
+  }
 }
