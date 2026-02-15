@@ -46,5 +46,10 @@
   "packageManager": "pnpm@9.14.2",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "tar": ">=7.5.7"
+    }
   }
 }
