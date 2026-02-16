@@ -176,9 +176,13 @@ export class Client extends EventEmitter {
     if (typeof emoji === 'object' && emoji.id) {
       return formatEmoji({ name: emoji.name, id: emoji.id as string, animated: emoji.animated });
     }
-    const parsed = parseEmoji(typeof emoji === 'string' ? emoji : `:${emoji.name}:`);
+    const parsed = parseEmoji(
+      typeof emoji === 'string' ? emoji : emoji.id ? `:${emoji.name}:` : emoji.name,
+    );
     if (!parsed) throw new Error('Invalid emoji');
     if (parsed.id) return formatEmoji(parsed);
+    // Unicode emoji: name has non-ASCII or isn't a custom shortcode — return encoded, skip guild lookup
+    if (!/^\w+$/.test(parsed.name)) return encodeURIComponent(parsed.name);
     if (guildId) {
       const emojis = await this.rest.get(Routes.guildEmojis(guildId));
       const list = (Array.isArray(emojis) ? emojis : Object.values(emojis ?? {})) as Array<{

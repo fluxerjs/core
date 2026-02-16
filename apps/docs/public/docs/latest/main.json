@@ -5,7 +5,7 @@
     "date": 1771221260862
   },
   "package": "@fluxerjs/core",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "packages": [
     "@fluxerjs/builders",
     "@fluxerjs/collection",

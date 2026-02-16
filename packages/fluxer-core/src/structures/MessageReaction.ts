@@ -1,3 +1,7 @@
+import { Routes } from '@fluxerjs/types';
+import { FluxerAPIError, RateLimitError } from '@fluxerjs/rest';
+import { FluxerError } from '../errors/FluxerError.js';
+import { ErrorCodes } from '../errors/ErrorCodes.js';
 import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import type { Message } from './Message.js';
@@ -47,6 +51,23 @@ export class MessageReaction extends Base {
    * @throws FluxerError with MESSAGE_NOT_FOUND if the message does not exist
    */
   async fetchMessage(): Promise<Message> {
-    return this.client.channels.fetchMessage(this.channelId, this.messageId);
+    try {
+      const { Message } = await import('./Message.js');
+      const data = await this.client.rest.get<import('@fluxerjs/types').APIMessage>(
+        Routes.channelMessage(this.channelId, this.messageId),
+      );
+      return new Message(this.client, data);
+    } catch (err) {
+      if (err instanceof RateLimitError) throw err;
+      if (err instanceof FluxerAPIError && err.statusCode === 404) {
+        throw new FluxerError(
+          `Message ${this.messageId} not found in channel ${this.channelId}`,
+          { code: ErrorCodes.MessageNotFound, cause: err },
+        );
+      }
+      throw err instanceof FluxerError
+        ? err
+        : new FluxerError(String(err), { cause: err as Error });
+    }
   }
 }
