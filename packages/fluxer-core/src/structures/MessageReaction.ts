@@ -60,10 +60,10 @@ export class MessageReaction extends Base {
     } catch (err) {
       if (err instanceof RateLimitError) throw err;
       if (err instanceof FluxerAPIError && err.statusCode === 404) {
-        throw new FluxerError(
-          `Message ${this.messageId} not found in channel ${this.channelId}`,
-          { code: ErrorCodes.MessageNotFound, cause: err },
-        );
+        throw new FluxerError(`Message ${this.messageId} not found in channel ${this.channelId}`, {
+          code: ErrorCodes.MessageNotFound,
+          cause: err,
+        });
       }
       throw err instanceof FluxerError
         ? err
