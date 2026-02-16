@@ -50,4 +50,4 @@ pnpm run docs:preview
 
 ## License
 
-AGPL-3.0
+Apache-2.0

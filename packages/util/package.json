@@ -18,7 +18,7 @@
     "snowflake",
     "bitfield"
   ],
-  "license": "AGPL-3.0",
+  "license": "Apache-2.0",
   "dependencies": {
     "@fluxerjs/types": "workspace:*"
   },
