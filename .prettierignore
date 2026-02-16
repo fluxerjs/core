@@ -4,3 +4,4 @@ coverage
 .turbo
 *.min.js
 pnpm-lock.yaml
+apps/docs/public/docs

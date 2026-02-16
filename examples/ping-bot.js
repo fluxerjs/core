@@ -15,7 +15,15 @@
  */
 
 import youtubedl from 'youtube-dl-exec';
-import { Client, Events, EmbedBuilder, Routes, User, VoiceChannel } from '@fluxerjs/core';
+import {
+  Client,
+  Events,
+  EmbedBuilder,
+  Routes,
+  User,
+  VoiceChannel,
+  cdnBannerURL,
+} from '@fluxerjs/core';
 import { getVoiceManager, LiveKitRtcConnection } from '@fluxerjs/voice';
 
 /** Fixed non‑copyrighted track; we get a direct WebM/Opus URL so the voice package can play without FFmpeg. */
@@ -42,7 +50,7 @@ async function getStreamUrl(url) {
       noWarnings: true,
       noPlaylist: true,
     },
-    { timeout: 15000 }
+    { timeout: 15000 },
   );
   return String(result ?? '').trim();
 }
@@ -57,7 +65,7 @@ async function getVideoUrl(url) {
       noWarnings: true,
       noPlaylist: true,
     },
-    { timeout: 20000 }
+    { timeout: 20000 },
   );
   return String(result ?? '').trim() || null;
 }
@@ -158,7 +166,7 @@ commands.set('info', {
         { name: 'Channels', value: `${client.channels.size}`, inline: true },
         { name: 'Uptime', value: formatUptime(uptime), inline: true },
         { name: 'API Latency', value: `${apiLatency}ms`, inline: true },
-        { name: 'Node.js', value: process.version, inline: true }
+        { name: 'Node.js', value: process.version, inline: true },
       )
       .setFooter({ text: 'Powered by @fluxerjs/core' })
       .setTimestamp();
@@ -173,7 +181,7 @@ commands.set('userinfo', {
     const userId = resolveUserId(args[0], message.author.id);
     if (!userId) {
       await message.reply(
-        'Provide a user mention (`@user`) or a user ID. Example: `!userinfo @Someone` or `!userinfo 123456789012345678`'
+        'Provide a user mention (`@user`) or a user ID. Example: `!userinfo @Someone` or `!userinfo 123456789012345678`',
       );
       return;
     }
@@ -183,7 +191,7 @@ commands.set('userinfo', {
       userData = await client.rest.get(Routes.user(userId));
     } catch {
       await message.reply(
-        'Could not fetch that user. They may not exist or the ID may be invalid.'
+        'Could not fetch that user. They may not exist or the ID may be invalid.',
       );
       return;
     }
@@ -192,10 +200,13 @@ commands.set('userinfo', {
     } catch {
       // Profile may not be available for all users or bots
     }
-    const avatarUrl = userData.avatar
-      ? `https://fluxerusercontent.com/avatars/${userData.id}/${userData.avatar}.png?size=256`
-      : null;
+    const user = client.getOrCreateUser(userData);
+    const avatarUrl = user.displayAvatarURL({ size: 256 });
     const profile = profileData?.user_profile;
+    const bannerUrl =
+      profile?.banner != null && profile.banner !== ''
+        ? cdnBannerURL(userData.id, profile.banner, { size: 512 })
+        : null;
     const accentColor =
       profile && (profile.accent_color ?? profile.banner_color) != null
         ? Number(profile.accent_color ?? profile.banner_color)
@@ -205,7 +216,9 @@ commands.set('userinfo', {
     const embed = new EmbedBuilder()
       .setTitle('User profile')
       .setColor(accentColor)
-      .setThumbnail(avatarUrl)
+      .setThumbnail(avatarUrl);
+    if (bannerUrl) embed.setImage(bannerUrl);
+    embed
       .addFields(
         { name: 'Username', value: userData.username ?? '—', inline: true },
         {
@@ -223,7 +236,7 @@ commands.set('userinfo', {
               ? `#${Number(userData.avatar_color).toString(16).padStart(6, '0')}`
               : '—',
           inline: true,
-        }
+        },
       )
       .setFooter({ text: `Requested by ${message.author.username}` })
       .setTimestamp();
@@ -268,7 +281,7 @@ commands.set('serverinfo', {
     const guildId = args[0] ?? message.guildId;
     if (!guildId) {
       await message.reply(
-        'Use this command in a server or provide a guild ID: `!serverinfo [guild_id]`'
+        'Use this command in a server or provide a guild ID: `!serverinfo [guild_id]`',
       );
       return;
     }
@@ -337,13 +350,13 @@ commands.set('serverinfo', {
           value: data.afk_channel_id ? `\`${data.afk_channel_id}\`` : '—',
           inline: true,
         },
-        { name: 'Features', value: data.features?.length ? data.features.join(', ') : '—' }
+        { name: 'Features', value: data.features?.length ? data.features.join(', ') : '—' },
       )
       .setFooter({ text: `Requested by ${message.author.username}` })
       .setTimestamp();
     if (data.banner)
       embed.setImage(
-        `https://fluxerusercontent.com/banners/${data.id}/${data.banner}.png?size=512`
+        `https://fluxerusercontent.com/banners/${data.id}/${data.banner}.png?size=512`,
       );
     try {
       await message.reply({ embeds: [embed.toJSON()] });
@@ -374,7 +387,7 @@ commands.set('roleinfo', {
     const resolved = resolveRoleIdOrName(args[0]);
     if (!resolved) {
       await message.reply(
-        'Provide a role ID, role mention (`@Role`), or role name. Example: `!roleinfo Moderator`'
+        'Provide a role ID, role mention (`@Role`), or role name. Example: `!roleinfo Moderator`',
       );
       return;
     }
@@ -390,11 +403,11 @@ commands.set('roleinfo', {
       roleList.find((r) =>
         resolved.type === 'id'
           ? r.id === resolved.value
-          : r.name && r.name.toLowerCase() === resolved.value.toLowerCase()
+          : r.name && r.name.toLowerCase() === resolved.value.toLowerCase(),
       ) ?? null;
     if (!role) {
       await message.reply(
-        resolved.type === 'id' ? 'No role found with that ID.' : 'No role found with that name.'
+        resolved.type === 'id' ? 'No role found with that ID.' : 'No role found with that name.',
       );
       return;
     }
@@ -423,7 +436,7 @@ commands.set('roleinfo', {
           value: role.hoist_position != null ? String(role.hoist_position) : '—',
           inline: true,
         },
-        { name: 'Permissions', value: permStr }
+        { name: 'Permissions', value: permStr },
       )
       .setFooter({ text: `Requested by ${message.author.username}` })
       .setTimestamp();
@@ -499,12 +512,12 @@ commands.set('editembed', {
     const updatedEmbed = new EmbedBuilder()
       .setTitle('Edited Embed')
       .setDescription(
-        'The Fluxer API supports editing message embeds via `message.edit({ embeds: [...] })`.'
+        'The Fluxer API supports editing message embeds via `message.edit({ embeds: [...] })`.',
       )
       .setColor(0x57f287)
       .addFields(
         { name: 'Original', value: 'First state', inline: true },
-        { name: 'Edited', value: 'Updated state', inline: true }
+        { name: 'Edited', value: 'Updated state', inline: true },
       )
       .setFooter({ text: 'Embed was successfully edited' })
       .setTimestamp();
@@ -604,7 +617,7 @@ commands.set('playvideo', {
     const inputUrl = args[0]?.trim() || DEFAULT_VIDEO_URL;
     if (!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
       await message.reply(
-        'Provide a valid URL: YouTube link or direct MP4. Example: `!playvideo https://youtube.com/watch?v=...`'
+        'Provide a valid URL: YouTube link or direct MP4. Example: `!playvideo https://youtube.com/watch?v=...`',
       );
       return;
     }
@@ -624,7 +637,7 @@ commands.set('playvideo', {
       const connection = await voiceManager.join(channel);
       if (!(connection instanceof LiveKitRtcConnection)) {
         await message.reply(
-          'Video requires LiveKit voice (this server may use a different voice backend).'
+          'Video requires LiveKit voice (this server may use a different voice backend).',
         );
         return;
       }
@@ -725,13 +738,13 @@ if (process.env.VOICE_DEBUG === '1' || process.env.VOICE_DEBUG === 'true') {
       guild_id: d.guild_id,
       user_id: d.user_id,
       channel_id: d.channel_id,
-    })
+    }),
   );
   client.on(Events.VoiceServerUpdate, (d) =>
     console.log('[voice] VoiceServerUpdate', {
       guild_id: d.guild_id,
       endpoint: d.endpoint ? 'present' : 'null',
-    })
+    }),
   );
 }
 

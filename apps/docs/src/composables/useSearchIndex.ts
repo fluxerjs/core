@@ -90,6 +90,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   webhooks: 'Webhooks',
   voice: 'Voice',
   'sending-messages': 'Sending Messages',
+  media: 'Media',
   events: 'Events',
   other: 'Other',
 };

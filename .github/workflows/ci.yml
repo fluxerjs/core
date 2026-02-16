@@ -6,11 +6,21 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
 
@@ -22,17 +32,63 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts
 
+      - name: Format
+        run: pnpm run format
+
+      - name: Check for format changes
+        id: format_check
+        run: |
+          git add -A
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push format fixes
+        if: ${{ steps.format_check.outputs.has_changes == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "style: apply prettier"
+          git push
+
+      - name: Comment on fork PR about format fixes
+        if: ${{ steps.format_check.outputs.has_changes == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = '## Prettier format needed\n\nThis PR has formatting issues that CI cannot auto-fix (PRs from forks cannot be pushed to). Please run:\n\n```bash\npnpm run format\n```\n\nThen commit and push the changes.\n\n<!-- prettier-format-comment -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(c => c.body && c.body.includes('<!-- prettier-format-comment -->'));
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
       - name: Lint
         run: pnpm run lint
 
-      - name: Format check
-        run: pnpm run format:check
-
       - name: Build
-        run: pnpm run build
+        run: pnpm run build --concurrency=10
 
       - name: Test
-        run: pnpm run test
+        run: pnpm run test --concurrency=10
 
       - name: Audit
         run: pnpm audit --prod

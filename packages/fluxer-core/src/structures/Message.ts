@@ -17,6 +17,10 @@ import type { User } from './User.js';
 import type { Channel } from './Channel.js';
 import type { Guild } from './Guild.js';
 
+import { buildSendBody, type MessageSendOptions } from '../util/messageUtils.js';
+import { ReactionCollector } from '../util/ReactionCollector.js';
+import type { ReactionCollectorOptions } from '../util/ReactionCollector.js';
+
 /** Options for editing a message (content and/or embeds). */
 export interface MessageEditOptions {
   /** New text content */
@@ -24,6 +28,9 @@ export interface MessageEditOptions {
   /** New embeds (replaces existing) */
   embeds?: (APIEmbed | EmbedBuilder)[];
 }
+
+/** Re-export for convenience. */
+export type { MessageSendOptions } from '../util/messageUtils.js';
 
 /** Represents a message in a channel. */
 export class Message extends Base {
@@ -48,6 +55,14 @@ export class Message extends Base {
   readonly messageSnapshots: APIMessageSnapshot[];
   readonly call: APIMessageCall | null;
   readonly referencedMessage: Message | null;
+  /** Webhook ID if this message was sent via webhook. Null otherwise. */
+  readonly webhookId: string | null;
+  /** Users mentioned in this message. */
+  readonly mentions: User[];
+  /** Role IDs mentioned in this message. */
+  readonly mentionRoles: string[];
+  /** Client-side nonce for acknowledgment. Null if not provided. */
+  readonly nonce: string | null;
 
   /** Channel where this message was sent. Resolved from cache; null if not cached (e.g. DM channel not in cache). */
   get channel(): Channel | null {
@@ -86,18 +101,25 @@ export class Message extends Base {
     this.referencedMessage = data.referenced_message
       ? new Message(client, data.referenced_message)
       : null;
+    this.webhookId = data.webhook_id ?? null;
+    this.mentions = (data.mentions ?? []).map((u) => client.getOrCreateUser(u));
+    this.mentionRoles = data.mention_roles ?? [];
+    this.nonce = data.nonce ?? null;
   }
 
   /**
    * Send a message to this channel without replying. Use when you want a standalone message.
-   * @param options - Text content or object with content and/or embeds
+   * @param options - Text content or object with content, embeds, and/or files
    * @example
    * await message.send('Pong!');
    * await message.send({ embeds: [embed.toJSON()] });
+   * await message.send({ content: 'File', files: [{ name: 'data.txt', data }] });
    */
-  async send(options: string | { content?: string; embeds?: APIEmbed[] }): Promise<Message> {
-    const body = typeof options === 'string' ? { content: options } : options;
-    const data = await this.client.rest.post(Routes.channelMessages(this.channelId), { body });
+  async send(options: MessageSendOptions): Promise<Message> {
+    const opts = typeof options === 'string' ? { content: options } : options;
+    const body = buildSendBody(options);
+    const postOptions = opts.files?.length ? { body, files: opts.files } : { body };
+    const data = await this.client.rest.post(Routes.channelMessages(this.channelId), postOptions);
     return new Message(this.client, data as APIMessage);
   }
 
@@ -109,37 +131,27 @@ export class Message extends Base {
    * await message.sendTo(logChannelId, 'User ' + message.author.username + ' said: ' + message.content);
    * await message.sendTo(announceChannelId, { embeds: [embed.toJSON()] });
    */
-  async sendTo(
-    channelId: string,
-    options: string | { content?: string; embeds?: APIEmbed[] }
-  ): Promise<Message> {
+  async sendTo(channelId: string, options: MessageSendOptions): Promise<Message> {
     return this.client.channels.send(channelId, options);
   }
 
   /**
    * Reply to this message.
-   * @param options - Text content or object with content and/or embeds
+   * @param options - Text content or object with content, embeds, and/or files
    */
-  async reply(options: string | { content?: string; embeds?: APIEmbed[] }): Promise<Message> {
-    const body =
-      typeof options === 'string'
-        ? {
-            content: options,
-            message_reference: {
-              channel_id: this.channelId,
-              message_id: this.id,
-              guild_id: this.guildId ?? undefined,
-            },
-          }
-        : {
-            ...options,
-            message_reference: {
-              channel_id: this.channelId,
-              message_id: this.id,
-              guild_id: this.guildId ?? undefined,
-            },
-          };
-    const data = await this.client.rest.post(Routes.channelMessages(this.channelId), { body });
+  async reply(options: MessageSendOptions): Promise<Message> {
+    const opts = typeof options === 'string' ? { content: options } : options;
+    const base = buildSendBody(options);
+    const body = {
+      ...base,
+      message_reference: {
+        channel_id: this.channelId,
+        message_id: this.id,
+        guild_id: this.guildId ?? undefined,
+      },
+    };
+    const postOptions = opts.files?.length ? { body, files: opts.files } : { body };
+    const data = await this.client.rest.post(Routes.channelMessages(this.channelId), postOptions);
     return new Message(this.client, data as APIMessage);
   }
 
@@ -160,14 +172,28 @@ export class Message extends Base {
   }
 
   /**
+   * Create a reaction collector for this message.
+   * Collects reactions matching the filter until time expires or max is reached.
+   * @param options - Filter, time (ms), and max count
+   * @example
+   * const collector = message.createReactionCollector({ filter: (r, u) => u.id === userId, time: 10000 });
+   * collector.on('collect', (reaction, user) => console.log(user.username, 'reacted with', reaction.emoji.name));
+   * collector.on('end', (collected, reason) => { ... });
+   */
+  createReactionCollector(options?: ReactionCollectorOptions): ReactionCollector {
+    return new ReactionCollector(this.client, this.id, this.channelId, options);
+  }
+
+  /**
    * Re-fetch this message from the API to get the latest content, embeds, reactions, etc.
    * Use when you have a stale Message (e.g. from an old event or cache) and need fresh data.
-   * @returns The updated message, or null if deleted or not found
+   * @returns The updated message
+   * @throws FluxerError with MESSAGE_NOT_FOUND if the message was deleted or does not exist
    * @example
    * const updated = await message.fetch();
-   * if (updated) console.log('Latest content:', updated.content);
+   * console.log('Latest content:', updated.content);
    */
-  async fetch(): Promise<Message | null> {
+  async fetch(): Promise<Message> {
     return this.client.channels.fetchMessage(this.channelId, this.id);
   }
 
@@ -198,7 +224,7 @@ export class Message extends Base {
   }
 
   private resolveEmojiForReaction(
-    emoji: string | { name: string; id?: string; animated?: boolean }
+    emoji: string | { name: string; id?: string; animated?: boolean },
   ): Promise<string> {
     return this.client.resolveEmoji(emoji, this.guildId);
   }
@@ -220,7 +246,7 @@ export class Message extends Base {
    */
   async removeReaction(
     emoji: string | { name: string; id?: string; animated?: boolean },
-    userId?: string
+    userId?: string,
   ): Promise<void> {
     const emojiStr = await this.resolveEmojiForReaction(emoji);
     const route = `${Routes.channelMessageReaction(this.channelId, this.id, emojiStr)}/${userId ?? '@me'}`;
@@ -240,9 +266,34 @@ export class Message extends Base {
    * @param emoji - Unicode emoji, custom `{ name, id }`, `:name:`, `name:id`, or `<:name:id>`. Requires moderator permissions.
    */
   async removeReactionEmoji(
-    emoji: string | { name: string; id?: string; animated?: boolean }
+    emoji: string | { name: string; id?: string; animated?: boolean },
   ): Promise<void> {
     const emojiStr = await this.resolveEmojiForReaction(emoji);
     await this.client.rest.delete(Routes.channelMessageReaction(this.channelId, this.id, emojiStr));
+  }
+
+  /**
+   * Fetch users who reacted with the given emoji.
+   * @param emoji - Unicode emoji or custom `{ name, id }`
+   * @param options - limit (1–100), after (user ID for pagination)
+   * @returns Array of User objects
+   */
+  async fetchReactionUsers(
+    emoji: string | { name: string; id?: string; animated?: boolean },
+    options?: { limit?: number; after?: string },
+  ): Promise<User[]> {
+    const emojiStr = await this.resolveEmojiForReaction(emoji);
+    const params = new URLSearchParams();
+    if (options?.limit != null) params.set('limit', String(options.limit));
+    if (options?.after) params.set('after', options.after);
+    const qs = params.toString();
+    const route =
+      Routes.channelMessageReaction(this.channelId, this.id, emojiStr) + (qs ? `?${qs}` : '');
+    const data = await this.client.rest.get<
+      | { users?: import('@fluxerjs/types').APIUserPartial[] }
+      | import('@fluxerjs/types').APIUserPartial[]
+    >(route);
+    const list = Array.isArray(data) ? data : (data?.users ?? []);
+    return list.map((u) => this.client.getOrCreateUser(u));
   }
 }

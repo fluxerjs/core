@@ -1,5 +1,11 @@
 import { Collection } from '@fluxerjs/collection';
 import { Routes } from '@fluxerjs/types';
+import { emitDeprecationWarning } from '@fluxerjs/util';
+import { FluxerAPIError, RateLimitError } from '@fluxerjs/rest';
+import { FluxerError } from '../errors/FluxerError.js';
+import { ErrorCodes } from '../errors/ErrorCodes.js';
+import { buildSendBody } from '../util/messageUtils.js';
+import type { MessageSendOptions } from '../util/messageUtils.js';
 import type { Client } from './Client.js';
 import type { Channel } from '../structures/Channel.js';
 
@@ -15,25 +21,40 @@ export class ChannelManager extends Collection<string, Channel> {
   /**
    * Fetch a channel by ID from the API (or return from cache if present).
    * @param channelId - Snowflake of the channel
-   * @returns The channel, or null if not found
+   * @returns The channel
+   * @throws FluxerError with CHANNEL_NOT_FOUND if the channel does not exist
    * @example
    * const channel = await client.channels.fetch(channelId);
    * if (channel?.isSendable()) await channel.send('Hello!');
    */
-  async fetch(channelId: string): Promise<Channel | null> {
+  async fetch(channelId: string): Promise<Channel> {
     const cached = this.get(channelId);
     if (cached) return cached;
 
     try {
       const { Channel } = await import('../structures/Channel.js');
       const data = await this.client.rest.get<import('@fluxerjs/types').APIChannel>(
-        Routes.channel(channelId)
+        Routes.channel(channelId),
       );
       const channel = Channel.fromOrCreate(this.client, data);
-      if (channel) this.set(channel.id, channel);
+      if (!channel) {
+        throw new FluxerError('Channel data invalid or unsupported type', {
+          code: ErrorCodes.ChannelNotFound,
+        });
+      }
+      this.set(channel.id, channel);
       return channel;
-    } catch {
-      return null;
+    } catch (err) {
+      if (err instanceof RateLimitError) throw err;
+      if (err instanceof FluxerAPIError && err.statusCode === 404) {
+        throw new FluxerError(`Channel ${channelId} not found`, {
+          code: ErrorCodes.ChannelNotFound,
+          cause: err,
+        });
+      }
+      throw err instanceof FluxerError
+        ? err
+        : new FluxerError(String(err), { cause: err as Error });
     }
   }
 
@@ -41,7 +62,8 @@ export class ChannelManager extends Collection<string, Channel> {
    * Fetch a message by ID from the API.
    * @param channelId - Snowflake of the channel
    * @param messageId - Snowflake of the message
-   * @returns The message, or null if not found
+   * @returns The message
+   * @throws FluxerError with MESSAGE_NOT_FOUND if the message does not exist
    * @deprecated Use channel.messages.fetch(messageId). Prefer (await client.channels.fetch(channelId))?.messages?.fetch(messageId).
    * @example
    * const channel = await client.channels.fetch(channelId);
@@ -49,16 +71,29 @@ export class ChannelManager extends Collection<string, Channel> {
    */
   async fetchMessage(
     channelId: string,
-    messageId: string
-  ): Promise<import('../structures/Message.js').Message | null> {
+    messageId: string,
+  ): Promise<import('../structures/Message.js').Message> {
+    emitDeprecationWarning(
+      'ChannelManager.fetchMessage()',
+      'Use channel.messages.fetch(messageId). Prefer (await client.channels.fetch(channelId))?.messages?.fetch(messageId).',
+    );
     try {
       const { Message } = await import('../structures/Message.js');
       const data = await this.client.rest.get<import('@fluxerjs/types').APIMessage>(
-        Routes.channelMessage(channelId, messageId)
+        Routes.channelMessage(channelId, messageId),
       );
       return new Message(this.client, data);
-    } catch {
-      return null;
+    } catch (err) {
+      if (err instanceof RateLimitError) throw err;
+      if (err instanceof FluxerAPIError && err.statusCode === 404) {
+        throw new FluxerError(`Message ${messageId} not found in channel ${channelId}`, {
+          code: ErrorCodes.MessageNotFound,
+          cause: err,
+        });
+      }
+      throw err instanceof FluxerError
+        ? err
+        : new FluxerError(String(err), { cause: err as Error });
     }
   }
 
@@ -66,19 +101,22 @@ export class ChannelManager extends Collection<string, Channel> {
    * Send a message to a channel by ID. Works even when the channel is not cached.
    * Skips the fetch when you only need to send.
    * @param channelId - Snowflake of the channel (text channel or DM)
-   * @param payload - Text content or object with content and/or embeds
+   * @param payload - Text content or object with content, embeds, and/or files
    * @returns The created message
    * @example
    * await client.channels.send(logChannelId, 'User joined!');
    * await client.channels.send(channelId, { embeds: [embed.toJSON()] });
+   * await client.channels.send(channelId, { content: 'Report', files: [{ name: 'log.txt', data }] });
    */
   async send(
     channelId: string,
-    payload: string | { content?: string; embeds?: import('@fluxerjs/types').APIEmbed[] }
+    payload: MessageSendOptions,
   ): Promise<import('../structures/Message.js').Message> {
-    const body = typeof payload === 'string' ? { content: payload } : payload;
+    const opts = typeof payload === 'string' ? { content: payload } : payload;
+    const body = buildSendBody(payload);
     const { Message } = await import('../structures/Message.js');
-    const data = await this.client.rest.post(Routes.channelMessages(channelId), { body });
+    const postOptions = opts.files?.length ? { body, files: opts.files } : { body };
+    const data = await this.client.rest.post(Routes.channelMessages(channelId), postOptions);
     return new Message(this.client, data as import('@fluxerjs/types').APIMessage);
   }
 }

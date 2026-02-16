@@ -4,16 +4,14 @@
       type="button"
       class="sidebar-toggle"
       aria-label="Toggle navigation menu"
-      @click="sidebarOpen = !sidebarOpen"
-    >
+      @click="sidebarOpen = !sidebarOpen">
       <span class="toggle-icon">{{ sidebarOpen ? '✕' : '☰' }}</span>
     </button>
     <div
       v-if="sidebarOpen"
       class="sidebar-backdrop"
       aria-hidden="true"
-      @click="sidebarOpen = false"
-    />
+      @click="sidebarOpen = false" />
     <aside class="sidebar sidebar-base" :class="{ 'is-open': sidebarOpen }">
       <SidebarNav />
     </aside>
@@ -42,7 +40,7 @@ watch(
   () => route.path,
   () => {
     sidebarOpen.value = false;
-  }
+  },
 );
 </script>
 

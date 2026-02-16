@@ -20,7 +20,7 @@ export function escapeMarkdown(text: string): string {
  */
 export function formatTimestamp(
   timestamp: number,
-  style?: 't' | 'T' | 'd' | 'D' | 'f' | 'F' | 'R'
+  style?: 't' | 'T' | 'd' | 'D' | 'f' | 'F' | 'R',
 ): string {
   const suffix = style ? `:${style}` : '';
   return `<t:${Math.floor(timestamp / 1000)}${suffix}>`;

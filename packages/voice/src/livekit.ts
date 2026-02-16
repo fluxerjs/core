@@ -7,7 +7,7 @@
  */
 export function isLiveKitEndpoint(
   endpoint: string | null | undefined,
-  token?: string | null
+  token?: string | null,
 ): boolean {
   if (!endpoint || typeof endpoint !== 'string') return false;
   const s = endpoint.trim();

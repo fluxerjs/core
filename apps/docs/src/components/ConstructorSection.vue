@@ -14,8 +14,7 @@
         :key="i"
         :code="ex"
         language="javascript"
-        :link-types="true"
-      />
+        :link-types="true" />
     </div>
   </section>
 </template>

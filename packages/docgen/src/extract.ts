@@ -96,14 +96,16 @@ function getSource(node: ts.Node): DocSource | undefined {
 
 export function extractConstructor(
   checker: ts.TypeChecker,
-  node: ts.ConstructorDeclaration
+  node: ts.ConstructorDeclaration,
 ): DocConstructor | undefined {
   const comment = getJSDoc(node);
   const paramDescs = getParamDescriptions(comment);
 
   const params: DocParam[] = node.parameters.map((p) => {
     const name = (p.name as ts.Identifier).getText();
-    const type = p.type ? formatTypeNode(checker, p.type) : 'unknown';
+    const type = p.type
+      ? formatTypeNode(checker, p.type)
+      : formatTypeFromType(checker, checker.getTypeAtLocation(p));
     const optional = !!p.questionToken;
     const description = paramDescs.get(name);
     return { name, type, optional, description };
@@ -120,7 +122,7 @@ export function extractConstructor(
 
 export function extractProperty(
   checker: ts.TypeChecker,
-  node: ts.PropertyDeclaration | ts.PropertySignature
+  node: ts.PropertyDeclaration | ts.PropertySignature,
 ): DocProperty | null {
   const name = (node.name as ts.Identifier)?.getText();
   if (!name || name.startsWith('_')) return null;
@@ -130,7 +132,7 @@ export function extractProperty(
     ? formatTypeNode(checker, node.type)
     : formatTypeFromType(checker, checker.getTypeAtLocation(node));
   const readonly = !!(node as ts.PropertyDeclaration).modifiers?.some(
-    (m) => m.kind === ts.SyntaxKind.ReadonlyKeyword
+    (m) => m.kind === ts.SyntaxKind.ReadonlyKeyword,
   );
   const optional = !!(node as ts.PropertySignature).questionToken;
   const description = getDescriptionFromJSDoc(comment) || undefined;
@@ -148,7 +150,7 @@ export function extractProperty(
 
 export function extractMethod(
   checker: ts.TypeChecker,
-  node: ts.MethodDeclaration | ts.MethodSignature
+  node: ts.MethodDeclaration | ts.MethodSignature,
 ): DocMethod | null {
   const name = (node.name as ts.Identifier)?.getText();
   if (!name || name.startsWith('_')) return null;
@@ -158,7 +160,9 @@ export function extractMethod(
 
   const params: DocParam[] = (node.parameters ?? []).map((p) => {
     const pname = (p.name as ts.Identifier).getText();
-    const type = p.type ? formatTypeNode(checker, p.type) : 'unknown';
+    const type = p.type
+      ? formatTypeNode(checker, p.type)
+      : formatTypeFromType(checker, checker.getTypeAtLocation(p));
     const optional = !!p.questionToken;
     const description = paramDescs.get(pname);
     return { name: pname, type, optional, description };
@@ -169,12 +173,12 @@ export function extractMethod(
     : (node as ts.MethodDeclaration).body
       ? formatTypeFromType(
           checker,
-          checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)!)
+          checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)!),
         )
       : 'void';
 
   const async = !!(node as ts.MethodDeclaration).modifiers?.some(
-    (m) => m.kind === ts.SyntaxKind.AsyncKeyword
+    (m) => m.kind === ts.SyntaxKind.AsyncKeyword,
   );
 
   const deprecated = getDeprecatedFromJSDoc(comment);
@@ -192,9 +196,36 @@ export function extractMethod(
   };
 }
 
+export function extractGetterProperty(
+  checker: ts.TypeChecker,
+  node: ts.GetAccessorDeclaration,
+): DocProperty | null {
+  const name = (node.name as ts.Identifier)?.getText();
+  if (!name || name.startsWith('_')) return null;
+
+  const comment = getJSDoc(node);
+  const returnType = node.type
+    ? formatTypeNode(checker, node.type)
+    : formatTypeFromType(
+        checker,
+        checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)!),
+      );
+  const description = getDescriptionFromJSDoc(comment) || undefined;
+  const examples = getExamplesFromJSDoc(comment);
+
+  return {
+    name,
+    type: returnType,
+    readonly: true,
+    optional: false,
+    description,
+    examples: examples.length ? examples : undefined,
+  };
+}
+
 export function extractInterfaceProperty(
   checker: ts.TypeChecker,
-  node: ts.PropertySignature
+  node: ts.PropertySignature,
 ): DocInterfaceProperty | null {
   return extractProperty(checker, node) as DocInterfaceProperty | null;
 }

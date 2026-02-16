@@ -9,16 +9,14 @@
           href="https://github.com/fluxerjs/core"
           target="_blank"
           rel="noopener noreferrer"
-          class="footer-link"
-        >
+          class="footer-link">
           GitHub
         </a>
         <a
           href="https://fluxer.gg/fluxer-js"
           target="_blank"
           rel="noopener noreferrer"
-          class="footer-link"
-        >
+          class="footer-link">
           Fluxer
         </a>
       </nav>
@@ -30,7 +28,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
-const version = ref('1.0.9');
+const version = ref('1.1.0');
 
 onMounted(async () => {
   try {

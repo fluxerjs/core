@@ -1,3 +1,10 @@
+import type { APIUser } from './user.js';
+import type { APIGuildMember } from './user.js';
+import type { Snowflake } from '../common/snowflake.js';
+
+/** Application command option value (string, number, or boolean). */
+export type APIApplicationCommandOptionValue = string | number | boolean;
+
 /** Minimal application command interaction (slash command) payload from the gateway. */
 export interface APIApplicationCommandInteraction {
   id: string;
@@ -8,10 +15,12 @@ export interface APIApplicationCommandInteraction {
     id?: string;
     name: string;
     type?: number;
-    options?: Array<{ name: string; type: number; value?: unknown }>;
+    options?: Array<{ name: string; type: number; value?: APIApplicationCommandOptionValue }>;
   };
   guild_id?: string;
   channel_id?: string;
-  member?: unknown;
-  user?: unknown;
+  /** Guild member (when interaction is in a guild). Includes user. */
+  member?: APIGuildMember & { guild_id?: Snowflake };
+  /** User who ran the command (DM context or fallback). */
+  user?: APIUser;
 }

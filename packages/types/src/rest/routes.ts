@@ -57,6 +57,8 @@ export const Routes = {
   // Users
   user: (id: Snowflake) => `/users/${id}` as const,
   currentUser: () => `/users/@me` as const,
+  currentUserGuilds: () => `/users/@me/guilds` as const,
+  leaveGuild: (guildId: Snowflake) => `/users/@me/guilds/${guildId}` as const,
   userMeChannels: () => `/users/@me/channels` as const,
   userProfile: (id: Snowflake) => `/users/${id}/profile` as const,
 

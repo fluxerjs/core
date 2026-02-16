@@ -5,8 +5,7 @@
       class="version-trigger"
       :class="{ open: open }"
       @click="open = !open"
-      @blur="handleBlur"
-    >
+      @blur="handleBlur">
       <span class="version-trigger-label">v{{ displayVersion }}</span>
       <span class="version-trigger-chevron">▼</span>
     </button>
@@ -18,8 +17,7 @@
           type="button"
           class="version-option"
           :class="{ active: currentVersion === opt.value }"
-          @mousedown.prevent="selectVersion(opt.value)"
-        >
+          @mousedown.prevent="selectVersion(opt.value)">
           {{ opt.label }}
         </button>
       </div>
@@ -56,7 +54,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 const { availableVersions, latestVersion, currentVersion } = storeToRefs(versionStore);
 
 const displayVersion = computed(() =>
-  currentVersion.value === 'latest' ? latestVersion.value : currentVersion.value
+  currentVersion.value === 'latest' ? latestVersion.value : currentVersion.value,
 );
 
 const versionOptions = computed(() => {

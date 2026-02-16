@@ -21,6 +21,8 @@ export interface APIUserPartial {
   bot?: boolean;
   /** Whether this is an official system user */
   system?: boolean;
+  /** User banner hash (from profile, member, or invite context) */
+  banner?: string | null;
 }
 
 export type APIUser = APIUserPartial;

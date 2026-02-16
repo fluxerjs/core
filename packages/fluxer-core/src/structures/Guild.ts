@@ -1,14 +1,28 @@
 import { parseRoleMention } from '@fluxerjs/util';
+import { FluxerAPIError } from '@fluxerjs/rest';
 import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
+import { FluxerError } from '../errors/FluxerError.js';
+import { ErrorCodes } from '../errors/ErrorCodes.js';
 import { Collection } from '@fluxerjs/collection';
-import type { APIGuild, APIGuildAuditLog, APIGuildMember, APIRole } from '@fluxerjs/types';
+import type {
+  APIGuild,
+  APIGuildAuditLog,
+  APIGuildMember,
+  APIRole,
+  GuildFeature,
+  GuildVerificationLevel,
+  GuildMFALevel,
+  GuildExplicitContentFilter,
+  DefaultMessageNotifications,
+} from '@fluxerjs/types';
 import { GuildMember } from './GuildMember.js';
 import { Role } from './Role.js';
 import type { GuildChannel } from './Channel.js';
 import { CDN_URL } from '../util/Constants.js';
 import { Routes } from '@fluxerjs/types';
 import type { Webhook } from './Webhook.js';
+import type { GuildBan } from './GuildBan.js';
 
 /** Represents a Fluxer guild (server). */
 export class Guild extends Base {
@@ -18,19 +32,62 @@ export class Guild extends Base {
   icon: string | null;
   banner: string | null;
   readonly ownerId: string;
+  /** Invite splash image hash. Null if none. */
+  splash: string | null;
+  /** Custom vanity URL code (e.g. fluxer.gg/code). Null if none. */
+  vanityURLCode: string | null;
+  /** Enabled guild features. */
+  features: GuildFeature[];
+  verificationLevel: GuildVerificationLevel;
+  defaultMessageNotifications: DefaultMessageNotifications;
+  explicitContentFilter: GuildExplicitContentFilter;
+  /** AFK voice channel ID. Null if none. */
+  afkChannelId: string | null;
+  /** AFK timeout in seconds. */
+  afkTimeout: number;
+  /** System messages channel ID. Null if none. */
+  systemChannelId: string | null;
+  /** Rules/guidelines channel ID. Null if none. */
+  rulesChannelId: string | null;
+  nsfwLevel: number;
+  mfaLevel: GuildMFALevel;
+  /** Banner image width. Optional. */
+  bannerWidth?: number | null;
+  /** Banner image height. Optional. */
+  bannerHeight?: number | null;
+  /** Splash image width. Optional. */
+  splashWidth?: number | null;
+  /** Splash image height. Optional. */
+  splashHeight?: number | null;
   members = new Collection<string, GuildMember>();
   channels = new Collection<string, GuildChannel>();
   roles = new Collection<string, Role>();
 
   /** @param data - API guild from GET /guilds/{id} or gateway GUILD_CREATE */
-  constructor(client: Client, data: APIGuild & { roles?: APIRole[] }) {
+  constructor(client: Client, data: APIGuild & { roles?: APIRole[]; ownerId?: string }) {
     super();
     this.client = client;
     this.id = data.id;
     this.name = data.name;
     this.icon = data.icon ?? null;
     this.banner = data.banner ?? null;
-    this.ownerId = data.owner_id;
+    this.ownerId = data.owner_id ?? data.ownerId ?? '';
+    this.splash = data.splash ?? null;
+    this.vanityURLCode = data.vanity_url_code ?? null;
+    this.features = data.features ?? [];
+    this.verificationLevel = data.verification_level ?? 0;
+    this.defaultMessageNotifications = data.default_message_notifications ?? 0;
+    this.explicitContentFilter = data.explicit_content_filter ?? 0;
+    this.afkChannelId = data.afk_channel_id ?? null;
+    this.afkTimeout = data.afk_timeout ?? 0;
+    this.systemChannelId = data.system_channel_id ?? null;
+    this.rulesChannelId = data.rules_channel_id ?? null;
+    this.nsfwLevel = data.nsfw_level ?? 0;
+    this.mfaLevel = data.mfa_level ?? 0;
+    this.bannerWidth = data.banner_width ?? null;
+    this.bannerHeight = data.banner_height ?? null;
+    this.splashWidth = data.splash_width ?? null;
+    this.splashHeight = data.splash_height ?? null;
     for (const r of data.roles ?? []) {
       this.roles.set(r.id, new Role(client, r, this.id));
     }
@@ -48,6 +105,13 @@ export class Guild extends Base {
     if (!this.banner) return null;
     const size = options?.size ? `?size=${options.size}` : '';
     return `${CDN_URL}/banners/${this.id}/${this.banner}.png${size}`;
+  }
+
+  /** Get the guild splash (invite background) URL, or null if no splash. */
+  splashURL(options?: { size?: number }): string | null {
+    if (!this.splash) return null;
+    const size = options?.size ? `?size=${options.size}` : '';
+    return `${CDN_URL}/splashes/${this.id}/${this.splash}.png${size}`;
   }
 
   /**
@@ -81,7 +145,7 @@ export class Guild extends Base {
     if (parsed) return parsed;
     if (/^\d{17,19}$/.test(arg.trim())) return arg.trim();
     const cached = this.roles.find(
-      (r) => !!(r.name && r.name.toLowerCase() === arg.trim().toLowerCase())
+      (r) => !!(r.name && r.name.toLowerCase() === arg.trim().toLowerCase()),
     );
     if (cached) return cached.id;
     const roles = await this.client.rest.get(Routes.guildRoles(this.id));
@@ -95,18 +159,88 @@ export class Guild extends Base {
   }
 
   /**
+   * Ban a user from this guild.
+   * @param userId - The user ID to ban
+   * @param options - Optional reason, delete_message_days (0–7), and ban_duration_seconds (temporary ban).
+   *   ban_duration_seconds: 0 = permanent, or use 3600, 43200, 86400, 259200, 432000, 604800, 1209600, 2592000.
+   * Requires Ban Members permission.
+   */
+  async ban(
+    userId: string,
+    options?: { reason?: string; delete_message_days?: number; ban_duration_seconds?: number },
+  ): Promise<void> {
+    const body: Record<string, unknown> = {};
+    if (options?.reason) body.reason = options.reason;
+    if (options?.delete_message_days != null)
+      body.delete_message_days = options.delete_message_days;
+    if (options?.ban_duration_seconds != null)
+      body.ban_duration_seconds = options.ban_duration_seconds;
+    await this.client.rest.put(Routes.guildBan(this.id, userId), {
+      body: Object.keys(body).length ? body : undefined,
+      auth: true,
+    });
+  }
+
+  /**
+   * Fetch guild bans. Requires Ban Members permission.
+   * @returns List of GuildBan objects
+   */
+  async fetchBans(): Promise<GuildBan[]> {
+    const { GuildBan } = await import('./GuildBan.js');
+    const data = await this.client.rest.get<
+      import('@fluxerjs/types').APIBan[] | { bans?: import('@fluxerjs/types').APIBan[] }
+    >(Routes.guildBans(this.id));
+    const list = Array.isArray(data) ? data : (data?.bans ?? []);
+    return list.map((b) => new GuildBan(this.client, { ...b, guild_id: this.id }, this.id));
+  }
+
+  /**
+   * Remove a ban (unban a user).
+   * @param userId - The user ID to unban
+   * Requires Ban Members permission.
+   */
+  async unban(userId: string): Promise<void> {
+    await this.client.rest.delete(Routes.guildBan(this.id, userId), { auth: true });
+  }
+
+  /**
+   * Kick a member from this guild.
+   * @param userId - The user ID to kick
+   * Requires Kick Members permission.
+   */
+  async kick(userId: string): Promise<void> {
+    await this.client.rest.delete(Routes.guildMember(this.id, userId), { auth: true });
+  }
+
+  /**
    * Fetch a guild member by user ID.
    * @param userId - The user ID of the member to fetch
-   * @returns The guild member, or null if not found
+   * @returns The guild member
+   * @throws FluxerError with MEMBER_NOT_FOUND if user is not in the guild (404)
+   * @throws FluxerError with cause for permission denied (403) or other REST errors
    */
-  async fetchMember(userId: string): Promise<GuildMember | null> {
+  async fetchMember(userId: string): Promise<GuildMember> {
     try {
       const data = await this.client.rest.get<APIGuildMember & { user: { id: string } }>(
-        Routes.guildMember(this.id, userId)
+        Routes.guildMember(this.id, userId),
       );
-      return new GuildMember(this.client, { ...data, guild_id: this.id }, this);
-    } catch {
-      return null;
+      const member = new GuildMember(this.client, { ...data, guild_id: this.id }, this);
+      this.members.set(member.id, member);
+      return member;
+    } catch (err) {
+      const statusCode =
+        err instanceof FluxerAPIError
+          ? err.statusCode
+          : (err as { statusCode?: number })?.statusCode;
+      if (statusCode === 404) {
+        throw new FluxerError(`Member ${userId} not found in guild`, {
+          code: ErrorCodes.MemberNotFound,
+          cause: err as Error,
+        });
+      }
+      throw err instanceof FluxerError
+        ? err
+        : new FluxerError('Failed to fetch guild member', { cause: err as Error });
     }
   }
 
@@ -138,5 +272,72 @@ export class Guild extends Base {
     const data = await this.client.rest.get(Routes.guildWebhooks(this.id));
     const list = Array.isArray(data) ? data : Object.values(data ?? {});
     return list.map((w) => new Webhook(this.client, w));
+  }
+
+  /**
+   * Create a channel in this guild.
+   * @param data - Channel data: type (0=text, 2=voice, 4=category, 5=link), name, and optional parent_id, topic, bitrate, user_limit, nsfw, permission_overwrites
+   * Requires Manage Channels permission.
+   */
+  async createChannel(data: {
+    type: 0 | 2 | 4 | 5;
+    name: string;
+    parent_id?: string | null;
+    topic?: string | null;
+    bitrate?: number | null;
+    user_limit?: number | null;
+    nsfw?: boolean;
+    permission_overwrites?: Array<{ id: string; type: number; allow: string; deny: string }>;
+  }): Promise<GuildChannel> {
+    const { Channel } = await import('./Channel.js');
+    const created = await this.client.rest.post(Routes.guildChannels(this.id), {
+      body: data,
+      auth: true,
+    });
+    const channel = Channel.from(this.client, created as import('@fluxerjs/types').APIChannel);
+    if (channel) {
+      this.client.channels.set(channel.id, channel);
+      this.channels.set(channel.id, channel as GuildChannel);
+    }
+    return channel as GuildChannel;
+  }
+
+  /**
+   * Fetch all channels in this guild.
+   * @returns Array of GuildChannel objects (cached in guild.channels and client.channels)
+   */
+  async fetchChannels(): Promise<GuildChannel[]> {
+    const { Channel } = await import('./Channel.js');
+    const data = await this.client.rest.get(Routes.guildChannels(this.id));
+    const list = Array.isArray(data) ? data : Object.values(data ?? {});
+    const channels: GuildChannel[] = [];
+    for (const ch of list) {
+      const channel = Channel.from(this.client, ch as import('@fluxerjs/types').APIChannel);
+      if (channel) {
+        this.client.channels.set(channel.id, channel);
+        this.channels.set(channel.id, channel as GuildChannel);
+        channels.push(channel as GuildChannel);
+      }
+    }
+    return channels;
+  }
+
+  /**
+   * Update channel positions.
+   * @param updates - Array of { id, position?, parent_id?, lock_permissions? }
+   * Requires Manage Channels permission.
+   */
+  async setChannelPositions(
+    updates: Array<{
+      id: string;
+      position?: number;
+      parent_id?: string | null;
+      lock_permissions?: boolean;
+    }>,
+  ): Promise<void> {
+    await this.client.rest.patch(Routes.guildChannels(this.id), {
+      body: updates,
+      auth: true,
+    });
   }
 }

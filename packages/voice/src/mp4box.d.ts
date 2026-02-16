@@ -20,7 +20,7 @@ declare module 'mp4box' {
         timescale: number;
         dts: number;
         duration: number;
-      }>
+      }>,
     ) => void;
     appendBuffer(data: ArrayBuffer): number;
     flush(): void;

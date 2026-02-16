@@ -9,15 +9,16 @@ import type { Client } from './Client.js';
 export class MessageManager {
   constructor(
     private readonly client: Client,
-    private readonly channelId: string
+    private readonly channelId: string,
   ) {}
 
   /**
    * Fetch a message by ID from this channel.
    * @param messageId - Snowflake of the message
-   * @returns The message, or null if not found
+   * @returns The message
+   * @throws FluxerError with MESSAGE_NOT_FOUND if the message does not exist
    */
-  async fetch(messageId: string): Promise<import('../structures/Message.js').Message | null> {
+  async fetch(messageId: string): Promise<import('../structures/Message.js').Message> {
     return this.client.channels.fetchMessage(this.channelId, messageId);
   }
 }

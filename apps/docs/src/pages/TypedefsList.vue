@@ -17,8 +17,7 @@
             v-for="i in interfaces"
             :key="i.name"
             :to="{ name: 'typedef', params: { version: routeVersion, typedef: i.name } }"
-            class="type-card type-card-interface"
-          >
+            class="type-card type-card-interface">
             <code class="type-name">{{ i.name }}</code>
             <p v-if="i.description" class="type-desc">{{ i.description }}</p>
           </router-link>
@@ -35,8 +34,7 @@
             v-for="e in enums"
             :key="e.name"
             :to="{ name: 'typedef', params: { version: routeVersion, typedef: e.name } }"
-            class="type-card type-card-enum"
-          >
+            class="type-card type-card-enum">
             <code class="type-name">{{ e.name }}</code>
             <p v-if="e.description" class="type-desc">{{ e.description }}</p>
           </router-link>

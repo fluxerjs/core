@@ -3,9 +3,10 @@ import type {
   APIMessage,
   APIChannel,
   APIGuild,
+  APIGuildMember,
+  APIRole,
   APIUser,
   APIUserPartial,
-  APIGuildMember,
   APIApplicationCommandInteraction,
 } from '@fluxerjs/types';
 import type {
@@ -34,7 +35,17 @@ const handlers = new Map<string, DispatchHandler>();
 
 handlers.set('MESSAGE_CREATE', async (client, d) => {
   const { Message } = await import('../structures/Message.js');
-  client.emit(Events.MessageCreate, new Message(client, d as APIMessage));
+  const { GuildMember } = await import('../structures/GuildMember.js');
+  const data = d as APIMessage & { member?: APIGuildMember };
+  if (data.guild_id && data.member && data.author) {
+    const guild = client.guilds.get(data.guild_id);
+    if (guild) {
+      const memberData = { ...data.member, user: data.author, guild_id: data.guild_id };
+      const member = new GuildMember(client, memberData, guild);
+      guild.members.set(member.id, member);
+    }
+  }
+  client.emit(Events.MessageCreate, new Message(client, data));
 });
 
 handlers.set('MESSAGE_UPDATE', async (client, d) => {
@@ -61,7 +72,15 @@ handlers.set('MESSAGE_REACTION_ADD', async (client, d) => {
     username: 'Unknown',
     discriminator: '0',
   } as APIUserPartial);
-  client.emit(Events.MessageReactionAdd, reaction, user);
+  client.emit(
+    Events.MessageReactionAdd,
+    reaction,
+    user,
+    reaction.messageId,
+    reaction.channelId,
+    reaction.emoji,
+    user.id,
+  );
 });
 
 handlers.set('MESSAGE_REACTION_REMOVE', async (client, d) => {
@@ -73,7 +92,15 @@ handlers.set('MESSAGE_REACTION_REMOVE', async (client, d) => {
     username: 'Unknown',
     discriminator: '0',
   } as APIUserPartial);
-  client.emit(Events.MessageReactionRemove, reaction, user);
+  client.emit(
+    Events.MessageReactionRemove,
+    reaction,
+    user,
+    reaction.messageId,
+    reaction.channelId,
+    reaction.emoji,
+    user.id,
+  );
 });
 
 handlers.set('MESSAGE_REACTION_REMOVE_ALL', async (client, d) => {
@@ -83,14 +110,19 @@ handlers.set('MESSAGE_REACTION_REMOVE_ALL', async (client, d) => {
 handlers.set('MESSAGE_REACTION_REMOVE_EMOJI', async (client, d) => {
   client.emit(
     Events.MessageReactionRemoveEmoji,
-    d as GatewayMessageReactionRemoveEmojiDispatchData
+    d as GatewayMessageReactionRemoveEmojiDispatchData,
   );
 });
 
 handlers.set('GUILD_CREATE', async (client, d) => {
   const { Guild } = await import('../structures/Guild.js');
   const { Channel } = await import('../structures/Channel.js');
-  const guild = new Guild(client, d as APIGuild);
+  const raw = d as APIGuild & { properties?: Record<string, unknown>; roles?: unknown };
+  const guildData: APIGuild & { roles?: APIRole[] } =
+    raw?.properties != null
+      ? ({ ...raw.properties, roles: raw.roles } as APIGuild & { roles?: APIRole[] })
+      : (raw as APIGuild);
+  const guild = new Guild(client, guildData);
   client.guilds.set(guild.id, guild);
   const g = d as APIGuild & {
     channels?: APIChannel[];
@@ -108,9 +140,13 @@ handlers.set('GUILD_CREATE', async (client, d) => {
 
 handlers.set('GUILD_UPDATE', async (client, d) => {
   const { Guild } = await import('../structures/Guild.js');
-  const g = d as APIGuild;
-  const old = client.guilds.get(g.id);
-  const updated = new Guild(client, g);
+  const raw = d as APIGuild & { properties?: Record<string, unknown>; roles?: unknown };
+  const guildData: APIGuild & { roles?: APIRole[] } =
+    raw?.properties != null
+      ? ({ ...raw.properties, roles: raw.roles } as APIGuild & { roles?: APIRole[] })
+      : (raw as APIGuild);
+  const old = client.guilds.get(guildData.id);
+  const updated = new Guild(client, guildData);
   client.guilds.set(updated.id, updated);
   client.emit(Events.GuildUpdate, old ?? updated, updated);
 });

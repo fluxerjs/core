@@ -11,6 +11,14 @@ export interface APIEmbedFooter {
   proxy_icon_url?: string;
 }
 
+/** Bitwise flags for embed media. */
+export const EmbedMediaFlags = {
+  /** Embed media contains explicit content */
+  CONTAINS_EXPLICIT_MEDIA: 16,
+  /** Embed media is animated */
+  IS_ANIMATED: 32,
+} as const;
+
 export interface APIEmbedMedia {
   url: string;
   proxy_url?: string | null;
@@ -22,7 +30,7 @@ export interface APIEmbedMedia {
   /** Base64 placeholder for lazy loading */
   placeholder?: string | null;
   duration?: number | null;
-  /** EmbedMediaFlags bitfield (e.g. CONTAINS_EXPLICIT_MEDIA) */
+  /** EmbedMediaFlags bitfield (e.g. EmbedMediaFlags.CONTAINS_EXPLICIT_MEDIA) */
   flags?: number | null;
 }
 

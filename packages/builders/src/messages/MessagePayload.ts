@@ -53,14 +53,14 @@ export class MessagePayload {
   setAttachments(
     attachments: Array<
       AttachmentBuilder | { id: number; filename: string; description?: string | null }
-    > | null
+    > | null,
   ): this {
     if (!attachments?.length) {
       this.data.attachments = undefined;
       return this;
     }
     this.data.attachments = attachments.map((a) =>
-      a instanceof AttachmentBuilder ? a.toJSON() : a
+      a instanceof AttachmentBuilder ? a.toJSON() : a,
     );
     return this;
   }
@@ -70,7 +70,7 @@ export class MessagePayload {
     reference:
       | { channel_id: string; message_id: string; guild_id?: string | null }
       | APIMessageReference
-      | null
+      | null,
   ): this {
     if (!reference) {
       this.data.message_reference = undefined;

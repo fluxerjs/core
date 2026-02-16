@@ -8,8 +8,7 @@
           type="button"
           class="filter-pill"
           :class="{ active: selectedVersion === null }"
-          @click="selectedVersion = null"
-        >
+          @click="selectedVersion = null">
           All versions
         </button>
         <button
@@ -18,8 +17,7 @@
           type="button"
           class="filter-pill"
           :class="{ active: selectedVersion === v }"
-          @click="selectedVersion = v"
-        >
+          @click="selectedVersion = v">
           v{{ v }}
         </button>
       </div>
@@ -29,8 +27,7 @@
         v-for="entry in filteredChangelog"
         :id="`v${entry.version}`"
         :key="entry.version"
-        class="changelog-entry"
-      >
+        class="changelog-entry">
         <header class="entry-header">
           <h2 class="entry-version">
             v{{ entry.version }}
@@ -38,8 +35,7 @@
               type="button"
               class="copy-link-btn"
               :aria-label="`Copy link to v${entry.version}`"
-              @click="copyLink(`#v${entry.version}`)"
-            >
+              @click="copyLink(`#v${entry.version}`)">
               #
             </button>
           </h2>
@@ -49,16 +45,14 @@
           v-for="section in entry.sections"
           :id="`v${entry.version}-${sectionSlug(section.title)}`"
           :key="section.title"
-          class="section"
-        >
+          class="section">
           <h3 class="section-title">
             {{ section.title }}
             <button
               type="button"
               class="copy-link-btn"
               :aria-label="`Copy link to ${section.title}`"
-              @click="copyLink(`#v${entry.version}-${sectionSlug(section.title)}`)"
-            >
+              @click="copyLink(`#v${entry.version}-${sectionSlug(section.title)}`)">
               #
             </button>
           </h3>
@@ -95,7 +89,7 @@ watch(
   (v) => {
     selectedVersion.value = v && versions.includes(v) ? v : null;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(selectedVersion, (v) => {
@@ -109,7 +103,7 @@ watch(selectedVersion, (v) => {
 const filteredChangelog = computed(() =>
   selectedVersion.value
     ? changelogEntries.filter((e) => e.version === selectedVersion.value)
-    : changelogEntries
+    : changelogEntries,
 );
 
 function sectionSlug(title: string): string {

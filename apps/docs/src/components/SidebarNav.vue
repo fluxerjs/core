@@ -20,8 +20,7 @@
             :to="versionedPath(`/docs/classes/${c.name}`)"
             class="sidebar-link sidebar-link-class"
             active-class="active"
-            :title="c.name"
-          >
+            :title="c.name">
             {{ c.name }}
           </router-link>
         </div>
@@ -38,8 +37,7 @@
             :to="versionedPath(`/docs/typedefs/${i.name}`)"
             class="sidebar-link sidebar-link-interface"
             active-class="active"
-            :title="i.name"
-          >
+            :title="i.name">
             {{ i.name }}
           </router-link>
         </div>
@@ -56,8 +54,7 @@
             :to="versionedPath(`/docs/typedefs/${e.name}`)"
             class="sidebar-link sidebar-link-enum"
             active-class="active"
-            :title="e.name"
-          >
+            :title="e.name">
             {{ e.name }}
           </router-link>
         </div>

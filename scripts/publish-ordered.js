@@ -29,7 +29,7 @@ const PACKAGES = [
 ];
 
 const args = process.argv.slice(2);
-const delaySec = parseInt(args.find((a) => a.startsWith('--delay='))?.split('=')[1] || '1', 1);
+const delaySec = parseInt(args.find((a) => a.startsWith('--delay='))?.split('=')[1] || '1', 10);
 const otp = args.find((a) => a.startsWith('--otp='));
 const otpArg = otp ? ` ${otp}` : '';
 

@@ -10,6 +10,8 @@ export class GuildBan extends Base {
   readonly guildId: string;
   readonly user: User;
   readonly reason: string | null;
+  /** ISO timestamp when a temporary ban expires. Null for permanent bans. */
+  readonly expiresAt: string | null;
 
   /** @param data - API ban from GET /guilds/{id}/bans or gateway GUILD_BAN_ADD */
   constructor(client: Client, data: APIBan & { guild_id?: string }, guildId: string) {
@@ -18,6 +20,7 @@ export class GuildBan extends Base {
     this.guildId = data.guild_id ?? guildId;
     this.user = client.getOrCreateUser(data.user);
     this.reason = data.reason ?? null;
+    this.expiresAt = data.expires_at ?? null;
   }
 
   /**

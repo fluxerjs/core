@@ -8,8 +8,7 @@
         aria-modal="true"
         :aria-label="searchContextLabel"
         @click.self="close"
-        @keydown="handleKeydown"
-      >
+        @keydown="handleKeydown">
         <div ref="modalRef" class="search-modal">
           <div class="search-input-wrap">
             <span class="search-icon" aria-hidden>⌘K</span>
@@ -24,8 +23,7 @@
               @keydown.esc="close"
               @keydown.down.prevent="selectNext"
               @keydown.up.prevent="selectPrev"
-              @keydown.enter="navigateSelected"
-            />
+              @keydown.enter="navigateSelected" />
           </div>
 
           <div v-if="query.length >= 1" class="search-results">
@@ -36,8 +34,7 @@
                 :to="searchResultTo(r)"
                 class="result-row"
                 :class="{ selected: i === selectedIndex }"
-                @click="close"
-              >
+                @click="close">
                 <span :class="['result-type', 'type-' + r.type]">{{ typeLabel(r.type) }}</span>
                 <span class="result-name">{{
                   r.type === 'guide' ? r.name : r.parent ? `${r.parent}.${r.name}` : r.name
@@ -128,7 +125,7 @@ const selectedIndex = ref(0);
 function getFocusables(): HTMLElement[] {
   if (!modalRef.value) return [];
   const focusables = modalRef.value.querySelectorAll<HTMLElement>(
-    'input:not([disabled]), button:not([disabled]), a[href]'
+    'input:not([disabled]), button:not([disabled]), a[href]',
   );
   return Array.from(focusables).filter((el) => (el as HTMLElement).offsetParent !== null);
 }
@@ -170,7 +167,7 @@ watch(
       selectedIndex.value = 0;
       requestAnimationFrame(() => inputRef.value?.focus());
     }
-  }
+  },
 );
 
 watch(filtered, () => {

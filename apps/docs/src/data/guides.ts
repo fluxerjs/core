@@ -15,7 +15,14 @@ export interface Guide {
   slug: string;
   title: string;
   description: string;
-  category: 'getting-started' | 'webhooks' | 'voice' | 'sending-messages' | 'events' | 'other';
+  category:
+    | 'getting-started'
+    | 'webhooks'
+    | 'voice'
+    | 'sending-messages'
+    | 'media'
+    | 'events'
+    | 'other';
   sections: GuideSection[];
 }
 
@@ -213,10 +220,18 @@ await client.channels.send(channelId, 'New update available!');`,
     id: 'embeds',
     slug: 'embeds',
     title: 'Embeds',
-    description: 'Send rich embeds with EmbedBuilder.',
+    description:
+      'Complete reference for EmbedBuilder: title, description, author, footer, fields, color, media, and more.',
     category: 'sending-messages',
     sections: [
       {
+        title: 'Overview',
+        description:
+          'Use EmbedBuilder to create rich embeds. Call toJSON() when passing to reply(), send(), or edit(). An embed must have at least one of: title, description, fields, or image/thumbnail. A description-only embed (no title) is valid.',
+      },
+      {
+        title: 'Basic embed',
+        description: 'Minimal embed with title, description, color, fields, footer, and timestamp.',
         code: `import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
 
 const client = new Client({ intents: 0 });
@@ -240,6 +255,124 @@ client.on(Events.MessageCreate, async (message) => {
 
 await client.login(process.env.FLUXER_BOT_TOKEN);`,
         language: 'javascript',
+      },
+      {
+        title: 'Title, Description, and URL',
+        description:
+          'setTitle() and setDescription() accept strings (max 256 and 4096 chars). setURL() makes the title a clickable link.',
+        code: `const embed = new EmbedBuilder()
+  .setTitle('Clickable Title')
+  .setDescription('Main body text here.')
+  .setURL('https://example.com');`,
+        language: 'javascript',
+      },
+      {
+        title: 'Color',
+        description:
+          'setColor() accepts: number (0x5865f2), hex string ("#5865f2"), or [r, g, b] array.',
+        code: `embed.setColor(0x5865f2);
+embed.setColor('#57f287');
+embed.setColor([88, 101, 242]);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Author',
+        description: 'setAuthor() adds a header line with name. Optional: iconURL, url.',
+        code: `embed.setAuthor({
+  name: 'Fluxer.js',
+  iconURL: 'https://example.com/icon.png',
+  url: 'https://fluxerjs.dev',
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Footer',
+        description: 'setFooter() adds text at the bottom. Optional: iconURL.',
+        code: `embed.setFooter({
+  text: 'Powered by Fluxer.js',
+  iconURL: 'https://example.com/footer-icon.png',
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Timestamp',
+        description:
+          'setTimestamp() shows a date. Omit or pass null for current time. Pass Date or number (ms) for a specific time.',
+        code: `embed.setTimestamp();                    // current time
+embed.setTimestamp(new Date('2026-01-01'));
+embed.setTimestamp(Date.now() - 3600000);  // 1 hour ago`,
+        language: 'javascript',
+      },
+      {
+        title: 'Fields',
+        description:
+          'addFields() adds name/value pairs. Max 25 fields. Use inline: true for side-by-side layout. spliceFields() to insert/remove.',
+        code: `embed.addFields(
+  { name: 'Field 1', value: 'Value 1', inline: true },
+  { name: 'Field 2', value: 'Value 2', inline: true },
+  { name: 'Long field', value: 'Not inline, full width' }
+);
+
+// Insert/replace fields
+embed.spliceFields(1, 1, { name: 'Replaced', value: 'New value' });`,
+        language: 'javascript',
+      },
+      {
+        title: 'Image and Thumbnail',
+        description:
+          'setImage() adds a large image. setThumbnail() adds a small image (e.g. top-right). Pass a URL string or EmbedMediaOptions (url, width, height, content_type, etc).',
+        code: `embed.setImage('https://example.com/image.png');
+embed.setThumbnail('https://example.com/thumb.png');
+
+// With metadata
+embed.setImage({
+  url: 'https://example.com/image.png',
+  width: 400,
+  height: 200,
+  content_type: 'image/png',
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Video and Audio',
+        description:
+          'setVideo() and setAudio() add video/audio to embeds (Fluxer supports these). Pass URL or EmbedMediaOptions. Include a title when using video. See Embed Media guide for full examples.',
+        code: `embed.setVideo('https://example.com/video.mp4');
+embed.setAudio({
+  url: 'https://example.com/audio.mp3',
+  duration: 120,
+  content_type: 'audio/mpeg',
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Multiple embeds',
+        description: 'Messages can include up to 10 embeds. Pass an array to embeds.',
+        code: `await message.reply({
+  embeds: [
+    new EmbedBuilder().setTitle('First').setColor(0x5865f2).toJSON(),
+    new EmbedBuilder().setTitle('Second').setColor(0x57f287).toJSON(),
+  ],
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Load from existing embed',
+        description:
+          'EmbedBuilder.from() creates a builder from an API embed (e.g. from a received message). Edit and toJSON() to send.',
+        code: `const existing = message.embeds[0];
+if (existing) {
+  const edited = EmbedBuilder.from(existing)
+    .setTitle('Updated title')
+    .setColor(0x57f287);
+  await message.edit({ embeds: [edited.toJSON()] });
+}`,
+        language: 'javascript',
+      },
+      {
+        title: 'Limits',
+        description:
+          'Title ≤256, description ≤4096, field name ≤256, field value ≤1024, footer ≤2048, author name ≤256. Max 25 fields. Combined title+description+fields+footer ≤6000 chars.',
       },
     ],
   },
@@ -312,6 +445,279 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
     ],
   },
   {
+    id: 'embed-media',
+    slug: 'embed-media',
+    title: 'Embed Media',
+    description:
+      'Add images, thumbnails, video, and audio to embeds with EmbedBuilder and EmbedMediaOptions.',
+    category: 'media',
+    sections: [
+      {
+        title: 'Images and Thumbnails',
+        description:
+          'Use setImage() and setThumbnail() with a URL string, or pass full EmbedMediaOptions for width, height, content_type, and other metadata.',
+        code: `import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!embedimg') {
+    const embed = new EmbedBuilder()
+      .setTitle('Image Embed')
+      .setDescription('Simple image from URL.')
+      .setImage('https://placehold.co/400x200/5865f2/white?text=Image')
+      .setThumbnail('https://placehold.co/100x100/57f287/white?text=Thumb')
+      .setColor(0x5865f2);
+
+    await message.reply({ embeds: [embed.toJSON()] });
+  }
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Image with Full Media Options',
+        description:
+          'Pass an object to setImage or setThumbnail with url, width, height, content_type, description, placeholder, duration, and flags. Use EmbedMediaFlags.IS_ANIMATED for animated GIFs.',
+        code: `const embed = new EmbedBuilder()
+  .setTitle('Image with metadata')
+  .setDescription('EmbedMediaOptions: width, height')
+  .setImage({
+    url: 'https://placehold.co/400x200/5865f2/white?text=Image',
+    width: 400,
+    height: 200,
+    content_type: 'image/png',
+  })
+  .setColor(0x5865f2);`,
+        language: 'javascript',
+      },
+      {
+        title: 'GIFs in embeds',
+        description:
+          'Embeds require GIF format for animated images (not MP4). Add EmbedMediaFlags.IS_ANIMATED to the flags field. For Tenor URLs, use resolveTenorToImageUrl() to get the GIF URL and flag — see the GIFs (Tenor) guide.',
+      },
+      {
+        title: 'Video in Embeds',
+        description:
+          'Use setVideo() to add video to a rich embed. Fluxer supports the .video field. Include a title when using video. Pass a URL or EmbedMediaOptions (e.g. duration for progress bars).',
+        code: `const embed = new EmbedBuilder()
+  .setTitle('Video embed')
+  .setDescription('Rich embed with video field.')
+  .setVideo('https://example.com/sample.mp4')
+  .setURL('https://example.com/sample.mp4')
+  .setColor(0x5865f2);
+
+// With full options (duration, dimensions for progress bar):
+const embedWithDuration = new EmbedBuilder()
+  .setTitle('Video with metadata')
+  .setVideo({
+    url: 'https://example.com/video.mp4',
+    duration: 120,
+    width: 1280,
+    height: 720,
+  })
+  .setColor(0x5865f2);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Audio in Embeds',
+        description:
+          'Use setAudio() to add audio to an embed. Pass a URL or EmbedMediaOptions (e.g. duration, content_type).',
+        code: `const embed = new EmbedBuilder()
+  .setTitle('Audio embed')
+  .setDescription('Rich embed with audio field.')
+  .setAudio({
+    url: 'https://example.com/sample.mp3',
+    duration: 180,
+    content_type: 'audio/mpeg',
+  })
+  .setColor(0x5865f2);`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'gifs',
+    slug: 'gifs',
+    title: 'GIFs (Tenor)',
+    description:
+      'Send Tenor GIFs as content (gifv) or in embeds using resolveTenorToImageUrl() for GIF URLs.',
+    category: 'media',
+    sections: [
+      {
+        title: 'How Tenor GIFs Work',
+        description:
+          'Tenor embeds are created by the Fluxer unfurler when you send a Tenor URL as message content. Do not use custom embeds for Tenor GIFs—the API turns the URL into a type: "gifv" embed.',
+      },
+      {
+        title: 'Send a Tenor GIF',
+        description:
+          'Send the Tenor URL as content. No embeds needed. The unfurler detects the URL and creates the gifv embed.',
+        code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!gif') {
+    const tenorUrl = 'https://tenor.com/view/stressed-gif-7048057395502071840';
+    await message.reply({ content: tenorUrl });
+  }
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Tenor URL in an embed',
+        description:
+          'Tenor page URLs do not work as setImage() URLs. Use resolveTenorToImageUrl() to fetch the Tenor page or oEmbed, derive the GIF URL (embeds require GIF, not MP4), and return { url, flags: IS_ANIMATED }. For full gifv embeds, send the Tenor URL as content.',
+        code: `import { EmbedBuilder, resolveTenorToImageUrl } from '@fluxerjs/core';
+
+const tenorUrl = 'https://tenor.com/view/stressed-gif-7048057395502071840';
+const media = await resolveTenorToImageUrl(tenorUrl);
+if (media) {
+  const embed = new EmbedBuilder()
+    .setTitle('Tenor in embed')
+    .setDescription('GIF URL + IS_ANIMATED flag')
+    .setImage(media)
+    .setColor(0x5865f2);
+  await message.reply({ embeds: [embed.toJSON()] });
+}`,
+        language: 'javascript',
+      },
+      {
+        title: 'Important',
+        description:
+          'Custom embeds cannot create gifv embeds. For full animated gifv, send the Tenor URL as content. resolveTenorToImageUrl() returns GIF URL + IS_ANIMATED (derived from media.tenor.com path).',
+      },
+    ],
+  },
+  {
+    id: 'attachments',
+    slug: 'attachments',
+    title: 'File Attachments',
+    description:
+      'Upload files with messages and set attachment metadata (title, description, flags for spoiler, animated, explicit).',
+    category: 'media',
+    sections: [
+      {
+        title: 'Basic File Upload',
+        description:
+          'Pass files in your send options. Each file needs a name and data (Buffer, Blob, Uint8Array). Use with message.reply(), message.send(), or channel.send().',
+        code: `import { Client, Events } from '@fluxerjs/core';
+import { readFileSync } from 'fs';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!file') {
+    const data = Buffer.from('Hello from Fluxer!', 'utf-8');
+    await message.reply({
+      content: 'Here is a file:',
+      files: [{ name: 'hello.txt', data }],
+    });
+  }
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Attachment Metadata',
+        description:
+          'When using files, you can pass attachments to set metadata per file: filename, title, description, and flags. The id in each attachment matches the file index (0, 1, 2...).',
+        code: `import { MessageAttachmentFlags } from '@fluxerjs/core';
+
+await message.reply({
+  content: 'Spoiler image:',
+  files: [{ name: 'secret.png', data: imageBuffer }],
+  attachments: [
+    {
+      id: 0,
+      filename: 'secret.png',
+      title: 'Hidden image',
+      flags: MessageAttachmentFlags.IS_SPOILER,
+    },
+  ],
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Attachment Flags',
+        description:
+          'MessageAttachmentFlags: IS_SPOILER (8) blurs until clicked, CONTAINS_EXPLICIT_MEDIA (16) for explicit content, IS_ANIMATED (32) for GIFs and animated WebP. Combine with bitwise OR.',
+        code: `import { MessageAttachmentFlags } from '@fluxerjs/core';
+
+// Spoiler (blurred until clicked)
+flags: MessageAttachmentFlags.IS_SPOILER
+
+// Animated image (GIF, animated WebP)
+flags: MessageAttachmentFlags.IS_ANIMATED
+
+// Combine flags
+flags: MessageAttachmentFlags.IS_SPOILER | MessageAttachmentFlags.IS_ANIMATED`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'profile-urls',
+    slug: 'profile-urls',
+    title: 'Profile URLs',
+    description:
+      'Get avatar, banner, and other CDN URLs easily with User/Webhook/GuildMember methods or standalone CDN helpers for raw API data.',
+    category: 'media',
+    sections: [
+      {
+        title: 'User avatar and banner',
+        description:
+          'When you have a User object (e.g. message.author), use avatarURL(), displayAvatarURL(), and bannerURL(). These handle animated avatars (a_ prefix) and default fallbacks.',
+        code: `import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!avatar') {
+    const user = message.author;
+    // avatarURL() returns null if no custom avatar; displayAvatarURL() uses default
+    const avatarUrl = user.displayAvatarURL({ size: 256 });
+    const bannerUrl = user.bannerURL({ size: 512 });
+
+    const embed = new EmbedBuilder()
+      .setTitle(\`\${user.username}'s profile\`)
+      .setThumbnail(avatarUrl)
+      .setColor(user.avatarColor ?? 0x5865f2);
+    if (bannerUrl) embed.setImage(bannerUrl);
+    await message.reply({ embeds: [embed.toJSON()] });
+  }
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Raw API data: CDN helpers',
+        description:
+          'When you have raw API data (e.g. from client.rest.get(Routes.user(id))), use the standalone CDN helpers. They work with id + hash and support size and extension options.',
+        code: `import { cdnAvatarURL, cdnBannerURL } from '@fluxerjs/core';
+
+// From REST response
+const userData = await client.rest.get(Routes.user(userId));
+const avatarUrl = cdnAvatarURL(userData.id, userData.avatar, { size: 256 });
+const bannerUrl = cdnBannerURL(userData.id, profile?.banner ?? null, { size: 512 });
+
+// Or use User: client.getOrCreateUser(userData) then user.displayAvatarURL()
+const user = client.getOrCreateUser(userData);
+const avatarUrl2 = user.displayAvatarURL({ size: 256 });`,
+        language: 'javascript',
+      },
+      {
+        title: 'Guild member and webhook avatars',
+        description:
+          'GuildMember has displayAvatarURL() (guild avatar or fallback to user) and bannerURL(). Webhook has avatarURL().',
+        code: `// Member avatar (guild-specific or user fallback)
+const memberAvatar = member.displayAvatarURL({ size: 128 });
+
+// Webhook avatar
+const webhookAvatar = webhook.avatarURL({ size: 64 });`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
     id: 'reactions',
     slug: 'reactions',
     title: 'Reactions',
@@ -348,17 +754,17 @@ await message.removeAllReactions();`,
       {
         title: 'Listen for Reactions',
         description:
-          'MessageReactionAdd and MessageReactionRemove emit (reaction, user). Use reaction.emoji, reaction.messageId, reaction.channelId, reaction.guildId, or reaction.fetchMessage() to get the full message.',
-        code: `client.on(Events.MessageReactionAdd, async (reaction, user) => {
-  if (reaction.emoji.name === '👍') {
-    console.log(\`User \${user.id} voted yes on message \${reaction.messageId}\`);
+          'MessageReactionAdd and MessageReactionRemove emit (reaction, user, messageId, channelId, emoji, userId). Use client.on(Events.X, handler) or client.events.MessageReactionAdd(handler).',
+        code: `client.on(Events.MessageReactionAdd, async (reaction, user, messageId, channelId, emoji, userId) => {
+  if (emoji.name === '👍') {
+    console.log(\`User \${userId} voted yes on message \${messageId}\`);
     const message = await reaction.fetchMessage();
     if (message) await message.react('✅');
   }
 });
 
-client.on(Events.MessageReactionRemove, (reaction, user) => {
-  console.log(\`User \${user.id} removed \${reaction.emoji.name} from message \${reaction.messageId}\`);
+client.on(Events.MessageReactionRemove, (reaction, user, messageId, channelId, emoji, userId) => {
+  console.log(\`User \${userId} removed \${emoji.name} from message \${messageId}\`);
 });`,
         language: 'javascript',
       },
@@ -448,6 +854,20 @@ await webhook.send({
         language: 'javascript',
       },
       {
+        title: 'Embeds without a title',
+        description:
+          'Embeds can use only a description—no title required. At least one of title, description, fields, or image is needed.',
+        code: `await webhook.send({
+  embeds: [
+    new EmbedBuilder()
+      .setDescription('Description-only embed works.')
+      .setColor(0x5865f2)
+      .toJSON(),
+  ],
+});`,
+        language: 'javascript',
+      },
+      {
         title: 'Fetching & Listing Webhooks',
         description:
           'Fetch by ID or list channel/guild webhooks. Requires a logged-in bot. Fetched webhooks have no token and cannot send—but you can edit or delete them with bot auth.',
@@ -494,6 +914,86 @@ await fetched.edit({
         title: 'Deleting a Webhook',
         code: `const webhook = await Webhook.fetch(client, webhookId);
 await webhook.delete();`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'webhook-attachments-embeds',
+    slug: 'webhook-attachments-embeds',
+    title: 'Webhook Attachments & Embeds',
+    description:
+      'Send embeds with or without a title, and attach files to webhook messages—same API as channel messages.',
+    category: 'webhooks',
+    sections: [
+      {
+        title: 'Overview',
+        description:
+          'Webhooks support rich embeds and file attachments. Embeds can have just a description (no title required), and you can attach files the same way as with channel.send or message.reply.',
+      },
+      {
+        title: 'Embeds Without a Title',
+        description:
+          'You do not need a title for embeds to work. At least one of title, description, fields, or image/thumbnail is required. A description-only embed is valid.',
+        code: `import { Client, Webhook, EmbedBuilder } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+const webhook = Webhook.fromToken(client, webhookId, webhookToken);
+
+// Description only—no title
+await webhook.send({
+  embeds: [
+    new EmbedBuilder()
+      .setDescription('This embed has no title. Description-only works fine.')
+      .setColor(0x5865f2)
+      .setTimestamp()
+      .toJSON(),
+  ],
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Direct Attachments',
+        description:
+          'Attach files to webhook messages using the files array. Each file needs name and data (Blob, ArrayBuffer, or Uint8Array). Optional filename overrides the display name.',
+        code: `import { Client, Webhook } from '@fluxerjs/core';
+import { readFileSync } from 'fs';
+
+const client = new Client({ intents: 0 });
+const webhook = Webhook.fromToken(client, webhookId, webhookToken);
+
+const buffer = readFileSync('report.pdf');
+await webhook.send({
+  content: 'Report attached',
+  files: [
+    { name: 'report.pdf', data: buffer },
+    { name: 'log.txt', data: new TextEncoder().encode('Log content'), filename: 'log-2025.txt' },
+  ],
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Full Example: Embed + Files',
+        description:
+          'Combine content, description-only embed, and file attachments in a single webhook send.',
+        code: `import { Client, Webhook, EmbedBuilder } from '@fluxerjs/core';
+import { readFileSync } from 'fs';
+
+const client = new Client({ intents: 0 });
+const webhook = Webhook.fromToken(client, webhookId, webhookToken);
+
+await webhook.send({
+  content: 'Build completed',
+  embeds: [
+    new EmbedBuilder()
+      .setDescription('Deploy succeeded. See attachment for logs.')
+      .setColor(0x57f287)
+      .setTimestamp()
+      .toJSON(),
+  ],
+  files: [{ name: 'deploy.log', data: readFileSync('deploy.log') }],
+  username: 'CI Bot',
+});`,
         language: 'javascript',
       },
     ],
@@ -625,8 +1125,8 @@ client.on(Events.Ready, () => {});
 client.on(Events.MessageCreate, async (message) => {});
 
 // Reaction events
-client.on(Events.MessageReactionAdd, (data) => {});
-client.on(Events.MessageReactionRemove, (data) => {});
+client.on(Events.MessageReactionAdd, (reaction, user, messageId, channelId, emoji, userId) => {});
+client.on(Events.MessageReactionRemove, (reaction, user, messageId, channelId, emoji, userId) => {});
 
 // Guild joined/left/updated
 client.on(Events.GuildCreate, (guild) => {});
@@ -648,25 +1148,23 @@ client.on(Events.VoiceServerUpdate, (data) => {});`,
       {
         title: 'Reaction Events',
         description:
-          'Listen for when users add or remove reactions. The payload includes message_id, channel_id, user_id, and emoji (name and optional id for custom emojis). Use MessageReactionRemoveAll and MessageReactionRemoveEmoji for moderator actions.',
+          'Listen for when users add or remove reactions. Handlers receive (reaction, user, messageId, channelId, emoji, userId). Use MessageReactionRemoveAll and MessageReactionRemoveEmoji for moderator actions.',
         code: `import { Client, Events } from '@fluxerjs/core';
 
 const client = new Client({ intents: 0 });
 
-client.on(Events.MessageReactionAdd, (data) => {
-  const { message_id, channel_id, user_id, emoji } = data;
+client.on(Events.MessageReactionAdd, (reaction, user, messageId, channelId, emoji, userId) => {
   const emojiStr = emoji.id ? \`<:\${emoji.name}:\${emoji.id}>\` : emoji.name;
-  console.log(\`User \${user_id} reacted with \${emojiStr} on message \${message_id}\`);
+  console.log(\`User \${userId} reacted with \${emojiStr} on message \${messageId}\`);
 
   // Filter for specific message (e.g. poll) or emoji
-  if (data.emoji.name === '👍') {
+  if (emoji.name === '👍') {
     console.log('Someone voted yes!');
   }
 });
 
-client.on(Events.MessageReactionRemove, (data) => {
-  const { message_id, user_id, emoji } = data;
-  console.log(\`User \${user_id} removed \${emoji.name} from message \${message_id}\`);
+client.on(Events.MessageReactionRemove, (reaction, user, messageId, channelId, emoji, userId) => {
+  console.log(\`User \${userId} removed \${emoji.name} from message \${messageId}\`);
 });
 
 client.on(Events.MessageReactionRemoveAll, (data) => {
@@ -685,6 +1183,141 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
         code: `client.on(Events.Error, (err) => {
   console.error('Client error:', err);
 });`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'permissions-moderation',
+    slug: 'permissions-moderation',
+    title: 'Permissions & Moderation',
+    description:
+      'Check member permissions (including guild owner override), use PermissionFlags, and implement ban/kick/unban commands.',
+    category: 'other',
+    sections: [
+      {
+        title: 'Overview',
+        description:
+          'Use member.permissions for guild-level checks (roles only) and member.permissionsIn(channel) for channel-specific permissions (includes overwrites). The server owner always has all permissions.',
+      },
+      {
+        title: 'Guild-level permissions',
+        description:
+          'member.permissions returns an object with has(permission). Use it for server-wide actions like ban, kick, manage roles.',
+        code: `import { Client, Events, PermissionFlags } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+async function getModeratorPerms(message) {
+  const guild = message.guild ?? await message.client.guilds.fetch(message.guildId);
+  if (!guild) return null;
+  const member = guild.members.get(message.author.id) ?? await guild.fetchMember(message.author.id);
+  return member?.permissions ?? null;
+}
+
+client.on(Events.MessageCreate, async (message) => {
+  const perms = await getModeratorPerms(message);
+  if (!perms) return;
+
+  // Server owner always has all permissions
+  if (perms.has(PermissionFlags.BanMembers)) {
+    await message.reply('You can ban members.');
+  }
+  if (perms.has(PermissionFlags.Administrator)) {
+    await message.reply('You have Administrator.');
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Owner override',
+        description:
+          'The guild owner automatically receives all permissions regardless of roles. No need to give the owner a role with Administrator.',
+        code: `// When the message author is the server owner:
+const perms = member.permissions;
+perms.has(PermissionFlags.BanMembers);  // true
+perms.has(PermissionFlags.ManageRoles); // true
+perms.has(PermissionFlags.Administrator); // true
+// ... all permission flags return true for the owner`,
+        language: 'javascript',
+      },
+      {
+        title: 'Channel-specific permissions',
+        description:
+          'member.permissionsIn(channel) applies channel overwrites. Use it when checking if a user can send messages, read history, or connect to voice in a specific channel.',
+        code: `const channel = message.channel;
+if (channel?.isSendable?.()) {
+  const perms = member.permissionsIn(channel);
+  if (perms.has(PermissionFlags.SendMessages)) {
+    await channel.send('You can send here!');
+  }
+}`,
+        language: 'javascript',
+      },
+      {
+        title: 'PermissionFlags reference',
+        description:
+          'Common flags: BanMembers, KickMembers, Administrator, ManageRoles, ManageChannels, ManageGuild, ViewAuditLog, ManageMessages, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory, MentionEveryone, Connect, Speak, MuteMembers, ModerateMembers, CreateExpressions, PinMessages, BypassSlowmode.',
+        code: `import { PermissionFlags } from '@fluxerjs/core';
+
+// Check multiple
+const canModerate = perms.has(PermissionFlags.BanMembers) || perms.has(PermissionFlags.Administrator);
+
+// List all permissions the user has
+const names = Object.keys(PermissionFlags).filter((name) =>
+  perms.has(PermissionFlags[name])
+);
+await message.reply(\`Your permissions: \${names.join(', ')}\`);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Moderation example',
+        description:
+          'See examples/moderation-bot.js for a full bot with !ban, !kick, !unban, and !perms commands.',
+        code: `import { Client, Events, PermissionFlags, EmbedBuilder, FluxerError, ErrorCodes } from '@fluxerjs/core';
+
+const PREFIX = '!';
+const client = new Client({ intents: 0 });
+
+async function getModeratorPerms(message) {
+  const guild = message.guild ?? await message.client.guilds.fetch(message.guildId);
+  if (!guild) return null;
+  const member = guild.members.get(message.author.id);
+  const resolved = member ?? await guild.fetchMember(message.author.id);
+  return resolved?.permissions ?? null;
+}
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot || !message.content?.startsWith(PREFIX)) return;
+  const [cmd, target, ...rest] = message.content.slice(PREFIX.length).trim().split(/\\s+/);
+  const perms = await getModeratorPerms(message);
+  if (!perms) {
+    await message.reply('Could not load your member data.');
+    return;
+  }
+
+  const guild = message.guild ?? await message.client.guilds.fetch(message.guildId);
+  if (!guild) return;
+
+  if (cmd === 'ban' && (perms.has(PermissionFlags.BanMembers) || perms.has(PermissionFlags.Administrator))) {
+    const userId = target?.match(/^<@!?(\\d+)>$/)?.[1] ?? target;
+    if (userId) {
+      await guild.ban(userId, { reason: rest.join(' ') || undefined });
+      await message.reply(\`Banned <@\${userId}>.\`);
+    }
+  }
+  if (cmd === 'kick' && (perms.has(PermissionFlags.KickMembers) || perms.has(PermissionFlags.Administrator))) {
+    const userId = target?.match(/^<@!?(\\d+)>$/)?.[1] ?? target;
+    if (userId) {
+      await guild.kick(userId, { reason: rest.join(' ') || undefined });
+      await message.reply(\`Kicked <@\${userId}>.\`);
+    }
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
         language: 'javascript',
       },
     ],
@@ -740,6 +1373,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   webhooks: 'Webhooks',
   voice: 'Voice',
   'sending-messages': 'Sending Messages',
+  media: 'Media',
   events: 'Events',
   other: 'Other',
 };

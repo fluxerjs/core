@@ -15,8 +15,7 @@
       :href="sourceUrl(typedef.source)"
       target="_blank"
       rel="noopener noreferrer"
-      class="source-link"
-    >
+      class="source-link">
       View source
     </a>
 
@@ -69,7 +68,7 @@ watch(
   () => route.params.typedef,
   () => {
     queueMicrotask(() => Prism.highlightAll());
-  }
+  },
 );
 
 const typedef = computed(() => {
@@ -87,11 +86,11 @@ const isInterface = computed(() => typedef.value && 'properties' in typedef.valu
 const isEnum = computed(() => typedef.value && 'members' in typedef.value);
 
 const properties = computed(() =>
-  isInterface.value && typedef.value ? ((typedef.value as DocInterface).properties ?? []) : []
+  isInterface.value && typedef.value ? ((typedef.value as DocInterface).properties ?? []) : [],
 );
 
 const members = computed(() =>
-  isEnum.value && typedef.value ? ((typedef.value as DocEnum).members ?? []) : []
+  isEnum.value && typedef.value ? ((typedef.value as DocEnum).members ?? []) : [],
 );
 
 const enumDefinition = computed(() => {

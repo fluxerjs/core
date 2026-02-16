@@ -5,6 +5,7 @@ import {
   extractConstructor,
   extractProperty,
   extractMethod,
+  extractGetterProperty,
   extractInterfaceProperty,
   extractEnumMember,
   getDescriptionFromJSDocComment,
@@ -44,7 +45,7 @@ function isExported(node: ts.Node): boolean {
 export function visitSourceFile(
   checker: ts.TypeChecker,
   sourceFile: ts.SourceFile,
-  options?: { repoRoot: string }
+  options?: { repoRoot: string },
 ): { classes: DocClass[]; interfaces: DocInterface[]; enums: DocEnum[] } {
   const classes: DocClass[] = [];
   const interfaces: DocInterface[] = [];
@@ -74,8 +75,11 @@ export function visitSourceFile(
           } else if (ts.isPropertyDeclaration(member)) {
             const prop = extractProperty(checker, member);
             if (prop) docClass.properties.push(prop);
-          } else if (ts.isGetAccessor(member) || ts.isSetAccessor(member)) {
-            // Skip getters/setters for now or add support
+          } else if (ts.isGetAccessor(member)) {
+            const prop = extractGetterProperty(checker, member);
+            if (prop) docClass.properties.push(prop);
+          } else if (ts.isSetAccessor(member)) {
+            // Setters are not documented as separate properties
           } else if (ts.isMethodDeclaration(member)) {
             const method = extractMethod(checker, member);
             if (method) docClass.methods.push(method);

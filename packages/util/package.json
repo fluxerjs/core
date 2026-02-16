@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Shared utilities for @fluxerjs/core",
   "repository": {
     "type": "git",
@@ -19,6 +19,9 @@
     "bitfield"
   ],
   "license": "AGPL-3.0",
+  "dependencies": {
+    "@fluxerjs/types": "workspace:*"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

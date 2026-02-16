@@ -3,6 +3,8 @@ export { SnowflakeUtil, FLUXER_EPOCH } from './SnowflakeUtil.js';
 export {
   PermissionsBitField,
   PermissionFlags,
+  PermissionFlagsMap,
+  ALL_PERMISSIONS_BIGINT,
   type PermissionString,
   type PermissionResolvable,
 } from './PermissionsBitField.js';
@@ -20,3 +22,5 @@ export {
 } from './UserFlagsBitField.js';
 export { formatColor, escapeMarkdown, formatTimestamp, truncate } from './formatters.js';
 export { resolveColor, parseEmoji, formatEmoji, parseRoleMention } from './resolvers.js';
+export { resolveTenorToImageUrl, type TenorMediaResult } from './tenorUtils.js';
+export { emitDeprecationWarning } from './deprecation.js';

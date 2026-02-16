@@ -27,7 +27,7 @@ export class GuildManager extends Collection<string, Guild> {
     try {
       const { Guild } = await import('../structures/Guild.js');
       const data = await this.client.rest.get<import('@fluxerjs/types').APIGuild>(
-        Routes.guild(guildId)
+        Routes.guild(guildId),
       );
       const guild = new Guild(this.client, data);
       this.set(guild.id, guild);

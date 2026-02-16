@@ -16,8 +16,7 @@
           :key="i"
           :code="ex"
           language="javascript"
-          :link-types="true"
-        />
+          :link-types="true" />
       </div>
     </div>
   </section>

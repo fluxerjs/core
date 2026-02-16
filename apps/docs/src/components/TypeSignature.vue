@@ -4,8 +4,7 @@
       <router-link
         v-if="part.kind === 'type' && part.link"
         :to="part.link"
-        :class="['ts-type-link', part.linkKind ? 'ts-link-' + part.linkKind : '']"
-      >
+        :class="['ts-type-link', part.linkKind ? 'ts-link-' + part.linkKind : '']">
         {{ part.text }}
       </router-link>
       <span v-else :class="['ts-' + part.kind]">{{ part.text }}</span>

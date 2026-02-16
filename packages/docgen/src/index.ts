@@ -33,7 +33,7 @@ export function generateDocs(options: DocgenOptions): DocOutput {
   const parsedConfig = ts.parseJsonConfigFileContent(
     configFile.config,
     ts.sys,
-    dirname(configPath)
+    dirname(configPath),
   );
 
   const rootPath = dirname(configPath);
@@ -41,7 +41,7 @@ export function generateDocs(options: DocgenOptions): DocOutput {
     parsedConfig.fileNames.length
       ? parsedConfig.fileNames
       : entryPoints.map((e) => resolve(rootPath, e)),
-    parsedConfig.options
+    parsedConfig.options,
   );
 
   const checker = program.getTypeChecker();

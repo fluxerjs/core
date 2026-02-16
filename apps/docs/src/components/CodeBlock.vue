@@ -30,7 +30,7 @@ const props = withDefaults(
     title?: string;
     linkTypes?: boolean;
   }>(),
-  { language: 'javascript', linkTypes: false }
+  { language: 'javascript', linkTypes: false },
 );
 
 const store = useDocsStore();
@@ -59,7 +59,7 @@ function addLinks(html: string): string {
     for (const tok of tokenClasses) {
       const re = new RegExp(
         `(<span class="[^"]*token[^"]*${escapeRegex(tok)}[^"]*"[^>]*)>${escapeRegex(name)}</span>`,
-        'g'
+        'g',
       );
       out = out.replace(re, `$1><a href="${path}" class="doc-link">${name}</a></span>`);
     }
@@ -79,7 +79,7 @@ function dedent(code: string): string {
     ...nonEmpty.map((l) => {
       const m = l.match(/^(\s*)/);
       return m ? m[1].length : 0;
-    })
+    }),
   );
   return lines
     .map((l) => (l.length >= minIndent ? l.slice(minIndent) : l))

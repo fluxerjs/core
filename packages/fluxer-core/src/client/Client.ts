@@ -10,6 +10,7 @@ import type { ClientUser } from './ClientUser.js';
 import type { Guild } from '../structures/Guild.js';
 import type { Channel } from '../structures/Channel.js';
 import { FluxerError } from '../errors/FluxerError.js';
+import { ErrorCodes } from '../errors/ErrorCodes.js';
 import { Events } from '../util/Events.js';
 import type {
   GatewayReceivePayload,
@@ -18,12 +19,26 @@ import type {
   GatewayVoiceServerUpdateDispatchData,
   GatewayMessageReactionRemoveEmojiDispatchData,
   GatewayMessageReactionRemoveAllDispatchData,
+  GatewayReactionEmoji,
+  GatewayGuildEmojisUpdateDispatchData,
+  GatewayGuildStickersUpdateDispatchData,
+  GatewayGuildIntegrationsUpdateDispatchData,
+  GatewayGuildScheduledEventCreateDispatchData,
+  GatewayGuildScheduledEventUpdateDispatchData,
+  GatewayGuildScheduledEventDeleteDispatchData,
+  GatewayChannelPinsUpdateDispatchData,
+  GatewayPresenceUpdateDispatchData,
+  GatewayWebhooksUpdateDispatchData,
 } from '@fluxerjs/types';
-import type { APIChannel, APIGuild, APIUser, APIUserPartial } from '@fluxerjs/types';
-import { formatEmoji, parseEmoji } from '@fluxerjs/util';
+import type { APIChannel, APIGuild, APIRole, APIUser, APIUserPartial } from '@fluxerjs/types';
+import { emitDeprecationWarning, formatEmoji, parseEmoji } from '@fluxerjs/util';
 import { User } from '../structures/User.js';
 import { eventHandlers } from './EventHandlerRegistry.js';
 
+/**
+ * Callback parameter types for client events. Use with client.on(Events.X, handler).
+ * @see Events
+ */
 export interface ClientEvents {
   [Events.Ready]: [];
   [Events.MessageCreate]: [message: import('../structures/Message.js').Message];
@@ -35,10 +50,18 @@ export interface ClientEvents {
   [Events.MessageReactionAdd]: [
     reaction: import('../structures/MessageReaction.js').MessageReaction,
     user: User,
+    messageId: string,
+    channelId: string,
+    emoji: GatewayReactionEmoji,
+    userId: string,
   ];
   [Events.MessageReactionRemove]: [
     reaction: import('../structures/MessageReaction.js').MessageReaction,
     user: User,
+    messageId: string,
+    channelId: string,
+    emoji: GatewayReactionEmoji,
+    userId: string,
   ];
   [Events.MessageReactionRemoveAll]: [data: GatewayMessageReactionRemoveAllDispatchData];
   [Events.MessageReactionRemoveEmoji]: [data: GatewayMessageReactionRemoveEmojiDispatchData];
@@ -67,25 +90,42 @@ export interface ClientEvents {
   ];
   [Events.GuildBanAdd]: [ban: import('../structures/GuildBan.js').GuildBan];
   [Events.GuildBanRemove]: [ban: import('../structures/GuildBan.js').GuildBan];
-  [Events.GuildEmojisUpdate]: [data: unknown];
-  [Events.GuildStickersUpdate]: [data: unknown];
-  [Events.GuildIntegrationsUpdate]: [data: unknown];
+  [Events.GuildEmojisUpdate]: [data: GatewayGuildEmojisUpdateDispatchData];
+  [Events.GuildStickersUpdate]: [data: GatewayGuildStickersUpdateDispatchData];
+  [Events.GuildIntegrationsUpdate]: [data: GatewayGuildIntegrationsUpdateDispatchData];
   [Events.GuildRoleCreate]: [data: import('@fluxerjs/types').GatewayGuildRoleCreateDispatchData];
   [Events.GuildRoleUpdate]: [data: import('@fluxerjs/types').GatewayGuildRoleUpdateDispatchData];
   [Events.GuildRoleDelete]: [data: import('@fluxerjs/types').GatewayGuildRoleDeleteDispatchData];
-  [Events.GuildScheduledEventCreate]: [data: unknown];
-  [Events.GuildScheduledEventUpdate]: [data: unknown];
-  [Events.GuildScheduledEventDelete]: [data: unknown];
-  [Events.ChannelPinsUpdate]: [data: unknown];
+  [Events.GuildScheduledEventCreate]: [data: GatewayGuildScheduledEventCreateDispatchData];
+  [Events.GuildScheduledEventUpdate]: [data: GatewayGuildScheduledEventUpdateDispatchData];
+  [Events.GuildScheduledEventDelete]: [data: GatewayGuildScheduledEventDeleteDispatchData];
+  [Events.ChannelPinsUpdate]: [data: GatewayChannelPinsUpdateDispatchData];
   [Events.InviteCreate]: [invite: import('../structures/Invite.js').Invite];
   [Events.InviteDelete]: [data: import('@fluxerjs/types').GatewayInviteDeleteDispatchData];
   [Events.TypingStart]: [data: import('@fluxerjs/types').GatewayTypingStartDispatchData];
   [Events.UserUpdate]: [data: import('@fluxerjs/types').GatewayUserUpdateDispatchData];
-  [Events.PresenceUpdate]: [data: unknown];
-  [Events.WebhooksUpdate]: [data: unknown];
+  [Events.PresenceUpdate]: [data: GatewayPresenceUpdateDispatchData];
+  [Events.WebhooksUpdate]: [data: GatewayWebhooksUpdateDispatchData];
   [Events.Resumed]: [];
   [Events.Error]: [error: Error];
   [Events.Debug]: [message: string];
+}
+
+/** Typed event handler methods. Use client.events.MessageReactionAdd((reaction, user, messageId, channelId, emoji, userId) => {...}) or client.on(Events.MessageReactionAdd, ...). */
+export type ClientEventMethods = {
+  [K in keyof typeof Events]: (cb: (...args: ClientEvents[(typeof Events)[K]]) => void) => Client;
+};
+
+function createEventMethods(client: Client): ClientEventMethods {
+  const result: Record<string, (cb: (...args: unknown[]) => void) => Client> = {};
+  for (const key of Object.keys(Events) as (keyof typeof Events)[]) {
+    const eventName = Events[key];
+    result[key] = (cb) => {
+      client.on(eventName, cb as (...args: unknown[]) => void);
+      return client;
+    };
+  }
+  return result as ClientEventMethods;
 }
 
 /** Main Fluxer bot client. Connects to the gateway, emits events, and provides REST access. */
@@ -94,13 +134,18 @@ export class Client extends EventEmitter {
   readonly guilds = new GuildManager(this);
   readonly channels = new ChannelManager(this);
   readonly users = new Collection<string, User>();
+  /** Typed event handlers. Use client.events.MessageReactionAdd((reaction, user, messageId, channelId, emoji, userId) => {...}) or client.on(Events.MessageReactionAdd, ...). */
+  readonly events: ClientEventMethods;
+  /** The authenticated bot user. Null until READY is received. */
   user: ClientUser | null = null;
+  /** Timestamp when the client became ready. Null until READY is received. */
   readyAt: Date | null = null;
   private _ws: WebSocketManager | null = null;
 
   /** @param options - Token, REST config, WebSocket, presence, etc. */
   constructor(public readonly options: ClientOptions = {}) {
     super();
+    this.events = createEventMethods(this);
     Object.defineProperty(this.channels, 'cache', {
       get: () => this.channels,
       configurable: true,
@@ -126,7 +171,7 @@ export class Client extends EventEmitter {
    */
   async resolveEmoji(
     emoji: string | { name: string; id?: string; animated?: boolean },
-    guildId?: string | null
+    guildId?: string | null,
   ): Promise<string> {
     if (typeof emoji === 'object' && emoji.id) {
       return formatEmoji({ name: emoji.name, id: emoji.id as string, animated: emoji.animated });
@@ -144,12 +189,12 @@ export class Client extends EventEmitter {
       const found = list.find((e) => e.name && e.name.toLowerCase() === parsed!.name.toLowerCase());
       if (found) return formatEmoji({ ...parsed, id: found.id, animated: found.animated });
       throw new Error(
-        `Custom emoji ":${parsed.name}:" not found in guild. Use name:id or <:name:id> format.`
+        `Custom emoji ":${parsed.name}:" not found in guild. Use name:id or <:name:id> format.`,
       );
     }
     if (/^\w+$/.test(parsed.name)) {
       throw new Error(
-        `Custom emoji ":${parsed.name}:" requires guild context. Use message.react() in a guild channel, or pass guildId to client.resolveEmoji().`
+        `Custom emoji ":${parsed.name}:" requires guild context. Use message.react() in a guild channel, or pass guildId to client.resolveEmoji().`,
       );
     }
     return encodeURIComponent(parsed.name);
@@ -159,7 +204,8 @@ export class Client extends EventEmitter {
    * Fetch a message by channel and message ID. Use when you have IDs (e.g. from a DB).
    * @param channelId - Snowflake of the channel
    * @param messageId - Snowflake of the message
-   * @returns The message, or null if not found
+   * @returns The message
+   * @throws FluxerError with MESSAGE_NOT_FOUND if the message does not exist
    * @deprecated Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.fetch(channelId))?.messages?.fetch(messageId)
    * @example
    * const channel = await client.channels.fetch(channelId);
@@ -167,8 +213,12 @@ export class Client extends EventEmitter {
    */
   async fetchMessage(
     channelId: string,
-    messageId: string
-  ): Promise<import('../structures/Message.js').Message | null> {
+    messageId: string,
+  ): Promise<import('../structures/Message.js').Message> {
+    emitDeprecationWarning(
+      'Client.fetchMessage()',
+      'Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.fetch(channelId))?.messages?.fetch(messageId)',
+    );
     return this.channels.fetchMessage(channelId, messageId);
   }
 
@@ -178,7 +228,7 @@ export class Client extends EventEmitter {
    */
   async sendToChannel(
     channelId: string,
-    payload: string | { content?: string; embeds?: import('@fluxerjs/types').APIEmbed[] }
+    payload: string | { content?: string; embeds?: import('@fluxerjs/types').APIEmbed[] },
   ): Promise<import('../structures/Message.js').Message> {
     return this.channels.send(channelId, payload);
   }
@@ -230,7 +280,9 @@ export class Client extends EventEmitter {
    */
   async login(token: string): Promise<string> {
     if (this._ws) {
-      throw new FluxerError('Client is already logged in. Call destroy() first.');
+      throw new FluxerError('Client is already logged in. Call destroy() first.', {
+        code: ErrorCodes.AlreadyLoggedIn,
+      });
     }
     this.rest.setToken(token);
     let intents = this.options.intents ?? 0;
@@ -254,7 +306,7 @@ export class Client extends EventEmitter {
     });
     this._ws.on('dispatch', ({ payload }: { payload: GatewayReceivePayload }) => {
       this.handleDispatch(payload).catch((err: unknown) =>
-        this.emit(Events.Error, err instanceof Error ? err : new Error(String(err)))
+        this.emit(Events.Error, err instanceof Error ? err : new Error(String(err))),
       );
     });
     this._ws.on(
@@ -269,7 +321,16 @@ export class Client extends EventEmitter {
         const { Channel } = await import('../structures/Channel.js');
         this.user = new ClientUser(this, data.user);
         for (const g of data.guilds ?? []) {
-          const guild = new Guild(this, g);
+          // Fluxer gateway sends GuildReadyData: { id, properties: { owner_id, ... }, channels, roles }
+          // Normalize to APIGuild shape so owner_id is available for permission checks
+          const guildData: APIGuild & { roles?: APIRole[] } =
+            g && typeof g === 'object' && 'properties' in g && g.properties
+              ? ({
+                  ...(g.properties as Record<string, unknown>),
+                  roles: (g as { roles?: APIRole[] }).roles,
+                } as APIGuild & { roles?: APIRole[] })
+              : (g as APIGuild);
+          const guild = new Guild(this, guildData);
           this.guilds.set(guild.id, guild);
           const withCh = g as APIGuild & {
             channels?: APIChannel[];
@@ -288,7 +349,7 @@ export class Client extends EventEmitter {
         }
         this.readyAt = new Date();
         this.emit(Events.Ready);
-      }
+      },
     );
     this._ws.on('error', ({ error }: { error: Error }) => this.emit(Events.Error, error));
     this._ws.on('debug', (msg: string) => this.emit(Events.Debug, msg));

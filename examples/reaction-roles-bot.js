@@ -39,7 +39,13 @@ async function handleReactionAdd(reaction, user) {
   if (!roleId || roleId.startsWith('ROLE_ID_')) return;
 
   const guild = client.guilds.get(reaction.guildId);
-  const member = await guild?.fetchMember(user.id);
+  if (!guild) return;
+  let member;
+  try {
+    member = guild.members.get(user.id) ?? (await guild.fetchMember(user.id));
+  } catch {
+    return;
+  }
   if (!member) return;
 
   if (member.roles.includes(roleId)) return;
@@ -59,7 +65,13 @@ async function handleReactionRemove(reaction, user) {
   if (!roleId || roleId.startsWith('ROLE_ID_')) return;
 
   const guild = client.guilds.get(reaction.guildId);
-  const member = await guild?.fetchMember(user.id);
+  if (!guild) return;
+  let member;
+  try {
+    member = guild.members.get(user.id) ?? (await guild.fetchMember(user.id));
+  } catch {
+    return;
+  }
   if (!member) return;
 
   if (!member.roles.includes(roleId)) return;
@@ -88,13 +100,14 @@ client.on(Events.MessageCreate, async (message) => {
     }
     const emojiList = Object.entries(ROLE_EMOJI_MAP)
       .map(
-        ([emoji, id]) => `${emoji} ${id.startsWith('ROLE_ID_') ? '(configure ROLE_EMOJI_MAP)' : ''}`
+        ([emoji, id]) =>
+          `${emoji} ${id.startsWith('ROLE_ID_') ? '(configure ROLE_EMOJI_MAP)' : ''}`,
       )
       .join('\n');
     const embed = new EmbedBuilder()
       .setTitle('Reaction Roles')
       .setDescription(
-        'React to get a role. Remove your reaction to remove the role.\n\n' + emojiList
+        'React to get a role. Remove your reaction to remove the role.\n\n' + emojiList,
       )
       .setColor(0x5865f2)
       .setTimestamp();
@@ -106,7 +119,7 @@ client.on(Events.MessageCreate, async (message) => {
     }
     rolesMessageId = reply.id;
     console.log(
-      `[reaction-roles] Set roles message to ${reply.id}. Set REACTION_ROLES_MESSAGE_ID=${reply.id} and REACTION_ROLES_CHANNEL_ID=${message.channelId} to reuse.`
+      `[reaction-roles] Set roles message to ${reply.id}. Set REACTION_ROLES_MESSAGE_ID=${reply.id} and REACTION_ROLES_CHANNEL_ID=${message.channelId} to reuse.`,
     );
   }
 });

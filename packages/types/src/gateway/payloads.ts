@@ -6,6 +6,8 @@ import type { APIMessage } from '../api/message.js';
 import type { APIGuildMember } from '../api/user.js';
 import type { APIRole } from '../api/role.js';
 import type { APIInvite } from '../api/invite.js';
+import type { APIEmoji } from '../api/emoji.js';
+import type { APISticker } from '../api/sticker.js';
 import { GatewayOpcodes } from './opcodes.js';
 import type { GatewayDispatchEventName } from './events.js';
 
@@ -229,6 +231,62 @@ export interface GatewayVoiceServerUpdateDispatchData {
   endpoint: string | null;
   /** Connection ID for subsequent voice state updates (Fluxer). */
   connection_id?: string | null;
+}
+
+/** GUILD_EMOJIS_UPDATE — emoji list for a guild changed. */
+export interface GatewayGuildEmojisUpdateDispatchData {
+  guild_id: Snowflake;
+  emojis: APIEmoji[];
+}
+
+/** GUILD_STICKERS_UPDATE — sticker list for a guild changed. */
+export interface GatewayGuildStickersUpdateDispatchData {
+  guild_id: Snowflake;
+  stickers: APISticker[];
+}
+
+/** GUILD_INTEGRATIONS_UPDATE — integrations for a guild changed. */
+export interface GatewayGuildIntegrationsUpdateDispatchData {
+  guild_id: Snowflake;
+}
+
+/** GUILD_SCHEDULED_EVENT_CREATE — a scheduled event was created. */
+export interface GatewayGuildScheduledEventCreateDispatchData {
+  guild_id: Snowflake;
+  id: Snowflake;
+}
+
+/** GUILD_SCHEDULED_EVENT_UPDATE — a scheduled event was updated. */
+export interface GatewayGuildScheduledEventUpdateDispatchData {
+  guild_id: Snowflake;
+  id: Snowflake;
+}
+
+/** GUILD_SCHEDULED_EVENT_DELETE — a scheduled event was deleted. */
+export interface GatewayGuildScheduledEventDeleteDispatchData {
+  guild_id: Snowflake;
+  id: Snowflake;
+}
+
+/** CHANNEL_PINS_UPDATE — pins in a channel changed. */
+export interface GatewayChannelPinsUpdateDispatchData {
+  guild_id?: Snowflake;
+  channel_id: Snowflake;
+  last_pin_timestamp?: string | null;
+}
+
+/** PRESENCE_UPDATE — user presence (status, activities) changed. */
+export interface GatewayPresenceUpdateDispatchData {
+  user: { id: Snowflake };
+  guild_id?: Snowflake;
+  status?: string;
+  activities?: Array<{ name: string; type: number; url?: string | null }>;
+}
+
+/** WEBHOOKS_UPDATE — webhooks in a channel were updated. */
+export interface GatewayWebhooksUpdateDispatchData {
+  guild_id: Snowflake;
+  channel_id: Snowflake;
 }
 
 export interface GatewayReceivePayload<T = unknown> {

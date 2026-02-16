@@ -22,8 +22,7 @@
             v-if="section.code"
             :code="section.code"
             :language="section.language ?? 'javascript'"
-            :link-types="section.language !== 'bash'"
-          />
+            :link-types="section.language !== 'bash'" />
         </section>
       </template>
 
@@ -31,15 +30,13 @@
         <router-link
           v-if="prevGuide"
           :to="versionedPath(`/guides/${prevGuide.slug}`)"
-          class="guide-nav-link guide-prev"
-        >
+          class="guide-nav-link guide-prev">
           ← {{ prevGuide.title }}
         </router-link>
         <router-link
           v-if="nextGuide"
           :to="versionedPath(`/guides/${nextGuide.slug}`)"
-          class="guide-nav-link guide-next"
-        >
+          class="guide-nav-link guide-next">
           {{ nextGuide.title }} →
         </router-link>
       </nav>

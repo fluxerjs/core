@@ -20,7 +20,7 @@ export class MessageReaction extends Base {
 
   constructor(
     client: Client,
-    data: GatewayMessageReactionAddDispatchData | GatewayMessageReactionRemoveDispatchData
+    data: GatewayMessageReactionAddDispatchData | GatewayMessageReactionRemoveDispatchData,
   ) {
     super();
     this.client = client;
@@ -44,8 +44,9 @@ export class MessageReaction extends Base {
   /**
    * Fetch the message this reaction belongs to.
    * Use when you need to edit, delete, or otherwise interact with the message.
+   * @throws FluxerError with MESSAGE_NOT_FOUND if the message does not exist
    */
-  async fetchMessage(): Promise<Message | null> {
+  async fetchMessage(): Promise<Message> {
     return this.client.channels.fetchMessage(this.channelId, this.messageId);
   }
 }

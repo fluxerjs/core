@@ -1,17 +1,22 @@
 <template>
   <div v-if="clazz" class="class-page">
-    <div class="page-content">
+    <div class="page-content" :class="{ 'class-deprecated': clazz.deprecated }">
+      <div v-if="clazz.deprecated" class="deprecated-banner">
+        <span class="deprecated-badge">Deprecated</span>
+        <span v-if="typeof clazz.deprecated === 'string'" class="deprecated-message">{{
+          clazz.deprecated
+        }}</span>
+      </div>
       <div class="page-header">
         <span class="kind-badge kind-class">class</span>
         <h1>{{ clazz.name }}</h1>
-        <span v-if="clazz.deprecated" class="deprecated-badge">deprecated</span>
+        <span v-if="clazz.deprecated" class="deprecated-badge-inline">deprecated</span>
         <template v-if="clazz.extends">
           <span class="extends-label">extends</span>
           <router-link
             v-if="extendsClassExists"
             :to="{ name: 'class', params: { version: routeVersion, class: clazz.extends } }"
-            class="extends-link"
-          >
+            class="extends-link">
             {{ clazz.extends }}
           </router-link>
           <span v-else class="extends-text">{{ clazz.extends }}</span>
@@ -23,8 +28,7 @@
         :href="sourceUrl(clazz.source)"
         target="_blank"
         rel="noopener noreferrer"
-        class="source-link"
-      >
+        class="source-link">
         View source
       </a>
 
@@ -182,12 +186,47 @@ function sourceUrl(source: { file: string; line: number; path?: string }) {
   color: var(--badge-class);
 }
 
-.deprecated-badge {
+.class-deprecated {
+  background: var(--deprecated-bg);
+  border: 1px solid var(--deprecated-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin: -0.5rem 0 2rem;
+}
+
+.class-deprecated .deprecated-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--deprecated-border);
+}
+
+.class-deprecated .deprecated-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #1c1917;
+  background: var(--deprecated);
+  padding: 0.3em 0.65em;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.class-deprecated .deprecated-message {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.deprecated-badge-inline {
   font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--text-muted);
-  background: var(--bg-tertiary);
+  color: var(--deprecated);
+  background: rgba(245, 158, 11, 0.2);
   padding: 0.25em 0.6em;
   border-radius: var(--radius-sm);
 }

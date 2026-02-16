@@ -1,5 +1,6 @@
 import type { Snowflake } from '../common/snowflake.js';
 import type { APIUser } from './user.js';
+import type { APIGuildMember } from './user.js';
 import type { APIEmbed } from './embed.js';
 
 export enum MessageType {
@@ -60,6 +61,16 @@ export interface APIMessageSnapshot {
   stickers?: APIMessageSticker[] | null;
   type?: number;
 }
+
+/** Bitwise flags for message attachments (when sending, use in attachments metadata). */
+export const MessageAttachmentFlags = {
+  /** Renders attachment as spoiler (blurred until clicked) */
+  IS_SPOILER: 8,
+  /** Attachment contains explicit content */
+  CONTAINS_EXPLICIT_MEDIA: 16,
+  /** Animated image (e.g. GIF, animated WebP). Renders with EmbedGif / looping behavior. */
+  IS_ANIMATED: 32,
+} as const;
 
 export interface APIMessageAttachment {
   id: Snowflake;
@@ -124,4 +135,6 @@ export interface APIMessage {
   /** Call info when type is Call */
   call?: APIMessageCall | null;
   referenced_message?: APIMessage | null;
+  /** Author's guild member (gateway MESSAGE_CREATE only, when guild message) */
+  member?: APIGuildMember | null;
 }

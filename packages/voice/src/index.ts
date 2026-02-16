@@ -26,7 +26,7 @@ export type VoiceConnectionLike =
 export async function joinVoiceChannel(
   client: Client,
   channel: VoiceChannel,
-  options?: { shardId?: number }
+  options?: { shardId?: number },
 ): Promise<VoiceConnectionLike> {
   const manager = getVoiceManager(client, options);
   return manager.join(channel);

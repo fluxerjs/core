@@ -144,7 +144,7 @@ export class WebSocketShard extends EventEmitter {
     if (typeof ws.addEventListener === 'function') {
       ws.addEventListener('open', handleOpen);
       ws.addEventListener('message', (e: unknown) =>
-        handleMessage((e as MessageEvent).data as string)
+        handleMessage((e as MessageEvent).data as string),
       );
       ws.addEventListener('close', (e: unknown) => handleClose((e as CloseEvent).code));
       ws.addEventListener('error', () => handleError(new Error('WebSocket error')));

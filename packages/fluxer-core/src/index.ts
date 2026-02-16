@@ -1,4 +1,4 @@
-export { Client, type ClientEvents } from './client/Client.js';
+export { Client, type ClientEvents, type ClientEventMethods } from './client/Client.js';
 export { ChannelManager } from './client/ChannelManager.js';
 export { MessageManager } from './client/MessageManager.js';
 export { ClientUser } from './client/ClientUser.js';
@@ -14,7 +14,7 @@ export {
   LinkChannel,
   DMChannel,
 } from './structures/Channel.js';
-export { Message, type MessageEditOptions } from './structures/Message.js';
+export { Message, type MessageEditOptions, type MessageSendOptions } from './structures/Message.js';
 export type { PartialMessage } from './structures/PartialMessage.js';
 export { MessageReaction } from './structures/MessageReaction.js';
 export { Webhook, type WebhookSendOptions } from './structures/Webhook.js';
@@ -25,11 +25,44 @@ export { GuildBan } from './structures/GuildBan.js';
 export { GuildEmoji } from './structures/GuildEmoji.js';
 export { GuildSticker } from './structures/GuildSticker.js';
 export { Events } from './util/Events.js';
-export { FluxerError } from './errors/FluxerError.js';
+export {
+  MessageCollector,
+  type MessageCollectorOptions,
+  type MessageCollectorEndReason,
+} from './util/MessageCollector.js';
+export {
+  ReactionCollector,
+  type ReactionCollectorOptions,
+  type ReactionCollectorEndReason,
+  type CollectedReaction,
+} from './util/ReactionCollector.js';
+export { FluxerError, type FluxerErrorOptions } from './errors/FluxerError.js';
 export { ErrorCodes } from './errors/ErrorCodes.js';
 
 // Re-export builders for convenience
 export { EmbedBuilder, MessagePayload, AttachmentBuilder } from '@fluxerjs/builders';
 
-// Re-export Routes and GatewayOpcodes for REST/gateway API calls
-export { Routes, GatewayOpcodes } from '@fluxerjs/types';
+// Re-export Routes, GatewayOpcodes, MessageAttachmentFlags for REST/gateway API calls
+export { Routes, GatewayOpcodes, MessageAttachmentFlags } from '@fluxerjs/types';
+
+// Re-export Tenor URL resolver for embeds
+export { resolveTenorToImageUrl } from '@fluxerjs/util';
+
+// Re-export permission helpers for role/member permission checks
+export {
+  PermissionsBitField,
+  PermissionFlags,
+  type PermissionString,
+  type PermissionResolvable,
+} from '@fluxerjs/util';
+
+// CDN URL helpers for avatars, banners, etc. (works with raw API data or User objects)
+export {
+  cdnAvatarURL,
+  cdnDisplayAvatarURL,
+  cdnBannerURL,
+  cdnMemberAvatarURL,
+  cdnMemberBannerURL,
+  cdnDefaultAvatarURL,
+} from './util/cdn.js';
+export type { CdnUrlOptions } from './util/cdn.js';

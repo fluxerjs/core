@@ -31,6 +31,9 @@
   --badge-enum-bg: rgba(199, 146, 234, 0.15);
 
   --error: #f87171;
+  --deprecated: #f59e0b;
+  --deprecated-bg: rgba(245, 158, 11, 0.12);
+  --deprecated-border: rgba(245, 158, 11, 0.35);
 
   /* Sidebar - shared across docs and guides */
   --sidebar-width: 260px;

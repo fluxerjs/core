@@ -18,29 +18,30 @@ client.on(Events.Ready, () => {
 });
 
 // When someone adds a reaction to any message
-client.on(Events.MessageReactionAdd, (data) => {
-  const { message_id, channel_id, user_id, emoji } = data;
+// MessageReactionAdd / MessageReactionRemove emit (reaction, user, messageId, channelId, emoji, userId)
+client.on(Events.MessageReactionAdd, (reaction, user, messageId, channelId, emoji, userId) => {
   const emojiStr = emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name;
   console.log(
-    `Reaction added: user ${user_id} reacted with ${emojiStr} on message ${message_id} in channel ${channel_id}`
+    `Reaction added: user ${userId} reacted with ${emojiStr} on message ${messageId} in channel ${channelId}`,
   );
 });
 
-// Tip: filter by message_id or emoji for polls, confirmations, etc.:
-//   if (data.message_id !== myPollMessageId) return;
-//   if (data.emoji.name !== '👍') return;
+// Tip: filter by messageId or emoji for polls, confirmations, etc.:
+//   if (messageId !== myPollMessageId) return;
+//   if (emoji.name !== '👍') return;
+
+// Alternatively: client.events.MessageReactionAdd((reaction, user, messageId, channelId, emoji, userId) => { ... })
 
 // When someone removes their reaction
-client.on(Events.MessageReactionRemove, (data) => {
-  const { message_id, user_id, emoji } = data;
+client.on(Events.MessageReactionRemove, (reaction, user, messageId, channelId, emoji, userId) => {
   const emojiStr = emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name;
-  console.log(`Reaction removed: user ${user_id} removed ${emojiStr} from message ${message_id}`);
+  console.log(`Reaction removed: user ${userId} removed ${emojiStr} from message ${messageId}`);
 });
 
 // When all reactions are removed from a message (moderator action)
 client.on(Events.MessageReactionRemoveAll, (data) => {
   console.log(
-    `All reactions cleared from message ${data.message_id} in channel ${data.channel_id}`
+    `All reactions cleared from message ${data.message_id} in channel ${data.channel_id}`,
   );
 });
 

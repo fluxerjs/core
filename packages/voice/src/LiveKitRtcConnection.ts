@@ -73,7 +73,7 @@ function _getAacDecoderDescription(mp4aEntry: {
     if (!dsi?.data?.length) return undefined;
     return dsi.data.buffer.slice(
       dsi.data.byteOffset,
-      dsi.data.byteOffset + dsi.data.byteLength
+      dsi.data.byteOffset + dsi.data.byteLength,
     ) as ArrayBuffer;
   } catch {
     return undefined;
@@ -274,7 +274,7 @@ export class LiveKitRtcConnection extends EventEmitter {
   playOpus(_stream: NodeJS.ReadableStream): void {
     this.emit(
       'error',
-      new Error('LiveKit: playOpus not supported; use play(url) with a WebM/Opus URL')
+      new Error('LiveKit: playOpus not supported; use play(url) with a WebM/Opus URL'),
     );
   }
 
@@ -287,7 +287,7 @@ export class LiveKitRtcConnection extends EventEmitter {
    */
   async connect(
     server: GatewayVoiceServerUpdateDispatchData,
-    _state: GatewayVoiceStateUpdateDispatchData
+    _state: GatewayVoiceStateUpdateDispatchData,
   ): Promise<void> {
     const raw = (server.endpoint ?? '').trim();
     const token = server.token;
@@ -355,7 +355,7 @@ export class LiveKitRtcConnection extends EventEmitter {
    */
   async playVideo(
     urlOrBuffer: string | ArrayBuffer | Uint8Array,
-    options?: VideoPlayOptions
+    options?: VideoPlayOptions,
   ): Promise<void> {
     this.stopVideo();
     if (!this.room || !this.room.isConnected) {
@@ -392,7 +392,7 @@ export class LiveKitRtcConnection extends EventEmitter {
     } else if (urlOrBuffer instanceof Uint8Array) {
       arrayBuffer = urlOrBuffer.buffer.slice(
         urlOrBuffer.byteOffset,
-        urlOrBuffer.byteOffset + urlOrBuffer.byteLength
+        urlOrBuffer.byteOffset + urlOrBuffer.byteLength,
       ) as ArrayBuffer;
     } else {
       arrayBuffer = urlOrBuffer;
@@ -429,7 +429,7 @@ export class LiveKitRtcConnection extends EventEmitter {
         return;
       }
       const audioTrackInfo = tracks.find(
-        (t: { type: string; codec: string }) => t.type === 'audio' && t.codec.startsWith('mp4a')
+        (t: { type: string; codec: string }) => t.type === 'audio' && t.codec.startsWith('mp4a'),
       );
       const width = videoTrack.video?.width ?? 640;
       const height = videoTrack.video?.height ?? 480;
@@ -647,7 +647,7 @@ export class LiveKitRtcConnection extends EventEmitter {
                 timescale: number;
                 dts: number;
                 duration: number;
-              }>
+              }>,
             ) => {
               if (!this._playingVideo) return;
               if (tid === videoTrack.id) {
@@ -666,7 +666,7 @@ export class LiveKitRtcConnection extends EventEmitter {
                 } catch (decodeErr) {
                   this.emit(
                     'error',
-                    decodeErr instanceof Error ? decodeErr : new Error(String(decodeErr))
+                    decodeErr instanceof Error ? decodeErr : new Error(String(decodeErr)),
                   );
                   doCleanup();
                   return;
@@ -700,7 +700,7 @@ export class LiveKitRtcConnection extends EventEmitter {
           timescale: number;
           dts: number;
           duration: number;
-        }>
+        }>,
       ) => {
         if (!this._playingVideo) return;
         if (trackId === videoTrack.id) {
@@ -719,7 +719,7 @@ export class LiveKitRtcConnection extends EventEmitter {
           } catch (decodeErr) {
             this.emit(
               'error',
-              decodeErr instanceof Error ? decodeErr : new Error(String(decodeErr))
+              decodeErr instanceof Error ? decodeErr : new Error(String(decodeErr)),
             );
             doCleanup();
             return;
@@ -775,7 +775,7 @@ export class LiveKitRtcConnection extends EventEmitter {
                   f.buffer,
                   f.width,
                   f.height,
-                  VideoBufferType.I420
+                  VideoBufferType.I420,
                 );
                 source.captureFrame(livekitFrame);
               } catch (captureErr) {
@@ -783,7 +783,7 @@ export class LiveKitRtcConnection extends EventEmitter {
                   this.audioDebug('captureFrame error', { error: String(captureErr) });
                 this.emit(
                   'error',
-                  captureErr instanceof Error ? captureErr : new Error(String(captureErr))
+                  captureErr instanceof Error ? captureErr : new Error(String(captureErr)),
                 );
               }
             }
@@ -816,7 +816,7 @@ export class LiveKitRtcConnection extends EventEmitter {
                   ...(loop ? ['-stream_loop', '-1'] : []),
                   'pipe:1',
                 ],
-                { stdio: ['ignore', 'pipe', 'pipe'] }
+                { stdio: ['ignore', 'pipe', 'pipe'] },
               );
               audioFfmpegProc = audioProc;
               const demuxer = new prismOpus.WebmDemuxer();
@@ -851,7 +851,7 @@ export class LiveKitRtcConnection extends EventEmitter {
                       outSamples,
                       SAMPLE_RATE,
                       CHANNELS,
-                      FRAME_SAMPLES
+                      FRAME_SAMPLES,
                     );
                     if (audioSource.queuedDuration > 500) await audioSource.waitForPlayout();
                     await audioSource.captureFrame(audioFrame);
@@ -890,7 +890,7 @@ export class LiveKitRtcConnection extends EventEmitter {
               });
             };
             runAudioFfmpeg().catch((e) =>
-              this.audioDebug('audio ffmpeg error', { error: String(e) })
+              this.audioDebug('audio ffmpeg error', { error: String(e) }),
             );
           }
 
@@ -937,7 +937,7 @@ export class LiveKitRtcConnection extends EventEmitter {
           'json',
           url,
         ],
-        { encoding: 'utf8', timeout: 10000 }
+        { encoding: 'utf8', timeout: 10000 },
       );
       const parsed = JSON.parse(stdout) as { streams?: Array<{ width?: number; height?: number }> };
       const stream = parsed?.streams?.[0];
@@ -949,8 +949,8 @@ export class LiveKitRtcConnection extends EventEmitter {
       this.emit(
         'error',
         new Error(
-          `ffprobe failed: ${probeErr instanceof Error ? probeErr.message : String(probeErr)}`
-        )
+          `ffprobe failed: ${probeErr instanceof Error ? probeErr.message : String(probeErr)}`,
+        ),
       );
       return;
     }
@@ -988,14 +988,14 @@ export class LiveKitRtcConnection extends EventEmitter {
     const audioSource: AudioSource | null = new AudioSource(SAMPLE_RATE, CHANNELS);
     const audioTrack: LocalAudioTrack | null = LocalAudioTrack.createAudioTrack(
       'audio',
-      audioSource
+      audioSource,
     );
     this.audioSource = audioSource;
     this.audioTrack = audioTrack;
     try {
       await participant.publishTrack(
         audioTrack,
-        new TrackPublishOptions({ source: TrackSource.SOURCE_MICROPHONE })
+        new TrackPublishOptions({ source: TrackSource.SOURCE_MICROPHONE }),
       );
     } catch {
       audioTrack.close().catch(() => {});
@@ -1104,7 +1104,7 @@ export class LiveKitRtcConnection extends EventEmitter {
           new Uint8Array(frameData.buffer, frameData.byteOffset, frameSize),
           width,
           height,
-          VideoBufferType.I420
+          VideoBufferType.I420,
         );
         const timestampUs = frameIndex * FRAME_DURATION_US;
         frameIndex += 1n;
@@ -1203,7 +1203,7 @@ export class LiveKitRtcConnection extends EventEmitter {
           ...(loop ? ['-stream_loop', '-1'] : []),
           'pipe:1',
         ],
-        { stdio: ['ignore', 'pipe', 'pipe'] }
+        { stdio: ['ignore', 'pipe', 'pipe'] },
       );
       audioFfmpegProc = audioProc;
       const { opus: prismOpus } = await import('prism-media');
@@ -1504,7 +1504,7 @@ declare module 'events' {
   interface LiveKitRtcConnection {
     on<E extends keyof LiveKitRtcConnectionEvents>(
       event: E,
-      listener: (...args: LiveKitRtcConnectionEvents[E]) => void
+      listener: (...args: LiveKitRtcConnectionEvents[E]) => void,
     ): this;
     emit<E extends keyof LiveKitRtcConnectionEvents>(
       event: E,

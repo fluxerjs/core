@@ -42,12 +42,15 @@ That runs the [minimal bot](minimal-bot.js) — login + `!ping` → Pong. See th
 | [reaction-bot.js](reaction-bot.js)             | Simple reaction handling                         | [Reactions](https://fluxerjs.blstmo.com/v/latest/guides/reactions)                                                             |
 | [reaction-roles-bot.js](reaction-roles-bot.js) | Reaction-based role assignment                   | [Reactions](https://fluxerjs.blstmo.com/v/latest/guides/reactions)                                                             |
 | [webhook-bot.js](webhook-bot.js)               | Webhook-based bot (no gateway)                   | [Webhooks](https://fluxerjs.blstmo.com/v/latest/guides/webhooks)                                                               |
+| [webi-bot.js](webi-bot.js)                     | Full webhook demo: embeds, files, all options    | [Webhook Attachments & Embeds](https://fluxerjs.blstmo.com/v/latest/guides/webhook-attachments-embeds)                         |
+| [moderation-bot.js](moderation-bot.js)         | Ban, kick, unban, !perms (permissions)           | [Permissions & Moderation](https://fluxerjs.blstmo.com/v/latest/guides/permissions-moderation)                                 |
 
 ## Environment Variables
 
 | Variable                          | Required               | Description                                  |
 | --------------------------------- | ---------------------- | -------------------------------------------- |
 | `FLUXER_BOT_TOKEN`                | Yes (for gateway bots) | Bot token from the Fluxer developer portal   |
+| `FLUXER_SUPPRESS_DEPRECATION`     | No                     | Set to `1` to silence deprecation warnings   |
 | `FLUXER_API_URL`                  | No                     | Custom API base URL                          |
 | `VOICE_DEBUG`                     | No                     | Set to `1` for voice connection logs         |
 | `FLUXER_VIDEO_FFMPEG`             | No                     | Set to `1` for FFmpeg video decoding (macOS) |

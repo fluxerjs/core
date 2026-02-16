@@ -52,17 +52,17 @@ export class VoiceManager extends EventEmitter {
     this.client = client;
     this.shardId = options.shardId ?? 0;
     this.client.on(Events.VoiceStateUpdate, (data: GatewayVoiceStateUpdateDispatchData) =>
-      this.handleVoiceStateUpdate(data)
+      this.handleVoiceStateUpdate(data),
     );
     this.client.on(Events.VoiceServerUpdate, (data: GatewayVoiceServerUpdateDispatchData) =>
-      this.handleVoiceServerUpdate(data)
+      this.handleVoiceServerUpdate(data),
     );
     this.client.on(
       Events.VoiceStatesSync,
       (data: {
         guildId: string;
         voiceStates: Array<{ user_id: string; channel_id: string | null }>;
-      }) => this.handleVoiceStatesSync(data)
+      }) => this.handleVoiceStatesSync(data),
     );
   }
 
@@ -96,7 +96,7 @@ export class VoiceManager extends EventEmitter {
     if (!guildId) return;
     this.client.emit?.(
       'debug',
-      `[VoiceManager] VoiceStateUpdate guild=${guildId} user=${data.user_id} channel=${data.channel_id ?? 'null'} (bot=${this.client.user?.id})`
+      `[VoiceManager] VoiceStateUpdate guild=${guildId} user=${data.user_id} channel=${data.channel_id ?? 'null'} (bot=${this.client.user?.id})`,
     );
     let guildMap = this.voiceStates.get(guildId);
     if (!guildMap) {
@@ -113,7 +113,7 @@ export class VoiceManager extends EventEmitter {
     if (pending && isBot) {
       this.client.emit?.(
         'debug',
-        `[VoiceManager] VoiceStateUpdate for bot - completing pending guild ${guildId}`
+        `[VoiceManager] VoiceStateUpdate for bot - completing pending guild ${guildId}`,
       );
       pending.state = data;
       this.tryCompletePending(guildId);
@@ -128,7 +128,7 @@ export class VoiceManager extends EventEmitter {
       const hasToken = !!(data.token && data.token.length > 0);
       this.client.emit?.(
         'debug',
-        `[VoiceManager] VoiceServerUpdate guild=${guildId} endpoint=${data.endpoint ?? 'null'} token=${hasToken ? 'yes' : 'NO'}`
+        `[VoiceManager] VoiceServerUpdate guild=${guildId} endpoint=${data.endpoint ?? 'null'} token=${hasToken ? 'yes' : 'NO'}`,
       );
       pending.server = data;
       this.tryCompletePending(guildId);
@@ -139,7 +139,7 @@ export class VoiceManager extends EventEmitter {
     if (!userId) {
       this.client.emit?.(
         'debug',
-        '[VoiceManager] Client user not available. Ensure the client is logged in.'
+        '[VoiceManager] Client user not available. Ensure the client is logged in.',
       );
       return;
     }
@@ -150,7 +150,7 @@ export class VoiceManager extends EventEmitter {
     if (!data.endpoint || !data.token) {
       this.client.emit?.(
         'debug',
-        `[VoiceManager] Voice server endpoint null for guild ${guildId}; disconnecting until new allocation`
+        `[VoiceManager] Voice server endpoint null for guild ${guildId}; disconnecting until new allocation`,
       );
       conn.destroy();
       this.connections.delete(guildId);
@@ -166,7 +166,7 @@ export class VoiceManager extends EventEmitter {
     const channel = conn.channel;
     this.client.emit?.(
       'debug',
-      `[VoiceManager] Voice server migration for guild ${guildId}; reconnecting`
+      `[VoiceManager] Voice server migration for guild ${guildId}; reconnecting`,
     );
     conn.destroy();
     this.connections.delete(guildId);
@@ -205,7 +205,7 @@ export class VoiceManager extends EventEmitter {
       this.updateVoiceState(guildId, p);
       if (p.self_stream) {
         this.uploadStreamPreview(guildId, conn).catch((e) =>
-          this.client.emit?.('debug', `[VoiceManager] Stream preview upload failed: ${String(e)}`)
+          this.client.emit?.('debug', `[VoiceManager] Stream preview upload failed: ${String(e)}`),
         );
       }
     });
@@ -214,7 +214,7 @@ export class VoiceManager extends EventEmitter {
   /** Upload a placeholder stream preview so the preview URL returns 200 instead of 404. */
   private async uploadStreamPreview(
     guildId: string,
-    conn: VoiceConnection | LiveKitRtcConnection
+    conn: VoiceConnection | LiveKitRtcConnection,
   ): Promise<void> {
     const connectionId = this.connectionIds.get(guildId);
     if (!connectionId) return;
@@ -238,7 +238,7 @@ export class VoiceManager extends EventEmitter {
     if (useLiveKit && !hasState) {
       this.client.emit?.(
         'debug',
-        `[VoiceManager] Proceeding with VoiceServerUpdate only (LiveKit does not require VoiceStateUpdate)`
+        `[VoiceManager] Proceeding with VoiceServerUpdate only (LiveKit does not require VoiceStateUpdate)`,
       );
     }
 
@@ -246,7 +246,7 @@ export class VoiceManager extends EventEmitter {
     if (!userId) {
       this.client.emit?.(
         'debug',
-        '[VoiceManager] Client user not available. Ensure the client is logged in.'
+        '[VoiceManager] Client user not available. Ensure the client is logged in.',
       );
       return;
     }
@@ -260,7 +260,7 @@ export class VoiceManager extends EventEmitter {
 
     this.storeConnectionId(
       guildId,
-      pending.server.connection_id ?? (state as { connection_id?: string }).connection_id
+      pending.server.connection_id ?? (state as { connection_id?: string }).connection_id,
     );
     this.pending.delete(guildId);
     const ConnClass = useLiveKit ? LiveKitRtcConnection : VoiceConnection;
@@ -268,7 +268,7 @@ export class VoiceManager extends EventEmitter {
     this.registerConnection(guildId, conn);
     conn.connect(pending.server, state).then(
       () => pending.resolve(conn),
-      (e) => pending.reject(e)
+      (e) => pending.reject(e),
     );
   }
 
@@ -290,7 +290,7 @@ export class VoiceManager extends EventEmitter {
     return new Promise((resolve, reject) => {
       this.client.emit?.(
         'debug',
-        `[VoiceManager] Requesting voice join guild=${channel.guildId} channel=${channel.id}`
+        `[VoiceManager] Requesting voice join guild=${channel.guildId} channel=${channel.id}`,
       );
       const timeout = setTimeout(() => {
         if (this.pending.has(channel.guildId)) {
@@ -298,8 +298,8 @@ export class VoiceManager extends EventEmitter {
           reject(
             new Error(
               'Voice connection timeout. Ensure the server has voice enabled and the bot has Connect permissions. ' +
-                'The gateway must send VoiceServerUpdate and VoiceStateUpdate in response.'
-            )
+                'The gateway must send VoiceServerUpdate and VoiceStateUpdate in response.',
+            ),
           );
         }
       }, 20_000);
@@ -371,7 +371,7 @@ export class VoiceManager extends EventEmitter {
       self_video?: boolean;
       self_mute?: boolean;
       self_deaf?: boolean;
-    }
+    },
   ): void {
     const conn = this.connections.get(guildId);
     if (!conn) return;
@@ -380,7 +380,7 @@ export class VoiceManager extends EventEmitter {
     if (!connectionId) {
       this.client.emit?.(
         'debug',
-        `[VoiceManager] Skipping voice state sync: no connection_id for guild ${guildId}`
+        `[VoiceManager] Skipping voice state sync: no connection_id for guild ${guildId}`,
       );
       return;
     }

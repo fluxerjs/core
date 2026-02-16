@@ -1,5 +1,17 @@
-import type { APIEmbed, APIEmbedAuthor, APIEmbedFooter } from '@fluxerjs/types';
+import type { APIEmbed, APIEmbedAuthor, APIEmbedFooter, APIEmbedMedia } from '@fluxerjs/types';
 import { resolveColor } from '@fluxerjs/util';
+
+/** Options for embed media (image, thumbnail, video, audio). */
+export interface EmbedMediaOptions {
+  url: string;
+  content_type?: string | null;
+  width?: number | null;
+  height?: number | null;
+  description?: string | null;
+  placeholder?: string | null;
+  duration?: number | null;
+  flags?: number | null;
+}
 
 const EMBED_MAX = {
   title: 256,
@@ -11,6 +23,24 @@ const EMBED_MAX = {
   authorName: 256,
   total: 6000,
 };
+
+function toEmbedMedia(input: string | EmbedMediaOptions): APIEmbedMedia {
+  if (typeof input === 'string') {
+    return { url: input };
+  }
+  if (!URL.canParse(input.url)) {
+    throw new Error('Invalid embed media URL');
+  }
+  const media: APIEmbedMedia = { url: input.url };
+  if (input.content_type != null) media.content_type = input.content_type;
+  if (input.width != null) media.width = input.width;
+  if (input.height != null) media.height = input.height;
+  if (input.description != null) media.description = input.description;
+  if (input.placeholder != null) media.placeholder = input.placeholder;
+  if (input.duration != null) media.duration = input.duration;
+  if (input.flags != null) media.flags = input.flags;
+  return media;
+}
 
 /** Author field for an embed. */
 export interface EmbedAuthorOptions {
@@ -32,7 +62,11 @@ export interface EmbedFieldData {
   inline?: boolean;
 }
 
-/** Builder for creating rich embeds. Use `toJSON()` when passing to `reply`, `send`, or `edit`. */
+/**
+ * Builder for creating rich embeds. Use `toJSON()` when passing to `reply`, `send`, or `edit`.
+ * Embeds must have at least one of: title, description, fields, or image/thumbnail.
+ * A description-only embed (no title) is valid.
+ */
 export class EmbedBuilder {
   public readonly data: Partial<APIEmbed> = {};
 
@@ -109,20 +143,37 @@ export class EmbedBuilder {
     return this;
   }
 
-  /** Set the embed image URL. */
-  setImage(url: string | null): this {
-    this.data.image = url ? { url } : undefined;
+  /** Set the embed image (URL string or full media options). */
+  setImage(input: string | EmbedMediaOptions | null): this {
+    this.data.image = input ? toEmbedMedia(input) : undefined;
     return this;
   }
 
-  /** Set the embed thumbnail URL. */
-  setThumbnail(url: string | null): this {
-    this.data.thumbnail = url ? { url } : undefined;
+  /** Set the embed thumbnail (URL string or full media options). */
+  setThumbnail(input: string | EmbedMediaOptions | null): this {
+    this.data.thumbnail = input ? toEmbedMedia(input) : undefined;
     return this;
   }
 
-  setVideo(url: string | null): this {
-    this.data.video = url ? { url } : undefined;
+  /**
+   * Set the embed video. Supported by Fluxer.
+   * Embed stays type 'rich'; this adds the .video field.
+   * Include a title (e.g. setTitle) when using video.
+   *
+   * @param input - Video URL, full media options (e.g. duration for progress bars), or null to clear
+   */
+  setVideo(input: string | EmbedMediaOptions | null): this {
+    this.data.video = input ? toEmbedMedia(input) : undefined;
+    return this;
+  }
+
+  /**
+   * Set the embed audio. Supported by Fluxer.
+   *
+   * @param input - Audio URL, full media options, or null to clear
+   */
+  setAudio(input: string | EmbedMediaOptions | null): this {
+    this.data.audio = input ? toEmbedMedia(input) : undefined;
     return this;
   }
 
@@ -165,7 +216,7 @@ export class EmbedBuilder {
       .join('').length;
     if (totalLength > EMBED_MAX.total)
       throw new RangeError(`Embed total length must be ≤${EMBED_MAX.total}`);
-    return { ...this.data, type: this.data.type ?? 'rich' } as APIEmbed;
+    return { ...this.data, type: 'rich' } as APIEmbed;
   }
 
   /** Create an EmbedBuilder from an existing API embed. */
@@ -180,8 +231,9 @@ export class EmbedBuilder {
     b.data.footer = data.footer ?? undefined;
     b.data.image = data.image ?? undefined;
     b.data.thumbnail = data.thumbnail ?? undefined;
+    b.data.video = data.video ?? undefined;
+    b.data.audio = data.audio ?? undefined;
     b.data.fields = data.fields ?? undefined;
-    b.data.type = data.type ?? 'rich';
     return b;
   }
 }

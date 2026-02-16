@@ -2,8 +2,12 @@ import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import type { User } from './User.js';
 import type { Guild } from './Guild.js';
+import type { GuildChannel } from './Channel.js';
 import type { APIGuildMember } from '@fluxerjs/types';
+import { PermissionFlagsMap, type PermissionResolvable } from '@fluxerjs/util';
 import { Routes } from '@fluxerjs/types';
+import { cdnMemberAvatarURL, cdnMemberBannerURL } from '../util/cdn.js';
+import { computePermissions, hasPermission } from '../util/permissions.js';
 
 /** Represents a member of a guild. */
 export class GuildMember extends Base {
@@ -49,6 +53,30 @@ export class GuildMember extends Base {
   }
 
   /**
+   * Get the guild-specific avatar URL for this member.
+   * Returns null if the member has no guild avatar (use displayAvatarURL for fallback).
+   */
+  avatarURL(options?: { size?: number; extension?: string }): string | null {
+    return cdnMemberAvatarURL(this.guild.id, this.id, this.avatar, options);
+  }
+
+  /**
+   * Get the avatar URL to display for this member.
+   * Uses guild-specific avatar if set, otherwise falls back to the user's avatar.
+   */
+  displayAvatarURL(options?: { size?: number; extension?: string }): string {
+    return this.avatarURL(options) ?? this.user.displayAvatarURL(options);
+  }
+
+  /**
+   * Get the guild-specific banner URL for this member.
+   * Returns null if the member has no guild banner.
+   */
+  bannerURL(options?: { size?: number; extension?: string }): string | null {
+    return cdnMemberBannerURL(this.guild.id, this.id, this.banner, options);
+  }
+
+  /**
    * Add a role to this member.
    * @param roleId - The role ID to add
    * Requires Manage Roles permission.
@@ -64,5 +92,70 @@ export class GuildMember extends Base {
    */
   async removeRole(roleId: string): Promise<void> {
     await this.client.rest.delete(Routes.guildMemberRole(this.guild.id, this.id, roleId));
+  }
+
+  /**
+   * Get the member's guild-level permissions (from roles only, no channel overwrites).
+   * Use this for server-wide permission checks (e.g. ban, kick, manage roles).
+   * @returns Object with has(permission) to check specific permissions
+   * @example
+   * const perms = member.permissions;
+   * if (perms.has(PermissionFlags.BanMembers)) { ... }
+   */
+  get permissions(): { has(permission: PermissionResolvable): boolean } {
+    const base = this._computeBasePermissions();
+    const ownerId = this.guild.ownerId;
+    const isOwner = ownerId != null && ownerId !== '' && String(ownerId) === String(this.id);
+    const perms = computePermissions(base, [], [], this.id, isOwner);
+    return {
+      has(permission: PermissionResolvable): boolean {
+        const perm =
+          typeof permission === 'number' ? permission : PermissionFlagsMap[String(permission)];
+        if (perm === undefined) return false;
+        return hasPermission(perms, BigInt(perm));
+      },
+    };
+  }
+
+  /**
+   * Compute the member's effective permissions in a guild channel.
+   * Applies role permissions and channel overwrites.
+   * @param channel - The guild channel to check permissions for
+   * @returns Object with has(permission) to check specific permissions
+   * @example
+   * const perms = member.permissionsIn(channel);
+   * if (perms.has(PermissionFlags.SendMessages)) { ... }
+   */
+  permissionsIn(channel: GuildChannel): { has(permission: PermissionResolvable): boolean } {
+    const base = this._computeBasePermissions();
+    const ownerId = this.guild.ownerId;
+    const isOwner = ownerId != null && ownerId !== '' && String(ownerId) === String(this.id);
+    const perms = computePermissions(
+      base,
+      channel.permissionOverwrites,
+      this.roles,
+      this.id,
+      isOwner,
+    );
+    return {
+      has(permission: PermissionResolvable): boolean {
+        const perm =
+          typeof permission === 'number' ? permission : PermissionFlagsMap[String(permission)];
+        if (perm === undefined) return false;
+        return hasPermission(perms, BigInt(perm));
+      },
+    };
+  }
+
+  private _computeBasePermissions(): bigint {
+    let base = 0n;
+    const everyone = this.guild.roles.get(this.guild.id);
+    if (everyone) base |= BigInt(everyone.permissions);
+    for (const roleId of this.roles) {
+      if (roleId === this.guild.id) continue;
+      const role = this.guild.roles.get(roleId);
+      if (role) base |= BigInt(role.permissions);
+    }
+    return base;
   }
 }

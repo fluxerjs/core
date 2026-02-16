@@ -1,11 +1,16 @@
 import { RateLimitManager } from './RateLimitManager.js';
 import { FluxerAPIError, RateLimitError, HTTPError } from './errors/index.js';
 import type { APIErrorBody, RateLimitErrorBody } from '@fluxerjs/types';
+import { buildFormData } from './utils/files.js';
 
 export interface RequestOptions {
   body?: unknown | FormData;
   headers?: Record<string, string>;
-  files?: Array<{ name: string; data: Blob | ArrayBuffer | Uint8Array; filename?: string }>;
+  files?: Array<{
+    name: string;
+    data: Blob | ArrayBuffer | Uint8Array | Buffer;
+    filename?: string;
+  }>;
   auth?: boolean;
 }
 
@@ -52,7 +57,11 @@ export class RequestManager {
     if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   }
 
-  private buildHeaders(route: string, options: RequestOptions): Record<string, string> {
+  private buildHeaders(
+    _route: string,
+    options: RequestOptions,
+    body: string | FormData | undefined,
+  ): Record<string, string> {
     const headers: Record<string, string> = {
       'User-Agent': this.options.userAgent,
       ...options.headers,
@@ -60,7 +69,7 @@ export class RequestManager {
     if (options.auth !== false && this.token) {
       headers['Authorization'] = `${this.options.authPrefix} ${this.token}`;
     }
-    if (options.body !== undefined && !(options.body instanceof FormData)) {
+    if (body !== undefined && !(body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
     return headers;
@@ -76,12 +85,18 @@ export class RequestManager {
     if (options.body !== undefined) {
       if (options.body instanceof FormData) {
         body = options.body;
+      } else if (
+        options.files?.length &&
+        typeof options.body === 'object' &&
+        options.body !== null
+      ) {
+        body = buildFormData(options.body as Record<string, unknown>, options.files);
       } else {
         body = JSON.stringify(options.body);
       }
     }
 
-    const headers = this.buildHeaders(route, options);
+    const headers = this.buildHeaders(route, options, body);
 
     let lastError: Error | null = null;
     for (let attempt = 0; attempt <= this.options.retries; attempt++) {
@@ -110,7 +125,7 @@ export class RequestManager {
               message: data.message ?? 'Rate limited',
               retry_after: data.retry_after ?? 0,
             },
-            response.status
+            response.status,
           );
         }
 

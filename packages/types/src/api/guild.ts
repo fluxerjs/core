@@ -91,7 +91,12 @@ export interface APIGuildAuditLogEntry {
   user_id?: Snowflake | null;
   target_id?: Snowflake | null;
   reason?: string | null;
-  changes?: Array<{ key: string; old_value?: unknown; new_value?: unknown }>;
+  /** Changed fields. Value types vary by action_type (e.g. string for name, number for permissions). */
+  changes?: Array<{
+    key: string;
+    old_value?: string | number | boolean | null;
+    new_value?: string | number | boolean | null;
+  }>;
 }
 
 /** Response from GET /guilds/{id}/audit-logs */

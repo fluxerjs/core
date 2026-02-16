@@ -106,7 +106,7 @@ export class VoiceConnection extends EventEmitter {
   /** Called when we have both server update and state update. */
   async connect(
     server: GatewayVoiceServerUpdateDispatchData,
-    state: GatewayVoiceStateUpdateDispatchData
+    state: GatewayVoiceStateUpdateDispatchData,
   ): Promise<void> {
     this._token = server.token;
     const raw = (server.endpoint ?? '').trim();

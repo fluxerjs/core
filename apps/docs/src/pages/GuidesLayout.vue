@@ -4,16 +4,14 @@
       type="button"
       class="sidebar-toggle"
       aria-label="Toggle navigation menu"
-      @click="sidebarOpen = !sidebarOpen"
-    >
+      @click="sidebarOpen = !sidebarOpen">
       <span class="toggle-icon">{{ sidebarOpen ? '✕' : '☰' }}</span>
     </button>
     <div
       v-if="sidebarOpen"
       class="sidebar-backdrop"
       aria-hidden="true"
-      @click="sidebarOpen = false"
-    />
+      @click="sidebarOpen = false" />
     <aside class="guides-sidebar sidebar-base" :class="{ 'is-open': sidebarOpen }">
       <h3 class="sidebar-title">Guides</h3>
       <div class="sidebar-filter-wrap">
@@ -21,8 +19,7 @@
           v-model="filter"
           type="search"
           placeholder="Search guides..."
-          class="sidebar-filter"
-        />
+          class="sidebar-filter" />
       </div>
       <nav class="guides-nav">
         <div v-for="(items, cat) in filteredGroupedGuides" :key="cat" class="guide-group">
@@ -32,8 +29,7 @@
             :key="g.id"
             :to="versionedPath(`/guides/${g.slug}`)"
             class="sidebar-link"
-            active-class="active"
-          >
+            active-class="active">
             {{ g.title }}
           </router-link>
         </div>
@@ -70,7 +66,7 @@ watch(
   () => route.path,
   () => {
     sidebarOpen.value = false;
-  }
+  },
 );
 
 const groupedGuides = computed(() => {
@@ -93,7 +89,7 @@ const filteredGroupedGuides = computed(() => {
       (g) =>
         g.title.toLowerCase().includes(q) ||
         g.description.toLowerCase().includes(q) ||
-        getCategoryLabel(cat).toLowerCase().includes(q)
+        getCategoryLabel(cat).toLowerCase().includes(q),
     );
     if (matched.length) filtered[cat] = matched;
   }

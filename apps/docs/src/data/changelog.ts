@@ -11,6 +11,116 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.1.0',
+    date: '2026-02-16',
+    sections: [
+      {
+        title: 'BREAKING: Reaction events',
+        items: [
+          'MessageReactionAdd and MessageReactionRemove now emit (reaction, user, messageId, channelId, emoji, userId). Migrate from (reaction, user) or raw data destructuring.',
+          'Handlers expecting message_id, channel_id, user_id from raw data will break. Use reaction.messageId, reaction.channelId, user.id or the new convenience args.',
+        ],
+      },
+      {
+        title: 'New: client.events API',
+        items: [
+          'client.events — typed shorthand for event handlers. client.events.MessageReactionAdd((reaction, user, messageId, channelId, emoji, userId) => {...}).',
+        ],
+      },
+      {
+        title: 'Typing',
+        items: [
+          'MessageSendOptions — shared type for Channel.send, User.send, DMChannel.send, Message.send, Message.reply; embeds accept (APIEmbed | EmbedBuilder)[]',
+          'Webhook.send — embeds typed as (APIEmbed | EmbedBuilder)[]; optional wait param returns Message when true',
+          'ClientEvents — GuildEmojisUpdate, GuildStickersUpdate, and other events now use typed dispatch data',
+          'Gateway dispatch types — GatewayGuildEmojisUpdateDispatchData, GatewayChannelPinsUpdateDispatchData, etc. exported from @fluxerjs/types',
+          'APIApplicationCommandInteraction — member and user fields typed as APIGuildMember and APIUser',
+          'APIGuildAuditLogEntry changes — old_value/new_value typed; fetchPinnedMessages pinned items typed',
+        ],
+      },
+      {
+        title: 'Webhook & message attachments',
+        items: [
+          'Webhook.send() — files and attachments support; multipart/form-data when files provided',
+          'Channel.send, Message.reply, Message.send, Message.sendTo, client.channels.send — files and attachments support',
+          'MessageSendOptions and WebhookSendOptions — files (Blob/ArrayBuffer/Uint8Array) and attachments metadata',
+          'REST RequestManager — builds FormData from body + files when files present',
+          'EmbedBuilder — JSDoc: embeds can use description-only (no title required)',
+        ],
+      },
+      {
+        title: 'Media & embeds',
+        items: [
+          '@fluxerjs/util — resolveTenorToImageUrl() — resolve Tenor view URLs to GIF URLs for embed images; returns { url, flags: IS_ANIMATED }; derives GIF from JSON-LD or oEmbed (embeds require GIF, not MP4)',
+          'EmbedBuilder — setImage/setThumbnail accept EmbedMediaOptions with flags (e.g. EmbedMediaFlags.IS_ANIMATED)',
+        ],
+      },
+      {
+        title: 'Profile URLs (avatars, banners)',
+        items: [
+          'User — avatarURL(), displayAvatarURL(), bannerURL(); auto-detects animated avatars (a_ → gif); optional banner from profile/member context',
+          'GuildMember — avatarURL(), displayAvatarURL(), bannerURL() for guild-specific avatars/banners',
+          'Webhook — avatarURL()',
+          'CDN helpers — cdnAvatarURL(), cdnDisplayAvatarURL(), cdnBannerURL(), cdnMemberAvatarURL(), cdnMemberBannerURL(), cdnDefaultAvatarURL() for raw API data',
+          'New guide: Profile URLs — User/Webhook/GuildMember methods and standalone CDN helpers',
+        ],
+      },
+      {
+        title: 'Deprecation warnings',
+        items: [
+          'Runtime deprecation warnings — deprecated APIs (e.g. ChannelManager.fetchMessage, Channel.fetchMessage, Client.fetchMessage) now emit a one-time console.warn when used',
+          'emitDeprecationWarning(symbol, message) — exported from @fluxerjs/util for SDK use',
+          'FLUXER_SUPPRESS_DEPRECATION=1 — set to silence all deprecation warnings',
+        ],
+      },
+      {
+        title: 'Permissions & guild owner',
+        items: [
+          'Guild owner override — server owner now receives all permissions in member.permissions and member.permissionsIn(channel)',
+          'GuildMember.permissions — guild-level permissions (roles only); GuildMember.permissionsIn(channel) — channel-specific permissions (includes overwrites)',
+          'Fluxer gateway compatibility — READY, GUILD_CREATE, GUILD_UPDATE now correctly parse GuildReadyData (properties.owner_id) so owner_id is available for permission checks',
+          'Guild constructor — supports both owner_id and ownerId; defensive fallback when missing',
+          'New guide: Permissions & Moderation — member.permissions, PermissionFlags, owner override, ban/kick examples',
+        ],
+      },
+      {
+        title: 'SDK missing properties',
+        items: [
+          'Channel — icon, lastPinTimestamp on base; permissionOverwrites on GuildChannel',
+          'DMChannel — ownerId, recipients (User[]), nicks (Group DM support)',
+          'Guild — splash, splashURL(), vanityURLCode, features, verificationLevel, defaultMessageNotifications, explicitContentFilter, afkChannelId, afkTimeout, systemChannelId, rulesChannelId, nsfwLevel, mfaLevel, bannerWidth/Height, splashWidth/Height',
+          'User — avatarColor, flags, system',
+          'Message — webhookId, mentions (User[]), mentionRoles, nonce',
+          'Role — hoistPosition',
+          'Webhook — user (creator)',
+        ],
+      },
+      {
+        title: 'Fluxer API alignment (bot features)',
+        items: [
+          'BREAKING: Guild.ban() — now uses delete_message_days (0–7) instead of delete_message_seconds; added ban_duration_seconds for temporary bans',
+          'Routes — currentUserGuilds(), leaveGuild(guildId)',
+          'ClientUser — fetchGuilds(), leaveGuild(guildId)',
+          'GuildChannel — createInvite(options?), fetchInvites()',
+          'Channel — bulkDeleteMessages(ids), sendTyping()',
+          'Guild — createChannel(data), fetchChannels(), setChannelPositions(updates)',
+          'Message — fetchReactionUsers(emoji, options?)',
+          'GuildBan and APIBan — expires_at for temporary bans',
+        ],
+      },
+      {
+        title: 'Docs',
+        items: [
+          'New guide: Webhook Attachments & Embeds — description-only embeds, file attachments, full examples',
+          'New guides (Media category): Embed Media — images, thumbnails, video, audio; GIFs (Tenor) — send URL as content for gifv, resolveTenorToImageUrl() for Tenor in embeds; File Attachments — files with metadata and flags (spoiler, animated, explicit)',
+          'Embeds guide expanded — full EmbedBuilder reference: title, description, URL, color, author, footer, timestamp, fields, image, thumbnail, video, audio, multiple embeds, EmbedBuilder.from(), limits',
+          'Docgen — getters (channel, guild, displayName) now appear in API docs',
+          'Docgen — AttachmentBuilder.setSpoiler param type fixed; Base class and Client properties documented',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.0.9',
     date: '2026-02-15',
     sections: [

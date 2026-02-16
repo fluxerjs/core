@@ -1,3 +1,4 @@
+/** Event name constants for client.on(Events.X, handler). Use with ClientEvents for typed callbacks. */
 export const Events = {
   Ready: 'ready',
   MessageCreate: 'messageCreate',

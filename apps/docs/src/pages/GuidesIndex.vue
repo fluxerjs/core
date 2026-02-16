@@ -11,8 +11,7 @@
           v-for="g in items"
           :key="g.id"
           :to="versionedPath(`/guides/${g.slug}`)"
-          class="guide-card"
-        >
+          class="guide-card">
           <h3 class="guide-card-title">{{ g.title }}</h3>
           <p class="guide-card-desc">{{ g.description }}</p>
         </router-link>

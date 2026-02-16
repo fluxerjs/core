@@ -23,7 +23,7 @@ export function resolveColor(color: number | string | [number, number, number]):
  * Supports: <a?:name:id> (mention), :name: (colons), name:id (API format), unicode.
  */
 export function parseEmoji(
-  emoji: string
+  emoji: string,
 ): { id: string | null; name: string; animated?: boolean } | null {
   if (emoji == null || typeof emoji !== 'string') return null;
   const trimmed = emoji.trim();

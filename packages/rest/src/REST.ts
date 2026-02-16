@@ -53,7 +53,7 @@ export class REST extends EventEmitter {
       body?: unknown;
       auth?: boolean;
       files?: Array<{ name: string; data: Blob | ArrayBuffer | Uint8Array; filename?: string }>;
-    }
+    },
   ): Promise<T> {
     return this.requestManager.request<T>('POST', route, {
       body: options?.body,

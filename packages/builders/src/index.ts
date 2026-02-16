@@ -3,6 +3,7 @@ export {
   type EmbedAuthorOptions,
   type EmbedFooterOptions,
   type EmbedFieldData,
+  type EmbedMediaOptions,
 } from './messages/EmbedBuilder.js';
 export {
   AttachmentBuilder,

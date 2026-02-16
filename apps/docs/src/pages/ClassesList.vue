@@ -11,8 +11,7 @@
         v-for="c in classes"
         :key="c.name"
         :to="{ name: 'class', params: { version: routeVersion, class: c.name } }"
-        class="class-card"
-      >
+        class="class-card">
         <code class="class-name">{{ c.name }}</code>
         <p v-if="c.description" class="class-desc">{{ c.description }}</p>
       </router-link>

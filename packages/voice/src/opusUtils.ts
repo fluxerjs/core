@@ -8,7 +8,7 @@
  * Returns { frames: Uint8Array[], consumed } or null if not enough data.
  */
 export function parseOpusPacketBoundaries(
-  buffer: Uint8Array
+  buffer: Uint8Array,
 ): { frames: Uint8Array[]; consumed: number } | null {
   if (buffer.length < 2) return null;
   const toc = buffer[0];
