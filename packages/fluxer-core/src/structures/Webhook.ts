@@ -78,7 +78,10 @@ export class Webhook extends Base {
    * Returns null if the webhook has no custom avatar.
    */
   avatarURL(options?: { size?: number; extension?: string }): string | null {
-    return cdnAvatarURL(this.id, this.avatar, options);
+    return cdnAvatarURL(this.id, this.avatar, {
+      ...options,
+      cdnBase: this.client.getCDNBase(),
+    });
   }
 
   /** Delete this webhook. Requires bot token with Manage Webhooks permission. */

@@ -2,7 +2,6 @@ import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import type { APISticker } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
-import { CDN_URL } from '../util/Constants.js';
 
 /** Represents a custom sticker in a guild. */
 export class GuildSticker extends Base {
@@ -28,8 +27,9 @@ export class GuildSticker extends Base {
 
   /** CDN URL for this sticker image. */
   get url(): string {
+    const base = this.client.getCDNBase();
     const ext = this.animated ? 'gif' : 'png';
-    return `${CDN_URL}/stickers/${this.id}.${ext}`;
+    return `${base}/stickers/${this.id}.${ext}`;
   }
 
   /** Delete this sticker. Requires Manage Emojis and Stickers permission. */

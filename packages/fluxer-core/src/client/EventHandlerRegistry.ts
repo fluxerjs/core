@@ -11,6 +11,7 @@ import type {
 } from '@fluxerjs/types';
 import type {
   GatewayMessageReactionAddDispatchData,
+  GatewayMessageReactionAddManyDispatchData,
   GatewayMessageReactionRemoveDispatchData,
   GatewayMessageReactionRemoveEmojiDispatchData,
   GatewayMessageReactionRemoveAllDispatchData,
@@ -23,9 +24,16 @@ import type {
   GatewayInviteDeleteDispatchData,
   GatewayGuildRoleCreateDispatchData,
   GatewayGuildRoleUpdateDispatchData,
+  GatewayGuildRoleUpdateBulkDispatchData,
   GatewayGuildRoleDeleteDispatchData,
   GatewayTypingStartDispatchData,
   GatewayUserUpdateDispatchData,
+  GatewayChannelRecipientAddDispatchData,
+  GatewayChannelRecipientRemoveDispatchData,
+  GatewayChannelUpdateBulkDispatchData,
+  GatewayCallCreateDispatchData,
+  GatewayCallUpdateDispatchData,
+  GatewayCallDeleteDispatchData,
 } from '@fluxerjs/types';
 import type { Client } from './Client.js';
 
@@ -112,6 +120,71 @@ handlers.set('MESSAGE_REACTION_REMOVE_EMOJI', async (client, d) => {
     Events.MessageReactionRemoveEmoji,
     d as GatewayMessageReactionRemoveEmojiDispatchData,
   );
+});
+
+handlers.set('MESSAGE_REACTION_ADD_MANY', async (client, d) => {
+  client.emit(Events.MessageReactionAddMany, d as GatewayMessageReactionAddManyDispatchData);
+});
+
+handlers.set('CALL_CREATE', async (client, d) => {
+  client.emit(Events.CallCreate, d as GatewayCallCreateDispatchData);
+});
+
+handlers.set('CALL_UPDATE', async (client, d) => {
+  client.emit(Events.CallUpdate, d as GatewayCallUpdateDispatchData);
+});
+
+handlers.set('CALL_DELETE', async (client, d) => {
+  client.emit(Events.CallDelete, d as GatewayCallDeleteDispatchData);
+});
+
+handlers.set('CHANNEL_RECIPIENT_ADD', async (client, d) => {
+  const data = d as GatewayChannelRecipientAddDispatchData;
+  const channel = client.channels.get(data.channel_id);
+  if (channel) {
+    const user = client.getOrCreateUser(data.user as APIUserPartial);
+    client.emit(Events.ChannelRecipientAdd, channel, user);
+  } else {
+    client.emit(Events.ChannelRecipientAdd, null, client.getOrCreateUser(data.user as APIUserPartial));
+  }
+});
+
+handlers.set('CHANNEL_RECIPIENT_REMOVE', async (client, d) => {
+  const data = d as GatewayChannelRecipientRemoveDispatchData;
+  const channel = client.channels.get(data.channel_id);
+  const user = client.getOrCreateUser(data.user as APIUserPartial);
+  client.emit(Events.ChannelRecipientRemove, channel, user);
+});
+
+handlers.set('CHANNEL_UPDATE_BULK', async (client, d) => {
+  const data = d as GatewayChannelUpdateBulkDispatchData;
+  const guildId = data.channels[0]?.guild_id;
+  if (guildId) {
+    const { Channel } = await import('../structures/Channel.js');
+    for (const ch of data.channels) {
+      const channel = Channel.from(client, ch);
+      if (channel) client.channels.set(channel.id, channel);
+    }
+  }
+  client.emit(Events.ChannelUpdateBulk, data);
+});
+
+handlers.set('GUILD_ROLE_UPDATE_BULK', async (client, d) => {
+  const data = d as GatewayGuildRoleUpdateBulkDispatchData;
+  const guild = data.guild_id
+    ? client.guilds.get(data.guild_id)
+    : Array.from(client.guilds.values()).find((g) =>
+        data.roles.some((r) => g.roles.has(r.id)),
+      );
+  if (guild) {
+    const { Role } = await import('../structures/Role.js');
+    for (const r of data.roles) {
+      const existing = guild.roles.get(r.id);
+      if (existing) existing._patch(r);
+      else guild.roles.set(r.id, new Role(client, r, guild.id));
+    }
+  }
+  client.emit(Events.GuildRoleUpdateBulk, data);
 });
 
 handlers.set('GUILD_CREATE', async (client, d) => {

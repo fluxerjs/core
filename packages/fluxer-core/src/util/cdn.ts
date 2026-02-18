@@ -3,6 +3,8 @@ import { CDN_URL } from './Constants.js';
 export interface CdnUrlOptions {
   size?: number;
   extension?: string;
+  /** CDN base URL. Use {@link Client.getCDNBase} for instance discovery (self-hosted). */
+  cdnBase?: string;
 }
 
 function getExtension(hash: string | null, options?: CdnUrlOptions): string {
@@ -14,6 +16,10 @@ function getExtension(hash: string | null, options?: CdnUrlOptions): string {
 
 function appendSize(options?: CdnUrlOptions): string {
   return options?.size ? `?size=${options.size}` : '';
+}
+
+function getCdnBase(options?: CdnUrlOptions): string {
+  return options?.cdnBase ?? CDN_URL;
 }
 
 /**
@@ -31,9 +37,10 @@ export function cdnAvatarURL(
   options?: CdnUrlOptions,
 ): string | null {
   if (!avatarHash) return null;
+  const base = getCdnBase(options);
   const ext = getExtension(avatarHash, options);
   const size = appendSize(options);
-  return `${CDN_URL}/avatars/${userId}/${avatarHash}.${ext}${size}`;
+  return `${base}/avatars/${userId}/${avatarHash}.${ext}${size}`;
 }
 
 /**
@@ -50,7 +57,8 @@ export function cdnDisplayAvatarURL(
   avatarHash: string | null,
   options?: CdnUrlOptions,
 ): string {
-  return cdnAvatarURL(userId, avatarHash, options) ?? `${CDN_URL}/avatars/0/0.png`;
+  const base = getCdnBase(options);
+  return cdnAvatarURL(userId, avatarHash, options) ?? `${base}/avatars/0/0.png`;
 }
 
 /**
@@ -68,9 +76,10 @@ export function cdnBannerURL(
   options?: CdnUrlOptions,
 ): string | null {
   if (!bannerHash) return null;
+  const base = getCdnBase(options);
   const ext = getExtension(bannerHash, options);
   const size = appendSize(options);
-  return `${CDN_URL}/banners/${resourceId}/${bannerHash}.${ext}${size}`;
+  return `${base}/banners/${resourceId}/${bannerHash}.${ext}${size}`;
 }
 
 /**
@@ -90,9 +99,10 @@ export function cdnMemberAvatarURL(
   options?: CdnUrlOptions,
 ): string | null {
   if (!avatarHash) return null;
+  const base = getCdnBase(options);
   const ext = getExtension(avatarHash, options);
   const size = appendSize(options);
-  return `${CDN_URL}/guilds/${guildId}/users/${userId}/avatars/${avatarHash}.${ext}${size}`;
+  return `${base}/guilds/${guildId}/users/${userId}/avatars/${avatarHash}.${ext}${size}`;
 }
 
 /**
@@ -110,9 +120,10 @@ export function cdnMemberBannerURL(
   options?: CdnUrlOptions,
 ): string | null {
   if (!bannerHash) return null;
+  const base = getCdnBase(options);
   const ext = getExtension(bannerHash, options);
   const size = appendSize(options);
-  return `${CDN_URL}/guilds/${guildId}/users/${userId}/banners/${bannerHash}.${ext}${size}`;
+  return `${base}/guilds/${guildId}/users/${userId}/banners/${bannerHash}.${ext}${size}`;
 }
 
 /**
@@ -120,7 +131,8 @@ export function cdnMemberBannerURL(
  * @param discriminatorIndex - Optional index 0-4 for default avatar variant
  * @returns The default avatar URL
  */
-export function cdnDefaultAvatarURL(discriminatorIndex?: number): string {
+export function cdnDefaultAvatarURL(discriminatorIndex?: number, cdnBase?: string): string {
+  const base = cdnBase ?? CDN_URL;
   const index = discriminatorIndex != null ? discriminatorIndex % 5 : 0;
-  return `${CDN_URL}/avatars/0/${index}.png`;
+  return `${base}/avatars/0/${index}.png`;
 }

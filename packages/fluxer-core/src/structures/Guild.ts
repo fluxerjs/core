@@ -26,7 +26,6 @@ import { GuildMemberManager } from '../client/GuildMemberManager.js';
 import { GuildMember } from './GuildMember.js';
 import { Role } from './Role.js';
 import type { GuildChannel } from './Channel.js';
-import { CDN_URL } from '../util/Constants.js';
 import { Routes } from '@fluxerjs/types';
 import type { Webhook } from './Webhook.js';
 import type { GuildBan } from './GuildBan.js';
@@ -104,22 +103,25 @@ export class Guild extends Base {
   /** Get the guild icon URL, or null if no icon. */
   iconURL(options?: { size?: number }): string | null {
     if (!this.icon) return null;
+    const base = this.client.getCDNBase();
     const size = options?.size ? `?size=${options.size}` : '';
-    return `${CDN_URL}/icons/${this.id}/${this.icon}.png${size}`;
+    return `${base}/icons/${this.id}/${this.icon}.png${size}`;
   }
 
   /** Get the guild banner URL, or null if no banner. */
   bannerURL(options?: { size?: number }): string | null {
     if (!this.banner) return null;
+    const base = this.client.getCDNBase();
     const size = options?.size ? `?size=${options.size}` : '';
-    return `${CDN_URL}/banners/${this.id}/${this.banner}.png${size}`;
+    return `${base}/banners/${this.id}/${this.banner}.png${size}`;
   }
 
   /** Get the guild splash (invite background) URL, or null if no splash. */
   splashURL(options?: { size?: number }): string | null {
     if (!this.splash) return null;
+    const base = this.client.getCDNBase();
     const size = options?.size ? `?size=${options.size}` : '';
-    return `${CDN_URL}/splashes/${this.id}/${this.splash}.png${size}`;
+    return `${base}/splashes/${this.id}/${this.splash}.png${size}`;
   }
 
   /**
@@ -219,7 +221,10 @@ export class Guild extends Base {
       }
       throw err instanceof FluxerError
         ? err
-        : new FluxerError('Failed to fetch guild role', { cause: err as Error });
+        : new FluxerError('Failed to fetch guild role', {
+            code: err instanceof FluxerAPIError ? err.code : undefined,
+            cause: err as Error,
+          });
     }
   }
 
@@ -329,7 +334,10 @@ export class Guild extends Base {
       }
       throw err instanceof FluxerError
         ? err
-        : new FluxerError('Failed to fetch guild member', { cause: err as Error });
+        : new FluxerError('Failed to fetch guild member', {
+            code: err instanceof FluxerAPIError ? err.code : undefined,
+            cause: err as Error,
+          });
     }
   }
 

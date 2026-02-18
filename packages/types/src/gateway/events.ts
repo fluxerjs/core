@@ -131,6 +131,8 @@ export const GatewayDispatchEvents = {
   MessageReactionRemoveAll: 'MESSAGE_REACTION_REMOVE_ALL',
   /** All reactions of an emoji were removed from a message. */
   MessageReactionRemoveEmoji: 'MESSAGE_REACTION_REMOVE_EMOJI',
+  /** Multiple reactions added in a batch (debounced). */
+  MessageReactionAddMany: 'MESSAGE_REACTION_ADD_MANY',
   /** Message was acknowledged (read receipt). */
   MessageAck: 'MESSAGE_ACK',
 

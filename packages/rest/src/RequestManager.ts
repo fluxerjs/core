@@ -77,7 +77,11 @@ export class RequestManager {
 
   async request<T>(method: string, route: string, options: RequestOptions = {}): Promise<T> {
     const routeHash = this.getRouteHash(route);
-    const url = route.startsWith('http') ? route : `${this.baseUrl}${route}`;
+    const url = route.startsWith('http')
+      ? route
+      : route.startsWith('/.well-known/')
+        ? `${this.options.api}${route}`
+        : `${this.baseUrl}${route}`;
 
     await this.waitForRateLimit(routeHash);
 

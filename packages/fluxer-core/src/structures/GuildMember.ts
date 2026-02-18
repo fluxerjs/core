@@ -57,7 +57,10 @@ export class GuildMember extends Base {
    * Returns null if the member has no guild avatar (use displayAvatarURL for fallback).
    */
   avatarURL(options?: { size?: number; extension?: string }): string | null {
-    return cdnMemberAvatarURL(this.guild.id, this.id, this.avatar, options);
+    return cdnMemberAvatarURL(this.guild.id, this.id, this.avatar, {
+      ...options,
+      cdnBase: this.client.getCDNBase(),
+    });
   }
 
   /**
@@ -73,7 +76,10 @@ export class GuildMember extends Base {
    * Returns null if the member has no guild banner.
    */
   bannerURL(options?: { size?: number; extension?: string }): string | null {
-    return cdnMemberBannerURL(this.guild.id, this.id, this.banner, options);
+    return cdnMemberBannerURL(this.guild.id, this.id, this.banner, {
+      ...options,
+      cdnBase: this.client.getCDNBase(),
+    });
   }
 
   /**

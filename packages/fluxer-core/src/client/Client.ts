@@ -10,6 +10,7 @@ import type { Guild } from '../structures/Guild.js';
 import type { Channel } from '../structures/Channel.js';
 import { FluxerError } from '../errors/FluxerError.js';
 import { ErrorCodes } from '../errors/ErrorCodes.js';
+import { CDN_URL } from '../util/Constants.js';
 import { Events } from '../util/Events.js';
 import type {
   GatewayReceivePayload,
@@ -35,7 +36,7 @@ import type {
   APIRole,
   APIUser,
   APIUserPartial,
-  APIInstance,
+  WellKnownFluxerResponse,
 } from '@fluxerjs/types';
 import { emitDeprecationWarning, formatEmoji, parseEmoji } from '@fluxerjs/util';
 import { User } from '../structures/User.js';
@@ -72,6 +73,26 @@ export interface ClientEvents {
   ];
   [Events.MessageReactionRemoveAll]: [data: GatewayMessageReactionRemoveAllDispatchData];
   [Events.MessageReactionRemoveEmoji]: [data: GatewayMessageReactionRemoveEmojiDispatchData];
+  [Events.MessageReactionAddMany]: [
+    data: import('@fluxerjs/types').GatewayMessageReactionAddManyDispatchData,
+  ];
+  [Events.CallCreate]: [data: import('@fluxerjs/types').GatewayCallCreateDispatchData];
+  [Events.CallUpdate]: [data: import('@fluxerjs/types').GatewayCallUpdateDispatchData];
+  [Events.CallDelete]: [data: import('@fluxerjs/types').GatewayCallDeleteDispatchData];
+  [Events.ChannelRecipientAdd]: [
+    channel: Channel | null,
+    user: User,
+  ];
+  [Events.ChannelRecipientRemove]: [
+    channel: Channel | null,
+    user: User,
+  ];
+  [Events.ChannelUpdateBulk]: [
+    data: import('@fluxerjs/types').GatewayChannelUpdateBulkDispatchData,
+  ];
+  [Events.GuildRoleUpdateBulk]: [
+    data: import('@fluxerjs/types').GatewayGuildRoleUpdateBulkDispatchData,
+  ];
   [Events.InteractionCreate]: [
     interaction: import('@fluxerjs/types').APIApplicationCommandInteraction,
   ];
@@ -148,10 +169,13 @@ export class Client extends EventEmitter {
   /** Timestamp when the client became ready. Null until READY is received. */
   readyAt: Date | null = null;
   private _ws: WebSocketManager | null = null;
+  /** CDN base URL from instance discovery or options. Used by avatar/emoji URL helpers. */
+  private _cdnBaseUrl: string | null = null;
 
   /** @param options - Token, REST config, WebSocket, presence, etc. */
   constructor(public readonly options: ClientOptions = {}) {
     super();
+    this._cdnBaseUrl = options.cdn ?? null;
     this.events = createEventMethods(this);
     Object.defineProperty(this.channels, 'cache', {
       get: () => this.channels,
@@ -216,11 +240,22 @@ export class Client extends EventEmitter {
   }
 
   /**
-   * Fetch instance info (API URL, gateway URL, features). GET /instance.
-   * Does not require authentication.
+   * CDN base URL for avatars, icons, emojis, etc.
+   * Uses value from {@link fetchInstance} when available, else options.cdn, else default.
    */
-  async fetchInstance(): Promise<APIInstance> {
-    return this.rest.get<APIInstance>(Routes.instance(), { auth: false });
+  getCDNBase(): string {
+    return this._cdnBaseUrl ?? CDN_URL;
+  }
+
+  /**
+   * Fetch instance discovery document (API URL, gateway URL, features, media CDN, etc.).
+   * GET /.well-known/fluxer. Does not require authentication.
+   * Automatically sets the CDN base from endpoints.static_cdn for self-hosted instances.
+   */
+  async fetchInstance(): Promise<WellKnownFluxerResponse> {
+    const info = await this.rest.get<WellKnownFluxerResponse>(Routes.wellKnown(), { auth: false });
+    this._cdnBaseUrl = info.endpoints?.static_cdn ?? info.endpoints?.media ?? null;
+    return info;
   }
 
   /**

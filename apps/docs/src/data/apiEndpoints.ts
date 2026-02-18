@@ -145,8 +145,61 @@ export const apiEndpoints: ApiEndpoint[] = [
   // --- Instance ---
   {
     method: 'GET',
-    path: '/instance',
-    summary: 'Get instance info and endpoints',
+    path: '/.well-known/fluxer',
+    summary: 'Instance discovery (well-known)',
+    description: 'Unversioned at domain root. Returns endpoints, features, captcha, limits, etc.',
+    auth: 'none',
+    category: 'instance',
+    responseBody: [
+      { name: 'api_code_version', type: 'number (int53)' },
+      {
+        name: 'endpoints',
+        type: 'object',
+        nested: [
+          { name: 'api', type: 'string' },
+          { name: 'api_client', type: 'string' },
+          { name: 'api_public', type: 'string' },
+          { name: 'gateway', type: 'string' },
+          { name: 'media', type: 'string' },
+          { name: 'static_cdn', type: 'string', description: 'Avatars, icons, emojis, stickers' },
+          { name: 'marketing', type: 'string' },
+          { name: 'admin', type: 'string' },
+          { name: 'invite', type: 'string' },
+          { name: 'gift', type: 'string' },
+          { name: 'webapp', type: 'string' },
+        ],
+      },
+      {
+        name: 'captcha',
+        type: 'object',
+        nested: [
+          { name: 'provider', type: 'string' },
+          { name: 'hcaptcha_site_key', type: 'string | null' },
+          { name: 'turnstile_site_key', type: 'string | null' },
+        ],
+      },
+      {
+        name: 'features',
+        type: 'object',
+        nested: [
+          { name: 'sms_mfa_enabled', type: 'boolean' },
+          { name: 'voice_enabled', type: 'boolean' },
+          { name: 'stripe_enabled', type: 'boolean' },
+          { name: 'self_hosted', type: 'boolean' },
+          { name: 'manual_review_enabled', type: 'boolean' },
+        ],
+      },
+      { name: 'push', type: 'object' },
+      { name: 'limits', type: 'object' },
+      { name: 'gif', type: 'object' },
+      { name: 'sso', type: 'object' },
+    ],
+  },
+  {
+    method: 'GET',
+    path: '/v1/instance',
+    summary: 'Get instance info (deprecated)',
+    description: 'Deprecated. Use GET /.well-known/fluxer for instance discovery.',
     auth: 'none',
     category: 'instance',
     responseBody: [

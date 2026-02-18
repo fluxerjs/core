@@ -2,7 +2,6 @@ import type { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import type { APIEmoji } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
-import { CDN_URL } from '../util/Constants.js';
 
 /** Represents a custom emoji in a guild. */
 export class GuildEmoji extends Base {
@@ -24,8 +23,9 @@ export class GuildEmoji extends Base {
 
   /** CDN URL for this emoji image. */
   get url(): string {
+    const base = this.client.getCDNBase();
     const ext = this.animated ? 'gif' : 'png';
-    return `${CDN_URL}/emojis/${this.id}.${ext}`;
+    return `${base}/emojis/${this.id}.${ext}`;
   }
 
   /** Emoji identifier for use in reactions: `name:id` */

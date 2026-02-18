@@ -3,7 +3,6 @@ import { Base } from './Base.js';
 import type { MessageSendOptions } from '../util/messageUtils.js';
 import type { APIUserPartial } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
-import { CDN_URL } from '../util/Constants.js';
 import type { DMChannel } from './Channel.js';
 
 /** Represents a user (or bot) on Fluxer. */
@@ -58,14 +57,15 @@ export class User extends Base {
    */
   avatarURL(options?: { size?: number; extension?: string }): string | null {
     if (!this.avatar) return null;
+    const base = this.client.getCDNBase();
     const ext = this.avatar.startsWith('a_') ? 'gif' : (options?.extension ?? 'png');
     const size = options?.size ? `?size=${options.size}` : '';
-    return `${CDN_URL}/avatars/${this.id}/${this.avatar}.${ext}${size}`;
+    return `${base}/avatars/${this.id}/${this.avatar}.${ext}${size}`;
   }
 
   /** Get the avatar URL, or the default avatar if none set. */
   displayAvatarURL(options?: { size?: number; extension?: string }): string {
-    return this.avatarURL(options) ?? `${CDN_URL}/avatars/0/0.png`;
+    return this.avatarURL(options) ?? `${this.client.getCDNBase()}/avatars/0/0.png`;
   }
 
   /**
@@ -74,9 +74,10 @@ export class User extends Base {
    */
   bannerURL(options?: { size?: number; extension?: string }): string | null {
     if (!this.banner) return null;
+    const base = this.client.getCDNBase();
     const ext = this.banner.startsWith('a_') ? 'gif' : (options?.extension ?? 'png');
     const size = options?.size ? `?size=${options.size}` : '';
-    return `${CDN_URL}/banners/${this.id}/${this.banner}.${ext}${size}`;
+    return `${base}/banners/${this.id}/${this.banner}.${ext}${size}`;
   }
 
   /** Returns a mention string (e.g. `<@123456>`). */

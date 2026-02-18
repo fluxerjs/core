@@ -39,7 +39,10 @@ export class MessageManager {
       }
       throw err instanceof FluxerError
         ? err
-        : new FluxerError(String(err), { cause: err as Error });
+        : new FluxerError(String(err), {
+            code: err instanceof FluxerAPIError ? err.code : undefined,
+            cause: err as Error,
+          });
     }
   }
 }

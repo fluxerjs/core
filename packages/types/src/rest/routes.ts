@@ -81,7 +81,11 @@ export const Routes = {
   userProfile: (id: Snowflake, guildId?: Snowflake): string =>
     guildId ? `/users/${id}/profile?guild_id=${guildId}` : `/users/${id}/profile`,
 
-  // Instance (unauthenticated)
+  /** Instance discovery at domain root (no /v1 prefix). Unauthenticated. */
+  wellKnown: () => '/.well-known/fluxer' as const,
+  /**
+   * @deprecated Use wellKnown() for GET /.well-known/fluxer. The /instance endpoint was removed.
+   */
   instance: () => '/instance' as const,
 
   // Gateway

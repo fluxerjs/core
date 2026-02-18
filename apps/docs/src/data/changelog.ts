@@ -11,6 +11,53 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.0.0-r',
+    date: '2026-02-18',
+    sections: [
+      {
+        title: 'Breaking',
+        items: [
+          'fetchInstance() now calls GET /.well-known/fluxer and returns WellKnownFluxerResponse; APIInstance deprecated; Routes.instance() → Routes.wellKnown()',
+        ],
+      },
+      {
+        title: 'Routes',
+        items: ['wellKnown() — GET /.well-known/fluxer (instance discovery, unauthenticated)'],
+      },
+      {
+        title: 'Types',
+        items: [
+          'WellKnownFluxerResponse — full instance discovery schema with endpoints, features, captcha, limits, etc.',
+        ],
+      },
+      {
+        title: 'SDK — Client',
+        items: [
+          'client.fetchInstance() returns WellKnownFluxerResponse; automatically sets CDN base from endpoints.static_cdn for self-hosted instances',
+          'client.getCDNBase() — returns CDN base URL (from discovery, options.cdn, or default)',
+          'ClientOptions.cdn — override CDN base for self-hosted instances',
+          'CDN helpers (User, Guild, GuildMember, Webhook, GuildEmoji, GuildSticker) use endpoints.media / static_cdn when available via client.getCDNBase()',
+        ],
+      },
+      {
+        title: 'Gateway events',
+        items: [
+          'callCreate, callUpdate, callDelete — voice/video call lifecycle',
+          'channelRecipientAdd, channelRecipientRemove — group DM member add/remove',
+          'channelUpdateBulk — bulk channel reorder',
+          'messageReactionAddMany — bulk reactions',
+          'guildRoleUpdateBulk — bulk role reorder',
+        ],
+      },
+      {
+        title: 'Errors',
+        items: [
+          'New FluxerError codes: UnknownChannel, UnknownMessage, UnknownGuild, UnknownMember, UnknownRole, UnknownUser, MissingPermissions, RateLimited, MissingAccess, Unauthorized, AccessDenied',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.1.6',
     date: '2026-02-18',
     sections: [

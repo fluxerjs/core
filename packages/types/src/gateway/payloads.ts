@@ -145,6 +145,19 @@ export interface GatewayMessageReactionRemoveAllDispatchData {
   channel_id: Snowflake;
   guild_id?: Snowflake;
 }
+
+/** MESSAGE_REACTION_ADD_MANY — batched reaction adds; channel_id, message_id, guild_id?, reactions[] */
+export interface GatewayMessageReactionAddManyDispatchData {
+  channel_id: Snowflake;
+  message_id: Snowflake;
+  guild_id?: Snowflake;
+  reactions: Array<{
+    user_id: Snowflake;
+    emoji: GatewayReactionEmoji;
+    member?: APIGuildMember & { guild_id?: Snowflake };
+  }>;
+}
+
 /** MESSAGE_ACK — read receipt; message_id, channel_id */
 export interface GatewayMessageAckDispatchData {
   message_id: Snowflake;
@@ -271,9 +284,9 @@ export interface GatewayGuildRoleDeleteDispatchData {
   guild_id: Snowflake;
   role_id: Snowflake;
 }
-/** GUILD_ROLE_UPDATE_BULK — guild_id, roles[] */
+/** GUILD_ROLE_UPDATE_BULK — roles[] (guild_id optional if included by gateway) */
 export interface GatewayGuildRoleUpdateBulkDispatchData {
-  guild_id: Snowflake;
+  guild_id?: Snowflake;
   roles: APIRole[];
 }
 
@@ -430,23 +443,26 @@ export interface GatewayRelationshipRemoveDispatchData {
   id: Snowflake;
 }
 
-/** CALL_CREATE — call created */
+/** CALL_CREATE — DM/group DM call created */
 export interface GatewayCallCreateDispatchData {
-  id: Snowflake;
   channel_id: Snowflake;
-  [key: string]: unknown;
+  message_id: Snowflake;
+  region?: string | null;
+  ringing: Snowflake[];
+  voice_states: Array<Record<string, unknown>>;
 }
 
-/** CALL_UPDATE — call updated */
+/** CALL_UPDATE — call updated (participants join/leave, ringing changes) */
 export interface GatewayCallUpdateDispatchData {
-  id: Snowflake;
   channel_id: Snowflake;
-  [key: string]: unknown;
+  message_id: Snowflake;
+  region?: string | null;
+  ringing: Snowflake[];
+  voice_states: Array<Record<string, unknown>>;
 }
 
 /** CALL_DELETE — call ended */
 export interface GatewayCallDeleteDispatchData {
-  id: Snowflake;
   channel_id: Snowflake;
 }
 
