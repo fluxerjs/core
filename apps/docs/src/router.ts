@@ -9,6 +9,8 @@ import GuidePage from './pages/GuidePage.vue';
 import DocsLayout from './pages/DocsLayout.vue';
 import ClassPage from './pages/ClassPage.vue';
 import TypedefPage from './pages/TypedefPage.vue';
+import ApiReferenceLayout from './pages/ApiReferenceLayout.vue';
+import ApiReferencePage from './pages/ApiReferencePage.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -17,6 +19,7 @@ const router = createRouter({
     { path: '/changelog', name: 'changelog', component: Changelog },
     { path: '/guides', redirect: '/v/latest/guides' },
     { path: '/docs', redirect: '/v/latest/docs' },
+    { path: '/api', redirect: '/v/latest/api' },
     { path: '/v/:version/changelog', redirect: '/changelog' },
     {
       path: '/v/:version',
@@ -53,6 +56,11 @@ const router = createRouter({
             },
             { path: 'typedefs/:typedef', name: 'typedef', component: TypedefPage },
           ],
+        },
+        {
+          path: 'api',
+          component: ApiReferenceLayout,
+          children: [{ path: '', name: 'api', component: ApiReferencePage }],
         },
       ],
     },

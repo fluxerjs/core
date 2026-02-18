@@ -2,6 +2,9 @@
   <nav class="sidebar-nav">
     <div v-if="store.currentDoc" class="nav-content">
       <h3 class="sidebar-title">API Reference</h3>
+      <router-link :to="versionedPath('/api')" class="sidebar-rest-api-link">
+        REST API →
+      </router-link>
       <div v-if="packages.length" class="sidebar-select-wrap">
         <select v-model="selectedPackage" class="sidebar-select">
           <option value="">All packages</option>
@@ -111,6 +114,25 @@ const filteredEnums = computed(() => {
   padding: 0.75rem 0;
   display: flex;
   flex-direction: column;
+}
+
+.sidebar-rest-api-link {
+  display: block;
+  margin: 0 var(--sidebar-padding-x) 1rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  background: rgba(99, 179, 237, 0.1);
+  border: 1px solid rgba(99, 179, 237, 0.25);
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sidebar-rest-api-link:hover {
+  background: rgba(99, 179, 237, 0.18);
+  border-color: var(--accent);
 }
 
 .sidebar-filter {

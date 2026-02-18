@@ -14,6 +14,7 @@
       @click="sidebarOpen = false" />
     <aside class="guides-sidebar sidebar-base" :class="{ 'is-open': sidebarOpen }">
       <h3 class="sidebar-title">Guides</h3>
+      <router-link :to="versionedPath('/api')" class="guides-rest-api-link">REST API →</router-link>
       <div class="sidebar-filter-wrap">
         <input
           v-model="filter"
@@ -120,6 +121,25 @@ const filteredGroupedGuides = computed(() => {
 
 .guides-sidebar {
   /* Shared styles from .sidebar-base in main.css */
+}
+
+.guides-rest-api-link {
+  display: block;
+  margin: 0 var(--sidebar-padding-x) 1rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  background: rgba(99, 179, 237, 0.1);
+  border: 1px solid rgba(99, 179, 237, 0.25);
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.guides-rest-api-link:hover {
+  background: rgba(99, 179, 237, 0.18);
+  border-color: var(--accent);
 }
 
 .guides-sidebar .sidebar-filter-wrap {

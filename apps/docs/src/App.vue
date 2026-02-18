@@ -8,6 +8,7 @@
       </router-link>
       <nav class="header-nav header-nav-desktop" aria-label="Main navigation">
         <router-link to="/v/latest/guides" class="header-link">Guides</router-link>
+        <router-link to="/v/latest/api" class="header-link">REST API</router-link>
         <router-link to="/v/latest/docs" class="header-link">Docs</router-link>
         <router-link to="/changelog" class="header-link">Changelog</router-link>
         <span class="header-spacer"></span>
@@ -58,6 +59,9 @@
           <router-link to="/v/latest/guides" class="mobile-link" @click="mobileMenuOpen = false">
             Guides
           </router-link>
+          <router-link to="/v/latest/api" class="mobile-link" @click="mobileMenuOpen = false">
+            REST API
+          </router-link>
           <router-link to="/v/latest/docs" class="mobile-link" @click="mobileMenuOpen = false">
             Docs
           </router-link>
@@ -97,7 +101,7 @@
     <main
       id="main"
       class="layout"
-      :class="{ 'layout-docs': isDocsRoute, 'layout-guides': isGuidesRoute }"
+      :class="{ 'layout-docs': isDocsRoute, 'layout-guides': isGuidesRoute, 'layout-api': isApiRoute }"
       role="main">
       <div class="layout-scroll">
         <router-view v-slot="{ Component }">
@@ -139,7 +143,8 @@ watch(mobileMenuOpen, (open) => {
 
 const isDocsRoute = computed(() => route.path.includes('/docs'));
 const isGuidesRoute = computed(() => route.path.includes('/guides'));
-const hideFooterInLayout = computed(() => isDocsRoute.value || isGuidesRoute.value);
+const isApiRoute = computed(() => route.path.includes('/api'));
+const hideFooterInLayout = computed(() => isDocsRoute.value || isGuidesRoute.value || isApiRoute.value);
 
 const guidesStore = useGuidesStore();
 const versionStore = useVersionStore();
@@ -226,6 +231,7 @@ watch(
   gap: 0.5rem;
   flex: 1;
   min-width: 0;
+  flex-wrap: wrap;
 }
 
 .header-right {
@@ -301,6 +307,7 @@ watch(
 }
 
 .header-link {
+  flex-shrink: 0;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-secondary);
@@ -474,12 +481,14 @@ watch(
 }
 
 .layout.layout-docs,
-.layout.layout-guides {
+.layout.layout-guides,
+.layout.layout-api {
   overflow: hidden;
 }
 
 .layout-docs .layout-scroll,
-.layout-guides .layout-scroll {
+.layout-guides .layout-scroll,
+.layout-api .layout-scroll {
   height: 100%;
   overflow: hidden;
 }

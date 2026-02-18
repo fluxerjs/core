@@ -3,8 +3,9 @@
     <div class="hero">
       <h1>Guides</h1>
       <p class="lead">Learn how to build bots with Fluxer.js. Pick a guide to get started.</p>
-      <div v-if="quickLinks.length" class="quick-links">
+      <div class="quick-links">
         <span class="quick-links-label">Quick links:</span>
+        <router-link :to="versionedPath('/api')" class="quick-link">REST API</router-link>
         <router-link
           v-for="g in quickLinks"
           :key="g.id"

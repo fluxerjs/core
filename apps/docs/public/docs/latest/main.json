@@ -2,7 +2,7 @@
   "meta": {
     "generator": "fluxer-docgen",
     "version": "1",
-    "date": 1771382243344
+    "date": 1771383262835
   },
   "package": "@fluxerjs/core",
   "version": "1.1.5",
@@ -3876,7 +3876,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 185
+            "line": 189
           }
         },
         {
@@ -3887,7 +3887,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 203
+            "line": 207
           }
         },
         {
@@ -3905,7 +3905,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 164
+            "line": 168
           }
         },
         {
@@ -3919,7 +3919,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 198
+            "line": 202
           }
         },
         {
@@ -3943,7 +3943,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 283
+            "line": 287
           }
         },
         {
@@ -3960,7 +3960,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 223
+            "line": 227
           }
         },
         {
@@ -3971,7 +3971,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 208
+            "line": 212
           }
         },
         {
@@ -3989,7 +3989,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 238
+            "line": 242
           }
         },
         {
@@ -4000,7 +4000,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 262
+            "line": 266
           }
         },
         {
@@ -4024,7 +4024,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 249
+            "line": 253
           }
         },
         {
@@ -4042,7 +4042,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 270
+            "line": 274
           }
         },
         {
@@ -4060,7 +4060,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 143
+            "line": 147
           }
         },
         {
@@ -4076,7 +4076,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 228
+            "line": 232
           }
         },
         {
@@ -4097,7 +4097,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 118
+            "line": 122
           }
         },
         {
@@ -4124,7 +4124,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 135
+            "line": 139
           }
         },
         {
@@ -4135,13 +4135,13 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 214
+            "line": 218
           }
         }
       ],
       "source": {
         "file": "Message.ts",
-        "line": 36,
+        "line": 40,
         "path": "packages/fluxer-core/src/structures/Message.ts"
       },
       "package": "@fluxerjs/core"
@@ -12105,7 +12105,7 @@
       ],
       "source": {
         "file": "Message.ts",
-        "line": 25,
+        "line": 29,
         "path": "packages/fluxer-core/src/structures/Message.ts"
       },
       "package": "@fluxerjs/core"

@@ -8,6 +8,7 @@
       >
       <nav class="hero-nav">
         <router-link to="/v/latest/guides" class="nav-link">Guides</router-link>
+        <router-link to="/v/latest/api" class="nav-link">REST API</router-link>
         <router-link to="/v/latest/docs" class="nav-link">Docs</router-link>
         <router-link to="/changelog" class="nav-link">Changelog</router-link>
         <a
