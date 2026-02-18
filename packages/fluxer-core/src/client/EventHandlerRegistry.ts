@@ -5,7 +5,6 @@ import type {
   APIGuild,
   APIGuildMember,
   APIRole,
-  APIUser,
   APIUserPartial,
   APIApplicationCommandInteraction,
 } from '@fluxerjs/types';
@@ -26,6 +25,7 @@ import type {
   GatewayGuildRoleDeleteDispatchData,
   GatewayTypingStartDispatchData,
   GatewayUserUpdateDispatchData,
+  GatewayGuildMemberRemoveDispatchData,
 } from '@fluxerjs/types';
 import type { Client } from './Client.js';
 
@@ -222,15 +222,32 @@ handlers.set('GUILD_MEMBER_UPDATE', async (client, d) => {
 });
 
 handlers.set('GUILD_MEMBER_REMOVE', async (client, d) => {
-  const data = d as { guild_id: string; user: APIUser };
+  const data = d as GatewayGuildMemberRemoveDispatchData;
   const guild = client.guilds.get(data.guild_id);
-  if (guild) {
-    const member = guild.members.get(data.user.id);
-    if (member) {
-      guild.members.delete(data.user.id);
-      client.emit(Events.GuildMemberRemove, member);
-    }
+  if (!guild || !data.user?.id) return;
+
+  const { GuildMember } = await import('../structures/GuildMember.js');
+  let member = guild.members.get(data.user.id);
+  if (member) {
+    guild.members.delete(data.user.id);
+  } else {
+    // Member was never cached (e.g. joined before bot cached guild). Build partial from payload
+    // so leave handlers run for all leaves, not only cached members.
+    const user: APIUserPartial = {
+      ...data.user,
+      id: data.user.id,
+      username: data.user.username ?? 'Unknown',
+      discriminator: data.user.discriminator ?? '0',
+    };
+    const memberData: APIGuildMember & { guild_id?: string } = {
+      user,
+      roles: [],
+      joined_at: new Date(0).toISOString(),
+      nick: null,
+    };
+    member = new GuildMember(client, memberData, guild);
   }
+  client.emit(Events.GuildMemberRemove, member);
 });
 
 handlers.set('INTERACTION_CREATE', async (client, d) => {
