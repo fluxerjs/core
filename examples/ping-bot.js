@@ -201,7 +201,9 @@ commands.set('bme', {
       for (const [name, bit] of Object.entries(PermissionFlags)) {
         if (typeof bit === 'number' && me.permissions.has(bit)) permNames.push(name);
       }
-    } catch { /* ignore import error */ }
+    } catch {
+      /* ignore import error */
+    }
 
     const embed = new EmbedBuilder()
       .setTitle('guild.members.me')
