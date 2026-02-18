@@ -3,11 +3,19 @@
  * Each guide is a separate page.
  */
 
+export interface GuideTable {
+  headers: string[];
+  rows: string[][];
+  /** Column indices to render as inline code (e.g. [1] for payload column) */
+  codeColumns?: number[];
+}
+
 export interface GuideSection {
   title?: string;
   description?: string;
   code?: string;
-  language?: 'javascript' | 'bash';
+  language?: 'javascript' | 'bash' | 'text';
+  table?: GuideTable;
 }
 
 export interface Guide {
@@ -1245,6 +1253,102 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
   console.error('Client error:', err);
 });`,
         language: 'javascript',
+      },
+      {
+        title: 'Gateway Dispatch Events Reference',
+        description:
+          'All events the Fluxer gateway can send. Use GatewayDispatchEvents from @fluxerjs/types for type-safe checks.',
+        table: {
+          headers: ['Category', 'Events'],
+          codeColumns: [1],
+          rows: [
+            ['Connection & Session', 'Ready, Resumed, SessionsReplace'],
+            ['User', 'UserUpdate, UserSettingsUpdate, UserGuildSettingsUpdate, UserPinnedDmsUpdate, UserNoteUpdate, RecentMentionDelete'],
+            ['Saved Messages & Auth', 'SavedMessageCreate, SavedMessageDelete, AuthSessionChange'],
+            ['Presence', 'PresenceUpdate'],
+            ['Guild', 'GuildCreate, GuildUpdate, GuildDelete, GuildMemberAdd, GuildMemberUpdate, GuildMemberRemove, GuildMembersChunk, GuildMemberListUpdate, GuildSync'],
+            ['Roles', 'GuildRoleCreate, GuildRoleUpdate, GuildRoleUpdateBulk, GuildRoleDelete'],
+            ['Guild Assets', 'GuildEmojisUpdate, GuildStickersUpdate'],
+            ['Moderation', 'GuildBanAdd, GuildBanRemove'],
+            ['Channels', 'ChannelCreate, ChannelUpdate, ChannelUpdateBulk, ChannelDelete, ChannelRecipientAdd, ChannelRecipientRemove, ChannelPinsUpdate, ChannelPinsAck'],
+            ['Passive', 'PassiveUpdates'],
+            ['Invites', 'InviteCreate, InviteDelete'],
+            ['Messages', 'MessageCreate, MessageUpdate, MessageDelete, MessageDeleteBulk, MessageReactionAdd, MessageReactionRemove, MessageReactionRemoveAll, MessageReactionRemoveEmoji, MessageAck'],
+            ['Typing', 'TypingStart'],
+            ['Webhooks', 'WebhooksUpdate'],
+            ['Relationships', 'RelationshipAdd, RelationshipUpdate, RelationshipRemove'],
+            ['Voice', 'VoiceStateUpdate, VoiceServerUpdate'],
+            ['Calls', 'CallCreate, CallUpdate, CallDelete'],
+            ['Favorites', 'FavoriteMemeCreate, FavoriteMemeUpdate, FavoriteMemeDelete'],
+            ['SDK / Compatibility', 'InteractionCreate, GuildIntegrationsUpdate, GuildScheduledEventCreate, GuildScheduledEventUpdate, GuildScheduledEventDelete'],
+          ],
+        },
+      },
+      {
+        title: 'Event Payload Reference',
+        description:
+          'Payload structure for each event. Handler receives (data) or (message), (reaction, user, ...) etc. Types: Gateway*DispatchData from @fluxerjs/types.',
+        table: {
+          headers: ['Event', 'Payload'],
+          codeColumns: [0, 1],
+          rows: [
+            ['READY', '{ v, user, guilds, session_id, shard?, application: { id, flags } }'],
+            ['RESUMED', '(no payload)'],
+            ['SESSIONS_REPLACE', 'Array of session objects'],
+            ['USER_UPDATE', 'APIUser — id, username, discriminator, global_name, avatar, etc.'],
+            ['GUILD_CREATE', 'APIGuild — id, name, icon, owner_id, channels[], members[], roles[], ...'],
+            ['GUILD_UPDATE', 'APIGuild — full guild object'],
+            ['GUILD_DELETE', '{ id, unavailable? }'],
+            ['GUILD_MEMBER_ADD', 'APIGuildMember & { guild_id } — user, roles, nick, joined_at, ...'],
+            ['GUILD_MEMBER_UPDATE', '{ guild_id, roles, user, nick?, avatar?, joined_at?, ... }'],
+            ['GUILD_MEMBER_REMOVE', '{ guild_id, user }'],
+            ['GUILD_MEMBERS_CHUNK', '{ guild_id, members[], chunk_index, chunk_count, presences?, nonce? }'],
+            ['GUILD_MEMBER_LIST_UPDATE', '{ guild_id, id, member_count, online_count, groups[], ops[] }'],
+            ['GUILD_ROLE_CREATE', '{ guild_id, role: APIRole }'],
+            ['GUILD_ROLE_UPDATE', '{ guild_id, role: APIRole }'],
+            ['GUILD_ROLE_UPDATE_BULK', '{ guild_id, roles: APIRole[] }'],
+            ['GUILD_ROLE_DELETE', '{ guild_id, role_id }'],
+            ['GUILD_EMOJIS_UPDATE', '{ guild_id, emojis: APIEmoji[] }'],
+            ['GUILD_STICKERS_UPDATE', '{ guild_id, stickers: APISticker[] }'],
+            ['GUILD_BAN_ADD', '{ guild_id, user, reason? }'],
+            ['GUILD_BAN_REMOVE', '{ guild_id, user }'],
+            ['CHANNEL_CREATE', 'APIChannel — id, name, type, guild_id?, parent_id, ...'],
+            ['CHANNEL_UPDATE', 'APIChannel'],
+            ['CHANNEL_UPDATE_BULK', '{ channels: APIChannel[] }'],
+            ['CHANNEL_DELETE', 'APIChannel'],
+            ['CHANNEL_RECIPIENT_ADD', '{ channel_id, user }'],
+            ['CHANNEL_RECIPIENT_REMOVE', '{ channel_id, user }'],
+            ['CHANNEL_PINS_UPDATE', '{ channel_id, guild_id?, last_pin_timestamp? }'],
+            ['CHANNEL_PINS_ACK', '{ channel_id, last_pin_timestamp? }'],
+            ['INVITE_CREATE', 'APIInvite — code, guild, channel, inviter?, expires_at?, ...'],
+            ['INVITE_DELETE', '{ code, channel_id, guild_id? }'],
+            ['MESSAGE_CREATE', 'APIMessage — id, channel_id, author, content, embeds, attachments, member?, ...'],
+            ['MESSAGE_UPDATE', 'APIMessage — partial (edited fields)'],
+            ['MESSAGE_DELETE', '{ id, channel_id, guild_id? }'],
+            ['MESSAGE_DELETE_BULK', '{ ids[], channel_id, guild_id? }'],
+            ['MESSAGE_REACTION_ADD', '{ message_id, channel_id, user_id, guild_id?, emoji: { id, name, animated? } }'],
+            ['MESSAGE_REACTION_REMOVE', '{ message_id, channel_id, user_id, guild_id?, emoji }'],
+            ['MESSAGE_REACTION_REMOVE_ALL', '{ message_id, channel_id, guild_id? }'],
+            ['MESSAGE_REACTION_REMOVE_EMOJI', '{ message_id, channel_id, guild_id?, emoji }'],
+            ['MESSAGE_ACK', '{ message_id, channel_id } — read receipt'],
+            ['TYPING_START', '{ channel_id, user_id, timestamp, guild_id?, member? }'],
+            ['VOICE_STATE_UPDATE', '{ guild_id?, channel_id, user_id, member?, session_id, deaf?, mute?, ... }'],
+            ['VOICE_SERVER_UPDATE', '{ token, guild_id, endpoint, connection_id? }'],
+            ['WEBHOOKS_UPDATE', '{ guild_id, channel_id }'],
+            ['PRESENCE_UPDATE', '{ user: { id }, guild_id?, status?, activities?, custom_status? }'],
+            ['GUILD_INTEGRATIONS_UPDATE', '{ guild_id }'],
+            ['GUILD_SCHEDULED_EVENT_CREATE', '{ guild_id, id }'],
+            ['GUILD_SCHEDULED_EVENT_UPDATE', '{ guild_id, id }'],
+            ['GUILD_SCHEDULED_EVENT_DELETE', '{ guild_id, id }'],
+            ['USER_NOTE_UPDATE', '{ id, note? }'],
+            ['SAVED_MESSAGE_CREATE', 'APIMessage'],
+            ['SAVED_MESSAGE_DELETE', '{ id }'],
+            ['RELATIONSHIP_ADD / UPDATE', '{ id, type }'],
+            ['RELATIONSHIP_REMOVE', '{ id }'],
+            ['CALL_CREATE / UPDATE / DELETE', '{ id, channel_id, ... }'],
+            ['INTERACTION_CREATE', 'APIApplicationCommandInteraction'],
+          ],
+        },
       },
     ],
   },

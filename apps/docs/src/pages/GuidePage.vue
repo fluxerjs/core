@@ -18,6 +18,11 @@
         <section class="guide-section" :id="sectionId(section, i)">
           <h2 v-if="section.title" class="section-title">{{ section.title }}</h2>
           <p v-if="section.description" class="section-desc">{{ section.description }}</p>
+          <GuideTable
+            v-if="section.table"
+            :headers="section.table.headers"
+            :rows="section.table.rows"
+            :code-columns="section.table.codeColumns" />
           <CodeBlock
             v-if="section.code"
             :code="section.code"
@@ -61,6 +66,7 @@ import { getCategoryLabel } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
 import CodeBlock from '../components/CodeBlock.vue';
+import GuideTable from '../components/GuideTable.vue';
 
 const route = useRoute();
 const guidesStore = useGuidesStore();

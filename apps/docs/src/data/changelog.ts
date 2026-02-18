@@ -11,6 +11,19 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.1.5',
+    date: '2026-02-18',
+    sections: [
+      {
+        title: 'Gateway events & docs',
+        items: [
+          'GatewayDispatchEvents — documented all 60+ events from fluxer_gateway with JSDoc; new payload types for ChannelUpdateBulk, ChannelRecipientAdd/Remove, ChannelPinsAck, GuildMembersChunk, GuildMemberListUpdate, GuildRoleUpdateBulk, MessageAck, and session/user/call/relationship events',
+          'Guides — proper HTML tables for Gateway Dispatch Events Reference and Event Payload Reference (replacing code blocks); new GuideTable component',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.1.4',
     date: '2026-02-18',
     sections: [
