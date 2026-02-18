@@ -134,7 +134,9 @@ const filteredGroupedGuides = computed(() => {
   background: rgba(99, 179, 237, 0.1);
   border: 1px solid rgba(99, 179, 237, 0.25);
   border-radius: var(--radius-sm);
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .guides-rest-api-link:hover {

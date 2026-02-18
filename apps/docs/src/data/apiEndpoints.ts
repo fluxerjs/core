@@ -36,11 +36,29 @@ export interface ApiEndpoint {
 /** Shared schema definitions referenced by multiple endpoints */
 export const sharedSchemas = {
   messageRequest: [
-    { name: 'content', type: 'string | null', required: false, description: 'Message text content' },
+    {
+      name: 'content',
+      type: 'string | null',
+      required: false,
+      description: 'Message text content',
+    },
     { name: 'embeds', type: 'RichEmbed[]', required: false, description: 'Rich embeds (max 10)' },
-    { name: 'attachments', type: 'AttachmentRequest[]', required: false, description: 'Attachment refs (max 10)' },
-    { name: 'message_reference', type: '{ message_id, channel_id?, guild_id?, type? }', required: false },
-    { name: 'allowed_mentions', type: '{ parse?, users?, roles?, replied_user? }', required: false },
+    {
+      name: 'attachments',
+      type: 'AttachmentRequest[]',
+      required: false,
+      description: 'Attachment refs (max 10)',
+    },
+    {
+      name: 'message_reference',
+      type: '{ message_id, channel_id?, guild_id?, type? }',
+      required: false,
+    },
+    {
+      name: 'allowed_mentions',
+      type: '{ parse?, users?, roles?, replied_user? }',
+      required: false,
+    },
     { name: 'flags', type: 'number', required: false, description: 'Message flags (default 0)' },
     { name: 'nonce', type: 'string', required: false, description: '1-32 chars, for idempotency' },
     { name: 'favorite_meme_id', type: 'string (snowflake)', required: false },
@@ -50,7 +68,11 @@ export const sharedSchemas = {
   messageUpdate: [
     { name: 'content', type: 'string | null', required: false },
     { name: 'embeds', type: 'RichEmbed[]', required: false },
-    { name: 'allowed_mentions', type: '{ parse?, users?, roles?, replied_user? }', required: false },
+    {
+      name: 'allowed_mentions',
+      type: '{ parse?, users?, roles?, replied_user? }',
+      required: false,
+    },
     { name: 'flags', type: 'number', required: false },
     { name: 'attachments', type: 'AttachmentReference[]', required: false },
   ] as ApiSchemaField[],
@@ -129,7 +151,14 @@ export const apiEndpoints: ApiEndpoint[] = [
     category: 'instance',
     responseBody: [
       { name: 'api_code_version', type: 'string' },
-      { name: 'endpoints', type: 'object', nested: [{ name: 'api', type: 'string' }, { name: 'gateway', type: 'string' }] },
+      {
+        name: 'endpoints',
+        type: 'object',
+        nested: [
+          { name: 'api', type: 'string' },
+          { name: 'gateway', type: 'string' },
+        ],
+      },
       { name: 'captcha', type: 'object' },
       { name: 'features', type: 'object', nested: [{ name: 'voice_enabled', type: 'boolean' }] },
       { name: 'push', type: 'object' },
@@ -483,7 +512,12 @@ export const apiEndpoints: ApiEndpoint[] = [
     auth: 'bot',
     category: 'guilds',
     requestBody: [
-      { name: 'type', type: 'number', required: true, description: '0=text, 2=voice, 4=category, 5=link' },
+      {
+        name: 'type',
+        type: 'number',
+        required: true,
+        description: '0=text, 2=voice, 4=category, 5=link',
+      },
       { name: 'name', type: 'string', required: true },
       { name: 'topic', type: 'string (1-1024)', required: false },
       { name: 'url', type: 'string', required: false },
@@ -624,9 +658,19 @@ export const apiEndpoints: ApiEndpoint[] = [
     auth: 'bot',
     category: 'guilds',
     requestBody: [
-      { name: 'delete_message_days', type: 'number (0-7)', required: false, description: 'Default 0' },
+      {
+        name: 'delete_message_days',
+        type: 'number (0-7)',
+        required: false,
+        description: 'Default 0',
+      },
       { name: 'reason', type: 'string (0-512)', required: false },
-      { name: 'ban_duration_seconds', type: 'number', required: false, description: '0=permanent, or valid temp duration' },
+      {
+        name: 'ban_duration_seconds',
+        type: 'number',
+        required: false,
+        description: '0=permanent, or valid temp duration',
+      },
     ],
     responseRef: 'GuildBanResponse',
   },
@@ -681,7 +725,10 @@ export const apiEndpoints: ApiEndpoint[] = [
     summary: 'Reorder roles',
     auth: 'bot',
     category: 'guilds',
-    requestBody: [{ name: 'id', type: 'string (snowflake)', required: true }, { name: 'position', type: 'number', required: false }],
+    requestBody: [
+      { name: 'id', type: 'string (snowflake)', required: true },
+      { name: 'position', type: 'number', required: false },
+    ],
     responseRef: 'GuildRoleResponse[]',
   },
   {
@@ -754,7 +801,14 @@ export const apiEndpoints: ApiEndpoint[] = [
     summary: 'Bulk create emojis',
     auth: 'bot',
     category: 'guilds',
-    requestBody: [{ name: 'emojis', type: 'GuildEmojiCreateRequest[]', required: true, description: '1-50 emojis' }],
+    requestBody: [
+      {
+        name: 'emojis',
+        type: 'GuildEmojiCreateRequest[]',
+        required: true,
+        description: '1-50 emojis',
+      },
+    ],
     responseRef: 'GuildEmojiWithUserResponse[]',
   },
   {
@@ -802,7 +856,14 @@ export const apiEndpoints: ApiEndpoint[] = [
     summary: 'Bulk create stickers',
     auth: 'bot',
     category: 'guilds',
-    requestBody: [{ name: 'stickers', type: 'GuildStickerCreateRequest[]', required: true, description: '1-50 stickers' }],
+    requestBody: [
+      {
+        name: 'stickers',
+        type: 'GuildStickerCreateRequest[]',
+        required: true,
+        description: '1-50 stickers',
+      },
+    ],
     responseRef: 'GuildStickerWithUserResponse[]',
   },
   {
@@ -852,7 +913,12 @@ export const apiEndpoints: ApiEndpoint[] = [
     category: 'invites',
     requestBody: [
       { name: 'max_uses', type: 'number (0-100)', required: false, description: 'Default 0' },
-      { name: 'max_age', type: 'number (0-604800)', required: false, description: 'Seconds, default 0' },
+      {
+        name: 'max_age',
+        type: 'number (0-604800)',
+        required: false,
+        description: 'Seconds, default 0',
+      },
       { name: 'unique', type: 'boolean', required: false, description: 'Default false' },
       { name: 'temporary', type: 'boolean', required: false, description: 'Default false' },
     ],
@@ -969,13 +1035,31 @@ export const apiEndpoints: ApiEndpoint[] = [
     auth: 'webhook-token',
     category: 'webhooks',
     description: 'Token in URL. Use ?wait=true to receive MessageResponse instead of 204.',
-    queryParams: [{ name: 'wait', type: 'boolean', required: false, description: 'Return message if true' }],
+    queryParams: [
+      { name: 'wait', type: 'boolean', required: false, description: 'Return message if true' },
+    ],
     requestBody: [
       ...sharedSchemas.messageRequest,
-      { name: 'username', type: 'string', required: false, description: 'Override webhook username' },
-      { name: 'avatar_url', type: 'string (URL)', required: false, description: 'Override webhook avatar' },
+      {
+        name: 'username',
+        type: 'string',
+        required: false,
+        description: 'Override webhook username',
+      },
+      {
+        name: 'avatar_url',
+        type: 'string (URL)',
+        required: false,
+        description: 'Override webhook avatar',
+      },
     ],
-    responseBody: [{ name: '204 or MessageResponse', type: 'see MessageResponse', description: 'If wait=true returns message' }],
+    responseBody: [
+      {
+        name: '204 or MessageResponse',
+        type: 'see MessageResponse',
+        description: 'If wait=true returns message',
+      },
+    ],
     responseCode: 204,
   },
 ];

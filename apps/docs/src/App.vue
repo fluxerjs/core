@@ -101,7 +101,11 @@
     <main
       id="main"
       class="layout"
-      :class="{ 'layout-docs': isDocsRoute, 'layout-guides': isGuidesRoute, 'layout-api': isApiRoute }"
+      :class="{
+        'layout-docs': isDocsRoute,
+        'layout-guides': isGuidesRoute,
+        'layout-api': isApiRoute,
+      }"
       role="main">
       <div class="layout-scroll">
         <router-view v-slot="{ Component }">
@@ -144,7 +148,9 @@ watch(mobileMenuOpen, (open) => {
 const isDocsRoute = computed(() => route.path.includes('/docs'));
 const isGuidesRoute = computed(() => route.path.includes('/guides'));
 const isApiRoute = computed(() => route.path.includes('/api'));
-const hideFooterInLayout = computed(() => isDocsRoute.value || isGuidesRoute.value || isApiRoute.value);
+const hideFooterInLayout = computed(
+  () => isDocsRoute.value || isGuidesRoute.value || isApiRoute.value,
+);
 
 const guidesStore = useGuidesStore();
 const versionStore = useVersionStore();

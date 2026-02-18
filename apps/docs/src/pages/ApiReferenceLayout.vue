@@ -77,7 +77,9 @@ watch(
   background: rgba(99, 179, 237, 0.1);
   border: 1px solid rgba(99, 179, 237, 0.25);
   border-radius: var(--radius-sm);
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .api-guides-link:hover {
@@ -97,7 +99,10 @@ watch(
   text-decoration: none;
   border-left: 2px solid transparent;
   margin-left: 2px;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .api-sidebar .sidebar-link:hover {
@@ -140,7 +145,9 @@ watch(
   cursor: pointer;
   font-size: 1.25rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s;
 }
 
 .sidebar-toggle:hover {

@@ -459,8 +459,7 @@ export class DMChannel extends Channel {
    * @param options - silent: if true, does not send a system message (default false)
    */
   async removeRecipient(userId: string, options?: { silent?: boolean }): Promise<void> {
-    const url =
-      Routes.channelRecipient(this.id, userId) + (options?.silent ? '?silent=true' : '');
+    const url = Routes.channelRecipient(this.id, userId) + (options?.silent ? '?silent=true' : '');
     await this.client.rest.delete(url, { auth: true });
     const idx = this.recipients.findIndex((u) => u.id === userId);
     if (idx >= 0) this.recipients.splice(idx, 1);

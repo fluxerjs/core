@@ -56,13 +56,18 @@ export class GuildMemberManager extends Collection<string, GuildMember> {
     const qs = params.toString();
     const url = Routes.guildMembers(this.guild.id) + (qs ? `?${qs}` : '');
     const data = await this.guild.client.rest.get<
-      import('@fluxerjs/types').APIGuildMember[] | { members?: import('@fluxerjs/types').APIGuildMember[] }
+      | import('@fluxerjs/types').APIGuildMember[]
+      | { members?: import('@fluxerjs/types').APIGuildMember[] }
     >(url, { auth: true });
     const list = Array.isArray(data) ? data : (data?.members ?? []);
     const { GuildMember } = await import('../structures/GuildMember.js');
     const members: GuildMember[] = [];
     for (const m of list) {
-      const member = new GuildMember(this.guild.client, { ...m, guild_id: this.guild.id }, this.guild);
+      const member = new GuildMember(
+        this.guild.client,
+        { ...m, guild_id: this.guild.id },
+        this.guild,
+      );
       this.set(member.id, member);
       members.push(member);
     }

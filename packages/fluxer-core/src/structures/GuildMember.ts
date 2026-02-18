@@ -127,9 +127,8 @@ export class GuildMember extends Base {
     this.nick = data.nick ?? this.nick;
     if (data.roles) (this as { roles: string[] }).roles = data.roles;
     if (data.communication_disabled_until != null) {
-      (this as { communicationDisabledUntil: Date | null }).communicationDisabledUntil = data.communication_disabled_until
-        ? new Date(data.communication_disabled_until)
-        : null;
+      (this as { communicationDisabledUntil: Date | null }).communicationDisabledUntil =
+        data.communication_disabled_until ? new Date(data.communication_disabled_until) : null;
     }
     return this;
   }

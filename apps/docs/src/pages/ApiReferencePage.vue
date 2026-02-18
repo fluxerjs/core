@@ -2,9 +2,7 @@
   <div class="api-reference">
     <header class="api-hero">
       <h1 class="api-title">REST API Reference</h1>
-      <p class="api-lead">
-        Bot and webhook endpoints for the Fluxer API.
-      </p>
+      <p class="api-lead">Bot and webhook endpoints for the Fluxer API.</p>
       <div class="api-quick-info">
         <div class="api-quick-item">
           <span class="api-quick-label">Base path</span>
@@ -16,7 +14,9 @@
         </div>
         <div class="api-quick-links">
           <router-link :to="versionedPath('/guides')" class="api-quick-link">Guides →</router-link>
-          <router-link :to="versionedPath('/guides/basic-bot')" class="api-quick-link">Basic bot</router-link>
+          <router-link :to="versionedPath('/guides/basic-bot')" class="api-quick-link"
+            >Basic bot</router-link
+          >
         </div>
       </div>
     </header>

@@ -42,8 +42,7 @@ export const Routes = {
   guildDetachedBanner: (guildId: Snowflake) => `/guilds/${guildId}/detached-banner` as const,
   guildDisallowUnclaimedAccounts: (guildId: Snowflake) =>
     `/guilds/${guildId}/disallow-unclaimed-accounts` as const,
-  guildTransferOwnership: (guildId: Snowflake) =>
-    `/guilds/${guildId}/transfer-ownership` as const,
+  guildTransferOwnership: (guildId: Snowflake) => `/guilds/${guildId}/transfer-ownership` as const,
   guildRolesHoistPositions: (guildId: Snowflake) =>
     `/guilds/${guildId}/roles/hoist-positions` as const,
   guildEmojisBulk: (guildId: Snowflake) => `/guilds/${guildId}/emojis/bulk` as const,

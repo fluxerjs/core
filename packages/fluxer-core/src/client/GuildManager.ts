@@ -23,10 +23,10 @@ export class GuildManager extends Collection<string, Guild> {
     empty_features?: boolean;
   }): Promise<Guild> {
     const { Guild } = await import('../structures/Guild.js');
-    const data = await this.client.rest.post<import('@fluxerjs/types').APIGuild>(
-      Routes.guilds(),
-      { body: options, auth: true },
-    );
+    const data = await this.client.rest.post<import('@fluxerjs/types').APIGuild>(Routes.guilds(), {
+      body: options,
+      auth: true,
+    });
     const guild = new Guild(this.client, data);
     this.set(guild.id, guild);
     return guild;

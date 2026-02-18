@@ -520,9 +520,7 @@ export class Guild extends Base {
    * Update role positions. PATCH /guilds/{id}/roles.
    * @param updates - Array of { id, position? }
    */
-  async setRolePositions(
-    updates: Array<{ id: string; position?: number }>,
-  ): Promise<APIRole[]> {
+  async setRolePositions(updates: Array<{ id: string; position?: number }>): Promise<APIRole[]> {
     const data = await this.client.rest.patch<APIRole[] | Record<string, APIRole>>(
       Routes.guildRoles(this.id),
       { body: updates, auth: true },

@@ -2,10 +2,7 @@
   <div class="api-schema-block">
     <div v-if="title" class="api-schema-title">{{ title }}</div>
     <div v-if="fields?.length" class="api-schema-fields">
-      <div
-        v-for="(field, i) in fields"
-        :key="`${field.name}-${i}`"
-        class="api-schema-row">
+      <div v-for="(field, i) in fields" :key="`${field.name}-${i}`" class="api-schema-row">
         <code class="api-schema-name">{{ field.name }}</code>
         <span v-if="field.required" class="api-schema-required">required</span>
         <code class="api-schema-type">{{ field.type }}</code>

@@ -201,14 +201,15 @@ commands.set('setnick', {
           : 'Nickname cleared (showing username again).',
       );
     } catch (err) {
-      await message.reply(
-        'Failed to change nickname. The bot may need Change Nickname permission.',
-      ).catch(() => {});
+      await message
+        .reply('Failed to change nickname. The bot may need Change Nickname permission.')
+        .catch(() => {});
     }
   },
 });
 
-const SETAVATAR_DEBUG = process.env.SETAVATAR_DEBUG === '1' || process.env.SETAVATAR_DEBUG === 'true';
+const SETAVATAR_DEBUG =
+  process.env.SETAVATAR_DEBUG === '1' || process.env.SETAVATAR_DEBUG === 'true';
 
 commands.set('setavatar', {
   description: "Change the bot's guild avatar (!setavatar [image URL] or !setavatar clear)",
@@ -228,7 +229,10 @@ commands.set('setavatar', {
     if (arg === 'clear' || arg === 'reset') {
       try {
         if (SETAVATAR_DEBUG) {
-          console.log('[setavatar] PATCH /guilds/%s/members/@me with avatar: null (clear)', guildId);
+          console.log(
+            '[setavatar] PATCH /guilds/%s/members/@me with avatar: null (clear)',
+            guildId,
+          );
         }
         await me.edit({ avatar: null });
         if (SETAVATAR_DEBUG) {
@@ -292,7 +296,9 @@ commands.set('setavatar', {
       if (err?.name === 'AbortError') {
         await message.reply('Timed out fetching image (30s).');
       } else {
-        await message.reply('Failed to set guild avatar. Check the URL and try again.').catch(() => {});
+        await message
+          .reply('Failed to set guild avatar. Check the URL and try again.')
+          .catch(() => {});
       }
     }
   },

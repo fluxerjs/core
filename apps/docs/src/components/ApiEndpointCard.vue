@@ -28,10 +28,7 @@
         @click="showQuery = !showQuery">
         Query parameters
       </button>
-      <ApiSchemaBlock
-        v-if="showQuery"
-        :fields="queryAsFields"
-        class="api-toggle-content" />
+      <ApiSchemaBlock v-if="showQuery" :fields="queryAsFields" class="api-toggle-content" />
     </div>
 
     <div v-if="endpoint.requestBody?.length" class="api-section">
@@ -79,11 +76,12 @@ const props = defineProps<{
 
 const basePath = computed(() => props.basePath ?? '/v1');
 const fullPath = computed(() => basePath.value + props.endpoint.path);
-const endpointId = computed(() =>
-  props.endpoint.path
-    .replace(/^\//, '')
-    .replace(/:[a-z_]+/g, (m) => m.slice(1))
-    .replace(/\//g, '-') + `-${props.endpoint.method.toLowerCase()}`,
+const endpointId = computed(
+  () =>
+    props.endpoint.path
+      .replace(/^\//, '')
+      .replace(/:[a-z_]+/g, (m) => m.slice(1))
+      .replace(/\//g, '-') + `-${props.endpoint.method.toLowerCase()}`,
 );
 
 const authLabel = computed(() => {
@@ -132,7 +130,9 @@ async function copyPath() {
   border-radius: var(--radius);
   padding: 1.5rem 1.75rem;
   margin-bottom: 1.25rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .api-endpoint-card:hover {
@@ -202,7 +202,10 @@ async function copyPath() {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .api-copy-btn:hover {
