@@ -177,7 +177,7 @@ commands.set('info', {
 });
 
 commands.set('bme', {
-  description: 'Display guild.members.me (bot\'s member) info in this server',
+  description: "Display guild.members.me (bot's member) info in this server",
   async execute(message, client) {
     const guildId = message.guildId;
     if (!guildId) {
@@ -205,7 +205,7 @@ commands.set('bme', {
 
     const embed = new EmbedBuilder()
       .setTitle('guild.members.me')
-      .setDescription('Bot\'s GuildMember in this server')
+      .setDescription("Bot's GuildMember in this server")
       .setColor(accentColor)
       .setThumbnail(avatarUrl)
       .addFields(
@@ -214,7 +214,11 @@ commands.set('bme', {
         { name: 'Display name', value: me.displayName ?? '—', inline: true },
         { name: 'Nickname', value: me.nick ?? '*(none)*', inline: true },
         { name: 'Joined', value: me.joinedAt.toISOString(), inline: true },
-        { name: 'Roles', value: roleNames.length ? roleNames.slice(0, 15).join(', ') : '*(none)*', inline: false },
+        {
+          name: 'Roles',
+          value: roleNames.length ? roleNames.slice(0, 15).join(', ') : '*(none)*',
+          inline: false,
+        },
         { name: 'Mute', value: String(me.mute), inline: true },
         { name: 'Deaf', value: String(me.deaf), inline: true },
         {
