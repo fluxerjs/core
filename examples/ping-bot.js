@@ -200,7 +200,7 @@ commands.set('setnick', {
           ? `Nickname set to \`${newNick}\` in this server.`
           : 'Nickname cleared (showing username again).',
       );
-    } catch (err) {
+    } catch {
       await message.reply(
         'Failed to change nickname. The bot may need Change Nickname permission.',
       ).catch(() => {});
