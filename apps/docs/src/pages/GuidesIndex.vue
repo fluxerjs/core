@@ -32,11 +32,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import {
-  getCategoryLabel,
-  CATEGORY_ORDER,
-  QUICK_LINK_SLUGS,
-} from '../data/guides';
+import { getCategoryLabel, CATEGORY_ORDER, QUICK_LINK_SLUGS } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
 import type { Guide } from '../data/guides';
@@ -68,9 +64,7 @@ const sortedGroupedGuides = computed(() => {
 
 const quickLinks = computed(() => {
   const bySlug = new Map(guidesStore.guides.map((g) => [g.slug, g]));
-  return QUICK_LINK_SLUGS.map((slug) => bySlug.get(slug)).filter(
-    (g): g is Guide => g != null,
-  );
+  return QUICK_LINK_SLUGS.map((slug) => bySlug.get(slug)).filter((g): g is Guide => g != null);
 });
 </script>
 

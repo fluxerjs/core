@@ -1398,8 +1398,7 @@ if (userId) {
       },
       {
         title: 'Unban a user',
-        description:
-          'guild.unban(userId, reason?) removes a ban. Requires BanMembers permission.',
+        description: 'guild.unban(userId, reason?) removes a ban. Requires BanMembers permission.',
         code: `const userId = target?.match(/^<@!?(\\d+)>$/)?.[1] ?? target;
 if (userId) {
   await guild.unban(userId, rest.join(' ') || undefined);

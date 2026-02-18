@@ -17,7 +17,11 @@ import type { User } from './User.js';
 import type { Channel } from './Channel.js';
 import type { Guild } from './Guild.js';
 
-import { buildSendBody, resolveMessageFiles, type MessageSendOptions } from '../util/messageUtils.js';
+import {
+  buildSendBody,
+  resolveMessageFiles,
+  type MessageSendOptions,
+} from '../util/messageUtils.js';
 import { ReactionCollector } from '../util/ReactionCollector.js';
 import type { ReactionCollectorOptions } from '../util/ReactionCollector.js';
 

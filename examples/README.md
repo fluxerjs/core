@@ -35,14 +35,14 @@ That runs the [minimal bot](minimal-bot.js) — login + `!ping` → Pong. See th
 
 ## Examples
 
-| Example                                        | Description                                      | Guide                                                                                                                          |
-| ---------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| [minimal-bot.js](minimal-bot.js)               | Login + `!ping` → Pong                           | [Basic Bot](https://fluxerjs.blstmo.com/v/latest/guides/basic-bot)                                                             |
-| [ping-bot.js](ping-bot.js)                     | Prefix commands, embeds, DMs, voice, audio/video | [Basic Bot](https://fluxerjs.blstmo.com/v/latest/guides/basic-bot), [Voice](https://fluxerjs.blstmo.com/v/latest/guides/voice) |
-| [reaction-bot.js](reaction-bot.js)             | Simple reaction handling                         | [Reactions](https://fluxerjs.blstmo.com/v/latest/guides/reactions)                                                             |
-| [reaction-roles-bot.js](reaction-roles-bot.js) | Reaction-based role assignment                   | [Reactions](https://fluxerjs.blstmo.com/v/latest/guides/reactions)                                                             |
-| [webhook-bot.js](webhook-bot.js)               | Webhook-based bot (no gateway)                   | [Webhooks](https://fluxerjs.blstmo.com/v/latest/guides/webhooks)                                                               |
-| [webi-bot.js](webi-bot.js)                     | Full webhook demo: embeds, files, all options    | [Webhook Attachments & Embeds](https://fluxerjs.blstmo.com/v/latest/guides/webhook-attachments-embeds)                         |
+| Example                                        | Description                                      | Guide                                                                                                                                        |
+| ---------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| [minimal-bot.js](minimal-bot.js)               | Login + `!ping` → Pong                           | [Basic Bot](https://fluxerjs.blstmo.com/v/latest/guides/basic-bot)                                                                           |
+| [ping-bot.js](ping-bot.js)                     | Prefix commands, embeds, DMs, voice, audio/video | [Basic Bot](https://fluxerjs.blstmo.com/v/latest/guides/basic-bot), [Voice](https://fluxerjs.blstmo.com/v/latest/guides/voice)               |
+| [reaction-bot.js](reaction-bot.js)             | Simple reaction handling                         | [Reactions](https://fluxerjs.blstmo.com/v/latest/guides/reactions)                                                                           |
+| [reaction-roles-bot.js](reaction-roles-bot.js) | Reaction-based role assignment                   | [Reactions](https://fluxerjs.blstmo.com/v/latest/guides/reactions)                                                                           |
+| [webhook-bot.js](webhook-bot.js)               | Webhook-based bot (no gateway)                   | [Webhooks](https://fluxerjs.blstmo.com/v/latest/guides/webhooks)                                                                             |
+| [webi-bot.js](webi-bot.js)                     | Full webhook demo: embeds, files, all options    | [Webhook Attachments & Embeds](https://fluxerjs.blstmo.com/v/latest/guides/webhook-attachments-embeds)                                       |
 | [moderation-bot.js](moderation-bot.js)         | Ban, kick, unban, !perms (permissions)           | [Permissions](https://fluxerjs.blstmo.com/v/latest/guides/permissions), [Moderation](https://fluxerjs.blstmo.com/v/latest/guides/moderation) |
 
 ## Environment Variables
