@@ -771,7 +771,7 @@ client.on(Events.MessageReactionRemove, (reaction, user, messageId, channelId, e
       {
         title: 'Reaction Roles Example',
         description:
-          'See examples/reaction-roles-bot.js for a full bot that assigns roles when users react to a message. Uses (reaction, user), Guild.fetchMember(), and GuildMember.addRole()/removeRole().',
+          'See examples/reaction-roles-bot.js for a full bot that assigns roles when users react to a message. Uses (reaction, user), Guild.fetchMember(), Guild.addRoleToMember()/removeRoleFromMember(), and guild.createRole() if you need to create roles programmatically. See the Roles guide for role CRUD.',
         code: `// Simplified reaction-roles logic
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
   if (!reaction.guildId || reaction.messageId !== rolesMessageId) return;
@@ -1232,6 +1232,18 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
         language: 'javascript',
       },
       {
+        title: 'Bot\'s own permissions (guild.members.me)',
+        description:
+          'Use guild.members.me to get the bot\'s GuildMember. Returns null if not cached. Use guild.members.fetchMe() to load it. Discord.js parity.',
+        code: `// Check if the bot can ban members in this guild
+const guild = message.guild ?? await message.client.guilds.fetch(message.guildId);
+const me = guild?.members.me ?? (guild ? await guild.members.fetchMe() : null);
+if (me?.permissions.has(PermissionFlags.BanMembers)) {
+  await message.reply('I have Ban Members permission.');
+}`,
+        language: 'javascript',
+      },
+      {
         title: 'Owner override',
         description:
           'The guild owner automatically receives all permissions regardless of roles. No need to give the owner a role with Administrator.',
@@ -1254,6 +1266,21 @@ if (channel?.isSendable?.()) {
     await channel.send('You can send here!');
   }
 }`,
+        language: 'javascript',
+      },
+      {
+        title: 'Managing roles',
+        description:
+          'Create, fetch, edit, and delete roles with guild.createRole(), guild.fetchRoles(), guild.fetchRole(roleId), role.edit(), and role.delete(). Use resolvePermissionsToBitfield() for permission bitfields when creating or editing. See the Roles guide for full examples.',
+        code: `// Create a role with specific permissions
+const role = await guild.createRole({
+  name: 'Mod',
+  permissions: ['KickMembers', 'BanMembers', 'ManageMessages'],
+});
+
+// Add/remove roles from members (Guild.addRoleToMember / removeRoleFromMember)
+await guild.addRoleToMember(userId, roleId);
+await guild.removeRoleFromMember(userId, roleId);`,
         language: 'javascript',
       },
       {
@@ -1318,6 +1345,111 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'roles',
+    slug: 'roles',
+    title: 'Roles',
+    description:
+      'Create, fetch, edit, and delete guild roles. Use PermissionFlags and resolvePermissionsToBitfield for permission bitfields.',
+    category: 'other',
+    sections: [
+      {
+        title: 'Overview',
+        description:
+          'Guild roles can be created, fetched, edited, and deleted. Use guild.createRole(), guild.fetchRoles(), guild.fetchRole(roleId), role.edit(), and role.delete(). Requires Manage Roles permission. For permission bitfields, use resolvePermissionsToBitfield() or role.has() to check a role\'s permissions.',
+      },
+      {
+        title: 'Create a role',
+        description:
+          'Use guild.createRole() to create a new role. Pass name, permissions, color, hoist, mentionable, unicode_emoji, position, or hoist_position. Permissions accept PermissionResolvable (string, number, array) for convenience.',
+        code: `import { Client, Events, PermissionFlags, resolvePermissionsToBitfield } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!createrole' && message.guildId) {
+    const guild = client.guilds.get(message.guildId) ?? await client.guilds.fetch(message.guildId);
+    if (!guild) return;
+
+    const role = await guild.createRole({
+      name: 'Moderator',
+      permissions: ['BanMembers', 'KickMembers', 'ManageMessages'],
+      color: 0x5865f2,
+      hoist: true,
+      mentionable: false,
+    });
+    await message.reply(\`Created role \${role.name} (\${role.id})\`);
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Fetch roles',
+        description:
+          'Use guild.fetchRoles() to fetch all roles from the API and cache them. Use guild.fetchRole(roleId) to fetch a single role by ID. Throws FluxerError with ROLE_NOT_FOUND on 404.',
+        code: `// Fetch all roles (updates guild.roles cache)
+const roles = await guild.fetchRoles();
+
+// Fetch a single role by ID
+const role = await guild.fetchRole(roleId);
+console.log(role.name, role.color);`,
+        language: 'javascript',
+      },
+      {
+        title: 'Edit a role',
+        description:
+          'Use role.edit() to update a role. Pass any of name, permissions, color, hoist, mentionable, unicode_emoji, position, hoist_position. Permissions accept PermissionResolvable.',
+        code: `const role = guild.roles.get(roleId) ?? await guild.fetchRole(roleId);
+await role.edit({
+  name: 'Senior Mod',
+  permissions: ['BanMembers', 'KickMembers', 'ManageMessages', 'ManageRoles'],
+  color: 0x57f287,
+});`,
+        language: 'javascript',
+      },
+      {
+        title: 'Delete a role',
+        description: 'Use role.delete() to remove a role. The role is removed from guild.roles cache.',
+        code: `const role = guild.roles.get(roleId) ?? await guild.fetchRole(roleId);
+await role.delete();
+await message.reply('Role deleted.');`,
+        language: 'javascript',
+      },
+      {
+        title: 'Check role permissions',
+        description:
+          'Use role.has(permission) to check if a role has a specific permission. Administrator implies all permissions.',
+        code: `import { PermissionFlags } from '@fluxerjs/core';
+
+if (role.has(PermissionFlags.BanMembers)) {
+  await message.reply('This role can ban members.');
+}
+if (role.has('ManageChannels')) {
+  await message.reply('This role can manage channels.');
+}`,
+        language: 'javascript',
+      },
+      {
+        title: 'Permission bitfields for create/edit',
+        description:
+          'When creating or editing roles, pass permissions as a string (API format), number, PermissionString, or array. Use resolvePermissionsToBitfield() to combine multiple permissions. Handles high bits (PinMessages, ModerateMembers, etc.) correctly with BigInt.',
+        code: `import { resolvePermissionsToBitfield, PermissionFlags } from '@fluxerjs/core';
+
+// Single permission by name
+resolvePermissionsToBitfield('SendMessages');  // "2048"
+
+// Array of permissions (OR'd together)
+resolvePermissionsToBitfield(['SendMessages', 'ViewChannel', 'ReadMessageHistory']);
+// Returns combined bitfield as string
+
+// From PermissionFlags enum
+resolvePermissionsToBitfield(PermissionFlags.BanMembers);  // "4"`,
         language: 'javascript',
       },
     ],

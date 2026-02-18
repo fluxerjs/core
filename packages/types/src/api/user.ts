@@ -28,6 +28,38 @@ export interface APIUserPartial {
 export type APIUser = APIUserPartial;
 
 /**
+ * User profile sub-object from GET /users/{id}/profile.
+ * @see https://docs.fluxer.app/api-reference
+ */
+export interface APIUserProfile {
+  pronouns?: string | null;
+  bio?: string | null;
+  banner?: string | null;
+  accent_color?: number | null;
+  banner_color?: number | null;
+  theme?: string | null;
+}
+
+/**
+ * Connected account from profile response.
+ */
+export interface APIConnectedAccount {
+  name?: string | null;
+  type?: string | null;
+}
+
+/**
+ * Full profile response from GET /users/{id}/profile.
+ * Optionally use ?guild_id=GUILD_ID for server-specific profile.
+ */
+export interface APIProfileResponse {
+  user_profile?: APIUserProfile | null;
+  mutual_guilds?: Array<{ id: Snowflake }> | null;
+  mutual_guild_ids?: Snowflake[] | null;
+  connected_accounts?: APIConnectedAccount[] | null;
+}
+
+/**
  * Guild member from GET /guilds/{guild_id}/members or GET /guilds/{guild_id}/members/{user_id}
  */
 export interface APIGuildMember {
@@ -38,8 +70,10 @@ export interface APIGuildMember {
   accent_color?: number | null;
   roles: Snowflake[];
   joined_at: string;
-  mute: boolean;
-  deaf: boolean;
+  mute?: boolean;
+  deaf?: boolean;
   communication_disabled_until?: string | null;
   profile_flags?: number | null;
+  /** When the user started boosting this guild. */
+  premium_since?: string | null;
 }

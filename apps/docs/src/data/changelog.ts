@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.1.2',
+    date: '2026-02-18',
+    sections: [
+      {
+        title: 'Guild members',
+        items: [
+          'guild.members.me — Discord.js parity: returns the current bot user as a GuildMember in that guild, or null if not cached',
+          'guild.members.fetchMe() — fetch and cache the bot\'s member when not in cache',
+          'GuildMemberManager — guild.members extends Collection with me getter and fetchMe()',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.1.0',
     date: '2026-02-16',
     sections: [

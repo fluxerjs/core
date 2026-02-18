@@ -1,21 +1,23 @@
-import { parseRoleMention } from '@fluxerjs/util';
+import { parseRoleMention, resolvePermissionsToBitfield, type PermissionResolvable } from '@fluxerjs/util';
 import { FluxerAPIError } from '@fluxerjs/rest';
 import type { Client } from '../client/Client.js';
+import { Collection } from '@fluxerjs/collection';
 import { Base } from './Base.js';
 import { FluxerError } from '../errors/FluxerError.js';
 import { ErrorCodes } from '../errors/ErrorCodes.js';
-import { Collection } from '@fluxerjs/collection';
 import type {
   APIGuild,
   APIGuildAuditLog,
   APIGuildMember,
   APIRole,
+  RESTCreateRoleBody,
   GuildFeature,
   GuildVerificationLevel,
   GuildMFALevel,
   GuildExplicitContentFilter,
   DefaultMessageNotifications,
 } from '@fluxerjs/types';
+import { GuildMemberManager } from '../client/GuildMemberManager.js';
 import { GuildMember } from './GuildMember.js';
 import { Role } from './Role.js';
 import type { GuildChannel } from './Channel.js';
@@ -59,7 +61,7 @@ export class Guild extends Base {
   splashWidth?: number | null;
   /** Splash image height. Optional. */
   splashHeight?: number | null;
-  members = new Collection<string, GuildMember>();
+  members: GuildMemberManager;
   channels = new Collection<string, GuildChannel>();
   roles = new Collection<string, Role>();
 
@@ -68,6 +70,7 @@ export class Guild extends Base {
     super();
     this.client = client;
     this.id = data.id;
+    this.members = new GuildMemberManager(this);
     this.name = data.name;
     this.icon = data.icon ?? null;
     this.banner = data.banner ?? null;
@@ -132,6 +135,86 @@ export class Guild extends Base {
    */
   async removeRoleFromMember(userId: string, roleId: string): Promise<void> {
     await this.client.rest.delete(Routes.guildMemberRole(this.id, userId, roleId));
+  }
+
+  /**
+   * Create a role in this guild.
+   * Requires Manage Roles permission.
+   * @param options - Role data (permissions accepts PermissionResolvable for convenience)
+   * @returns The created role
+   * @example
+   * const role = await guild.createRole({ name: 'Mod', permissions: ['KickMembers', 'BanMembers'] });
+   */
+  async createRole(
+    options: RESTCreateRoleBody & { permissions?: string | PermissionResolvable },
+  ): Promise<Role> {
+    const body: Record<string, unknown> = {};
+    if (options.name !== undefined) body.name = options.name;
+    if (options.permissions !== undefined) {
+      body.permissions = typeof options.permissions === 'string'
+        ? options.permissions
+        : resolvePermissionsToBitfield(options.permissions);
+    }
+    if (options.color !== undefined) body.color = options.color;
+    if (options.hoist !== undefined) body.hoist = options.hoist;
+    if (options.mentionable !== undefined) body.mentionable = options.mentionable;
+    if (options.unicode_emoji !== undefined) body.unicode_emoji = options.unicode_emoji;
+    if (options.position !== undefined) body.position = options.position;
+    if (options.hoist_position !== undefined) body.hoist_position = options.hoist_position;
+    const data = await this.client.rest.post<APIRole>(Routes.guildRoles(this.id), {
+      body: Object.keys(body).length ? body : undefined,
+      auth: true,
+    });
+    const role = new Role(this.client, data, this.id);
+    this.roles.set(role.id, role);
+    return role;
+  }
+
+  /**
+   * Fetch all roles in this guild.
+   * @returns Array of Role objects (cached in guild.roles)
+   */
+  async fetchRoles(): Promise<Role[]> {
+    const data = await this.client.rest.get<APIRole[] | Record<string, APIRole>>(
+      Routes.guildRoles(this.id),
+    );
+    const list = Array.isArray(data) ? data : Object.values(data ?? {});
+    const roles: Role[] = [];
+    for (const r of list) {
+      const role = new Role(this.client, r, this.id);
+      this.roles.set(role.id, role);
+      roles.push(role);
+    }
+    return roles;
+  }
+
+  /**
+   * Fetch a role by ID.
+   * @param roleId - The role ID to fetch
+   * @returns The role
+   * @throws FluxerError with ROLE_NOT_FOUND if role does not exist (404)
+   */
+  async fetchRole(roleId: string): Promise<Role> {
+    try {
+      const data = await this.client.rest.get<APIRole>(Routes.guildRole(this.id, roleId));
+      const role = new Role(this.client, data, this.id);
+      this.roles.set(role.id, role);
+      return role;
+    } catch (err) {
+      const statusCode =
+        err instanceof FluxerAPIError
+          ? err.statusCode
+          : (err as { statusCode?: number })?.statusCode;
+      if (statusCode === 404) {
+        throw new FluxerError(`Role ${roleId} not found in guild`, {
+          code: ErrorCodes.RoleNotFound,
+          cause: err as Error,
+        });
+      }
+      throw err instanceof FluxerError
+        ? err
+        : new FluxerError('Failed to fetch guild role', { cause: err as Error });
+    }
   }
 
   /**

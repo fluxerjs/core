@@ -6,4 +6,5 @@ export const ErrorCodes = {
   MessageNotFound: 'MESSAGE_NOT_FOUND',
   GuildNotFound: 'GUILD_NOT_FOUND',
   MemberNotFound: 'MEMBER_NOT_FOUND',
+  RoleNotFound: 'ROLE_NOT_FOUND',
 } as const;

@@ -374,7 +374,21 @@ export class LiveKitRtcConnection extends EventEmitter {
     }
 
     const { createFile } = await import('mp4box');
-    const { VideoDecoder, EncodedVideoChunk } = await import('node-webcodecs');
+    let VideoDecoder: typeof import('node-webcodecs').VideoDecoder;
+    let EncodedVideoChunk: typeof import('node-webcodecs').EncodedVideoChunk;
+    try {
+      const webcodecs = await import('node-webcodecs');
+      VideoDecoder = webcodecs.VideoDecoder;
+      EncodedVideoChunk = webcodecs.EncodedVideoChunk;
+    } catch {
+      this.emit(
+        'error',
+        new Error(
+          'node-webcodecs is not available (optional dependency failed to install). Use options.useFFmpeg with a URL, or install node-webcodecs.',
+        ),
+      );
+      return;
+    }
 
     const videoUrl = typeof urlOrBuffer === 'string' ? urlOrBuffer : null;
 

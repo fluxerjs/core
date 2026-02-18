@@ -1,5 +1,10 @@
 export { Client, type ClientEvents, type ClientEventMethods } from './client/Client.js';
 export { ChannelManager } from './client/ChannelManager.js';
+export { GuildMemberManager } from './client/GuildMemberManager.js';
+export {
+  UsersManager,
+  type FetchedUserWithProfile,
+} from './client/UsersManager.js';
 export { MessageManager } from './client/MessageManager.js';
 export { ClientUser } from './client/ClientUser.js';
 export { Base } from './structures/Base.js';
@@ -52,8 +57,13 @@ export { resolveTenorToImageUrl } from '@fluxerjs/util';
 export {
   PermissionsBitField,
   PermissionFlags,
+  resolvePermissionsToBitfield,
+  UserFlagsBitField,
+  UserFlagsBits,
   type PermissionString,
   type PermissionResolvable,
+  type UserFlagsString,
+  type UserFlagsResolvable,
 } from '@fluxerjs/util';
 
 // CDN URL helpers for avatars, banners, etc. (works with raw API data or User objects)

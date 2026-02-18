@@ -5,6 +5,7 @@ export {
   PermissionFlags,
   PermissionFlagsMap,
   ALL_PERMISSIONS_BIGINT,
+  resolvePermissionsToBitfield,
   type PermissionString,
   type PermissionResolvable,
 } from './PermissionsBitField.js';

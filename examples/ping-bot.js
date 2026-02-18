@@ -23,6 +23,7 @@ import {
   User,
   VoiceChannel,
   cdnBannerURL,
+  UserFlagsBits,
 } from '@fluxerjs/core';
 import { getVoiceManager, LiveKitRtcConnection } from '@fluxerjs/voice';
 
@@ -175,6 +176,64 @@ commands.set('info', {
   },
 });
 
+/** Get human-readable badge names from user flags (checks common badges that fit in 32-bit). */
+function getBadgeNames(flags) {
+  if (flags == null || typeof flags !== 'number') return [];
+  const badges = [];
+  const DISPLAY_FLAGS = [
+    ['Staff', UserFlagsBits.Staff],
+    ['Partner', UserFlagsBits.Partner],
+    ['Bug Hunter', UserFlagsBits.BugHunter],
+    ['Ctp Member', UserFlagsBits.CtpMember],
+    ['Friendly Bot', UserFlagsBits.FriendlyBot],
+    ['Friendly Bot (Manual)', UserFlagsBits.FriendlyBotManualApproval],
+  ];
+  for (const [name, bit] of DISPLAY_FLAGS) {
+    if ((flags & bit) === bit) badges.push(name);
+  }
+  return badges;
+}
+
+function addProfileFields(fields, profile, profileData, prefix = '') {
+  if (!profile || typeof profile !== 'object') return;
+  if (profile.pronouns != null && profile.pronouns !== '')
+    fields.push({
+      name: prefix + 'Pronouns',
+      value: String(profile.pronouns).slice(0, 40),
+      inline: true,
+    });
+  if (profile.bio != null && profile.bio !== '')
+    fields.push({
+      name: prefix + 'Bio',
+      value: String(profile.bio).slice(0, 1024) || '—',
+    });
+  if (profile.banner != null && profile.banner !== '')
+    fields.push({ name: prefix + 'Banner', value: 'Set', inline: true });
+  const accent = profile.accent_color ?? profile.banner_color;
+  if (accent != null)
+    fields.push({
+      name: prefix + 'Accent color',
+      value: `#${Number(accent).toString(16).padStart(6, '0')}`,
+      inline: true,
+    });
+  if (profile.theme != null)
+    fields.push({ name: prefix + 'Theme', value: String(profile.theme), inline: true });
+  const mutualCount = profileData?.mutual_guilds?.length ?? profileData?.mutual_guild_ids?.length;
+  if (mutualCount != null && mutualCount > 0)
+    fields.push({ name: prefix + 'Mutual servers', value: String(mutualCount), inline: true });
+  const connected = profileData?.connected_accounts;
+  if (connected?.length)
+    fields.push({
+      name: prefix + 'Connected accounts',
+      value:
+        connected
+          .map((a) => a.name ?? a.type ?? '?')
+          .slice(0, 5)
+          .join(', ') + (connected.length > 5 ? ` (+${connected.length - 5})` : ''),
+      inline: true,
+    });
+}
+
 commands.set('userinfo', {
   description: "Show a user's profile (mention or user ID); no arg = yourself",
   async execute(message, client, args) {
@@ -185,86 +244,175 @@ commands.set('userinfo', {
       );
       return;
     }
-    let userData;
-    let profileData = null;
+    let data;
     try {
-      userData = await client.rest.get(Routes.user(userId));
+      data = await client.users.fetchWithProfile(userId, {
+        guildId: message.guildId ?? undefined,
+      });
     } catch {
       await message.reply(
         'Could not fetch that user. They may not exist or the ID may be invalid.',
       );
       return;
     }
-    try {
-      profileData = await client.rest.get(Routes.userProfile(userId));
-    } catch {
-      // Profile may not be available for all users or bots
-    }
-    const user = client.getOrCreateUser(userData);
-    const avatarUrl = user.displayAvatarURL({ size: 256 });
-    const profile = profileData?.user_profile;
+    const { user, userData, globalProfile: globalProfileData, serverProfile: serverProfileData, memberData } = data;
+    const globalProfileUserProfile = globalProfileData?.user_profile;
+    const serverProfileUserProfile = serverProfileData?.user_profile;
     const bannerUrl =
-      profile?.banner != null && profile.banner !== ''
-        ? cdnBannerURL(userData.id, profile.banner, { size: 512 })
-        : null;
+      serverProfileUserProfile?.banner != null && serverProfileUserProfile.banner !== ''
+        ? cdnBannerURL(userData.id, serverProfileUserProfile.banner, { size: 512 })
+        : globalProfileUserProfile?.banner != null && globalProfileUserProfile.banner !== ''
+          ? cdnBannerURL(userData.id, globalProfileUserProfile.banner, { size: 512 })
+          : userData.banner != null && userData.banner !== ''
+            ? cdnBannerURL(userData.id, userData.banner, { size: 512 })
+            : null;
     const accentColor =
-      profile && (profile.accent_color ?? profile.banner_color) != null
-        ? Number(profile.accent_color ?? profile.banner_color)
-        : userData.avatar_color != null
-          ? Number(userData.avatar_color)
-          : BRAND_COLOR;
+      serverProfileUserProfile &&
+      (serverProfileUserProfile.accent_color ?? serverProfileUserProfile.banner_color) != null
+        ? Number(
+            serverProfileUserProfile.accent_color ?? serverProfileUserProfile.banner_color,
+          )
+        : globalProfileUserProfile &&
+            (globalProfileUserProfile.accent_color ?? globalProfileUserProfile.banner_color) != null
+          ? Number(
+              globalProfileUserProfile.accent_color ?? globalProfileUserProfile.banner_color,
+            )
+          : userData.avatar_color != null
+            ? Number(userData.avatar_color)
+            : memberData?.accent_color != null
+              ? Number(memberData.accent_color)
+              : BRAND_COLOR;
+    const avatarUrl = user.displayAvatarURL({ size: 256 });
     const embed = new EmbedBuilder()
       .setTitle('User profile')
       .setColor(accentColor)
       .setThumbnail(avatarUrl);
     if (bannerUrl) embed.setImage(bannerUrl);
+
+    const fields = [
+      { name: 'Username', value: userData.username ?? '—', inline: true },
+      {
+        name: 'Display name',
+        value: userData.global_name ?? userData.username ?? '—',
+        inline: true,
+      },
+      { name: 'ID', value: `\`${userData.id}\``, inline: true },
+      { name: 'Bot', value: userData.bot ? 'Yes' : 'No', inline: true },
+      { name: 'System', value: userData.system ? 'Yes' : 'No', inline: true },
+      { name: 'Discriminator', value: userData.discriminator ?? '0', inline: true },
+      {
+        name: 'Avatar',
+        value: userData.avatar ? (userData.avatar.startsWith('a_') ? 'Animated' : 'Set') : 'Default',
+        inline: true,
+      },
+      {
+        name: 'Avatar color',
+        value:
+          userData.avatar_color != null
+            ? `#${Number(userData.avatar_color).toString(16).padStart(6, '0')}`
+            : '—',
+        inline: true,
+      },
+      {
+        name: 'User banner',
+        value: userData.banner != null && userData.banner !== '' ? 'Set' : '—',
+        inline: true,
+      },
+    ];
+
+    const flags = userData.flags ?? userData.public_flags;
+    if (flags != null) {
+      const badgeNames = getBadgeNames(flags);
+      fields.push({
+        name: 'Badges',
+        value: badgeNames.length ? badgeNames.join(', ') : '—',
+        inline: false,
+      });
+      fields.push({
+        name: 'Flags (raw)',
+        value: `\`${flags}\``,
+        inline: true,
+      });
+    }
+
+    if (globalProfileData) {
+      fields.push({ name: '\u200B', value: '**Global Profile**', inline: false });
+      addProfileFields(fields, globalProfileUserProfile, globalProfileData);
+    }
+
+    if (message.guildId && (serverProfileData || memberData)) {
+      const guild = client.guilds.get(message.guildId);
+      const guildName = guild?.name ?? 'this server';
+      fields.push({
+        name: '\u200B',
+        value: `**Server Profile** (${guildName})`,
+        inline: false,
+      });
+      if (serverProfileUserProfile && typeof serverProfileUserProfile === 'object') {
+        addProfileFields(fields, serverProfileUserProfile, serverProfileData, 'Server ');
+      }
+      if (memberData) {
+        const nick = memberData.nick ?? null;
+        if (nick)
+          fields.push({
+            name: 'Nickname',
+            value: String(nick).slice(0, 32),
+            inline: true,
+          });
+        if (memberData.joined_at)
+          fields.push({
+            name: 'Joined',
+            value: `<t:${Math.floor(new Date(memberData.joined_at).getTime() / 1000)}:R>`,
+            inline: true,
+          });
+        if (memberData.premium_since)
+          fields.push({
+            name: 'Boosting since',
+            value: `<t:${Math.floor(new Date(memberData.premium_since).getTime() / 1000)}:R>`,
+            inline: true,
+          });
+        if (memberData.communication_disabled_until) {
+          const until = new Date(memberData.communication_disabled_until);
+          if (until > new Date())
+            fields.push({
+              name: 'Timeout until',
+              value: `<t:${Math.floor(until.getTime() / 1000)}:F>`,
+              inline: true,
+            });
+        }
+        if (memberData.roles?.length) {
+          const roleIds = memberData.roles.filter((id) => id !== message.guildId);
+          const roleNames = guild
+            ? roleIds
+                .map((id) => guild.roles.get(id)?.name ?? id)
+                .slice(0, 20)
+            : roleIds.slice(0, 20);
+          const display =
+            roleNames.length > 0
+              ? roleNames.join(', ') +
+                (roleIds.length > 20 ? ` (+${roleIds.length - 20} more)` : '')
+              : '—';
+          fields.push({ name: 'Roles', value: display.slice(0, 1024) || '—' });
+        }
+        if (memberData.avatar != null && memberData.avatar !== '')
+          fields.push({ name: 'Server avatar', value: 'Set', inline: true });
+        if (memberData.banner != null && memberData.banner !== '')
+          fields.push({ name: 'Server banner', value: 'Set', inline: true });
+        if (memberData.mute !== undefined)
+          fields.push({ name: 'Muted', value: memberData.mute ? 'Yes' : 'No', inline: true });
+        if (memberData.deaf !== undefined)
+          fields.push({ name: 'Deafened', value: memberData.deaf ? 'Yes' : 'No', inline: true });
+      }
+    }
+
     embed
-      .addFields(
-        { name: 'Username', value: userData.username ?? '—', inline: true },
-        {
-          name: 'Display name',
-          value: userData.global_name ?? userData.username ?? '—',
-          inline: true,
-        },
-        { name: 'ID', value: `\`${userData.id}\``, inline: true },
-        { name: 'Bot', value: userData.bot ? 'Yes' : 'No', inline: true },
-        { name: 'Discriminator', value: userData.discriminator ?? '—', inline: true },
-        {
-          name: 'Avatar color',
-          value:
-            userData.avatar_color != null
-              ? `#${Number(userData.avatar_color).toString(16).padStart(6, '0')}`
-              : '—',
-          inline: true,
-        },
-      )
+      .addFields(...fields)
       .setFooter({ text: `Requested by ${message.author.username}` })
       .setTimestamp();
-    if (profile && typeof profile === 'object') {
-      const extra = [];
-      if (profile.pronouns != null && profile.pronouns !== '')
-        extra.push({
-          name: 'Pronouns',
-          value: String(profile.pronouns).slice(0, 40),
-          inline: true,
-        });
-      if (profile.bio != null && profile.bio !== '')
-        extra.push({ name: 'Bio', value: String(profile.bio).slice(0, 1024) || '—' });
-      if (profile.banner != null && profile.banner !== '')
-        extra.push({ name: 'Banner', value: 'Set', inline: true });
-      const accent = profile.accent_color ?? profile.banner_color;
-      if (accent != null)
-        extra.push({
-          name: 'Accent color',
-          value: `#${Number(accent).toString(16).padStart(6, '0')}`,
-          inline: true,
-        });
-      if (extra.length) embed.addFields(...extra);
-    }
     try {
       await message.reply({ embeds: [embed.toJSON()] });
     } catch (err) {
-      const fallback = `**${userData.username ?? userData.global_name ?? 'User'}** (ID: \`${userData.id}\`) — Could not send full embed (${err.statusCode === 502 ? 'server error' : 'error'}). Try again.`;
+      const fallback = `**${userData.username ?? userData.global_name ?? 'User'}** (ID: \`${userData.id}\`) — Could not send full embed (${err?.statusCode === 502 ? 'server error' : 'error'}). Try again.`;
       await message.reply(fallback).catch(() => {});
     }
   },

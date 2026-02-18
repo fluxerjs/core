@@ -280,8 +280,13 @@ handlers.set('GUILD_ROLE_UPDATE', async (client, d) => {
   const data = d as GatewayGuildRoleUpdateDispatchData;
   const guild = client.guilds.get(data.guild_id);
   if (guild) {
-    const { Role } = await import('../structures/Role.js');
-    guild.roles.set(data.role.id, new Role(client, data.role, guild.id));
+    const existing = guild.roles.get(data.role.id);
+    if (existing) {
+      existing._patch(data.role);
+    } else {
+      const { Role } = await import('../structures/Role.js');
+      guild.roles.set(data.role.id, new Role(client, data.role, guild.id));
+    }
   }
   client.emit(Events.GuildRoleUpdate, data);
 });

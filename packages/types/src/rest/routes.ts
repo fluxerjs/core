@@ -60,7 +60,9 @@ export const Routes = {
   currentUserGuilds: () => `/users/@me/guilds` as const,
   leaveGuild: (guildId: Snowflake) => `/users/@me/guilds/${guildId}` as const,
   userMeChannels: () => `/users/@me/channels` as const,
-  userProfile: (id: Snowflake) => `/users/${id}/profile` as const,
+  /** GET /users/{id}/profile. Pass guildId for server-specific profile. */
+  userProfile: (id: Snowflake, guildId?: Snowflake): string =>
+    guildId ? `/users/${id}/profile?guild_id=${guildId}` : `/users/${id}/profile`,
 
   // Gateway
   gatewayBot: () => `/gateway/bot` as const,

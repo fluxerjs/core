@@ -2,7 +2,6 @@ import { EventEmitter } from 'events';
 import { REST } from '@fluxerjs/rest';
 import { WebSocketManager } from '@fluxerjs/ws';
 import { Routes } from '@fluxerjs/types';
-import { Collection } from '@fluxerjs/collection';
 import { ChannelManager } from './ChannelManager.js';
 import { GuildManager } from './GuildManager.js';
 import type { ClientOptions } from '../util/Options.js';
@@ -33,6 +32,7 @@ import type {
 import type { APIChannel, APIGuild, APIRole, APIUser, APIUserPartial } from '@fluxerjs/types';
 import { emitDeprecationWarning, formatEmoji, parseEmoji } from '@fluxerjs/util';
 import { User } from '../structures/User.js';
+import { UsersManager } from './UsersManager.js';
 import { eventHandlers } from './EventHandlerRegistry.js';
 
 /**
@@ -133,7 +133,7 @@ export class Client extends EventEmitter {
   readonly rest: REST;
   readonly guilds = new GuildManager(this);
   readonly channels = new ChannelManager(this);
-  readonly users = new Collection<string, User>();
+  readonly users = new UsersManager(this);
   /** Typed event handlers. Use client.events.MessageReactionAdd((reaction, user, messageId, channelId, emoji, userId) => {...}) or client.on(Events.MessageReactionAdd, ...). */
   readonly events: ClientEventMethods;
   /** The authenticated bot user. Null until READY is received. */
@@ -152,6 +152,10 @@ export class Client extends EventEmitter {
     });
     Object.defineProperty(this.guilds, 'cache', {
       get: () => this.guilds,
+      configurable: true,
+    });
+    Object.defineProperty(this.users, 'cache', {
+      get: () => this.users,
       configurable: true,
     });
     this.rest = new REST({

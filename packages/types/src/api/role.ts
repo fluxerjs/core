@@ -15,3 +15,27 @@ export interface APIRole {
   mentionable: boolean;
   unicode_emoji?: string | null;
 }
+
+/** Body for POST /guilds/{id}/roles (create role). All fields optional. */
+export interface RESTCreateRoleBody {
+  name?: string;
+  permissions?: string;
+  color?: number;
+  hoist?: boolean;
+  mentionable?: boolean;
+  unicode_emoji?: string | null;
+  position?: number;
+  hoist_position?: number | null;
+}
+
+/** Body for PATCH /guilds/{id}/roles/{roleId} (update role). All fields optional. */
+export interface RESTUpdateRoleBody {
+  name?: string;
+  permissions?: string;
+  color?: number;
+  hoist?: boolean;
+  mentionable?: boolean;
+  unicode_emoji?: string | null;
+  position?: number;
+  hoist_position?: number | null;
+}

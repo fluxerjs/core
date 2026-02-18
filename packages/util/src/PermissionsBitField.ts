@@ -75,3 +75,39 @@ export class PermissionsBitField extends BitField<PermissionString> {
 }
 
 export type PermissionResolvable = BitFieldResolvable<PermissionString>;
+
+/**
+ * Resolve permission(s) to an API bitfield string. Uses BigInt to avoid overflow for flags > 2^31.
+ * @param perms - Permission string (e.g. "2048"), number, PermissionString, array of permissions, or PermissionsBitField
+ * @returns String bitfield for API (e.g. "8933636165185")
+ * @example
+ * resolvePermissionsToBitfield('2048'); // "2048"
+ * resolvePermissionsToBitfield(PermissionFlags.SendMessages); // "2048"
+ * resolvePermissionsToBitfield(['SendMessages', 'ViewChannel']); // combined bitfield
+ */
+export function resolvePermissionsToBitfield(perms: PermissionResolvable): string {
+  if (typeof perms === 'string') {
+    const num = Number(perms);
+    if (!Number.isNaN(num) && perms.trim() !== '') return perms;
+    const mapped = PermissionFlagsMap[perms];
+    if (mapped !== undefined) return String(mapped);
+    throw new RangeError(`Invalid permission string: ${perms}`);
+  }
+  if (typeof perms === 'number') return String(perms);
+  if (typeof perms === 'bigint') return String(perms);
+  if (perms instanceof PermissionsBitField) return String(BigInt(perms.bitfield));
+  if (Array.isArray(perms)) {
+    let acc = 0n;
+    for (const p of perms) {
+      let v: bigint;
+      if (typeof p === 'number') v = BigInt(p);
+      else if (typeof p === 'string') {
+        const mapped = PermissionFlagsMap[p];
+        v = mapped !== undefined ? BigInt(mapped) : BigInt(Number(p) || 0);
+      } else v = BigInt((p as PermissionsBitField).bitfield);
+      acc |= v;
+    }
+    return String(acc);
+  }
+  throw new RangeError(`Invalid permission resolvable: ${perms}`);
+}
