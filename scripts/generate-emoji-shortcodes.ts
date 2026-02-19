@@ -18,7 +18,9 @@ const utilPath = join(repoRoot, 'packages/util');
 const DISCORD_EMOJIS_URL =
   'https://raw.githubusercontent.com/anyascii/discord-emojis/master/discord-emojis.json';
 
-async function fetchDiscordEmojis(): Promise<{ emojis: Array<{ names: string[]; surrogates: string }> }> {
+async function fetchDiscordEmojis(): Promise<{
+  emojis: Array<{ names: string[]; surrogates: string }>;
+}> {
   const res = await fetch(DISCORD_EMOJIS_URL);
   if (!res.ok) throw new Error(`Failed to fetch discord-emojis: ${res.status}`);
   return res.json();
