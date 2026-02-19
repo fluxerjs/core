@@ -5,6 +5,13 @@ import { getDefaultWebSocket } from './utils/getWebSocket.js';
 
 export type WebSocketConstructor = import('./WebSocketShard.js').WebSocketConstructor;
 
+const RETRY_INITIAL_MS = 1000;
+const RETRY_MAX_MS = 45000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export interface WebSocketManagerOptions {
   token: string;
   intents: number;
@@ -21,6 +28,7 @@ export class WebSocketManager extends EventEmitter {
   private shards = new Map<number, WebSocketShard>();
   private gatewayUrl: string | null = null;
   private shardCount = 1;
+  private _aborted = false;
 
   constructor(options: WebSocketManagerOptions) {
     super();
@@ -28,26 +36,45 @@ export class WebSocketManager extends EventEmitter {
   }
 
   async connect(): Promise<void> {
+    this._aborted = false;
+
     let WS = this.options.WebSocket;
+    let delayMs = RETRY_INITIAL_MS;
+
     if (!WS) {
+      while (!this._aborted) {
+        try {
+          WS = await getDefaultWebSocket();
+          break;
+        } catch (err) {
+          const e = err instanceof Error ? err : new Error(String(err));
+          this.emit('error', { shardId: -1, error: e });
+          await sleep(delayMs);
+          delayMs = Math.min(RETRY_MAX_MS, Math.floor(delayMs * 1.5));
+        }
+      }
+      if (this._aborted) throw new Error('Connection aborted');
+      if (!WS) throw new Error('Failed to load WebSocket');
+    }
+
+    let gateway: APIGatewayBotResponse | null = null;
+    while (!this._aborted) {
       try {
-        WS = await getDefaultWebSocket();
+        gateway = (await this.options.rest.get('/gateway/bot')) as APIGatewayBotResponse;
+        break;
       } catch (err) {
         const e = err instanceof Error ? err : new Error(String(err));
         this.emit('error', { shardId: -1, error: e });
-        throw e;
+        await sleep(delayMs);
+        delayMs = Math.min(RETRY_MAX_MS, Math.floor(delayMs * 1.5));
       }
     }
 
-    try {
-      const gateway = (await this.options.rest.get('/gateway/bot')) as APIGatewayBotResponse;
-      this.gatewayUrl = gateway.url;
-      this.shardCount = this.options.shardCount ?? gateway.shards;
-    } catch (err) {
-      const e = err instanceof Error ? err : new Error(String(err));
-      this.emit('error', { shardId: -1, error: e });
-      throw e;
-    }
+    if (this._aborted) throw new Error('Connection aborted');
+    if (!gateway) throw new Error('Failed to fetch gateway');
+
+    this.gatewayUrl = gateway.url;
+    this.shardCount = this.options.shardCount ?? gateway.shards;
 
     const ids = this.options.shardIds ?? [...Array(this.shardCount).keys()];
 
@@ -55,7 +82,7 @@ export class WebSocketManager extends EventEmitter {
 
     for (const id of ids) {
       const shard = new WebSocketShard({
-        url: this.gatewayUrl!,
+        url: this.gatewayUrl ?? gateway.url,
         token: this.options.token,
         intents: this.options.intents,
         presence: this.options.presence,
@@ -89,6 +116,7 @@ export class WebSocketManager extends EventEmitter {
   }
 
   destroy(): void {
+    this._aborted = true;
     for (const shard of this.shards.values()) shard.destroy();
     this.shards.clear();
     this.gatewayUrl = null;

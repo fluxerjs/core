@@ -150,6 +150,19 @@ function floatToInt16(float32: Float32Array): Int16Array {
   return int16;
 }
 
+function applyVolumeToInt16(
+  samples: Int16Array,
+  volumePercent: number | null | undefined,
+): Int16Array {
+  const vol = (volumePercent ?? 100) / 100;
+  if (vol === 1) return samples;
+  const out = new Int16Array(samples.length);
+  for (let i = 0; i < samples.length; i++) {
+    out[i] = Math.max(-32768, Math.min(32767, Math.round(samples[i] * vol)));
+  }
+  return out;
+}
+
 /** Enable verbose audio pipeline logging. Set VOICE_DEBUG=1 in env to enable. */
 const VOICE_DEBUG = process.env.VOICE_DEBUG === '1' || process.env.VOICE_DEBUG === 'true';
 
@@ -174,6 +187,8 @@ export type LiveKitRtcConnectionEvents = VoiceConnectionEvents & {
  * @property maxFramerate - Max framerate for encoding (default: 60).
  * @property width - Output width (default: source). FFmpeg path only.
  * @property height - Output height (default: source). FFmpeg path only.
+ * @property resolution - Output resolution. When set, overrides width/height and maxFramerate. FFmpeg path only.
+ *   480p, 720p, 1080p, 1440p, 4k = @ 30fps.
  */
 export interface VideoPlayOptions {
   /** Track source hint - camera or screenshare (default: camera). */
@@ -190,6 +205,8 @@ export interface VideoPlayOptions {
   width?: number;
   /** Output height for resolution override (FFmpeg path). */
   height?: number;
+  /** Output resolution. When set, overrides width/height and maxFramerate. FFmpeg path only. */
+  resolution?: '480p' | '720p' | '1080p' | '1440p' | '4k';
 }
 
 /**
@@ -207,6 +224,7 @@ export class LiveKitRtcConnection extends EventEmitter {
   readonly client: Client;
   readonly channel: VoiceChannel;
   readonly guildId: string;
+  private _volume = 100;
   private _playing = false;
   private _playingVideo = false;
   private _destroyed = false;
@@ -269,6 +287,16 @@ export class LiveKitRtcConnection extends EventEmitter {
   isSameServer(endpoint: string | null, token: string): boolean {
     const ep = (endpoint ?? '').trim();
     return ep === (this.lastServerEndpoint ?? '') && token === (this.lastServerToken ?? '');
+  }
+
+  /** Set playback volume (0-200, 100 = normal). Affects current and future playback. */
+  setVolume(volumePercent: number): void {
+    this._volume = Math.max(0, Math.min(200, volumePercent ?? 100));
+  }
+
+  /** Get current volume (0-200). */
+  getVolume(): number {
+    return this._volume ?? 100;
   }
 
   playOpus(_stream: NodeJS.ReadableStream): void {
@@ -363,7 +391,8 @@ export class LiveKitRtcConnection extends EventEmitter {
       return;
     }
 
-    const useFFmpeg = options?.useFFmpeg ?? process.env.FLUXER_VIDEO_FFMPEG === '1';
+    let useFFmpeg = options?.useFFmpeg ?? process.env.FLUXER_VIDEO_FFMPEG === '1';
+    if (options?.resolution) useFFmpeg = true; // resolution requires FFmpeg path
     if (useFFmpeg && typeof urlOrBuffer === 'string') {
       await this.playVideoFFmpeg(urlOrBuffer, options);
       return;
@@ -859,8 +888,9 @@ export class LiveKitRtcConnection extends EventEmitter {
                     this._playingVideo &&
                     audioSource
                   ) {
-                    const outSamples = sampleBuffer.subarray(0, FRAME_SAMPLES);
+                    const rawSamples = sampleBuffer.subarray(0, FRAME_SAMPLES);
                     sampleBuffer = sampleBuffer.subarray(FRAME_SAMPLES).slice();
+                    const outSamples = applyVolumeToInt16(rawSamples, this._volume);
                     const audioFrame = new AudioFrame(
                       outSamples,
                       SAMPLE_RATE,
@@ -934,6 +964,7 @@ export class LiveKitRtcConnection extends EventEmitter {
 
     let width = 640;
     let height = 480;
+    let hasAudio = false;
     try {
       const { execFile } = await import('node:child_process');
       const { promisify } = await import('node:util');
@@ -943,21 +974,31 @@ export class LiveKitRtcConnection extends EventEmitter {
         [
           '-v',
           'error',
-          '-select_streams',
-          'v:0',
+          '-show_streams',
           '-show_entries',
-          'stream=width,height',
+          'stream=codec_type,width,height',
           '-of',
           'json',
           url,
         ],
         { encoding: 'utf8', timeout: 10000 },
       );
-      const parsed = JSON.parse(stdout) as { streams?: Array<{ width?: number; height?: number }> };
-      const stream = parsed?.streams?.[0];
-      if (stream?.width && stream?.height) {
-        width = stream.width;
-        height = stream.height;
+      const parsed = JSON.parse(stdout) as {
+        streams?: Array<{ codec_type?: string; width?: number; height?: number }>;
+      };
+      const streams = parsed?.streams ?? [];
+      for (const s of streams) {
+        if (s.codec_type === 'video' && s.width != null && s.height != null) {
+          width = s.width;
+          height = s.height;
+          break;
+        }
+      }
+      for (const s of streams) {
+        if (s.codec_type === 'audio') {
+          hasAudio = true;
+          break;
+        }
       }
     } catch (probeErr) {
       this.emit(
@@ -968,7 +1009,29 @@ export class LiveKitRtcConnection extends EventEmitter {
       );
       return;
     }
-    if (options?.width && options?.height) {
+    let maxFps = options?.maxFramerate ?? 60;
+    const res = options?.resolution;
+    if (res === '480p') {
+      width = 854;
+      height = 480;
+      maxFps = 60;
+    } else if (res === '720p') {
+      width = 1280;
+      height = 720;
+      maxFps = 60;
+    } else if (res === '1080p') {
+      width = 1920;
+      height = 1080;
+      maxFps = 60;
+    } else if (res === '1440p') {
+      width = 2560;
+      height = 1440;
+      maxFps = 60;
+    } else if (res === '4k') {
+      width = 3840;
+      height = 2160;
+      maxFps = 60;
+    } else if (options?.width != null && options?.height != null) {
       width = options.width;
       height = options.height;
     }
@@ -983,7 +1046,7 @@ export class LiveKitRtcConnection extends EventEmitter {
         sourceOption === 'screenshare' ? TrackSource.SOURCE_SCREENSHARE : TrackSource.SOURCE_CAMERA,
       videoEncoding: {
         maxBitrate: BigInt(options?.videoBitrate ?? 2_500_000),
-        maxFramerate: options?.maxFramerate ?? 60,
+        maxFramerate: maxFps,
       },
     });
 
@@ -997,24 +1060,28 @@ export class LiveKitRtcConnection extends EventEmitter {
       return;
     }
 
-    // FFmpeg audio (same pipeline as play())
-    let audioFfmpegProc: ReturnType<typeof spawn> | null = null;
-    const audioSource: AudioSource | null = new AudioSource(SAMPLE_RATE, CHANNELS);
-    const audioTrack: LocalAudioTrack | null = LocalAudioTrack.createAudioTrack(
-      'audio',
-      audioSource,
-    );
-    this.audioSource = audioSource;
-    this.audioTrack = audioTrack;
-    try {
-      await participant.publishTrack(
-        audioTrack,
-        new TrackPublishOptions({ source: TrackSource.SOURCE_MICROPHONE }),
-      );
-    } catch {
-      audioTrack.close().catch(() => {});
-      this.audioTrack = null;
+    let audioSource: AudioSource | null = null;
+    let audioReady = false;
+    if (hasAudio) {
+      const src = new AudioSource(SAMPLE_RATE, CHANNELS);
+      audioSource = src;
+      this.audioSource = src;
+      const track = LocalAudioTrack.createAudioTrack('audio', src);
+      this.audioTrack = track;
+      try {
+        await participant.publishTrack(
+          track,
+          new TrackPublishOptions({ source: TrackSource.SOURCE_MICROPHONE }),
+        );
+        audioReady = true;
+      } catch {
+        track.close().catch(() => {});
+        this.audioTrack = null;
+        this.audioSource = null;
+      }
+    } else {
       this.audioSource = null;
+      this.audioTrack = null;
     }
 
     this._playingVideo = true;
@@ -1024,7 +1091,6 @@ export class LiveKitRtcConnection extends EventEmitter {
     });
 
     const frameSize = Math.ceil((width * height * 3) / 2);
-    const maxFps = options?.maxFramerate ?? 60;
     const FRAME_INTERVAL_MS = Math.round(1000 / maxFps);
     let pacingTimeout: ReturnType<typeof setTimeout> | null = null;
     let ffmpegProc: ReturnType<typeof spawn> | null = null;
@@ -1042,10 +1108,6 @@ export class LiveKitRtcConnection extends EventEmitter {
       if (ffmpegProc && !ffmpegProc.killed) {
         ffmpegProc.kill('SIGKILL');
         ffmpegProc = null;
-      }
-      if (audioFfmpegProc && !audioFfmpegProc.killed) {
-        audioFfmpegProc.kill('SIGKILL');
-        audioFfmpegProc = null;
       }
       this.emit('requestVoiceStateSync', { self_stream: false, self_video: false });
       this.currentVideoStream = null;
@@ -1135,34 +1197,44 @@ export class LiveKitRtcConnection extends EventEmitter {
     };
     scheduleNextPacing();
 
-    const runFFmpeg = () => {
+    const runFFmpeg = async () => {
       const ffmpegArgs = [
         '-loglevel',
         'warning',
         '-re',
+        ...(loop ? ['-stream_loop', '-1'] : []),
         '-i',
         url,
+        '-map',
+        '0:v',
+        '-vf',
+        `scale=${width}:${height}`,
+        '-r',
+        String(maxFps),
         '-f',
         'rawvideo',
         '-pix_fmt',
         'yuv420p',
-        '-r',
-        String(maxFps),
+        '-an',
+        'pipe:1',
+        ...(hasAudio
+          ? ['-map', '0:a', '-c:a', 'libopus', '-f', 'webm', '-vn', 'pipe:3']
+          : []),
       ];
-      if (options?.width && options?.height) {
-        ffmpegArgs.splice(ffmpegArgs.indexOf('-f'), 0, '-vf', `scale=${width}:${height}`);
-      }
-      ffmpegArgs.push('-');
-      ffmpegProc = spawn('ffmpeg', ffmpegArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+      const stdioOpts: Array<'ignore' | 'pipe'> = hasAudio
+        ? ['ignore', 'pipe', 'pipe', 'pipe']
+        : ['ignore', 'pipe', 'pipe'];
+      const proc = spawn('ffmpeg', ffmpegArgs, { stdio: stdioOpts });
+      ffmpegProc = proc;
 
       this.currentVideoStream = {
         destroy: () => {
-          if (ffmpegProc && !ffmpegProc.killed) ffmpegProc.kill('SIGKILL');
+          if (proc && !proc.killed) proc.kill('SIGKILL');
         },
       };
 
-      const stdout = ffmpegProc.stdout;
-      const stderr = ffmpegProc.stderr;
+      const stdout = proc.stdout;
+      const stderr = proc.stderr;
       if (stdout) {
         stdout.on('data', (chunk: Buffer) => {
           if (!this._playingVideo || cleanupCalled) return;
@@ -1177,108 +1249,82 @@ export class LiveKitRtcConnection extends EventEmitter {
         });
       }
 
-      ffmpegProc.on('error', (err) => {
+      if (hasAudio && audioReady && audioSource && proc.stdio[3]) {
+        const audioPipe = proc.stdio[3] as NodeJS.ReadableStream;
+        const { opus: prismOpus } = await import('prism-media');
+        const { OpusDecoder } = await import('opus-decoder');
+        const demuxer = new prismOpus.WebmDemuxer();
+        audioPipe.pipe(demuxer);
+        const decoder = new OpusDecoder({ sampleRate: SAMPLE_RATE, channels: CHANNELS });
+        await decoder.ready;
+        let sampleBuffer = new Int16Array(0);
+        let opusBuffer = new Uint8Array(0);
+        let processing = false;
+        const opusFrameQueue: Uint8Array[] = [];
+        const processOneOpusFrame = async (frame: Uint8Array) => {
+          if (frame.length < 2 || !audioSource || !this._playingVideo) return;
+          try {
+            const result = decoder.decodeFrame(frame);
+            if (!result?.channelData?.[0]?.length) return;
+            const int16 = floatToInt16(result.channelData[0]);
+            const newBuffer = new Int16Array(sampleBuffer.length + int16.length);
+            newBuffer.set(sampleBuffer);
+            newBuffer.set(int16, sampleBuffer.length);
+            sampleBuffer = newBuffer;
+            while (sampleBuffer.length >= FRAME_SAMPLES && this._playingVideo && audioSource) {
+              const rawSamples = sampleBuffer.subarray(0, FRAME_SAMPLES);
+              sampleBuffer = sampleBuffer.subarray(FRAME_SAMPLES).slice();
+              const outSamples = applyVolumeToInt16(rawSamples, this._volume);
+              const audioFrame = new AudioFrame(outSamples, SAMPLE_RATE, CHANNELS, FRAME_SAMPLES);
+              if (audioSource.queuedDuration > 500) await audioSource.waitForPlayout();
+              await audioSource.captureFrame(audioFrame);
+            }
+          } catch {
+            /* decoder.close() may throw */
+          }
+        };
+        const drainQueue = async () => {
+          if (processing || opusFrameQueue.length === 0) return;
+          processing = true;
+          while (opusFrameQueue.length > 0 && this._playingVideo && audioSource) {
+            const f = opusFrameQueue.shift()!;
+            await processOneOpusFrame(f);
+          }
+          processing = false;
+        };
+        demuxer.on('data', (chunk: Buffer) => {
+          if (!this._playingVideo) return;
+          opusBuffer = new Uint8Array(concatUint8Arrays(opusBuffer, new Uint8Array(chunk)));
+          while (opusBuffer.length > 0) {
+            const parsed = parseOpusPacketBoundaries(opusBuffer);
+            if (!parsed) break;
+            opusBuffer = new Uint8Array(opusBuffer.subarray(parsed.consumed));
+            for (const frame of parsed.frames) opusFrameQueue.push(frame);
+          }
+          drainQueue().catch(() => {});
+        });
+      }
+
+      proc.on('error', (err) => {
         this.emit('error', err);
         doCleanup();
       });
 
-      ffmpegProc.on('exit', (code) => {
+      proc.on('exit', (code) => {
         ffmpegProc = null;
         if (cleanupCalled || !this._playingVideo) return;
         if (loop && (code === 0 || code === null)) {
           frameBuffer.length = 0;
           frameBufferBytes = 0;
           frameIndex = 0n;
-          setImmediate(runFFmpeg);
+          setImmediate(() => runFFmpeg());
         } else {
           doCleanup();
         }
       });
     };
 
-    runFFmpeg();
-
-    // Start FFmpeg audio pipeline (same as play())
-    const runAudioFfmpeg = async () => {
-      if (!this._playingVideo || cleanupCalled || !audioSource) return;
-      const audioProc = spawn(
-        'ffmpeg',
-        [
-          '-loglevel',
-          'warning',
-          '-re',
-          '-i',
-          url,
-          '-vn',
-          '-c:a',
-          'libopus',
-          '-f',
-          'webm',
-          ...(loop ? ['-stream_loop', '-1'] : []),
-          'pipe:1',
-        ],
-        { stdio: ['ignore', 'pipe', 'pipe'] },
-      );
-      audioFfmpegProc = audioProc;
-      const { opus: prismOpus } = await import('prism-media');
-      const { OpusDecoder } = await import('opus-decoder');
-      const demuxer = new prismOpus.WebmDemuxer();
-      if (audioProc.stdout) audioProc.stdout.pipe(demuxer);
-      const decoder = new OpusDecoder({ sampleRate: SAMPLE_RATE, channels: CHANNELS });
-      await decoder.ready;
-      let sampleBuffer = new Int16Array(0);
-      let opusBuffer = new Uint8Array(0);
-      let processing = false;
-      const opusFrameQueue: Uint8Array[] = [];
-      const processOneOpusFrame = async (frame: Uint8Array) => {
-        if (frame.length < 2 || !audioSource || !this._playingVideo) return;
-        try {
-          const result = decoder.decodeFrame(frame);
-          if (!result?.channelData?.[0]?.length) return;
-          const int16 = floatToInt16(result.channelData[0]);
-          const newBuffer = new Int16Array(sampleBuffer.length + int16.length);
-          newBuffer.set(sampleBuffer);
-          newBuffer.set(int16, sampleBuffer.length);
-          sampleBuffer = newBuffer;
-          while (sampleBuffer.length >= FRAME_SAMPLES && this._playingVideo && audioSource) {
-            const outSamples = sampleBuffer.subarray(0, FRAME_SAMPLES);
-            sampleBuffer = sampleBuffer.subarray(FRAME_SAMPLES).slice();
-            const audioFrame = new AudioFrame(outSamples, SAMPLE_RATE, CHANNELS, FRAME_SAMPLES);
-            if (audioSource.queuedDuration > 500) await audioSource.waitForPlayout();
-            await audioSource.captureFrame(audioFrame);
-          }
-        } catch {
-          /* decoder.close() may throw */
-        }
-      };
-      const drainQueue = async () => {
-        if (processing || opusFrameQueue.length === 0) return;
-        processing = true;
-        while (opusFrameQueue.length > 0 && this._playingVideo && audioSource) {
-          const f = opusFrameQueue.shift()!;
-          await processOneOpusFrame(f);
-        }
-        processing = false;
-      };
-      demuxer.on('data', (chunk: Buffer) => {
-        if (!this._playingVideo) return;
-        opusBuffer = new Uint8Array(concatUint8Arrays(opusBuffer, new Uint8Array(chunk)));
-        while (opusBuffer.length > 0) {
-          const parsed = parseOpusPacketBoundaries(opusBuffer);
-          if (!parsed) break;
-          opusBuffer = new Uint8Array(opusBuffer.subarray(parsed.consumed));
-          for (const frame of parsed.frames) opusFrameQueue.push(frame);
-        }
-        drainQueue().catch(() => {});
-      });
-      audioProc.on('exit', (code) => {
-        if (audioFfmpegProc === audioProc) audioFfmpegProc = null;
-        if (loop && this._playingVideo && !cleanupCalled && (code === 0 || code === null)) {
-          setImmediate(() => runAudioFfmpeg());
-        }
-      });
-    };
-    runAudioFfmpeg().catch(() => {});
+    runFFmpeg().catch((e) => this.audioDebug('ffmpeg error', { error: String(e) }));
   }
 
   /**
@@ -1351,8 +1397,9 @@ export class LiveKitRtcConnection extends EventEmitter {
         sampleBuffer = newBuffer;
 
         while (sampleBuffer.length >= FRAME_SAMPLES && this._playing && source) {
-          const outSamples = sampleBuffer.subarray(0, FRAME_SAMPLES);
+          const rawSamples = sampleBuffer.subarray(0, FRAME_SAMPLES);
           sampleBuffer = sampleBuffer.subarray(FRAME_SAMPLES).slice(); // copy remainder
+          const outSamples = applyVolumeToInt16(rawSamples, this._volume);
 
           const audioFrame = new AudioFrame(outSamples, SAMPLE_RATE, CHANNELS, FRAME_SAMPLES);
 
@@ -1417,8 +1464,9 @@ export class LiveKitRtcConnection extends EventEmitter {
       }
 
       while (sampleBuffer.length >= FRAME_SAMPLES && this._playing && source) {
-        const outSamples = sampleBuffer.subarray(0, FRAME_SAMPLES);
+        const rawSamples = sampleBuffer.subarray(0, FRAME_SAMPLES);
         sampleBuffer = sampleBuffer.subarray(FRAME_SAMPLES).slice();
+        const outSamples = applyVolumeToInt16(rawSamples, this._volume);
         const audioFrame = new AudioFrame(outSamples, SAMPLE_RATE, CHANNELS, FRAME_SAMPLES);
         await source.captureFrame(audioFrame);
         framesCaptured++;
@@ -1427,7 +1475,8 @@ export class LiveKitRtcConnection extends EventEmitter {
       if (sampleBuffer.length > 0 && this._playing && source) {
         const padded = new Int16Array(FRAME_SAMPLES);
         padded.set(sampleBuffer);
-        const audioFrame = new AudioFrame(padded, SAMPLE_RATE, CHANNELS, FRAME_SAMPLES);
+        const outSamples = applyVolumeToInt16(padded, this._volume);
+        const audioFrame = new AudioFrame(outSamples, SAMPLE_RATE, CHANNELS, FRAME_SAMPLES);
         await source.captureFrame(audioFrame);
         framesCaptured++;
       }

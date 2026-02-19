@@ -5,8 +5,8 @@
  * DMs: !dm (DM yourself), !dmuser @user [message] (DM another user).
  * Guild profile: !setnick [nickname] (change nickname), !setavatar [url] (change guild avatar).
  * Voice: !play (joins your VC and plays WebM/Opus audio via youtube-dl-exec). No FFmpeg.
- * Video: !playvideo [url] (streams MP4 in your VC; supports YouTube links or direct MP4; default demo).
- *   Set FLUXER_VIDEO_FFMPEG=1 to use FFmpeg decoding (recommended on macOS; avoids node-webcodecs crashes).
+ * Video: !playvideo [url] [480p|720p|1080p|1440p|4k] (streams MP4 in your VC; default 720p 30fps).
+ *   Resolution forces FFmpeg path. Set FLUXER_VIDEO_FFMPEG=1 to use FFmpeg without resolution.
  * !stop stops playback and leaves.
  *
  * Usage (from repo root after npm install && npm run build):
@@ -947,7 +947,7 @@ commands.set('play', {
 });
 
 commands.set('playvideo', {
-  description: 'Stream video in your VC (!playvideo [YouTube URL or MP4 URL])',
+  description: 'Stream video in your VC (default 720p; !playvideo [url] [480p|720p|1080p|1440p|4k])',
   async execute(message, client, args) {
     const guildId = message.guildId;
     if (!guildId) {
@@ -965,12 +965,21 @@ commands.set('playvideo', {
       await message.reply('Could not find that voice channel.');
       return;
     }
-    const inputUrl = args[0]?.trim() || DEFAULT_VIDEO_URL;
-    if (!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
-      await message.reply(
-        'Provide a valid URL: YouTube link or direct MP4. Example: `!playvideo https://youtube.com/watch?v=...`',
-      );
-      return;
+    const firstArg = args[0]?.trim();
+    const secondArg = args[1]?.trim();
+    const RESOLUTIONS = ['480p', '720p', '1080p', '1440p', '4k'];
+    const resolutionPreset = (s) => s && RESOLUTIONS.includes(s.toLowerCase());
+    let inputUrl;
+    let resolution;
+    if (resolutionPreset(firstArg)) {
+      inputUrl = DEFAULT_VIDEO_URL;
+      resolution = firstArg.toLowerCase();
+    } else if (firstArg && (firstArg.startsWith('http://') || firstArg.startsWith('https://'))) {
+      inputUrl = firstArg;
+      resolution = resolutionPreset(secondArg) ? secondArg.toLowerCase() : '720p';
+    } else {
+      inputUrl = DEFAULT_VIDEO_URL;
+      resolution = resolutionPreset(secondArg) ? secondArg.toLowerCase() : '720p';
     }
     try {
       let videoUrl = inputUrl;
@@ -996,8 +1005,14 @@ commands.set('playvideo', {
         await message.reply('Voice connection not ready. Try again in a moment.');
         return;
       }
-      await connection.playVideo(videoUrl, { source: 'screenshare' });
-      await message.reply(`Streaming video in your voice channel. Use \`${PREFIX}stop\` to leave.`);
+      await connection.playVideo(videoUrl, {
+        source: 'screenshare',
+        resolution,
+      });
+      const fps = 30;
+      await message.reply(
+        `Streaming video in your voice channel at ${resolution} ${fps}fps. Use \`${PREFIX}stop\` to leave.`,
+      );
     } catch (err) {
       console.error('Playvideo error:', err);
       await message.reply('Failed to join or stream video.').catch(() => {});

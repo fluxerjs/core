@@ -37,7 +37,7 @@ import type {
   APIUserPartial,
   APIInstance,
 } from '@fluxerjs/types';
-import { emitDeprecationWarning, formatEmoji, parseEmoji } from '@fluxerjs/util';
+import { emitDeprecationWarning, formatEmoji, getUnicodeFromShortcode, parseEmoji } from '@fluxerjs/util';
 import { User } from '../structures/User.js';
 import { UsersManager } from './UsersManager.js';
 import { eventHandlers } from './EventHandlerRegistry.js';
@@ -176,6 +176,7 @@ export class Client extends EventEmitter {
    * Resolve an emoji argument to the API format (unicode or "name:id").
    * Supports: <:name:id>, :name:, name:id, { name, id }, unicode.
    * When id is missing (e.g. :name:), fetches guild emojis if guildId provided.
+   * When reacting in a guild channel, custom emojis must be from that guild.
    * @param emoji - Emoji string or object
    * @param guildId - Guild ID for resolving custom emoji by name (required when id is missing)
    * @returns API-formatted string for reactions
@@ -185,15 +186,26 @@ export class Client extends EventEmitter {
     guildId?: string | null,
   ): Promise<string> {
     if (typeof emoji === 'object' && emoji.id) {
+      if (guildId) {
+        await this.assertEmojiInGuild(emoji.id, guildId);
+      }
       return formatEmoji({ name: emoji.name, id: emoji.id as string, animated: emoji.animated });
     }
     const parsed = parseEmoji(
       typeof emoji === 'string' ? emoji : emoji.id ? `:${emoji.name}:` : emoji.name,
     );
     if (!parsed) throw new Error('Invalid emoji');
-    if (parsed.id) return formatEmoji(parsed);
+    if (parsed.id) {
+      if (guildId) {
+        await this.assertEmojiInGuild(parsed.id, guildId);
+      }
+      return formatEmoji(parsed);
+    }
     // Unicode emoji: name has non-ASCII or isn't a custom shortcode — return encoded, skip guild lookup
     if (!/^\w+$/.test(parsed.name)) return encodeURIComponent(parsed.name);
+    // Known Unicode shortcode (e.g. :red_square:, :light_blue_heart:) — resolve and return encoded
+    const unicodeFromShortcode = getUnicodeFromShortcode(parsed.name);
+    if (unicodeFromShortcode) return encodeURIComponent(unicodeFromShortcode);
     if (guildId) {
       const emojis = await this.rest.get(Routes.guildEmojis(guildId));
       const list = (Array.isArray(emojis) ? emojis : Object.values(emojis ?? {})) as Array<{
@@ -213,6 +225,23 @@ export class Client extends EventEmitter {
       );
     }
     return encodeURIComponent(parsed.name);
+  }
+
+  /**
+   * Asserts that a custom emoji (by id) belongs to the given guild.
+   * Used when reacting in guild channels to reject emojis from other servers.
+   * @throws FluxerError with EMOJI_NOT_IN_GUILD if the emoji is not in the guild
+   */
+  private async assertEmojiInGuild(emojiId: string, guildId: string): Promise<void> {
+    const emojis = await this.rest.get(Routes.guildEmojis(guildId));
+    const list = (Array.isArray(emojis) ? emojis : Object.values(emojis ?? {})) as Array<{ id: string }>;
+    const found = list.some((e) => e.id === emojiId);
+    if (!found) {
+      throw new FluxerError(
+        'Custom emoji is from another server. Use an emoji from this server.',
+        { code: ErrorCodes.EmojiNotInGuild },
+      );
+    }
   }
 
   /**

@@ -7,4 +7,5 @@ export const ErrorCodes = {
   GuildNotFound: 'GUILD_NOT_FOUND',
   MemberNotFound: 'MEMBER_NOT_FOUND',
   RoleNotFound: 'ROLE_NOT_FOUND',
+  EmojiNotInGuild: 'EMOJI_NOT_IN_GUILD',
 } as const;

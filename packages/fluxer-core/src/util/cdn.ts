@@ -1,4 +1,4 @@
-import { CDN_URL } from './Constants.js';
+import { CDN_URL, STATIC_CDN_URL } from './Constants.js';
 
 export interface CdnUrlOptions {
   size?: number;
@@ -50,7 +50,7 @@ export function cdnDisplayAvatarURL(
   avatarHash: string | null,
   options?: CdnUrlOptions,
 ): string {
-  return cdnAvatarURL(userId, avatarHash, options) ?? `${CDN_URL}/avatars/0/0.png`;
+  return cdnAvatarURL(userId, avatarHash, options) ?? cdnDefaultAvatarURL(userId);
 }
 
 /**
@@ -117,10 +117,14 @@ export function cdnMemberBannerURL(
 
 /**
  * Get the default avatar URL (used when user has no custom avatar).
- * @param discriminatorIndex - Optional index 0-4 for default avatar variant
+ * Fluxer uses fluxerstatic.com with index = userId % 6 (six default avatar variants).
+ * @param userIdOrIndex - User ID (snowflake string) to derive index, or explicit index 0-5
  * @returns The default avatar URL
  */
-export function cdnDefaultAvatarURL(discriminatorIndex?: number): string {
-  const index = discriminatorIndex != null ? discriminatorIndex % 5 : 0;
-  return `${CDN_URL}/avatars/0/${index}.png`;
+export function cdnDefaultAvatarURL(userIdOrIndex: string | number): string {
+  const index =
+    typeof userIdOrIndex === 'string'
+      ? Number(BigInt(userIdOrIndex) % 6n)
+      : Math.abs(Math.floor(userIdOrIndex) % 6);
+  return `${STATIC_CDN_URL}/avatars/${index}.png`;
 }

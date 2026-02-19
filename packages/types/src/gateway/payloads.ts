@@ -92,11 +92,13 @@ export interface GatewayReadyDispatchData {
 export type GatewayMessageCreateDispatchData = APIMessage;
 /** MESSAGE_UPDATE — partial message (edited fields). */
 export type GatewayMessageUpdateDispatchData = APIMessage;
-/** MESSAGE_DELETE — id, channel_id, guild_id? */
+/** MESSAGE_DELETE — id, channel_id, guild_id?, content?, author_id? (Fluxer may send content/author_id) */
 export interface GatewayMessageDeleteDispatchData {
   id: Snowflake;
   channel_id: Snowflake;
   guild_id?: Snowflake;
+  content?: string | null;
+  author_id?: Snowflake | null;
 }
 
 /** MESSAGE_DELETE_BULK — ids[], channel_id, guild_id? */

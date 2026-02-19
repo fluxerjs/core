@@ -11,6 +11,53 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.1.8',
+    date: '2026-02-18',
+    sections: [
+      {
+        title: 'Types',
+        items: [
+          'GatewayMessageDeleteDispatchData — added content?, author_id? (Fluxer payload)',
+        ],
+      },
+      {
+        title: 'SDK — Events',
+        items: [
+          'GuildMemberRemove — always emits; builds partial member from payload when not cached (username fallback for Fluxer)',
+          'MessageDelete — PartialMessage now includes content?, authorId? from gateway payload',
+        ],
+      },
+      {
+        title: 'SDK — Reactions',
+        items: [
+          'message.react() — Unicode shortcodes (e.g. :red_square:, :light_blue_heart:) now resolve correctly; no longer misclassified as custom emojis requiring guild context; uses emojilib data (6k+ shortcodes) via getUnicodeFromShortcode',
+        ],
+      },
+      {
+        title: 'SDK — CDN / Avatars',
+        items: [
+          'displayAvatarURL, cdnDisplayAvatarURL, cdnDefaultAvatarURL — default avatars now use fluxerstatic.com (index = userId % 6) per Fluxer API',
+          'STATIC_CDN_URL exported for fluxerstatic.com; CDN_URL remains fluxerusercontent.com',
+        ],
+      },
+      {
+        title: '@fluxerjs/voice',
+        items: [
+          'LiveKitRtcConnection — setVolume(0-200), getVolume() for playback volume control',
+          'VoiceManager — multi-channel: connections keyed by channel_id; leave(guildId) leaves all channels; leaveChannel(channelId), getConnection(channelOrGuildId)',
+        ],
+      },
+      {
+        title: '@fluxerjs/ws',
+        items: [
+          'WebSocketManager — retry loop for getDefaultWebSocket() and gateway fetch with exponential backoff (1s → 45s max); no longer crashes when API or gateway is unreachable',
+          'WebSocketShard — max reconnect backoff increased from 30s to 45s; reconnects on additional close codes: 1005, 1006, 1012–1015 (Abnormal Closure, Service Restart, Bad Gateway, etc.)',
+          'destroy() — aborts retry loop when client is destroyed',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.1.6',
     date: '2026-02-18',
     sections: [

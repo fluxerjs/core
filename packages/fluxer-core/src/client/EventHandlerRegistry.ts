@@ -15,6 +15,7 @@ import type {
   GatewayMessageReactionRemoveAllDispatchData,
   GatewayVoiceStateUpdateDispatchData,
   GatewayVoiceServerUpdateDispatchData,
+  GatewayMessageDeleteDispatchData,
   GatewayMessageDeleteBulkDispatchData,
   GatewayGuildBanAddDispatchData,
   GatewayGuildBanRemoveDispatchData,
@@ -54,12 +55,14 @@ handlers.set('MESSAGE_UPDATE', async (client, d) => {
 });
 
 handlers.set('MESSAGE_DELETE', async (client, d) => {
-  const data = d as { id: string; channel_id: string };
+  const data = d as GatewayMessageDeleteDispatchData;
   const channel = client.channels.get(data.channel_id) ?? null;
   client.emit(Events.MessageDelete, {
     id: data.id,
     channelId: data.channel_id,
     channel,
+    content: data.content ?? null,
+    authorId: data.author_id ?? null,
   });
 });
 

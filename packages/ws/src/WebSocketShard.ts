@@ -40,7 +40,7 @@ export interface WebSocketShardEvents {
 }
 
 const RECONNECT_INITIAL_MS = 1000;
-const RECONNECT_MAX_MS = 30000;
+const RECONNECT_MAX_MS = 45000;
 
 export class WebSocketShard extends EventEmitter {
   private ws: WebSocketLike | null = null;
@@ -267,12 +267,18 @@ export class WebSocketShard extends EventEmitter {
   }
 }
 
-/** Close codes after which we should reconnect (normal closure or server ask). */
+/** Close codes after which we should reconnect (normal closure, server ask, or transient/network issues). */
 function shouldReconnectOnClose(code: number): boolean {
   switch (code) {
     case 1000: // Normal Closure (server may close with this to ask for reconnect)
     case 1001: // Going Away
     case 1011: // Internal Error (server hit unexpected condition; often transient)
+    case 1005: // No Status Received
+    case 1006: // Abnormal Closure (network drop, server crash)
+    case 1012: // Service Restart
+    case 1013: // Try Again Later
+    case 1014: // Bad Gateway
+    case 1015: // TLS Handshake Failed
       return true;
     case 4000: // Unknown error
     case 4007: // Invalid seq

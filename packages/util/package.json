@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "Shared utilities for @fluxerjs/core",
   "repository": {
     "type": "git",
@@ -36,7 +36,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "pnpm exec tsx ../../scripts/generate-emoji-shortcodes.ts && tsup src/index.ts --format cjs,esm --dts",
     "clean": "rm -rf dist",
     "lint": "eslint src --max-warnings 0 --config ../../eslint.config.js",
     "lint:fix": "eslint src --fix --config ../../eslint.config.js",
@@ -44,6 +44,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "emojilib": "^4.0.2",
     "tsup": "^8.3.0",
     "typescript": "^5.6.0",
     "vitest": "^4.0.18"

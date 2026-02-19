@@ -1134,11 +1134,27 @@ await connection.play(streamUrl);`,
         language: 'javascript',
       },
       {
+        title: 'Volume Control',
+        description:
+          'LiveKitRtcConnection supports setVolume(0-200) and getVolume(). 100 = normal, 50 = half, 200 = double. Affects current and future playback.',
+        code: `import { LiveKitRtcConnection } from '@fluxerjs/voice';
+
+if (connection instanceof LiveKitRtcConnection) {
+  connection.setVolume(80); // 80% volume
+  console.log('Current volume:', connection.getVolume());
+}`,
+        language: 'javascript',
+      },
+      {
         title: 'Stop and Leave',
-        description: "Stop playback and disconnect from the guild's voice channel.",
-        code: `const connection = voiceManager.getConnection(guildId);
+        description:
+          "Stop playback and disconnect. getConnection accepts channel ID or guild ID. leave(guildId) leaves all channels; leaveChannel(channelId) leaves a specific channel.",
+        code: `// By channel ID (primary) or guild ID
+const connection = voiceManager.getConnection(channelId) ?? voiceManager.getConnection(guildId);
 connection?.stop();
-if (connection) voiceManager.leave(guildId);`,
+if (connection) voiceManager.leaveChannel(connection.channel.id);
+// Or leave all channels in the guild:
+voiceManager.leave(guildId);`,
         language: 'javascript',
       },
       {
@@ -1354,7 +1370,7 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
               'APIMessage — id, channel_id, author, content, embeds, attachments, member?, ...',
             ],
             ['MESSAGE_UPDATE', 'APIMessage — partial (edited fields)'],
-            ['MESSAGE_DELETE', '{ id, channel_id, guild_id? }'],
+            ['MESSAGE_DELETE', '{ id, channel_id, guild_id?, content?, author_id? }'],
             ['MESSAGE_DELETE_BULK', '{ ids[], channel_id, guild_id? }'],
             [
               'MESSAGE_REACTION_ADD',

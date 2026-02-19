@@ -64,6 +64,7 @@ export {
 } from '@fluxerjs/util';
 
 // CDN URL helpers for avatars, banners, etc. (works with raw API data or User objects)
+export { CDN_URL, STATIC_CDN_URL } from './util/Constants.js';
 export {
   cdnAvatarURL,
   cdnDisplayAvatarURL,

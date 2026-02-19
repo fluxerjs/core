@@ -4,6 +4,7 @@ import type { MessageSendOptions } from '../util/messageUtils.js';
 import type { APIUserPartial } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import { CDN_URL } from '../util/Constants.js';
+import { cdnDefaultAvatarURL } from '../util/cdn.js';
 import type { DMChannel } from './Channel.js';
 
 /** Represents a user (or bot) on Fluxer. */
@@ -63,9 +64,9 @@ export class User extends Base {
     return `${CDN_URL}/avatars/${this.id}/${this.avatar}.${ext}${size}`;
   }
 
-  /** Get the avatar URL, or the default avatar if none set. */
+  /** Get the avatar URL, or the default avatar if none set (Fluxer: fluxerstatic.com). */
   displayAvatarURL(options?: { size?: number; extension?: string }): string {
-    return this.avatarURL(options) ?? `${CDN_URL}/avatars/0/0.png`;
+    return this.avatarURL(options) ?? cdnDefaultAvatarURL(this.id);
   }
 
   /**

@@ -1,6 +1,6 @@
 {
   "name": "fluxer-core-monorepo",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "private": true,
   "license": "Apache-2.0",
   "description": "@fluxerjs SDK monorepo",
@@ -14,6 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "clean": "turbo run clean && rm -rf node_modules",
     "generate:types": "pnpm exec tsx scripts/generate-types.ts",
+    "generate:emoji": "pnpm exec tsx scripts/generate-emoji-shortcodes.ts",
     "generate:docs": "pnpm exec tsx scripts/generate-docs.ts",
     "docs:generate": "pnpm run build && pnpm run generate:docs",
     "docs:dev": "pnpm --filter @fluxerjs/docs dev",
