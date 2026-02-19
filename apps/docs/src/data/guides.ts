@@ -1148,7 +1148,7 @@ if (connection instanceof LiveKitRtcConnection) {
       {
         title: 'Stop and Leave',
         description:
-          "Stop playback and disconnect. getConnection accepts channel ID or guild ID. leave(guildId) leaves all channels; leaveChannel(channelId) leaves a specific channel.",
+          'Stop playback and disconnect. getConnection accepts channel ID or guild ID. leave(guildId) leaves all channels; leaveChannel(channelId) leaves a specific channel.',
         code: `// By channel ID (primary) or guild ID
 const connection = voiceManager.getConnection(channelId) ?? voiceManager.getConnection(guildId);
 connection?.stop();

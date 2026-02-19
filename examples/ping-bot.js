@@ -947,7 +947,8 @@ commands.set('play', {
 });
 
 commands.set('playvideo', {
-  description: 'Stream video in your VC (default 720p; !playvideo [url] [480p|720p|1080p|1440p|4k])',
+  description:
+    'Stream video in your VC (default 720p; !playvideo [url] [480p|720p|1080p|1440p|4k])',
   async execute(message, client, args) {
     const guildId = message.guildId;
     if (!guildId) {
