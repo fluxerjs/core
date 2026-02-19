@@ -5,23 +5,23 @@ import { copyFileSync } from 'fs';
 import { join } from 'path';
 /** Copy index.html to 404.html so Vercel serves the SPA for unmatched routes */
 function vercel404Plugin() {
-    return {
-        name: 'vercel-404',
-        closeBundle: function () {
-            var outDir = join(__dirname, 'dist');
-            copyFileSync(join(outDir, 'index.html'), join(outDir, '404.html'));
-        },
-    };
+  return {
+    name: 'vercel-404',
+    closeBundle: function () {
+      var outDir = join(__dirname, 'dist');
+      copyFileSync(join(outDir, 'index.html'), join(outDir, '404.html'));
+    },
+  };
 }
 export default defineConfig({
-    base: '/',
-    plugins: [vue(), vercel404Plugin()],
-    resolve: {
-        alias: {
-            '~': resolve(__dirname, 'src'),
-        },
+  base: '/',
+  plugins: [vue(), vercel404Plugin()],
+  resolve: {
+    alias: {
+      '~': resolve(__dirname, 'src'),
     },
-    server: {
-        port: 3333,
-    },
+  },
+  server: {
+    port: 3333,
+  },
 });
