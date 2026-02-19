@@ -16,9 +16,7 @@ export const changelogEntries: ChangelogEntry[] = [
     sections: [
       {
         title: 'Types',
-        items: [
-          'GatewayMessageDeleteDispatchData — added content?, author_id? (Fluxer payload)',
-        ],
+        items: ['GatewayMessageDeleteDispatchData — added content?, author_id? (Fluxer payload)'],
       },
       {
         title: 'SDK — Events',

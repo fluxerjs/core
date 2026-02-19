@@ -317,8 +317,7 @@ export class VoiceManager extends EventEmitter {
     const channelId = channel.id;
     const existing = this.connections.get(channelId);
     if (existing) {
-      const isReusable =
-        existing instanceof LiveKitRtcConnection ? existing.isConnected() : true;
+      const isReusable = existing instanceof LiveKitRtcConnection ? existing.isConnected() : true;
       if (isReusable) return existing;
       existing.destroy();
       this.connections.delete(channelId);
@@ -419,9 +418,7 @@ export class VoiceManager extends EventEmitter {
    * Get the active voice connection for a channel or guild.
    * @param channelOrGuildId - Channel ID (primary) or guild ID (returns first connection in that guild)
    */
-  getConnection(
-    channelOrGuildId: string,
-  ): VoiceConnection | LiveKitRtcConnection | undefined {
+  getConnection(channelOrGuildId: string): VoiceConnection | LiveKitRtcConnection | undefined {
     const byChannel = this.connections.get(channelOrGuildId);
     if (byChannel) return byChannel;
     for (const [, c] of this.connections) {

@@ -1217,9 +1217,7 @@ export class LiveKitRtcConnection extends EventEmitter {
         'yuv420p',
         '-an',
         'pipe:1',
-        ...(hasAudio
-          ? ['-map', '0:a', '-c:a', 'libopus', '-f', 'webm', '-vn', 'pipe:3']
-          : []),
+        ...(hasAudio ? ['-map', '0:a', '-c:a', 'libopus', '-f', 'webm', '-vn', 'pipe:3'] : []),
       ];
       const stdioOpts: Array<'ignore' | 'pipe'> = hasAudio
         ? ['ignore', 'pipe', 'pipe', 'pipe']

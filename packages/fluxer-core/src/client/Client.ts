@@ -37,7 +37,12 @@ import type {
   APIUserPartial,
   APIInstance,
 } from '@fluxerjs/types';
-import { emitDeprecationWarning, formatEmoji, getUnicodeFromShortcode, parseEmoji } from '@fluxerjs/util';
+import {
+  emitDeprecationWarning,
+  formatEmoji,
+  getUnicodeFromShortcode,
+  parseEmoji,
+} from '@fluxerjs/util';
 import { User } from '../structures/User.js';
 import { UsersManager } from './UsersManager.js';
 import { eventHandlers } from './EventHandlerRegistry.js';
@@ -234,13 +239,14 @@ export class Client extends EventEmitter {
    */
   private async assertEmojiInGuild(emojiId: string, guildId: string): Promise<void> {
     const emojis = await this.rest.get(Routes.guildEmojis(guildId));
-    const list = (Array.isArray(emojis) ? emojis : Object.values(emojis ?? {})) as Array<{ id: string }>;
+    const list = (Array.isArray(emojis) ? emojis : Object.values(emojis ?? {})) as Array<{
+      id: string;
+    }>;
     const found = list.some((e) => e.id === emojiId);
     if (!found) {
-      throw new FluxerError(
-        'Custom emoji is from another server. Use an emoji from this server.',
-        { code: ErrorCodes.EmojiNotInGuild },
-      );
+      throw new FluxerError('Custom emoji is from another server. Use an emoji from this server.', {
+        code: ErrorCodes.EmojiNotInGuild,
+      });
     }
   }
 
