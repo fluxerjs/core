@@ -21,20 +21,11 @@ export const useGuidesStore = defineStore('guides', () => {
     error.value = null;
     try {
       const versionPath = versionKey === 'latest' ? 'latest' : `v${versionKey}`;
-
-      if (import.meta.env.SSR) {
-        const { readFileSync } = await import('fs');
-        const { resolve } = await import('path');
-        const path = resolve(process.cwd(), 'public/docs', versionPath, 'guides.json');
-        guidesData.value = JSON.parse(readFileSync(path, 'utf-8')) as Guide[];
-        loadedVersion.value = versionKey;
-      } else {
-        const url = `/docs/${versionPath}/guides.json`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`Failed to load guides: ${res.status}`);
-        guidesData.value = (await res.json()) as Guide[];
-        loadedVersion.value = versionKey;
-      }
+      const url = `/docs/${versionPath}/guides.json`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Failed to load guides: ${res.status}`);
+      guidesData.value = (await res.json()) as Guide[];
+      loadedVersion.value = versionKey;
     } catch (e) {
       // Fallback to static guides if json not yet generated (e.g. dev before docs:build)
       guidesData.value = null;

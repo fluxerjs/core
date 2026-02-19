@@ -35,7 +35,7 @@ The docs site is a custom Vue app that pulls API docs from the SDK via a custom 
 # Dev server — http://localhost:3333
 pnpm run docs:dev
 
-# Generate docs JSON + build static site
+# Generate docs JSON + build the site
 pnpm run docs:build
 
 # Preview the production build

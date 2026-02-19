@@ -31,31 +31,20 @@ export const useVersionStore = defineStore('version', () => {
   async function loadVersions() {
     if (versionsLoaded.value) return;
     try {
-      if (import.meta.env.SSR) {
-        const { readFileSync } = await import('fs');
-        const { resolve } = await import('path');
-        const path = resolve(process.cwd(), 'public/docs/versions.json');
-        const data = JSON.parse(readFileSync(path, 'utf-8')) as VersionsManifest;
-        availableVersions.value = data.versions ?? [];
-        latestVersion.value = data.latest ?? data.versions?.[0] ?? '1.0.7';
-        versionsLoaded.value = true;
-      } else {
-        const res = await fetch('/docs/versions.json');
-        if (!res.ok) throw new Error('Failed to load versions');
-        const data = (await res.json()) as VersionsManifest;
-        availableVersions.value = data.versions ?? [];
-        latestVersion.value = data.latest ?? data.versions?.[0] ?? '1.0.7';
-        versionsLoaded.value = true;
+      const res = await fetch('/docs/versions.json');
+      if (!res.ok) throw new Error('Failed to load versions');
+      const data = (await res.json()) as VersionsManifest;
+      availableVersions.value = data.versions ?? [];
+      latestVersion.value = data.latest ?? data.versions?.[0] ?? '1.0.7';
+      versionsLoaded.value = true;
 
-        // Restore saved preference (client only)
-        try {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved && (saved === 'latest' || availableVersions.value.includes(saved))) {
-            currentVersion.value = saved;
-          }
-        } catch {
-          /* ignore */
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved && (saved === 'latest' || availableVersions.value.includes(saved))) {
+          currentVersion.value = saved;
         }
+      } catch {
+        /* ignore */
       }
     } catch {
       // Fallback when versions.json doesn't exist (e.g. dev before first generate)
