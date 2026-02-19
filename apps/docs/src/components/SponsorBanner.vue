@@ -7,7 +7,8 @@
     aria-label="Sponsor Fluxer.js on GitHub Sponsors">
     <span class="sponsor-heart" aria-hidden="true">♥</span>
     <span class="sponsor-text">
-      <strong>Support Fluxer.js</strong> — Sponsor or donate on GitHub to help keep the project going
+      <strong>Support Fluxer.js</strong> — Sponsor or donate on GitHub to help keep the project
+      going
     </span>
     <span class="sponsor-cta">Sponsor →</span>
   </a>
