@@ -4,7 +4,6 @@
   "buildCommand": "pnpm -w run docs:build",
   "outputDirectory": "dist",
   "installCommand": "pnpm install",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "cleanUrls": false,
   "trailingSlash": false
 }
