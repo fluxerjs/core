@@ -284,8 +284,9 @@ export class Client extends EventEmitter {
    */
   async sendToChannel(
     channelId: string,
-    payload: string | { content?: string; embeds?: APIEmbed[] },
+    content: string | { content?: string; embeds?: APIEmbed[] },
   ): Promise<Message> {
+    const payload = await Message._createMessageBody(content);
     return this.channels.send(channelId, payload);
   }
 
