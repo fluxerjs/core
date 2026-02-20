@@ -2,7 +2,7 @@
   "meta": {
     "generator": "fluxer-docgen",
     "version": "1",
-    "date": 1771601615562
+    "date": 1771602083044
   },
   "package": "@fluxerjs/core",
   "version": "1.2.1",

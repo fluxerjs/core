@@ -1110,7 +1110,7 @@
     "id": "channels",
     "slug": "channels",
     "title": "Channels",
-    "description": "Create and manage channels, roles, invites, emojis, and stickers. Covers guild.createChannel(), channel.edit(), channel.createInvite(), guild.createEmojisBulk(), and more.",
+    "description": "Create and manage channels, roles, and invites. Covers guild.createChannel(), channel.edit(), channel.createInvite(), guild.createRole(), and more.",
     "category": "channels",
     "sections": [
       {
@@ -1148,18 +1148,6 @@
         "title": "Invites",
         "description": "Use channel.createInvite() to create an invite. Use channel.fetchInvites() to list channel invites. Use invite.delete() to revoke. invite.url gives the full invite URL.",
         "code": "import { Client, Events } from '@fluxerjs/core';\n\nconst client = new Client({ intents: 0 });\n\nclient.on(Events.MessageCreate, async (message) => {\n  if (!message.content.startsWith('!invite') || !message.guildId) return;\n  const channel = message.channel;\n  if (!channel?.createInvite) return;\n\n  if (message.content === '!invite') {\n    const invite = await channel.createInvite({\n      max_age: 86400,    // 24 hours\n      max_uses: 10,\n      temporary: false,\n    });\n    await message.reply(`Invite: ${invite.url}`);\n  }\n\n  if (message.content === '!invitelist') {\n    const invites = await channel.fetchInvites();\n    const list = invites.map((i) => `${i.code} (${i.max_uses ?? '∞'} uses)`).join('\\n');\n    await message.reply(list || 'No invites.');\n  }\n\n  if (message.content.startsWith('!inviterevoke ')) {\n    const code = message.content.slice(13).trim();\n    const invites = await channel.fetchInvites();\n    const inv = invites.find((i) => i.code === code);\n    if (inv) {\n      await inv.delete();\n      await message.reply('Invite revoked.');\n    }\n  }\n});\n\nawait client.login(process.env.FLUXER_BOT_TOKEN);",
-        "language": "javascript"
-      },
-      {
-        "title": "Fetch Emojis",
-        "description": "Use guild.fetchEmojis() to get all emojis in a guild. Cached in guild.emojis. Use guild.fetchEmoji(emojiId) for a single emoji. Use emoji.delete() to remove an emoji (e.g. autocreated ones).",
-        "code": "import { Client, Events } from '@fluxerjs/core';\n\nconst client = new Client({ intents: 0 });\n\nclient.on(Events.MessageCreate, async (message) => {\n  if (!message.guildId || message.content !== '!emojis') return;\n  const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);\n  if (!guild) return;\n\n  const emojis = await guild.fetchEmojis();\n  const list = emojis.map((e) => `:${e.name}: (${e.id})`).join(', ');\n  await message.reply(emojis.length ? list : 'No emojis.');\n\n  // Or get from cache after fetching: guild.emojis.get(emojiId)\n});\n\n// Fetch single emoji by ID\nconst emoji = await guild.fetchEmoji(emojiId);\nawait emoji.delete();",
-        "language": "javascript"
-      },
-      {
-        "title": "Emojis & Stickers",
-        "description": "Use guild.createEmojisBulk() and guild.createStickersBulk() with base64 image data. Use emoji.edit() / emoji.delete() and sticker.edit() / sticker.delete() for individual updates.",
-        "code": "import { Client, Events } from '@fluxerjs/core';\n\nconst client = new Client({ intents: 0 });\n\n// Create emoji from URL (fetch and convert to base64)\nasync function createEmojiFromUrl(guild, name, imageUrl) {\n  const res = await fetch(imageUrl);\n  const buf = await res.arrayBuffer();\n  const base64 = Buffer.from(buf).toString('base64');\n  const [emoji] = await guild.createEmojisBulk([{ name, image: base64 }]);\n  return emoji;\n}\n\nclient.on(Events.MessageCreate, async (message) => {\n  if (!message.guildId || !message.content.startsWith('!addemoji ')) return;\n  const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);\n  if (!guild) return;\n\n  const [_, name, url] = message.content.split(/\\s+/);\n  if (!name || !url) return;\n  const emoji = await createEmojiFromUrl(guild, name, url);\n  await message.reply(`Created emoji :${emoji.name}:`);\n});\n\n// Bulk create stickers\nconst stickers = await guild.createStickersBulk([\n  { name: 'cool', image: base64Image, description: 'A cool sticker' },\n]);\n\n// Edit and delete\nawait emoji.edit({ name: 'newname' });\nawait emoji.delete();",
         "language": "javascript"
       },
       {
@@ -1239,7 +1227,44 @@
               "Invites",
               "invite.delete()",
               "Revoke invite"
-            ],
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "emojis",
+    "slug": "emojis",
+    "title": "Emojis & Stickers",
+    "description": "Fetch, create, edit, and delete guild emojis and stickers. Use guild.fetchEmojis(), guild.createEmojisBulk(), and guild.createStickersBulk().",
+    "category": "emojis",
+    "sections": [
+      {
+        "title": "Fetch Emojis",
+        "description": "Use guild.fetchEmojis() to get all emojis in a guild. Cached in guild.emojis. Use guild.fetchEmoji(emojiId) for a single emoji. Use emoji.delete() to remove an emoji (e.g. autocreated ones).",
+        "code": "import { Client, Events } from '@fluxerjs/core';\n\nconst client = new Client({ intents: 0 });\n\nclient.on(Events.MessageCreate, async (message) => {\n  if (!message.guildId || message.content !== '!emojis') return;\n  const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);\n  if (!guild) return;\n\n  const emojis = await guild.fetchEmojis();\n  const list = emojis.map((e) => `:${e.name}: (${e.id})`).join(', ');\n  await message.reply(emojis.length ? list : 'No emojis.');\n\n  // Or get from cache after fetching: guild.emojis.get(emojiId)\n});\n\n// Fetch single emoji by ID\nconst emoji = await guild.fetchEmoji(emojiId);\nawait emoji.delete();",
+        "language": "javascript"
+      },
+      {
+        "title": "Create Emojis & Stickers",
+        "description": "Use guild.createEmojisBulk() and guild.createStickersBulk() with base64 image data. Use emoji.edit() / emoji.delete() and sticker.edit() / sticker.delete() for individual updates.",
+        "code": "import { Client, Events } from '@fluxerjs/core';\n\nconst client = new Client({ intents: 0 });\n\n// Create emoji from URL (fetch and convert to base64)\nasync function createEmojiFromUrl(guild, name, imageUrl) {\n  const res = await fetch(imageUrl);\n  const buf = await res.arrayBuffer();\n  const base64 = Buffer.from(buf).toString('base64');\n  const [emoji] = await guild.createEmojisBulk([{ name, image: base64 }]);\n  return emoji;\n}\n\nclient.on(Events.MessageCreate, async (message) => {\n  if (!message.guildId || !message.content.startsWith('!addemoji ')) return;\n  const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);\n  if (!guild) return;\n\n  const [_, name, url] = message.content.split(/\\s+/);\n  if (!name || !url) return;\n  const emoji = await createEmojiFromUrl(guild, name, url);\n  await message.reply(`Created emoji :${emoji.name}:`);\n});\n\n// Bulk create stickers\nconst stickers = await guild.createStickersBulk([\n  { name: 'cool', image: base64Image, description: 'A cool sticker' },\n]);\n\n// Edit and delete\nawait emoji.edit({ name: 'newname' });\nawait emoji.delete();",
+        "language": "javascript"
+      },
+      {
+        "title": "Quick Reference",
+        "table": {
+          "headers": [
+            "API",
+            "Method",
+            "Purpose"
+          ],
+          "codeColumns": [
+            0,
+            1
+          ],
+          "rows": [
             [
               "Emojis",
               "guild.fetchEmojis()",

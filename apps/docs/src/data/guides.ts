@@ -41,6 +41,7 @@ export interface Guide {
     | 'sending-messages'
     | 'media'
     | 'channels'
+    | 'emojis'
     | 'webhooks'
     | 'voice'
     | 'events'
@@ -1910,7 +1911,7 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
     slug: 'channels',
     title: 'Channels',
     description:
-      'Create and manage channels, roles, invites, emojis, and stickers. Covers guild.createChannel(), channel.edit(), channel.createInvite(), guild.createEmojisBulk(), and more.',
+      'Create and manage channels, roles, and invites. Covers guild.createChannel(), channel.edit(), channel.createInvite(), guild.createRole(), and more.',
     category: 'channels',
     sections: [
       {
@@ -2064,6 +2065,38 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
         language: 'javascript',
       },
       {
+        title: 'Quick Reference',
+        table: {
+          headers: ['API', 'Method', 'Purpose'],
+          codeColumns: [0, 1],
+          rows: [
+            ['Channels', 'guild.createChannel()', 'Create text, voice, category, or link channel'],
+            ['Channels', 'guild.fetchChannels()', 'Fetch all guild channels'],
+            ['Channels', 'channel.edit()', 'Rename, set topic, slowmode, parent, overwrites'],
+            ['Channels', 'channel.delete()', 'Delete a channel'],
+            ['Channels', 'guild.setChannelPositions()', 'Reorder or reparent channels'],
+            ['Channels', 'channel.editPermission()', 'Add or update permission overwrite'],
+            ['Channels', 'channel.deletePermission()', 'Remove permission overwrite'],
+            ['Roles', 'guild.createRole()', 'Create a role'],
+            ['Roles', 'guild.addRoleToMember()', 'Add role to member'],
+            ['Roles', 'guild.removeRoleFromMember()', 'Remove role from member'],
+            ['Invites', 'channel.createInvite()', 'Create invite with max_uses, max_age'],
+            ['Invites', 'channel.fetchInvites()', 'List channel invites'],
+            ['Invites', 'invite.delete()', 'Revoke invite'],
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'emojis',
+    slug: 'emojis',
+    title: 'Emojis & Stickers',
+    description:
+      'Fetch, create, edit, and delete guild emojis and stickers. Use guild.fetchEmojis(), guild.createEmojisBulk(), and guild.createStickersBulk().',
+    category: 'emojis',
+    sections: [
+      {
         title: 'Fetch Emojis',
         description:
           'Use guild.fetchEmojis() to get all emojis in a guild. Cached in guild.emojis. Use guild.fetchEmoji(emojiId) for a single emoji. Use emoji.delete() to remove an emoji (e.g. autocreated ones).',
@@ -2089,7 +2122,7 @@ await emoji.delete();`,
         language: 'javascript',
       },
       {
-        title: 'Emojis & Stickers',
+        title: 'Create Emojis & Stickers',
         description:
           'Use guild.createEmojisBulk() and guild.createStickersBulk() with base64 image data. Use emoji.edit() / emoji.delete() and sticker.edit() / sticker.delete() for individual updates.',
         code: `import { Client, Events } from '@fluxerjs/core';
@@ -2132,19 +2165,6 @@ await emoji.delete();`,
           headers: ['API', 'Method', 'Purpose'],
           codeColumns: [0, 1],
           rows: [
-            ['Channels', 'guild.createChannel()', 'Create text, voice, category, or link channel'],
-            ['Channels', 'guild.fetchChannels()', 'Fetch all guild channels'],
-            ['Channels', 'channel.edit()', 'Rename, set topic, slowmode, parent, overwrites'],
-            ['Channels', 'channel.delete()', 'Delete a channel'],
-            ['Channels', 'guild.setChannelPositions()', 'Reorder or reparent channels'],
-            ['Channels', 'channel.editPermission()', 'Add or update permission overwrite'],
-            ['Channels', 'channel.deletePermission()', 'Remove permission overwrite'],
-            ['Roles', 'guild.createRole()', 'Create a role'],
-            ['Roles', 'guild.addRoleToMember()', 'Add role to member'],
-            ['Roles', 'guild.removeRoleFromMember()', 'Remove role from member'],
-            ['Invites', 'channel.createInvite()', 'Create invite with max_uses, max_age'],
-            ['Invites', 'channel.fetchInvites()', 'List channel invites'],
-            ['Invites', 'invite.delete()', 'Revoke invite'],
             ['Emojis', 'guild.fetchEmojis()', 'Fetch all guild emojis (cached in guild.emojis)'],
             ['Emojis', 'guild.fetchEmoji(emojiId)', 'Fetch single emoji by ID'],
             ['Emojis', 'guild.createEmojisBulk()', 'Bulk create emojis (base64 image)'],
@@ -2161,6 +2181,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'sending-messages': 'Sending Messages',
   media: 'Media',
   channels: 'Channels',
+  emojis: 'Emojis',
   webhooks: 'Webhooks',
   voice: 'Voice',
   events: 'Events',
@@ -2173,6 +2194,7 @@ export const CATEGORY_ORDER: string[] = [
   'sending-messages',
   'media',
   'channels',
+  'emojis',
   'webhooks',
   'voice',
   'events',
@@ -2190,6 +2212,7 @@ export const QUICK_LINK_SLUGS: string[] = [
   'permissions',
   'moderation',
   'channels',
+  'emojis',
   'roles',
   'prefix-commands',
 ];
