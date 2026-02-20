@@ -38,6 +38,7 @@ import { Channel, GuildChannel } from '../structures/Channel';
 import { GuildBan } from '../structures/GuildBan';
 import { Role } from '../structures/Role';
 import { Invite } from '../structures/Invite';
+import { GuildEmoji } from '../structures/GuildEmoji';
 
 export type DispatchHandler = (client: Client, data: unknown) => Promise<void>;
 
@@ -275,6 +276,18 @@ handlers.set('GUILD_BAN_REMOVE', async (client, d) => {
 });
 
 handlers.set('GUILD_EMOJIS_UPDATE', async (client, d) => {
+  const data = d as { guild_id: string; emojis: Array<{ id: string; name?: string; animated?: boolean }> };
+  const guild = client.guilds.get(data.guild_id);
+  if (guild) {
+    guild.emojis.clear();
+    for (const e of data.emojis ?? []) {
+      if (!e.id || e.name == null) continue;
+      guild.emojis.set(
+        e.id,
+        new GuildEmoji(client, { id: e.id, name: e.name, animated: e.animated ?? false, guild_id: guild.id }, guild.id),
+      );
+    }
+  }
   client.emit(Events.GuildEmojisUpdate, d);
 });
 

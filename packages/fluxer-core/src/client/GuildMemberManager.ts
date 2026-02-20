@@ -7,6 +7,8 @@ import { GuildMember } from '../structures/GuildMember.js';
  * Manages guild members with a Collection-like API.
  * Extends Collection so you can use .get(), .set(), .filter(), etc.
  * Provides guild.members.me for Discord.js parity.
+ *
+ * @discordJsCompat https://discord.js.org/docs/packages/discord.js/main/GuildMemberManager
  */
 export class GuildMemberManager extends Collection<string, GuildMember> {
   constructor(private readonly guild: Guild) {
@@ -32,6 +34,7 @@ export class GuildMemberManager extends Collection<string, GuildMember> {
    * Returns null if the bot's member is not cached or client.user is null.
    * Use fetchMe() to load the bot's member when not cached.
    *
+   * @discordJsCompat https://discord.js.org/docs/packages/discord.js/main/GuildMemberManager
    * @example
    * const perms = guild.members.me?.permissions;
    * if (perms?.has(PermissionFlags.BanMembers)) { ... }

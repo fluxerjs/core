@@ -23,6 +23,7 @@
             :key="c.name"
             :to="versionedPath(`/docs/classes/${c.name}`)"
             class="sidebar-link sidebar-link-class"
+            :class="{ 'sidebar-link--discord-compat': c.discordJsCompat }"
             active-class="active"
             :title="c.name">
             {{ c.name }}
@@ -40,6 +41,7 @@
             :key="i.name"
             :to="versionedPath(`/docs/typedefs/${i.name}`)"
             class="sidebar-link sidebar-link-interface"
+            :class="{ 'sidebar-link--discord-compat': hasDiscordCompat(i) }"
             active-class="active"
             :title="i.name">
             {{ i.name }}
@@ -109,6 +111,10 @@ const filteredEnums = computed(() => {
   if (q) list = list.filter((e) => e.name.toLowerCase().includes(q));
   return list;
 });
+
+function hasDiscordCompat(item: Record<string, unknown>): boolean {
+  return !!item.discordJsCompat;
+}
 </script>
 
 <style scoped>
@@ -194,6 +200,18 @@ const filteredEnums = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sidebar-nav :deep(.sidebar-link--discord-compat) {
+  color: var(--discord-compat);
+  border-left-color: var(--discord-compat);
+}
+
+.sidebar-nav :deep(.sidebar-link--discord-compat:hover),
+.sidebar-nav :deep(.sidebar-link--discord-compat.active) {
+  color: var(--discord-compat);
+  background: var(--discord-compat-bg);
+  border-left-color: var(--discord-compat);
 }
 
 .nav-placeholder {

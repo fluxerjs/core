@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Extended Map with utility methods for @fluxerjs/core",
   "repository": {
     "type": "git",

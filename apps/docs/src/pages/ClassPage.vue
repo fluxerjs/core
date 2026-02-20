@@ -1,12 +1,19 @@
 <template>
   <div v-if="clazz" class="class-page">
-    <div class="page-content" :class="{ 'class-deprecated': clazz.deprecated }">
+    <div
+      class="page-content"
+      :class="{ 'class-deprecated': clazz.deprecated, 'class-discord-compat': clazz.discordJsCompat }">
       <div v-if="clazz.deprecated" class="deprecated-banner">
         <span class="deprecated-badge">Deprecated</span>
         <span v-if="typeof clazz.deprecated === 'string'" class="deprecated-message">{{
           clazz.deprecated
         }}</span>
       </div>
+      <ApiDiscordCompat
+        v-if="clazz.discordJsCompat && !clazz.deprecated"
+        :to="fluxerClassLink"
+        variant="banner"
+      />
       <div class="page-header">
         <span class="kind-badge kind-class">class</span>
         <h1>{{ clazz.name }}</h1>
@@ -33,7 +40,12 @@
       </a>
 
       <ConstructorSection v-if="constructor" :constructor="constructor" :class-name="clazz.name" />
-      <PropertiesSection v-if="properties.length" :properties="properties" />
+      <PropertiesSection
+        v-if="properties.length"
+        :properties="properties"
+        :parent-name="clazz?.name"
+        parent-type="class"
+      />
       <MethodsSection v-if="methods.length" :methods="methods" :parent-name="clazz.name" />
     </div>
     <nav v-if="tocItems.length" class="on-this-page" aria-label="On this page">
@@ -50,7 +62,11 @@
     <p>Failed to load docs: {{ store.error }}</p>
   </div>
   <div v-else class="not-found">
-    <p>Class not found.</p>
+    <p>Class not found in this version.</p>
+    <p class="not-found-hint">
+      It may have been added in a later release.
+      <router-link :to="latestClassPath" class="not-found-link">View in latest docs →</router-link>
+    </p>
   </div>
 </template>
 
@@ -58,6 +74,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDocsStore } from '../stores/docs';
+import ApiDiscordCompat from '../components/ApiDiscordCompat.vue';
 import ConstructorSection from '../components/ConstructorSection.vue';
 import DocDescription from '../components/DocDescription.vue';
 import PropertiesSection from '../components/PropertiesSection.vue';
@@ -82,6 +99,17 @@ const properties = computed(() => clazz.value?.properties ?? []);
 const methods = computed(() => clazz.value?.methods ?? []);
 
 const routeVersion = computed(() => (route.params.version as string) ?? 'latest');
+
+const latestClassPath = computed(() => {
+  const name = route.params.class as string;
+  if (!name) return { path: '/v/latest/docs/classes' };
+  return { path: `/v/latest/docs/classes/${name}` };
+});
+
+const fluxerClassLink = computed(() => {
+  if (!clazz.value) return undefined;
+  return { path: `/v/${routeVersion.value}/docs/classes/${clazz.value.name}` };
+});
 
 const extendsClassExists = computed(() => {
   const ext = clazz.value?.extends;
@@ -227,6 +255,18 @@ function sourceUrl(source: { file: string; line: number; path?: string }) {
   line-height: 1.4;
 }
 
+.class-discord-compat {
+  background: var(--discord-compat-bg);
+  border: 1px solid var(--discord-compat-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin: -0.5rem 0 2rem;
+}
+
+.class-discord-compat .api-discord-compat.banner {
+  border-bottom-color: var(--discord-compat-border);
+}
+
 .deprecated-badge-inline {
   font-size: 0.65rem;
   font-weight: 600;
@@ -256,6 +296,20 @@ h1 {
 .loading,
 .not-found {
   color: var(--text-muted);
+}
+
+.not-found-hint {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.not-found-link {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.not-found-link:hover {
+  text-decoration: underline;
 }
 
 .error {

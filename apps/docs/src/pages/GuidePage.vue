@@ -15,8 +15,21 @@
       </div>
 
       <template v-for="(section, i) in guide.sections" :key="i">
-        <section class="guide-section" :id="sectionId(section, i)">
-          <h2 v-if="section.title" class="section-title">{{ section.title }}</h2>
+        <section
+          class="guide-section"
+          :class="{ 'guide-section--discord-compat': section.discordJsCompat }"
+          :id="sectionId(section, i)">
+          <h2 v-if="section.title" class="section-title">
+            {{ section.title }}
+            <GuideDiscordCompat
+              v-if="section.discordJsCompat"
+              :href="typeof section.discordJsCompat === 'string' ? section.discordJsCompat : undefined"
+            />
+          </h2>
+          <GuideDiscordCompatCallout
+            v-if="typeof section.discordJsCompat === 'string'"
+            :href="section.discordJsCompat"
+          />
           <p v-if="section.description" class="section-desc">{{ section.description }}</p>
           <GuideTable
             v-if="section.table"
@@ -67,6 +80,8 @@ import { getCategoryLabel } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
 import GuideCodeBlock from '../components/GuideCodeBlock.vue';
+import GuideDiscordCompat from '../components/GuideDiscordCompat.vue';
+import GuideDiscordCompatCallout from '../components/GuideDiscordCompatCallout.vue';
 import GuideTable from '../components/GuideTable.vue';
 import GuideTip from '../components/GuideTip.vue';
 
@@ -168,6 +183,13 @@ const tocItems = computed(() => {
 
 .guide-section {
   margin-bottom: 1.5rem;
+}
+
+.guide-section--discord-compat {
+  padding: 1rem 1.25rem;
+  background: var(--discord-compat-bg);
+  border: 1px solid var(--discord-compat-border);
+  border-radius: var(--radius);
 }
 
 .section-title {

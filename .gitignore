@@ -16,6 +16,7 @@ openapi.json
 **/CHANGELOG.md
 
 webi-bot.js
+fluxer-ai-bot.js
 
 # IDE files
 .vscode

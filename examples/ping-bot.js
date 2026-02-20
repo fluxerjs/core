@@ -25,6 +25,7 @@ import {
   User,
   VoiceChannel,
   cdnBannerURL,
+  cdnMemberAvatarURL,
   UserFlagsBits,
   PermissionFlags,
 } from '@fluxerjs/core';
@@ -483,11 +484,16 @@ commands.set('userinfo', {
             : memberData?.accent_color != null
               ? Number(memberData.accent_color)
               : BRAND_COLOR;
-    const avatarUrl = user.displayAvatarURL({ size: 256 });
+    // Prefer guild-specific avatar when in a server (like Discord.js member.displayAvatarURL)
+    const avatarUrl =
+      message.guildId && memberData?.avatar
+        ? cdnMemberAvatarURL(message.guildId, userData.id, memberData.avatar, { size: 256 })
+        : user.displayAvatarURL({ size: 256 });
+    const displayName = userData.global_name ?? userData.username ?? 'User';
     const embed = new EmbedBuilder()
-      .setTitle('User profile')
-      .setColor(accentColor)
-      .setThumbnail(avatarUrl);
+      .setTitle(`${displayName}'s profile`)
+      .setAuthor({ name: displayName, iconURL: avatarUrl })
+      .setColor(accentColor);
     if (bannerUrl) embed.setImage(bannerUrl);
 
     const fields = [

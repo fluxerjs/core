@@ -27,6 +27,8 @@ export interface GuideSection {
   tip?: string;
   /** Alternative code snippet; shown as a second tab (e.g. "client.events" vs "client.on"). */
   alternateCode?: GuideAlternateSnippet;
+  /** If set, shows green "Discord.js compatible" badge. String = custom link (e.g. to discord.js docs). */
+  discordJsCompat?: boolean | string;
 }
 
 export interface Guide {
@@ -111,6 +113,49 @@ message.reply('Pong!');
 // ✅ GOOD
 await message.reply('Pong!');`,
         language: 'javascript',
+      },
+    ],
+  },
+  {
+    id: 'discord-js-compatibility',
+    slug: 'discord-js-compatibility',
+    title: 'Discord.js Compatibility',
+    description:
+      'APIs designed to ease migration from Discord.js. Look for the green "Discord.js compatible" badge in guides.',
+    category: 'getting-started',
+    sections: [
+      {
+        title: 'Overview',
+        description:
+          'Fluxer SDK provides Discord.js-style APIs where it makes sense. Sections marked with the green "Discord.js compatible" badge offer familiar patterns — click the badge to see the full API reference.',
+      },
+      {
+        title: 'member.roles (GuildMemberRoleManager)',
+        discordJsCompat: '/docs/classes/GuildMemberRoleManager',
+        description:
+          'member.roles is a manager with add(), remove(), set(), and cache. Use member.roles.add(roleId), member.roles.remove(roleId), member.roles.set(roleIds), and member.roles.cache.has(roleId) instead of the old member.addRole() / member.roles.includes() pattern.',
+        code: `// Discord.js style
+await member.roles.add(roleId);
+await member.roles.remove(roleId);
+await member.roles.set(['id1', 'id2']);
+if (member.roles.cache.has(roleId)) { ... }`,
+        language: 'javascript',
+      },
+      {
+        title: 'guild.members.me',
+        discordJsCompat: '/docs/classes/GuildMemberManager',
+        description:
+          "guild.members.me returns the bot's GuildMember in that guild. Use guild.members.fetchMe() to load it when not cached. Same as Discord.js.",
+        code: `const me = guild.members.me ?? await guild.members.fetchMe();
+if (me?.permissions.has(PermissionFlags.BanMembers)) {
+  await message.reply('I can ban members here.');
+}`,
+        language: 'javascript',
+      },
+      {
+        title: 'Other parity',
+        description:
+          'client.channels.cache and client.guilds.cache are compatibility aliases. Collection extends Map with find(), filter(), etc. See the API reference for full details.',
       },
     ],
   },
@@ -891,7 +936,8 @@ client.on(Events.MessageReactionRemove, (reaction, user, messageId, channelId, e
       {
         title: 'Reaction Roles Example',
         description:
-          'See examples/reaction-roles-bot.js for a full bot that assigns roles when users react to a message. Uses (reaction, user), Guild.fetchMember(), Guild.addRoleToMember()/removeRoleFromMember(), and guild.createRole() if you need to create roles programmatically. See the Roles guide for role CRUD.',
+          'See examples/reaction-roles-bot.js for a full bot that assigns roles when users react to a message. Uses (reaction, user), Guild.fetchMember(), member.roles.add() (Discord.js parity), and guild.createRole() if you need to create roles programmatically. See the Roles guide for role CRUD.',
+        discordJsCompat: '/docs/classes/GuildMemberRoleManager',
         code: `// Simplified reaction-roles logic
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
   if (!reaction.guildId || reaction.messageId !== rolesMessageId) return;
@@ -899,7 +945,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
   if (!roleId) return;
   const guild = client.guilds.get(reaction.guildId);
   const member = await guild?.fetchMember(user.id);
-  if (member && !member.roles.includes(roleId)) await member.addRole(roleId);
+  if (member && !member.roles.cache.has(roleId)) await member.roles.add(roleId);
 });`,
         language: 'javascript',
       },
@@ -1512,6 +1558,7 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
       },
       {
         title: "Bot's own permissions (guild.members.me)",
+        discordJsCompat: '/docs/classes/GuildMemberManager',
         description:
           "Use guild.members.me to get the bot's GuildMember. Returns null if not cached. Use guild.members.fetchMe() to load it. Discord.js parity.",
         code: `// Check if the bot can ban members in this guild
@@ -1774,6 +1821,28 @@ if (role.has('ManageChannels')) {
         language: 'javascript',
       },
       {
+        title: 'Add/remove roles from members (member.roles)',
+        discordJsCompat: '/docs/classes/GuildMemberRoleManager',
+        description:
+          'Use member.roles.add(), member.roles.remove(), and member.roles.set() for Discord.js-style role management. member.roles.cache is a Collection of Role objects. Also available: guild.addRoleToMember() and guild.removeRoleFromMember() when you only have user ID.',
+        code: `// Discord.js parity: member.roles.add(), remove(), set()
+const member = await guild.fetchMember(userId);
+
+await member.roles.add(roleId);        // Add a role
+await member.roles.remove(roleId);     // Remove a role
+await member.roles.set(['id1', 'id2']); // Replace all roles
+
+// Check if member has a role
+if (member.roles.cache.has(roleId)) {
+  await message.reply('Member already has this role.');
+}
+
+// Guild-level: when you only have user ID (no member fetch needed)
+await guild.addRoleToMember(userId, roleId);
+await guild.removeRoleFromMember(userId, roleId);`,
+        language: 'javascript',
+      },
+      {
         title: 'Permission bitfields for create/edit',
         description:
           'When creating or editing roles, pass permissions as a string (API format), number, PermissionString, or array. Use resolvePermissionsToBitfield() to combine multiple permissions. Handles high bits (PinMessages, ModerateMembers, etc.) correctly with BigInt.',
@@ -1995,6 +2064,31 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
         language: 'javascript',
       },
       {
+        title: 'Fetch Emojis',
+        description:
+          'Use guild.fetchEmojis() to get all emojis in a guild. Cached in guild.emojis. Use guild.fetchEmoji(emojiId) for a single emoji. Use emoji.delete() to remove an emoji (e.g. autocreated ones).',
+        code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client.on(Events.MessageCreate, async (message) => {
+  if (!message.guildId || message.content !== '!emojis') return;
+  const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);
+  if (!guild) return;
+
+  const emojis = await guild.fetchEmojis();
+  const list = emojis.map((e) => \`:\${e.name}: (\${e.id})\`).join(', ');
+  await message.reply(emojis.length ? list : 'No emojis.');
+
+  // Or get from cache after fetching: guild.emojis.get(emojiId)
+});
+
+// Fetch single emoji by ID
+const emoji = await guild.fetchEmoji(emojiId);
+await emoji.delete();`,
+        language: 'javascript',
+      },
+      {
         title: 'Emojis & Stickers',
         description:
           'Use guild.createEmojisBulk() and guild.createStickersBulk() with base64 image data. Use emoji.edit() / emoji.delete() and sticker.edit() / sticker.delete() for individual updates.',
@@ -2051,6 +2145,8 @@ await emoji.delete();`,
             ['Invites', 'channel.createInvite()', 'Create invite with max_uses, max_age'],
             ['Invites', 'channel.fetchInvites()', 'List channel invites'],
             ['Invites', 'invite.delete()', 'Revoke invite'],
+            ['Emojis', 'guild.fetchEmojis()', 'Fetch all guild emojis (cached in guild.emojis)'],
+            ['Emojis', 'guild.fetchEmoji(emojiId)', 'Fetch single emoji by ID'],
             ['Emojis', 'guild.createEmojisBulk()', 'Bulk create emojis (base64 image)'],
             ['Stickers', 'guild.createStickersBulk()', 'Bulk create stickers'],
           ],

@@ -21,6 +21,10 @@ export type { PartialMessage } from './structures/PartialMessage.js';
 export { MessageReaction } from './structures/MessageReaction.js';
 export { Webhook, type WebhookSendOptions } from './structures/Webhook.js';
 export { GuildMember } from './structures/GuildMember.js';
+export {
+  GuildMemberRoleManager,
+  type RoleResolvable,
+} from './structures/GuildMemberRoleManager.js';
 export { Role } from './structures/Role.js';
 export { Invite } from './structures/Invite.js';
 export { GuildBan } from './structures/GuildBan.js';

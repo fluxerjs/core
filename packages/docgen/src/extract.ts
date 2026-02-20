@@ -83,6 +83,18 @@ export function getDeprecatedFromJSDoc(comment: string): boolean | string | unde
   return desc || true;
 }
 
+/** @discordJsCompat or @discordJsCompat https://discord.js.org/... — string = URL, true = no link */
+export function getDiscordJsCompatFromJSDoc(comment: string): boolean | string | undefined {
+  const parsed = parseJSDoc(comment);
+  if (!parsed?.tags) return undefined;
+  const tag = parsed.tags.find(
+    (t) => t.title === 'discordJsCompat' || t.title === 'discordjscompat',
+  );
+  if (!tag) return undefined;
+  const desc = (tag as doctrine.type.Tag).description?.trim();
+  return desc || true;
+}
+
 export function getDescriptionFromJSDocComment(comment: string): string {
   return getDescriptionFromJSDoc(comment);
 }
@@ -136,6 +148,7 @@ export function extractProperty(
   );
   const optional = !!(node as ts.PropertySignature).questionToken;
   const description = getDescriptionFromJSDoc(comment) || undefined;
+  const discordJsCompat = getDiscordJsCompatFromJSDoc(comment);
   const examples = getExamplesFromJSDoc(comment);
 
   return {
@@ -144,6 +157,7 @@ export function extractProperty(
     readonly,
     optional,
     description,
+    discordJsCompat,
     examples: examples.length ? examples : undefined,
   };
 }
@@ -182,6 +196,7 @@ export function extractMethod(
   );
 
   const deprecated = getDeprecatedFromJSDoc(comment);
+  const discordJsCompat = getDiscordJsCompatFromJSDoc(comment);
   const examples = getExamplesFromJSDoc(comment);
 
   return {
@@ -192,6 +207,7 @@ export function extractMethod(
     examples: examples.length ? examples : undefined,
     async,
     deprecated,
+    discordJsCompat,
     source: getSource(node),
   };
 }
@@ -211,6 +227,7 @@ export function extractGetterProperty(
         checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)!),
       );
   const description = getDescriptionFromJSDoc(comment) || undefined;
+  const discordJsCompat = getDiscordJsCompatFromJSDoc(comment);
   const examples = getExamplesFromJSDoc(comment);
 
   return {
@@ -219,6 +236,7 @@ export function extractGetterProperty(
     readonly: true,
     optional: false,
     description,
+    discordJsCompat,
     examples: examples.length ? examples : undefined,
   };
 }

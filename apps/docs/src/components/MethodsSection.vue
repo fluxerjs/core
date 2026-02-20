@@ -6,13 +6,21 @@
       :id="`method-${m.name}`"
       :key="m.name"
       class="method-item"
-      :class="{ 'is-deprecated': m.deprecated }">
+      :class="{
+  'is-deprecated': m.deprecated,
+  'is-discord-compat': m.discordJsCompat && !m.deprecated
+}">
       <div class="deprecated-banner" v-if="m.deprecated">
         <span class="deprecated-badge">Deprecated</span>
         <span v-if="typeof m.deprecated === 'string'" class="deprecated-message">{{
           m.deprecated
         }}</span>
       </div>
+      <ApiDiscordCompat
+        v-if="m.discordJsCompat && !m.deprecated"
+        :to="fluxerMethodLink(m.name)"
+        variant="banner"
+      />
       <div class="method-header">
         <code class="method-name">{{ m.name }}</code>
         <span v-if="m.deprecated" class="deprecated-badge-inline">deprecated</span>
@@ -35,13 +43,23 @@
 </template>
 
 <script setup lang="ts">
-import { DocMethod } from '../types/doc-schema';
+import { useRoute } from 'vue-router';
+import type { DocMethod } from '../types/doc-schema';
+import ApiDiscordCompat from './ApiDiscordCompat.vue';
 import DocDescription from './DocDescription.vue';
 import ParamsTable from './ParamsTable.vue';
 import TypeSignature from './TypeSignature.vue';
 import CodeBlock from './CodeBlock.vue';
 
-defineProps<{ methods: DocMethod[]; parentName?: string }>();
+const props = defineProps<{ methods: DocMethod[]; parentName?: string }>();
+const route = useRoute();
+
+function fluxerMethodLink(methodName: string) {
+  const version = (route.params.version as string) ?? 'latest';
+  const cls = props.parentName;
+  if (!cls) return undefined;
+  return { path: `/v/${version}/docs/classes/${cls}`, hash: `#method-${methodName}` };
+}
 
 function methodSignature(m: DocMethod) {
   const paramsStr = (m.params ?? [])
@@ -86,6 +104,18 @@ function methodSignature(m: DocMethod) {
 }
 
 .method-item.is-deprecated:last-child {
+  margin-bottom: 0;
+}
+
+.method-item.is-discord-compat {
+  background: var(--discord-compat-bg);
+  border: 1px solid var(--discord-compat-border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.method-item.is-discord-compat:last-child {
   margin-bottom: 0;
 }
 

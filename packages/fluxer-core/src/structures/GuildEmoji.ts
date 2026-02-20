@@ -38,6 +38,8 @@ export class GuildEmoji extends Base {
     await this.client.rest.delete(Routes.guildEmoji(this.guildId, this.id), {
       auth: true,
     });
+    const guild = this.client.guilds.get(this.guildId);
+    if (guild) guild.emojis.delete(this.id);
   }
 
   /**

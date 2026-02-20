@@ -75,6 +75,7 @@ export class Guild extends Base {
   members: GuildMemberManager;
   channels = new Collection<string, GuildChannel>();
   roles = new Collection<string, Role>();
+  emojis = new Collection<string, GuildEmoji>();
 
   /** @param data - API guild from GET /guilds/{id} or gateway GUILD_CREATE */
   constructor(client: Client, data: APIGuild & { roles?: APIRole[]; ownerId?: string }) {
@@ -583,6 +584,53 @@ export class Guild extends Base {
       body: updates,
       auth: true,
     });
+  }
+
+  /**
+   * Fetch all emojis in this guild.
+   * @returns Array of GuildEmoji objects (cached in guild.emojis)
+   */
+  async fetchEmojis(): Promise<GuildEmoji[]> {
+    const data = await this.client.rest.get<APIEmoji[] | Record<string, APIEmoji>>(
+      Routes.guildEmojis(this.id),
+    );
+    const list = Array.isArray(data) ? data : Object.values(data ?? {});
+    const emojis: GuildEmoji[] = [];
+    for (const e of list) {
+      const emoji = new GuildEmoji(this.client, { ...e, guild_id: this.id }, this.id);
+      this.emojis.set(emoji.id, emoji);
+      emojis.push(emoji);
+    }
+    return emojis;
+  }
+
+  /**
+   * Fetch a single emoji by ID.
+   * @param emojiId - The emoji ID to fetch
+   * @returns The guild emoji
+   * @throws FluxerError if emoji not found (404)
+   */
+  async fetchEmoji(emojiId: string): Promise<GuildEmoji> {
+    try {
+      const data = await this.client.rest.get<APIEmoji>(Routes.guildEmoji(this.id, emojiId));
+      const emoji = new GuildEmoji(this.client, { ...data, guild_id: this.id }, this.id);
+      this.emojis.set(emoji.id, emoji);
+      return emoji;
+    } catch (err) {
+      const statusCode =
+        err instanceof FluxerAPIError
+          ? err.statusCode
+          : (err as { statusCode?: number })?.statusCode;
+      if (statusCode === 404) {
+        throw new FluxerError(`Emoji ${emojiId} not found in guild`, {
+          code: ErrorCodes.EmojiNotFound,
+          cause: err as Error,
+        });
+      }
+      throw err instanceof FluxerError
+        ? err
+        : new FluxerError('Failed to fetch guild emoji', { cause: err as Error });
+    }
   }
 
   /**

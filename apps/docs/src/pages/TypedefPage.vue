@@ -19,7 +19,12 @@
       View source
     </a>
 
-    <PropertiesSection v-if="isInterface && properties.length" :properties="properties" />
+    <PropertiesSection
+      v-if="isInterface && properties.length"
+      :properties="properties"
+      :parent-name="typedef?.name"
+      parent-type="typedef"
+    />
     <section v-else-if="isEnum && members.length" class="section enum-section">
       <h2>Members</h2>
       <div class="enum-definition">

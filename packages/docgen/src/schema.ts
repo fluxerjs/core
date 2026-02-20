@@ -28,6 +28,8 @@ export interface DocProperty {
   description?: string;
   examples?: string[];
   optional?: boolean;
+  /** Discord.js compatible: string = link to d.js docs, true = no link */
+  discordJsCompat?: boolean | string;
 }
 
 export interface DocMethod {
@@ -38,6 +40,8 @@ export interface DocMethod {
   examples?: string[];
   async?: boolean;
   deprecated?: boolean | string;
+  /** Discord.js compatible: string = link to d.js docs, true = no link */
+  discordJsCompat?: boolean | string;
   source?: DocSource;
 }
 
@@ -57,6 +61,8 @@ export interface DocClass {
   methods: DocMethod[];
   source?: DocSource;
   deprecated?: boolean | string;
+  /** Discord.js compatible: string = link to d.js docs, true = no link */
+  discordJsCompat?: boolean | string;
 }
 
 export interface DocInterfaceProperty {

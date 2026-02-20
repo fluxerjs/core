@@ -2,10 +2,10 @@
   "meta": {
     "generator": "fluxer-docgen",
     "version": "1",
-    "date": 1771596231333
+    "date": 1771601615562
   },
   "package": "@fluxerjs/core",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "packages": [
     "@fluxerjs/builders",
     "@fluxerjs/collection",
@@ -340,7 +340,7 @@
       "methods": [],
       "source": {
         "file": "Channel.ts",
-        "line": 346,
+        "line": 344,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -421,7 +421,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 98
+            "line": 102
           }
         },
         {
@@ -443,7 +443,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 38
+            "line": 42
           }
         },
         {
@@ -467,7 +467,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 67
+            "line": 71
           }
         },
         {
@@ -489,7 +489,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 84
+            "line": 88
           }
         },
         {
@@ -500,7 +500,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 28
+            "line": 32
           }
         },
         {
@@ -511,7 +511,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 23
+            "line": 27
           }
         },
         {
@@ -522,7 +522,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 33
+            "line": 37
           }
         },
         {
@@ -533,13 +533,13 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 108
+            "line": 112
           }
         }
       ],
       "source": {
         "file": "Channel.ts",
-        "line": 21,
+        "line": 25,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -584,7 +584,7 @@
           "async": true,
           "source": {
             "file": "ChannelManager.ts",
-            "line": 55
+            "line": 56
           }
         },
         {
@@ -612,7 +612,7 @@
           "deprecated": "Use channel.messages.fetch(messageId). Prefer (await client.channels.resolve(channelId))?.messages?.fetch(messageId).",
           "source": {
             "file": "ChannelManager.ts",
-            "line": 105
+            "line": 99
           }
         },
         {
@@ -633,7 +633,7 @@
           "async": true,
           "source": {
             "file": "ChannelManager.ts",
-            "line": 42
+            "line": 43
           }
         },
         {
@@ -660,7 +660,7 @@
           "async": true,
           "source": {
             "file": "ChannelManager.ts",
-            "line": 144
+            "line": 134
           }
         },
         {
@@ -681,13 +681,13 @@
           "async": false,
           "source": {
             "file": "ChannelManager.ts",
-            "line": 24
+            "line": 25
           }
         }
       ],
       "source": {
         "file": "ChannelManager.ts",
-        "line": 16,
+        "line": 17,
         "path": "packages/fluxer-core/src/client/ChannelManager.ts"
       },
       "package": "@fluxerjs/core"
@@ -786,7 +786,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 233
+            "line": 241
           }
         },
         {
@@ -797,7 +797,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 436
+            "line": 434
           }
         },
         {
@@ -808,7 +808,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 414
+            "line": 412
           }
         },
         {
@@ -819,7 +819,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 250
+            "line": 258
           }
         },
         {
@@ -847,7 +847,7 @@
           "deprecated": "Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.resolve(channelId))?.messages?.fetch(messageId)",
           "source": {
             "file": "Client.ts",
-            "line": 265
+            "line": 273
           }
         },
         {
@@ -864,7 +864,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 291
+            "line": 296
           }
         },
         {
@@ -880,7 +880,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 317
+            "line": 322
           }
         },
         {
@@ -891,7 +891,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 428
+            "line": 426
           }
         },
         {
@@ -909,7 +909,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 332
+            "line": 337
           }
         },
         {
@@ -933,7 +933,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 182
+            "line": 190
           }
         },
         {
@@ -955,7 +955,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 280
+            "line": 285
           }
         },
         {
@@ -979,13 +979,13 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 313
+            "line": 318
           }
         }
       ],
       "source": {
         "file": "Client.ts",
-        "line": 137,
+        "line": 145,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -1042,7 +1042,7 @@
           "async": true,
           "source": {
             "file": "ClientUser.ts",
-            "line": 37
+            "line": 36
           }
         }
       ],
@@ -1490,7 +1490,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 450
+            "line": 446
           }
         },
         {
@@ -1508,7 +1508,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 411
+            "line": 408
           }
         },
         {
@@ -1527,7 +1527,7 @@
           "deprecated": "Use channel.messages.fetch(messageId) instead.",
           "source": {
             "file": "Channel.ts",
-            "line": 438
+            "line": 434
           }
         },
         {
@@ -1538,7 +1538,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 419
+            "line": 416
           }
         },
         {
@@ -1561,7 +1561,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 461
+            "line": 457
           }
         },
         {
@@ -1579,13 +1579,13 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 392
+            "line": 390
           }
         }
       ],
       "source": {
         "file": "Channel.ts",
-        "line": 369,
+        "line": 367,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -2028,6 +2028,12 @@
           "optional": false
         },
         {
+          "name": "emojis",
+          "type": "Collection<string, GuildEmoji>",
+          "readonly": false,
+          "optional": false
+        },
+        {
           "name": "explicitContentFilter",
           "type": "GuildExplicitContentFilter",
           "readonly": false,
@@ -2159,7 +2165,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 131
+            "line": 138
           }
         },
         {
@@ -2183,7 +2189,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 257
+            "line": 264
           }
         },
         {
@@ -2200,7 +2206,7 @@
           "async": false,
           "source": {
             "file": "Guild.ts",
-            "line": 112
+            "line": 119
           }
         },
         {
@@ -2218,7 +2224,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 371
+            "line": 376
           }
         },
         {
@@ -2236,7 +2242,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 591
+            "line": 641
           }
         },
         {
@@ -2257,7 +2263,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 153
+            "line": 160
           }
         },
         {
@@ -2275,7 +2281,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 610
+            "line": 658
           }
         },
         {
@@ -2286,7 +2292,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 459
+            "line": 462
           }
         },
         {
@@ -2303,7 +2309,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 418
+            "line": 421
           }
         },
         {
@@ -2321,7 +2327,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 340
+            "line": 346
           }
         },
         {
@@ -2332,7 +2338,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 277
+            "line": 284
           }
         },
         {
@@ -2343,7 +2349,36 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 398
+            "line": 402
+          }
+        },
+        {
+          "name": "fetchEmoji",
+          "params": [
+            {
+              "name": "emojiId",
+              "type": "string",
+              "optional": false,
+              "description": "The emoji ID to fetch"
+            }
+          ],
+          "returns": "Promise<GuildEmoji>",
+          "description": "Fetch a single emoji by ID.",
+          "async": true,
+          "source": {
+            "file": "Guild.ts",
+            "line": 613
+          }
+        },
+        {
+          "name": "fetchEmojis",
+          "params": [],
+          "returns": "Promise<GuildEmoji[]>",
+          "description": "Fetch all emojis in this guild.",
+          "async": true,
+          "source": {
+            "file": "Guild.ts",
+            "line": 593
           }
         },
         {
@@ -2361,7 +2396,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 311
+            "line": 317
           }
         },
         {
@@ -2379,7 +2414,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 203
+            "line": 210
           }
         },
         {
@@ -2390,7 +2425,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 183
+            "line": 190
           }
         },
         {
@@ -2401,7 +2436,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 468
+            "line": 471
           }
         },
         {
@@ -2412,7 +2447,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 359
+            "line": 365
           }
         },
         {
@@ -2429,7 +2464,7 @@
           "async": false,
           "source": {
             "file": "Guild.ts",
-            "line": 105
+            "line": 112
           }
         },
         {
@@ -2447,7 +2482,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 300
+            "line": 306
           }
         },
         {
@@ -2471,7 +2506,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 141
+            "line": 148
           }
         },
         {
@@ -2482,7 +2517,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 555
+            "line": 558
           }
         },
         {
@@ -2500,7 +2535,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 232
+            "line": 239
           }
         },
         {
@@ -2518,7 +2553,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 572
+            "line": 575
           }
         },
         {
@@ -2535,7 +2570,7 @@
           "async": false,
           "source": {
             "file": "Guild.ts",
-            "line": 498
+            "line": 501
           }
         },
         {
@@ -2552,7 +2587,7 @@
           "async": false,
           "source": {
             "file": "Guild.ts",
-            "line": 510
+            "line": 513
           }
         },
         {
@@ -2569,7 +2604,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 538
+            "line": 541
           }
         },
         {
@@ -2587,7 +2622,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 523
+            "line": 526
           }
         },
         {
@@ -2604,7 +2639,7 @@
           "async": false,
           "source": {
             "file": "Guild.ts",
-            "line": 486
+            "line": 489
           }
         },
         {
@@ -2621,7 +2656,7 @@
           "async": false,
           "source": {
             "file": "Guild.ts",
-            "line": 119
+            "line": 126
           }
         },
         {
@@ -2643,7 +2678,7 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 476
+            "line": 479
           }
         },
         {
@@ -2661,13 +2696,13 @@
           "async": true,
           "source": {
             "file": "Guild.ts",
-            "line": 291
+            "line": 297
           }
         }
       ],
       "source": {
         "file": "Guild.ts",
-        "line": 35,
+        "line": 41,
         "path": "packages/fluxer-core/src/structures/Guild.ts"
       },
       "package": "@fluxerjs/core"
@@ -2815,7 +2850,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 160
+            "line": 162
           }
         },
         {
@@ -2833,7 +2868,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 135
+            "line": 139
           }
         },
         {
@@ -2920,7 +2955,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 183
+            "line": 184
           }
         },
         {
@@ -2931,13 +2966,13 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 148
+            "line": 151
           }
         }
       ],
       "source": {
         "file": "Channel.ts",
-        "line": 113,
+        "line": 117,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -3038,7 +3073,7 @@
           "async": true,
           "source": {
             "file": "GuildEmoji.ts",
-            "line": 47
+            "line": 49
           }
         }
       ],
@@ -3107,7 +3142,7 @@
           "async": true,
           "source": {
             "file": "GuildManager.ts",
-            "line": 67
+            "line": 66
           }
         },
         {
@@ -3276,9 +3311,11 @@
         },
         {
           "name": "roles",
-          "type": "string[]",
+          "type": "GuildMemberRoleManager",
           "readonly": true,
-          "optional": false
+          "optional": false,
+          "description": "Role manager with add/remove/set and cache. Discord.js parity: member.roles.add(), member.roles.cache",
+          "discordJsCompat": "https://discord.js.org/docs/packages/discord.js/main/GuildMemberRoleManager"
         },
         {
           "name": "user",
@@ -3299,11 +3336,11 @@
             }
           ],
           "returns": "Promise<void>",
-          "description": "Add a role to this member.",
+          "description": "Add a role to this member.\nPrefer member.roles.add(roleId) for Discord.js parity.",
           "async": true,
           "source": {
             "file": "GuildMember.ts",
-            "line": 84
+            "line": 90
           }
         },
         {
@@ -3320,7 +3357,7 @@
           "async": false,
           "source": {
             "file": "GuildMember.ts",
-            "line": 59
+            "line": 64
           }
         },
         {
@@ -3337,7 +3374,7 @@
           "async": false,
           "source": {
             "file": "GuildMember.ts",
-            "line": 75
+            "line": 80
           }
         },
         {
@@ -3354,7 +3391,7 @@
           "async": false,
           "source": {
             "file": "GuildMember.ts",
-            "line": 67
+            "line": 72
           }
         },
         {
@@ -3371,7 +3408,7 @@
           "async": true,
           "source": {
             "file": "GuildMember.ts",
-            "line": 103
+            "line": 110
           }
         },
         {
@@ -3392,7 +3429,7 @@
           "async": false,
           "source": {
             "file": "GuildMember.ts",
-            "line": 168
+            "line": 175
           }
         },
         {
@@ -3406,17 +3443,17 @@
             }
           ],
           "returns": "Promise<void>",
-          "description": "Remove a role from this member.",
+          "description": "Remove a role from this member.\nPrefer member.roles.remove(roleId) for Discord.js parity.",
           "async": true,
           "source": {
             "file": "GuildMember.ts",
-            "line": 93
+            "line": 100
           }
         }
       ],
       "source": {
         "file": "GuildMember.ts",
-        "line": 13,
+        "line": 14,
         "path": "packages/fluxer-core/src/structures/GuildMember.ts"
       },
       "package": "@fluxerjs/core"
@@ -3441,6 +3478,7 @@
           "readonly": true,
           "optional": false,
           "description": "The current bot user as a GuildMember in this guild.\nReturns null if the bot's member is not cached or client.user is null.\nUse fetchMe() to load the bot's member when not cached.",
+          "discordJsCompat": "https://discord.js.org/docs/packages/discord.js/main/GuildMemberManager",
           "examples": [
             "const perms = guild.members.me?.permissions;\nif (perms?.has(PermissionFlags.BanMembers)) { ... }"
           ]
@@ -3462,7 +3500,7 @@
           "async": true,
           "source": {
             "file": "GuildMemberManager.ts",
-            "line": 66
+            "line": 69
           }
         },
         {
@@ -3476,7 +3514,7 @@
           "async": true,
           "source": {
             "file": "GuildMemberManager.ts",
-            "line": 53
+            "line": 56
           }
         },
         {
@@ -3497,15 +3535,131 @@
           "async": true,
           "source": {
             "file": "GuildMemberManager.ts",
-            "line": 26
+            "line": 28
           }
         }
       ],
       "source": {
         "file": "GuildMemberManager.ts",
-        "line": 11,
+        "line": 13,
         "path": "packages/fluxer-core/src/client/GuildMemberManager.ts"
       },
+      "discordJsCompat": "https://discord.js.org/docs/packages/discord.js/main/GuildMemberManager",
+      "package": "@fluxerjs/core"
+    },
+    {
+      "name": "GuildMemberRoleManager",
+      "description": "Manages a guild member's roles with add/remove/set and a cache of Role objects.\nDiscord.js parity: member.roles.add(), member.roles.remove(), member.roles.set(), member.roles.cache",
+      "constructor": {
+        "params": [
+          {
+            "name": "member",
+            "type": "GuildMember",
+            "optional": false
+          },
+          {
+            "name": "initialRoleIds",
+            "type": "string[]",
+            "optional": false
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "cache",
+          "type": "Collection<string, Role>",
+          "readonly": true,
+          "optional": false,
+          "description": "Collection of Role objects for this member's roles (from guild.roles).\nDiscord.js parity: member.roles.cache",
+          "discordJsCompat": "https://discord.js.org/docs/packages/discord.js/main/GuildMemberRoleManager"
+        },
+        {
+          "name": "roleIds",
+          "type": "readonly string[]",
+          "readonly": true,
+          "optional": false,
+          "description": "Role IDs for this member. Used by permissions; prefer cache for Role objects."
+        }
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "params": [
+            {
+              "name": "roleOrId",
+              "type": "RoleResolvable",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "description": "Add a role to this member.\nDiscord.js parity: member.roles.add(roleId)\nRequires Manage Roles permission.",
+          "async": true,
+          "discordJsCompat": "https://discord.js.org/docs/packages/discord.js/main/GuildMemberRoleManager",
+          "source": {
+            "file": "GuildMemberRoleManager.ts",
+            "line": 72
+          }
+        },
+        {
+          "name": "has",
+          "params": [
+            {
+              "name": "roleOrId",
+              "type": "RoleResolvable",
+              "optional": false
+            }
+          ],
+          "returns": "boolean",
+          "description": "Check if the member has a role. Discord.js parity: member.roles.cache.has(roleId)",
+          "async": false,
+          "source": {
+            "file": "GuildMemberRoleManager.ts",
+            "line": 43
+          }
+        },
+        {
+          "name": "remove",
+          "params": [
+            {
+              "name": "roleOrId",
+              "type": "RoleResolvable",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "description": "Remove a role from this member.\nDiscord.js parity: member.roles.remove(roleId)\nRequires Manage Roles permission.",
+          "async": true,
+          "discordJsCompat": "https://discord.js.org/docs/packages/discord.js/main/GuildMemberRoleManager",
+          "source": {
+            "file": "GuildMemberRoleManager.ts",
+            "line": 87
+          }
+        },
+        {
+          "name": "set",
+          "params": [
+            {
+              "name": "roleIds",
+              "type": "string[]",
+              "optional": false
+            }
+          ],
+          "returns": "Promise<void>",
+          "description": "Replace all roles for this member. PATCH /guilds/{id}/members/{userId}\nDiscord.js parity: member.roles.set(roleIds)\nRequires Manage Roles permission.",
+          "async": true,
+          "discordJsCompat": "https://discord.js.org/docs/packages/discord.js/main/GuildMemberRoleManager",
+          "source": {
+            "file": "GuildMemberRoleManager.ts",
+            "line": 103
+          }
+        }
+      ],
+      "source": {
+        "file": "GuildMemberRoleManager.ts",
+        "line": 30,
+        "path": "packages/fluxer-core/src/structures/GuildMemberRoleManager.ts"
+      },
+      "discordJsCompat": "https://discord.js.org/docs/packages/discord.js/main/GuildMemberRoleManager",
       "package": "@fluxerjs/core"
     },
     {
@@ -3837,7 +3991,7 @@
       "methods": [],
       "source": {
         "file": "Channel.ts",
-        "line": 360,
+        "line": 358,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -3975,7 +4129,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 264
+            "line": 270
           }
         },
         {
@@ -3999,7 +4153,7 @@
           "async": true,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 316
+            "line": 322
           }
         },
         {
@@ -4020,7 +4174,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 260
+            "line": 266
           }
         },
         {
@@ -4031,7 +4185,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 1558
+            "line": 1551
           }
         },
         {
@@ -4042,7 +4196,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 1545
+            "line": 1538
           }
         },
         {
@@ -4058,7 +4212,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 270
+            "line": 276
           }
         },
         {
@@ -4069,7 +4223,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 298
+            "line": 304
           }
         },
         {
@@ -4080,7 +4234,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 278
+            "line": 284
           }
         },
         {
@@ -4104,7 +4258,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 287
+            "line": 293
           }
         },
         {
@@ -4122,7 +4276,7 @@
           "async": true,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 1334
+            "line": 1331
           }
         },
         {
@@ -4138,7 +4292,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 302
+            "line": 308
           }
         },
         {
@@ -4165,7 +4319,7 @@
           "async": true,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 384
+            "line": 390
           }
         },
         {
@@ -4187,7 +4341,7 @@
           "async": true,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 961
+            "line": 962
           }
         },
         {
@@ -4204,7 +4358,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 293
+            "line": 299
           }
         },
         {
@@ -4215,7 +4369,7 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 1529
+            "line": 1522
           }
         },
         {
@@ -4225,13 +4379,13 @@
           "async": false,
           "source": {
             "file": "LiveKitRtcConnection.ts",
-            "line": 1502
+            "line": 1495
           }
         }
       ],
       "source": {
         "file": "LiveKitRtcConnection.ts",
-        "line": 223,
+        "line": 229,
         "path": "packages/voice/src/LiveKitRtcConnection.ts"
       },
       "package": "@fluxerjs/voice"
@@ -4444,7 +4598,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 209
+            "line": 210
           }
         },
         {
@@ -4455,7 +4609,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 227
+            "line": 228
           }
         },
         {
@@ -4472,7 +4626,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 235
+            "line": 236
           }
         },
         {
@@ -4490,7 +4644,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 188
+            "line": 189
           }
         },
         {
@@ -4504,7 +4658,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 222
+            "line": 223
           }
         },
         {
@@ -4528,7 +4682,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 319
+            "line": 320
           }
         },
         {
@@ -4545,7 +4699,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 259
+            "line": 260
           }
         },
         {
@@ -4556,7 +4710,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 244
+            "line": 245
           }
         },
         {
@@ -4574,7 +4728,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 274
+            "line": 275
           }
         },
         {
@@ -4585,7 +4739,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 298
+            "line": 299
           }
         },
         {
@@ -4609,7 +4763,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 285
+            "line": 286
           }
         },
         {
@@ -4627,7 +4781,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 306
+            "line": 307
           }
         },
         {
@@ -4648,7 +4802,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 167
+            "line": 168
           }
         },
         {
@@ -4659,7 +4813,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 86
+            "line": 87
           }
         },
         {
@@ -4675,7 +4829,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 264
+            "line": 265
           }
         },
         {
@@ -4686,7 +4840,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 94
+            "line": 95
           }
         },
         {
@@ -4707,7 +4861,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 139
+            "line": 140
           }
         },
         {
@@ -4734,7 +4888,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 156
+            "line": 157
           }
         },
         {
@@ -4745,13 +4899,13 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 250
+            "line": 251
           }
         }
       ],
       "source": {
         "file": "Message.ts",
-        "line": 40,
+        "line": 41,
         "path": "packages/fluxer-core/src/structures/Message.ts"
       },
       "package": "@fluxerjs/core"
@@ -4925,13 +5079,13 @@
           "async": true,
           "source": {
             "file": "MessageManager.ts",
-            "line": 25
+            "line": 26
           }
         }
       ],
       "source": {
         "file": "MessageManager.ts",
-        "line": 13,
+        "line": 14,
         "path": "packages/fluxer-core/src/client/MessageManager.ts"
       },
       "package": "@fluxerjs/core"
@@ -6173,7 +6327,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 310
+            "line": 309
           }
         },
         {
@@ -6192,7 +6346,7 @@
           "deprecated": "Use channel.messages.fetch(messageId) instead.",
           "source": {
             "file": "Channel.ts",
-            "line": 337
+            "line": 335
           }
         },
         {
@@ -6203,7 +6357,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 318
+            "line": 317
           }
         },
         {
@@ -6339,7 +6493,7 @@
           "async": false,
           "source": {
             "file": "User.ts",
-            "line": 60
+            "line": 61
           }
         },
         {
@@ -6356,7 +6510,7 @@
           "async": false,
           "source": {
             "file": "User.ts",
-            "line": 76
+            "line": 77
           }
         },
         {
@@ -6367,7 +6521,7 @@
           "async": true,
           "source": {
             "file": "User.ts",
-            "line": 92
+            "line": 93
           }
         },
         {
@@ -6384,7 +6538,7 @@
           "async": false,
           "source": {
             "file": "User.ts",
-            "line": 68
+            "line": 69
           }
         },
         {
@@ -6412,13 +6566,13 @@
           "async": false,
           "source": {
             "file": "User.ts",
-            "line": 84
+            "line": 85
           }
         }
       ],
       "source": {
         "file": "User.ts",
-        "line": 11,
+        "line": 12,
         "path": "packages/fluxer-core/src/structures/User.ts"
       },
       "package": "@fluxerjs/core"
@@ -6581,7 +6735,7 @@
       "methods": [],
       "source": {
         "file": "Channel.ts",
-        "line": 347,
+        "line": 345,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -6735,7 +6889,7 @@
           "async": true,
           "source": {
             "file": "VoiceConnection.ts",
-            "line": 107
+            "line": 110
           }
         },
         {
@@ -6767,7 +6921,7 @@
           "async": true,
           "source": {
             "file": "VoiceConnection.ts",
-            "line": 203
+            "line": 206
           }
         },
         {
@@ -6784,7 +6938,7 @@
           "async": true,
           "source": {
             "file": "VoiceConnection.ts",
-            "line": 295
+            "line": 297
           }
         },
         {
@@ -6801,7 +6955,7 @@
           "async": false,
           "source": {
             "file": "VoiceConnection.ts",
-            "line": 255
+            "line": 257
           }
         },
         {
@@ -6838,7 +6992,7 @@
           "async": false,
           "source": {
             "file": "VoiceConnection.ts",
-            "line": 212
+            "line": 214
           }
         },
         {
@@ -6864,7 +7018,7 @@
           "async": false,
           "source": {
             "file": "VoiceConnection.ts",
-            "line": 217
+            "line": 219
           }
         },
         {
@@ -6881,7 +7035,7 @@
       ],
       "source": {
         "file": "VoiceConnection.ts",
-        "line": 65,
+        "line": 68,
         "path": "packages/voice/src/VoiceConnection.ts"
       },
       "package": "@fluxerjs/voice"
@@ -7294,7 +7448,7 @@
           "async": false,
           "source": {
             "file": "Webhook.ts",
-            "line": 80
+            "line": 76
           }
         },
         {
@@ -7305,7 +7459,7 @@
           "async": true,
           "source": {
             "file": "Webhook.ts",
-            "line": 85
+            "line": 81
           }
         },
         {
@@ -7323,7 +7477,7 @@
           "async": true,
           "source": {
             "file": "Webhook.ts",
-            "line": 94
+            "line": 90
           }
         },
         {
@@ -7347,7 +7501,7 @@
           "async": true,
           "source": {
             "file": "Webhook.ts",
-            "line": 175
+            "line": 167
           }
         },
         {
@@ -7383,7 +7537,7 @@
           "async": false,
           "source": {
             "file": "Webhook.ts",
-            "line": 187
+            "line": 179
           }
         },
         {
@@ -7410,13 +7564,13 @@
           "async": true,
           "source": {
             "file": "Webhook.ts",
-            "line": 135
+            "line": 131
           }
         }
       ],
       "source": {
         "file": "Webhook.ts",
-        "line": 51,
+        "line": 47,
         "path": "packages/fluxer-core/src/structures/Webhook.ts"
       },
       "package": "@fluxerjs/core"
@@ -7467,7 +7621,7 @@
           "async": true,
           "source": {
             "file": "WebSocketManager.ts",
-            "line": 38
+            "line": 40
           }
         },
         {
@@ -7477,7 +7631,7 @@
           "async": false,
           "source": {
             "file": "WebSocketManager.ts",
-            "line": 118
+            "line": 120
           }
         },
         {
@@ -7487,7 +7641,7 @@
           "async": false,
           "source": {
             "file": "WebSocketManager.ts",
-            "line": 125
+            "line": 127
           }
         },
         {
@@ -7508,13 +7662,13 @@
           "async": false,
           "source": {
             "file": "WebSocketManager.ts",
-            "line": 114
+            "line": 116
           }
         }
       ],
       "source": {
         "file": "WebSocketManager.ts",
-        "line": 26,
+        "line": 28,
         "path": "packages/ws/src/WebSocketManager.ts"
       },
       "package": "@fluxerjs/ws"
@@ -7627,7 +7781,7 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 102
+            "line": 103
           }
         },
         {
@@ -7643,7 +7797,7 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 159
+            "line": 160
           }
         },
         {
@@ -7653,7 +7807,7 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 256
+            "line": 257
           }
         },
         {
@@ -7669,7 +7823,7 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 200
+            "line": 201
           }
         },
         {
@@ -7685,7 +7839,7 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 163
+            "line": 164
           }
         },
         {
@@ -7695,7 +7849,7 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 61
+            "line": 62
           }
         },
         {
@@ -7711,7 +7865,7 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 251
+            "line": 252
           }
         },
         {
@@ -7727,7 +7881,7 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 229
+            "line": 230
           }
         },
         {
@@ -7737,13 +7891,13 @@
           "async": false,
           "source": {
             "file": "WebSocketShard.ts",
-            "line": 244
+            "line": 245
           }
         }
       ],
       "source": {
         "file": "WebSocketShard.ts",
-        "line": 45,
+        "line": 46,
         "path": "packages/ws/src/WebSocketShard.ts"
       },
       "package": "@fluxerjs/ws"
@@ -10229,7 +10383,7 @@
       "properties": [],
       "source": {
         "file": "Client.ts",
-        "line": 120,
+        "line": 128,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -10499,7 +10653,7 @@
       ],
       "source": {
         "file": "Client.ts",
-        "line": 47,
+        "line": 65,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -10584,7 +10738,7 @@
       "properties": [],
       "source": {
         "file": "EventHandlerRegistry.ts",
-        "line": 32,
+        "line": 43,
         "path": "packages/fluxer-core/src/client/EventHandlerRegistry.ts"
       },
       "package": "@fluxerjs/core"
@@ -12775,7 +12929,7 @@
       "properties": [],
       "source": {
         "file": "LiveKitRtcConnection.ts",
-        "line": 170,
+        "line": 176,
         "path": "packages/voice/src/LiveKitRtcConnection.ts"
       },
       "package": "@fluxerjs/voice"
@@ -12909,7 +13063,7 @@
       ],
       "source": {
         "file": "Message.ts",
-        "line": 29,
+        "line": 30,
         "path": "packages/fluxer-core/src/structures/Message.ts"
       },
       "package": "@fluxerjs/core"
@@ -13513,6 +13667,17 @@
       "package": "@fluxerjs/types"
     },
     {
+      "name": "RoleResolvable",
+      "description": "Role ID or Role object for add/remove.",
+      "properties": [],
+      "source": {
+        "file": "GuildMemberRoleManager.ts",
+        "line": 7,
+        "path": "packages/fluxer-core/src/structures/GuildMemberRoleManager.ts"
+      },
+      "package": "@fluxerjs/core"
+    },
+    {
       "name": "SendBodyResult",
       "description": "API-ready body from MessageSendOptions (serializes EmbedBuilder, includes attachments when files present).",
       "properties": [
@@ -13660,7 +13825,7 @@
       ],
       "source": {
         "file": "LiveKitRtcConnection.ts",
-        "line": 193,
+        "line": 199,
         "path": "packages/voice/src/LiveKitRtcConnection.ts"
       },
       "package": "@fluxerjs/voice"
@@ -13689,7 +13854,7 @@
       ],
       "source": {
         "file": "VoiceConnection.ts",
-        "line": 58,
+        "line": 61,
         "path": "packages/voice/src/VoiceConnection.ts"
       },
       "package": "@fluxerjs/voice"
@@ -13700,7 +13865,7 @@
       "properties": [],
       "source": {
         "file": "index.ts",
-        "line": 14,
+        "line": 15,
         "path": "packages/voice/src/index.ts"
       },
       "package": "@fluxerjs/voice"
@@ -13773,7 +13938,7 @@
       ],
       "source": {
         "file": "Webhook.ts",
-        "line": 20,
+        "line": 16,
         "path": "packages/fluxer-core/src/structures/Webhook.ts"
       },
       "package": "@fluxerjs/core"
@@ -13784,7 +13949,7 @@
       "properties": [],
       "source": {
         "file": "Webhook.ts",
-        "line": 17,
+        "line": 13,
         "path": "packages/fluxer-core/src/structures/Webhook.ts"
       },
       "package": "@fluxerjs/core"
@@ -13845,7 +14010,7 @@
       ],
       "source": {
         "file": "Webhook.ts",
-        "line": 30,
+        "line": 26,
         "path": "packages/fluxer-core/src/structures/Webhook.ts"
       },
       "package": "@fluxerjs/core"
@@ -13855,7 +14020,7 @@
       "properties": [],
       "source": {
         "file": "WebSocketShard.ts",
-        "line": 19,
+        "line": 20,
         "path": "packages/ws/src/WebSocketShard.ts"
       },
       "package": "@fluxerjs/ws"
@@ -13865,7 +14030,7 @@
       "properties": [],
       "source": {
         "file": "WebSocketShard.ts",
-        "line": 12,
+        "line": 13,
         "path": "packages/ws/src/WebSocketShard.ts"
       },
       "package": "@fluxerjs/ws"
@@ -13917,14 +14082,14 @@
         },
         {
           "name": "WebSocket",
-          "type": "WebSocketConstructor",
+          "type": "WSConstructor",
           "readonly": false,
           "optional": true
         }
       ],
       "source": {
         "file": "WebSocketManager.ts",
-        "line": 15,
+        "line": 17,
         "path": "packages/ws/src/WebSocketManager.ts"
       },
       "package": "@fluxerjs/ws"
@@ -13971,7 +14136,7 @@
       ],
       "source": {
         "file": "WebSocketShard.ts",
-        "line": 33,
+        "line": 34,
         "path": "packages/ws/src/WebSocketShard.ts"
       },
       "package": "@fluxerjs/ws"
@@ -14031,7 +14196,7 @@
       ],
       "source": {
         "file": "WebSocketShard.ts",
-        "line": 21,
+        "line": 22,
         "path": "packages/ws/src/WebSocketShard.ts"
       },
       "package": "@fluxerjs/ws"
