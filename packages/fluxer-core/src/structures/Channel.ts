@@ -29,12 +29,12 @@ export abstract class Channel extends Base {
   }
 
   /** Whether this channel is a DM or Group DM. */
-  isDM(): boolean {
+  isDM(): this is DMChannel {
     return this.type === ChannelType.DM || this.type === ChannelType.GroupDM;
   }
 
   /** Whether this channel is voice-based (VoiceChannel). */
-  isVoice(): boolean {
+  isVoice(): this is VoiceChannel {
     return 'bitrate' in this;
   }
 
