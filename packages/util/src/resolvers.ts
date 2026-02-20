@@ -55,6 +55,51 @@ export function parseEmoji(
 }
 
 /**
+ * Parse a user mention string or raw snowflake and extract the user ID.
+ * Supports: <@123456789012345678>, <@!123456789012345678>, or raw 17–19 digit snowflake.
+ * @param arg - String that may contain a user mention or raw user ID
+ * @returns The user ID if valid, otherwise null
+ * @example
+ * parseUserMention('<@!123456789012345678>'); // '123456789012345678'
+ * parseUserMention('<@123456789012345678>');  // '123456789012345678'
+ * parseUserMention('123456789012345678');     // '123456789012345678'
+ */
+export function parseUserMention(arg: string): string | null {
+  if (arg == null || typeof arg !== 'string') return null;
+  const trimmed = arg.trim();
+  if (trimmed.length === 0) return null;
+  const mentionMatch = trimmed.match(/^<@!?(\d{17,19})>$/);
+  if (mentionMatch) return mentionMatch[1];
+  if (/^\d{17,19}$/.test(trimmed)) return trimmed;
+  return null;
+}
+
+/**
+ * Parse prefix command content into command name and args.
+ * Returns null if content does not start with the prefix.
+ * @param content - Raw message content
+ * @param prefix - Command prefix (e.g. '!')
+ * @returns { command, args } or null
+ * @example
+ * parsePrefixCommand('!ping', '!');      // { command: 'ping', args: [] }
+ * parsePrefixCommand('!hello world', '!'); // { command: 'hello', args: ['world'] }
+ */
+export function parsePrefixCommand(
+  content: string,
+  prefix: string,
+): { command: string; args: string[] } | null {
+  if (content == null || typeof content !== 'string') return null;
+  const trimmed = content.trim();
+  if (!trimmed.startsWith(prefix)) return null;
+  const rest = trimmed.slice(prefix.length).trim();
+  if (rest.length === 0) return null;
+  const parts = rest.split(/\s+/);
+  const command = parts[0]?.toLowerCase() ?? '';
+  const args = parts.slice(1);
+  return { command, args };
+}
+
+/**
  * Parse a role mention string (e.g. <@&123456>) and extract the role ID.
  * @param arg - String that may contain a role mention
  * @returns The role ID if valid mention, otherwise null

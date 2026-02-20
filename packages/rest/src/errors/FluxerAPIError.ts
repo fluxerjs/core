@@ -13,4 +13,9 @@ export class FluxerAPIError extends Error {
     this.errors = body.errors;
     Object.setPrototypeOf(this, FluxerAPIError.prototype);
   }
+
+  /** True if the error is retryable (429 rate limit, 5xx server errors). */
+  get isRetryable(): boolean {
+    return this.statusCode === 429 || (this.statusCode >= 500 && this.statusCode < 600);
+  }
 }

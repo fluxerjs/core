@@ -8,8 +8,32 @@ import type { Guild } from '../structures/Guild.js';
  * Extends Collection so you can use .get(), .set(), .filter(), etc.
  */
 export class GuildManager extends Collection<string, Guild> {
+  private readonly maxSize: number;
+
   constructor(private readonly client: Client) {
     super();
+    this.maxSize = client.options?.cache?.guilds ?? 0;
+  }
+
+  override set(key: string, value: Guild): this {
+    if (this.maxSize > 0 && this.size >= this.maxSize && !this.has(key)) {
+      const firstKey = this.keys().next().value;
+      if (firstKey !== undefined) this.delete(firstKey);
+    }
+    return super.set(key, value);
+  }
+
+  /**
+   * Get a guild from cache or fetch from the API if not present.
+   * Convenience helper to avoid repeating `client.guilds.get(id) ?? (await client.guilds.fetch(id))`.
+   * @param guildId - Snowflake of the guild
+   * @returns The guild, or null if not found
+   * @example
+   * const guild = await client.guilds.resolve(message.guildId);
+   * if (guild) console.log(guild.name);
+   */
+  async resolve(guildId: string): Promise<Guild | null> {
+    return this.get(guildId) ?? this.fetch(guildId);
   }
 
   /**

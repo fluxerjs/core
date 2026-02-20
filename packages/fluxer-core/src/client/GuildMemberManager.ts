@@ -14,6 +14,20 @@ export class GuildMemberManager extends Collection<string, GuildMember> {
   }
 
   /**
+   * Get a guild member from cache or fetch from the API if not present.
+   * Convenience helper to avoid repeating `guild.members.get(userId) ?? (await guild.fetchMember(userId))`.
+   * @param userId - Snowflake of the user
+   * @returns The guild member
+   * @throws FluxerError with MEMBER_NOT_FOUND if user is not in the guild (404)
+   * @example
+   * const member = await guild.members.resolve(userId);
+   * console.log(member.displayName);
+   */
+  async resolve(userId: string): Promise<GuildMember> {
+    return this.get(userId) ?? this.guild.fetchMember(userId);
+  }
+
+  /**
    * The current bot user as a GuildMember in this guild.
    * Returns null if the bot's member is not cached or client.user is null.
    * Use fetchMe() to load the bot's member when not cached.

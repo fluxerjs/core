@@ -14,6 +14,7 @@
       @click="sidebarOpen = false" />
     <aside class="api-sidebar sidebar-base" :class="{ 'is-open': sidebarOpen }">
       <h3 class="sidebar-title">REST API</h3>
+      <CommunityCallout variant="sidebar" />
       <router-link :to="versionedPath('/guides')" class="api-guides-link">Guides →</router-link>
       <nav class="api-nav">
         <a
@@ -39,6 +40,7 @@
 import { ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import Footer from '../components/Footer.vue';
+import CommunityCallout from '../components/CommunityCallout.vue';
 import { API_CATEGORIES, API_CATEGORY_LABELS } from '../data/apiEndpoints';
 import { useVersionedPath } from '../composables/useVersionedPath';
 

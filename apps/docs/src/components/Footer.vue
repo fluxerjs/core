@@ -1,6 +1,13 @@
 <template>
   <footer class="footer">
     <div class="footer-content">
+      <a
+        href="https://fluxer.gg/fluxer-js"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="footer-community">
+        Join our Fluxer community →
+      </a>
       <nav class="footer-nav" aria-label="Footer navigation">
         <router-link to="/v/latest/guides" class="footer-link">Guides</router-link>
         <router-link to="/v/latest/docs" class="footer-link">Docs</router-link>
@@ -58,6 +65,18 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+}
+
+.footer-community {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-community:hover {
+  color: var(--accent-hover);
 }
 
 .footer-nav {

@@ -78,6 +78,23 @@ export class Message extends Base {
     return this.guildId ? (this.client.guilds.get(this.guildId) ?? null) : null;
   }
 
+  /**
+   * Resolve the channel (from cache or API). Use when you need the channel and it may not be cached.
+   * @returns The channel
+   * @throws FluxerError with CHANNEL_NOT_FOUND if the channel does not exist
+   */
+  async resolveChannel(): Promise<Channel> {
+    return this.client.channels.resolve(this.channelId);
+  }
+
+  /**
+   * Resolve the guild (from cache or API). Returns null for DMs.
+   * @returns The guild, or null if this is a DM or guild not found
+   */
+  async resolveGuild(): Promise<Guild | null> {
+    return this.guildId ? this.client.guilds.resolve(this.guildId) : null;
+  }
+
   /** @param data - API message from POST/PATCH /channels/{id}/messages or gateway MESSAGE_CREATE */
   constructor(client: Client, data: APIMessage) {
     super();
@@ -116,7 +133,7 @@ export class Message extends Base {
    * @param options - Text content or object with content, embeds, and/or files
    * @example
    * await message.send('Pong!');
-   * await message.send({ embeds: [embed.toJSON()] });
+   * await message.send({ embeds: [embed] }); // EmbedBuilder auto-converted
    * await message.send({ content: 'File', files: [{ name: 'data.txt', data }] });
    */
   async send(options: MessageSendOptions): Promise<Message> {
@@ -134,15 +151,18 @@ export class Message extends Base {
    * @param options - Text content or object with content and/or embeds
    * @example
    * await message.sendTo(logChannelId, 'User ' + message.author.username + ' said: ' + message.content);
-   * await message.sendTo(announceChannelId, { embeds: [embed.toJSON()] });
+   * await message.sendTo(announceChannelId, { embeds: [embed] });
    */
   async sendTo(channelId: string, options: MessageSendOptions): Promise<Message> {
     return this.client.channels.send(channelId, options);
   }
 
   /**
-   * Reply to this message.
+   * Reply to this message (shows as a reply in the client).
    * @param options - Text content or object with content, embeds, and/or files
+   * @example
+   * await message.reply('Pong!');
+   * await message.reply({ embeds: [embed] });
    */
   async reply(options: MessageSendOptions): Promise<Message> {
     const opts = typeof options === 'string' ? { content: options } : options;

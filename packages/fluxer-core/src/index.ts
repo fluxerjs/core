@@ -47,8 +47,8 @@ export { EmbedBuilder, MessagePayload, AttachmentBuilder } from '@fluxerjs/build
 // Re-export Routes, GatewayOpcodes, MessageAttachmentFlags for REST/gateway API calls
 export { Routes, GatewayOpcodes, MessageAttachmentFlags } from '@fluxerjs/types';
 
-// Re-export Tenor URL resolver for embeds
-export { resolveTenorToImageUrl } from '@fluxerjs/util';
+// Re-export Tenor URL resolver and mention parsers for embeds and moderation
+export { resolveTenorToImageUrl, parseUserMention, parsePrefixCommand } from '@fluxerjs/util';
 
 // Re-export permission helpers for role/member permission checks
 export {

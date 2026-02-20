@@ -128,7 +128,7 @@ export class Webhook extends Base {
    * @throws Error if token is not available
    * @example
    * await webhook.send('Hello!');
-   * await webhook.send({ embeds: [embed.toJSON()] });
+   * await webhook.send({ embeds: [embed] });
    * await webhook.send({ content: 'File attached', files: [{ name: 'data.txt', data: buffer }] });
    * const msg = await webhook.send({ content: 'Hi' }, true);
    */

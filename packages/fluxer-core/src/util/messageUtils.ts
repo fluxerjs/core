@@ -62,11 +62,14 @@ export interface MessageAttachmentMeta {
   flags?: number;
 }
 
-/** Options for sending a message (content, embeds, files). Used by Message.send, Channel.send, ChannelManager.send. */
+/** Options for sending a message (content, embeds, files). Used by Message.send, Channel.send, ChannelManager.send.
+ * EmbedBuilder instances are auto-converted to API format—no need to call .toJSON().
+ */
 export type MessageSendOptions =
   | string
   | {
       content?: string;
+      /** EmbedBuilder instances are auto-converted; raw APIEmbed also supported. */
       embeds?: (APIEmbed | EmbedBuilder)[];
       /** File attachments. When present, request uses multipart/form-data. */
       files?: MessageFileData[];

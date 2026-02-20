@@ -11,6 +11,90 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.2.0',
+    date: '2026-02-20',
+    sections: [
+      {
+        title: 'Docs site',
+        items: [
+          'Support banner — closable with × button; preference persisted in localStorage',
+          'Guides page — wider content area and improved layout to use more screen space',
+          'Join our Fluxer community — prominent callout on homepage, Guides sidebar, Docs sidebar, REST API sidebar, and Footer',
+          'CommunityCallout component with hero and sidebar variants linking to fluxer.gg/fluxer-js',
+        ],
+      },
+      {
+        title: 'SDK — Resolve helpers',
+        items: [
+          'client.channels.resolve(channelId) — get from cache or fetch; replaces common get(id) ?? fetch(id) pattern',
+          'client.guilds.resolve(guildId) — same pattern for guilds',
+          'guild.members.resolve(userId) — resolve member from cache or API',
+          'message.resolveChannel(), message.resolveGuild() — convenience for resolving message context',
+        ],
+      },
+      {
+        title: 'SDK — Cache & options',
+        items: [
+          'ClientOptions.cache — optional size limits (channels, guilds, users); FIFO eviction when exceeded',
+          'ChannelManager, GuildManager, UsersManager — respect cache limits when set; omit or 0 = unbounded',
+          'ClientOptions.suppressIntentWarning — silence warning when intents are set (Fluxer does not support intents yet)',
+        ],
+      },
+      {
+        title: 'SDK — Embeds',
+        items: [
+          'message.send(), message.sendTo(), channel.send(), webhook.send() — embeds accept EmbedBuilder directly; no need to call .toJSON()',
+        ],
+      },
+      {
+        title: 'SDK — Emoji',
+        items: [
+          'Client.resolveEmoji — Unicode emoji no longer double-encoded; fix for message.react() with shortcodes',
+        ],
+      },
+      {
+        title: 'SDK — Events & gateway',
+        items: [
+          'GUILD_CREATE, GUILD_UPDATE — use normalizeGuildPayload for Fluxer/Discord payload compatibility',
+          'GuildBanAdd — correct payload shape for GuildBan constructor',
+        ],
+      },
+      {
+        title: 'SDK — Bug fixes',
+        items: [
+          'guild.channels — now correctly populated when channels arrive via gateway (GUILD_CREATE, READY, CHANNEL_CREATE, CHANNEL_UPDATE) or client.channels.fetch(); previously guild.channels stayed empty while client.channels had them',
+        ],
+      },
+      {
+        title: '@fluxerjs/collection',
+        items: [
+          'findKey(predicate), some(predicate), every(predicate), partition(predicate)',
+          'clone(), concat(other), last(amount?), tap(fn), toString()',
+        ],
+      },
+      {
+        title: '@fluxerjs/rest',
+        items: [
+          'FluxerAPIError.isRetryable, HTTPError.isRetryable — true for 429 and 5xx; useful for retry logic',
+        ],
+      },
+    ],
+  },
+  {
+    version: '1.1.9',
+    date: '2026-02-19',
+    sections: [
+      {
+        title: 'SDK — Emoji shortcodes',
+        items: [
+          "Unicode emoji shortcodes now use Discord's official data (anyascii/discord-emojis) instead of emojilib — Fluxer Discord compatibility",
+          'message.react(:arrow_backward:), :flag_ad:, etc. resolve correctly per Discord naming',
+          'Removed emojilib dependency; generate script fetches from GitHub at build time',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.1.8',
     date: '2026-02-18',
     sections: [

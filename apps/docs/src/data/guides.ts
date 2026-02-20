@@ -10,12 +10,23 @@ export interface GuideTable {
   codeColumns?: number[];
 }
 
+/** Alternate code snippet shown in a tab alongside the main code block. */
+export interface GuideAlternateSnippet {
+  label: string;
+  code: string;
+  language?: 'javascript' | 'bash' | 'text';
+}
+
 export interface GuideSection {
   title?: string;
   description?: string;
   code?: string;
   language?: 'javascript' | 'bash' | 'text';
   table?: GuideTable;
+  /** Short tip shown in a callout (e.g. "You can use client.events for chainable handlers.") */
+  tip?: string;
+  /** Alternative code snippet; shown as a second tab (e.g. "client.events" vs "client.on"). */
+  alternateCode?: GuideAlternateSnippet;
 }
 
 export interface Guide {
@@ -55,7 +66,7 @@ FLUXER_BOT_TOKEN=your_token node your-bot.js`,
     id: 'basic-bot',
     slug: 'basic-bot',
     title: 'Basic Bot',
-    description: 'A minimal bot that responds to !ping with Pong.',
+    description: 'A minimal bot that responds to !ping with Pong. See examples/first-steps-bot.js for !hello, !avatar, !embed, !perms.',
     category: 'getting-started',
     sections: [
       {
@@ -72,6 +83,32 @@ client.on(Events.MessageCreate, async (message) => {
 
 await client.login(process.env.FLUXER_BOT_TOKEN);`,
         language: 'javascript',
+        tip: 'You can also use client.events for chainable, typed handlers with better autocomplete.',
+        alternateCode: {
+          label: 'client.events',
+          code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client
+  .events.Ready(() => console.log('Ready!'))
+  .events.MessageCreate(async (message) => {
+    if (message.content === '!ping') await message.reply('Pong!');
+  });
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        },
+      },
+      {
+        title: 'Common mistakes',
+        description:
+          'Always await message.reply() to avoid unhandled promise rejections. Use intents: 0 (Fluxer does not support intents yet). Set FLUXER_SUPPRESS_DEPRECATION=1 to silence deprecation warnings.',
+        code: `// ❌ BAD — unhandled rejection if reply fails
+message.reply('Pong!');
+
+// ✅ GOOD
+await message.reply('Pong!');`,
+        language: 'javascript',
       },
     ],
   },
@@ -80,7 +117,7 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
     slug: 'sending-without-reply',
     title: 'Sending Without Reply',
     description:
-      'Send messages to the same channel or to specific channels. Covers message.send(), message.sendTo(), client.channels.send(), and client.channels.fetch().',
+      'Send messages to the same channel or to specific channels. Covers message.send(), message.sendTo(), client.channels.send(), and client.channels.resolve().',
     category: 'sending-messages',
     sections: [
       {
@@ -125,7 +162,7 @@ client.on(Events.MessageCreate, async (message) => {
       )
       .setTimestamp();
 
-    await message.sendTo(LOG_CHANNEL_ID, { embeds: [embed.toJSON()] });
+    await message.sendTo(LOG_CHANNEL_ID, { embeds: [embed] });
     await message.send('Report logged.');
   }
 });
@@ -152,16 +189,16 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
         language: 'javascript',
       },
       {
-        title: 'client.channels.fetch() — get channel by ID',
+        title: 'client.channels.resolve() — get channel by ID',
         description:
-          'Fetch a channel by ID from the API (or cache). Use channel.isSendable() before sending. For sending when you only have an ID, prefer client.channels.send() which skips the fetch.',
+          'Resolve a channel by ID from cache or API. Use channel.isSendable() before sending. For sending when you only have an ID, prefer client.channels.send() which skips the fetch.',
         code: `import { Client } from '@fluxerjs/core';
 
 const client = new Client({ intents: 0 });
 await client.login(process.env.FLUXER_BOT_TOKEN);
 
 // Fetch channel (from API if not cached)
-const channel = await client.channels.fetch(channelId);
+const channel = await client.channels.resolve(channelId);
 if (channel?.isSendable()) {
   await channel.send('Hello!');
 }
@@ -180,7 +217,7 @@ if (message) {
 }
 
 // When you only have IDs (e.g. from sqlite)
-const ch = await client.channels.fetch(channelId);
+const ch = await client.channels.resolve(channelId);
 const msg = await ch?.messages?.fetch(messageId);
 if (msg) await msg.delete();
 
@@ -210,6 +247,18 @@ if (updated) console.log(updated.content);`,
         language: 'javascript',
       },
       {
+        title: 'Typing indicator',
+        description:
+          'Use channel.sendTyping() before a slow operation so users see "Bot is typing...". Lasts ~10 seconds.',
+        code: `const channel = message.channel ?? (await message.resolveChannel());
+if (channel?.isSendable?.()) {
+  await channel.sendTyping();
+  await slowOperation(); // e.g. fetch external API
+  await message.reply('Done!');
+}`,
+        language: 'javascript',
+      },
+      {
         title: 'Quick reference',
         code: `// Same channel, no reply
 await message.send('Pong!');
@@ -235,7 +284,7 @@ await client.channels.send(channelId, 'New update available!');`,
       {
         title: 'Overview',
         description:
-          'Use EmbedBuilder to create rich embeds. Call toJSON() when passing to reply(), send(), or edit(). An embed must have at least one of: title, description, fields, or image/thumbnail. A description-only embed (no title) is valid.',
+          'Use EmbedBuilder to create rich embeds. EmbedBuilder instances are auto-converted—no need to call .toJSON() when passing to reply(), send(), or edit(). An embed must have at least one of: title, description, fields, or image/thumbnail. A description-only embed (no title) is valid.',
       },
       {
         title: 'Basic embed',
@@ -257,7 +306,7 @@ client.on(Events.MessageCreate, async (message) => {
       .setFooter({ text: 'Powered by Fluxer.js' })
       .setTimestamp();
 
-    await message.reply({ embeds: [embed.toJSON()] });
+    await message.reply({ embeds: [embed] });
   }
 });
 
@@ -358,8 +407,8 @@ embed.setAudio({
         description: 'Messages can include up to 10 embeds. Pass an array to embeds.',
         code: `await message.reply({
   embeds: [
-    new EmbedBuilder().setTitle('First').setColor(0x5865f2).toJSON(),
-    new EmbedBuilder().setTitle('Second').setColor(0x57f287).toJSON(),
+    new EmbedBuilder().setTitle('First').setColor(0x5865f2),
+    new EmbedBuilder().setTitle('Second').setColor(0x57f287),
   ],
 });`,
         language: 'javascript',
@@ -373,7 +422,7 @@ if (existing) {
   const edited = EmbedBuilder.from(existing)
     .setTitle('Updated title')
     .setColor(0x57f287);
-  await message.edit({ embeds: [edited.toJSON()] });
+  await message.edit({ embeds: [edited] });
 }`,
         language: 'javascript',
       },
@@ -418,7 +467,7 @@ client.on(Events.MessageCreate, async (message) => {
       .setColor(0x5865f2)
       .setTimestamp();
 
-    const reply = await message.reply({ embeds: [embed.toJSON()] });
+    const reply = await message.reply({ embeds: [embed] });
 
     // Simulate loading, then update the embed
     await new Promise((r) => setTimeout(r, 2000));
@@ -441,7 +490,7 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
         description: 'You can update both content and embeds in a single edit call.',
         code: `await message.edit({
   content: 'Updated text',
-  embeds: [new EmbedBuilder().setTitle('Updated embed').setColor(0x5865f2).toJSON()],
+  embeds: [new EmbedBuilder().setTitle('Updated embed').setColor(0x5865f2)],
 });`,
         language: 'javascript',
       },
@@ -477,7 +526,7 @@ client.on(Events.MessageCreate, async (message) => {
       .setThumbnail('https://placehold.co/100x100/57f287/white?text=Thumb')
       .setColor(0x5865f2);
 
-    await message.reply({ embeds: [embed.toJSON()] });
+    await message.reply({ embeds: [embed] });
   }
 });`,
         language: 'javascript',
@@ -586,7 +635,7 @@ if (media) {
     .setDescription('GIF URL + IS_ANIMATED flag')
     .setImage(media)
     .setColor(0x5865f2);
-  await message.reply({ embeds: [embed.toJSON()] });
+  await message.reply({ embeds: [embed] });
 }`,
         language: 'javascript',
       },
@@ -752,7 +801,7 @@ client.on(Events.MessageCreate, async (message) => {
       .setThumbnail(avatarUrl)
       .setColor(user.avatarColor ?? 0x5865f2);
     if (bannerUrl) embed.setImage(bannerUrl);
-    await message.reply({ embeds: [embed.toJSON()] });
+    await message.reply({ embeds: [embed] });
   }
 });`,
         language: 'javascript',
@@ -909,8 +958,7 @@ await webhook.send({
     new EmbedBuilder()
       .setTitle('Webhook Message')
       .setColor(0x5865f2)
-      .setTimestamp()
-      .toJSON(),
+      .setTimestamp(),
   ],
   username: 'Custom Name',
   avatar_url: 'https://example.com/avatar.png',
@@ -930,8 +978,7 @@ await webhook.send({
   embeds: [
     new EmbedBuilder()
       .setDescription('Description-only embed works.')
-      .setColor(0x5865f2)
-      .toJSON(),
+      .setColor(0x5865f2),
   ],
 });`,
         language: 'javascript',
@@ -1015,8 +1062,7 @@ await webhook.send({
     new EmbedBuilder()
       .setDescription('This embed has no title. Description-only works fine.')
       .setColor(0x5865f2)
-      .setTimestamp()
-      .toJSON(),
+      .setTimestamp(),
   ],
 });`,
         language: 'javascript',
@@ -1057,8 +1103,7 @@ await webhook.send({
     new EmbedBuilder()
       .setDescription('Deploy succeeded. See attachment for logs.')
       .setColor(0x57f287)
-      .setTimestamp()
-      .toJSON(),
+      .setTimestamp(),
   ],
   files: [{ name: 'deploy.log', data: readFileSync('deploy.log') }],
   username: 'CI Bot',
@@ -1199,6 +1244,19 @@ client.on(Events.MessageCreate, async (message) => {
 
 await client.login(process.env.FLUXER_BOT_TOKEN);`,
         language: 'javascript',
+        tip: 'client.events.X(handler) offers the same API with chaining and better autocomplete.',
+        alternateCode: {
+          label: 'client.events',
+          code: `import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ intents: 0 });
+
+client
+  .events.Ready(() => console.log('Bot is ready!'))
+  .events.MessageCreate(async (message) => console.log(message.content));
+
+await client.login(process.env.FLUXER_BOT_TOKEN);`,
+        },
       },
       {
         title: 'Common Events',
@@ -1429,7 +1487,7 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
 const client = new Client({ intents: 0 });
 
 async function getMemberPerms(message) {
-  const guild = message.guild ?? await message.client.guilds.fetch(message.guildId);
+  const guild = message.guild ?? await message.client.guilds.resolve(message.guildId);
   if (!guild) return null;
   const member = guild.members.get(message.author.id) ?? await guild.fetchMember(message.author.id);
   return member?.permissions ?? null;
@@ -1455,7 +1513,7 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
         description:
           "Use guild.members.me to get the bot's GuildMember. Returns null if not cached. Use guild.members.fetchMe() to load it. Discord.js parity.",
         code: `// Check if the bot can ban members in this guild
-const guild = message.guild ?? await message.client.guilds.fetch(message.guildId);
+const guild = message.guild ?? await message.client.guilds.resolve(message.guildId);
 const me = guild?.members.me ?? (guild ? await guild.members.fetchMe() : null);
 if (me?.permissions.has(PermissionFlags.BanMembers)) {
   await message.reply('I have Ban Members permission.');
@@ -1466,7 +1524,7 @@ if (me?.permissions.has(PermissionFlags.BanMembers)) {
         title: "Editing the bot's guild profile (nickname)",
         description:
           "Use guild.members.me.edit({ nick }) to change the bot's nickname in that guild. Pass nick: null to clear and show the username. Requires Change Nickname permission (or bot has Manage Nicknames). See examples/ping-bot.js for a !setnick command.",
-        code: `const guild = message.guild ?? await client.guilds.fetch(message.guildId);
+        code: `const guild = message.guild ?? await client.guilds.resolve(message.guildId);
 const me = guild?.members.me ?? (guild ? await guild.members.fetchMe() : null);
 if (me) {
   await me.edit({ nick: 'My Custom Nick' });
@@ -1551,7 +1609,7 @@ await message.reply(\`Your permissions: \${names.join(', ')}\`);`,
         title: 'Ban a member',
         description:
           'guild.ban(userId, options) bans a user. Pass reason for the audit log. Requires BanMembers permission.',
-        code: `const userId = target?.match(/^<@!?(\\d+)>$/)?.[1] ?? target;
+        code: `const userId = parseUserMention(target);
 if (userId) {
   await guild.ban(userId, { reason: rest.join(' ') || undefined });
   await message.reply(\`Banned <@\${userId}>.\`);
@@ -1562,7 +1620,7 @@ if (userId) {
         title: 'Kick a member',
         description:
           'guild.kick(userId, options) kicks a user from the guild. Pass reason for the audit log. Requires KickMembers permission.',
-        code: `const userId = target?.match(/^<@!?(\\d+)>$/)?.[1] ?? target;
+        code: `const userId = parseUserMention(target);
 if (userId) {
   await guild.kick(userId, { reason: rest.join(' ') || undefined });
   await message.reply(\`Kicked <@\${userId}>.\`);
@@ -1572,7 +1630,7 @@ if (userId) {
       {
         title: 'Unban a user',
         description: 'guild.unban(userId, reason?) removes a ban. Requires BanMembers permission.',
-        code: `const userId = target?.match(/^<@!?(\\d+)>$/)?.[1] ?? target;
+        code: `const userId = parseUserMention(target);
 if (userId) {
   await guild.unban(userId, rest.join(' ') || undefined);
   await message.reply(\`Unbanned <@\${userId}>.\`);
@@ -1583,13 +1641,13 @@ if (userId) {
         title: 'Full moderation example',
         description:
           'See examples/moderation-bot.js for a complete bot with !ban, !kick, !unban, and !perms commands.',
-        code: `import { Client, Events, PermissionFlags } from '@fluxerjs/core';
+        code: `import { Client, Events, PermissionFlags, parseUserMention } from '@fluxerjs/core';
 
 const PREFIX = '!';
 const client = new Client({ intents: 0 });
 
 async function getModeratorPerms(message) {
-  const guild = message.guild ?? await message.client.guilds.fetch(message.guildId);
+  const guild = message.guild ?? await message.client.guilds.resolve(message.guildId);
   if (!guild) return null;
   const member = guild.members.get(message.author.id);
   const resolved = member ?? await guild.fetchMember(message.author.id);
@@ -1602,18 +1660,18 @@ client.on(Events.MessageCreate, async (message) => {
   const perms = await getModeratorPerms(message);
   if (!perms) return;
 
-  const guild = message.guild ?? await message.client.guilds.fetch(message.guildId);
+  const guild = message.guild ?? await message.client.guilds.resolve(message.guildId);
   if (!guild) return;
 
   if (cmd === 'ban' && (perms.has(PermissionFlags.BanMembers) || perms.has(PermissionFlags.Administrator))) {
-    const userId = target?.match(/^<@!?(\\d+)>$/)?.[1] ?? target;
+    const userId = parseUserMention(target);
     if (userId) {
       await guild.ban(userId, { reason: rest.join(' ') || undefined });
       await message.reply(\`Banned <@\${userId}>.\`);
     }
   }
   if (cmd === 'kick' && (perms.has(PermissionFlags.KickMembers) || perms.has(PermissionFlags.Administrator))) {
-    const userId = target?.match(/^<@!?(\\d+)>$/)?.[1] ?? target;
+    const userId = parseUserMention(target);
     if (userId) {
       await guild.kick(userId, { reason: rest.join(' ') || undefined });
       await message.reply(\`Kicked <@\${userId}>.\`);
@@ -1649,7 +1707,7 @@ const client = new Client({ intents: 0 });
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.content === '!createrole' && message.guildId) {
-    const guild = client.guilds.get(message.guildId) ?? await client.guilds.fetch(message.guildId);
+    const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);
     if (!guild) return;
 
     const role = await guild.createRole({
@@ -1809,7 +1867,7 @@ export const QUICK_LINK_SLUGS: string[] = [
   'attachments-by-url',
   'permissions',
   'moderation',
-  'slash-commands',
+  'prefix-commands',
 ];
 
 export function getCategoryLabel(cat?: string): string {

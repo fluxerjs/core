@@ -14,6 +14,7 @@
       @click="sidebarOpen = false" />
     <aside class="guides-sidebar sidebar-base" :class="{ 'is-open': sidebarOpen }">
       <h3 class="sidebar-title">Guides</h3>
+      <CommunityCallout variant="sidebar" />
       <router-link :to="versionedPath('/api')" class="guides-rest-api-link">REST API →</router-link>
       <div class="sidebar-filter-wrap">
         <input
@@ -53,6 +54,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import Footer from '../components/Footer.vue';
+import CommunityCallout from '../components/CommunityCallout.vue';
 import { getCategoryLabel, CATEGORY_ORDER } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
@@ -182,8 +184,9 @@ const filteredGroupedGuides = computed(() => {
 
 .guides-content-scroll {
   flex: 1;
-  padding: 2rem 2.5rem;
-  max-width: 1280px;
+  padding: 1.5rem 2rem;
+  max-width: 1600px;
+  width: 100%;
   min-width: 0;
 }
 

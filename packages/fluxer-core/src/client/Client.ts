@@ -32,7 +32,6 @@ import type {
 import type {
   APIChannel,
   APIGuild,
-  APIRole,
   APIUser,
   APIUserPartial,
   APIInstance,
@@ -206,11 +205,11 @@ export class Client extends EventEmitter {
       }
       return formatEmoji(parsed);
     }
-    // Unicode emoji: name has non-ASCII or isn't a custom shortcode — return encoded, skip guild lookup
-    if (!/^\w+$/.test(parsed.name)) return encodeURIComponent(parsed.name);
-    // Known Unicode shortcode (e.g. :red_square:, :light_blue_heart:) — resolve and return encoded
+    // Unicode emoji: name has non-ASCII or isn't a custom shortcode — return raw, route will encode
+    if (!/^\w+$/.test(parsed.name)) return parsed.name;
+    // Known Unicode shortcode (e.g. :red_square:, :light_blue_heart:) — resolve and return raw unicode
     const unicodeFromShortcode = getUnicodeFromShortcode(parsed.name);
-    if (unicodeFromShortcode) return encodeURIComponent(unicodeFromShortcode);
+    if (unicodeFromShortcode) return unicodeFromShortcode;
     if (guildId) {
       const emojis = await this.rest.get(Routes.guildEmojis(guildId));
       const list = (Array.isArray(emojis) ? emojis : Object.values(emojis ?? {})) as Array<{
@@ -229,7 +228,7 @@ export class Client extends EventEmitter {
         `Custom emoji ":${parsed.name}:" requires guild context. Use message.react() in a guild channel, or pass guildId to client.resolveEmoji().`,
       );
     }
-    return encodeURIComponent(parsed.name);
+    return parsed.name;
   }
 
   /**
@@ -264,9 +263,9 @@ export class Client extends EventEmitter {
    * @param messageId - Snowflake of the message
    * @returns The message
    * @throws FluxerError with MESSAGE_NOT_FOUND if the message does not exist
-   * @deprecated Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.fetch(channelId))?.messages?.fetch(messageId)
+   * @deprecated Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.resolve(channelId))?.messages?.fetch(messageId)
    * @example
-   * const channel = await client.channels.fetch(channelId);
+   * const channel = await client.channels.resolve(channelId);
    * const message = await channel?.messages?.fetch(messageId);
    */
   async fetchMessage(
@@ -275,7 +274,7 @@ export class Client extends EventEmitter {
   ): Promise<import('../structures/Message.js').Message> {
     emitDeprecationWarning(
       'Client.fetchMessage()',
-      'Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.fetch(channelId))?.messages?.fetch(messageId)',
+      'Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.resolve(channelId))?.messages?.fetch(messageId)',
     );
     return this.channels.fetchMessage(channelId, messageId);
   }
@@ -345,12 +344,14 @@ export class Client extends EventEmitter {
     this.rest.setToken(token);
     let intents = this.options.intents ?? 0;
     if (intents !== 0) {
-      if (typeof process !== 'undefined' && process.emitWarning) {
-        process.emitWarning('Fluxer does not support intents yet. Value has been set to 0.', {
-          type: 'FluxerIntents',
-        });
-      } else {
-        console.warn('Fluxer does not support intents yet. Value has been set to 0.');
+      if (!this.options.suppressIntentWarning) {
+        if (typeof process !== 'undefined' && process.emitWarning) {
+          process.emitWarning('Fluxer does not support intents yet. Value has been set to 0.', {
+            type: 'FluxerIntents',
+          });
+        } else {
+          console.warn('Fluxer does not support intents yet. Value has been set to 0.');
+        }
       }
       intents = 0;
     }
@@ -378,16 +379,10 @@ export class Client extends EventEmitter {
         const { Guild } = await import('../structures/Guild.js');
         const { Channel } = await import('../structures/Channel.js');
         this.user = new ClientUser(this, data.user);
+        const { normalizeGuildPayload } = await import('../util/guildUtils.js');
         for (const g of data.guilds ?? []) {
-          // Fluxer gateway sends GuildReadyData: { id, properties: { owner_id, ... }, channels, roles }
-          // Normalize to APIGuild shape so owner_id is available for permission checks
-          const guildData: APIGuild & { roles?: APIRole[] } =
-            g && typeof g === 'object' && 'properties' in g && g.properties
-              ? ({
-                  ...(g.properties as Record<string, unknown>),
-                  roles: (g as { roles?: APIRole[] }).roles,
-                } as APIGuild & { roles?: APIRole[] })
-              : (g as APIGuild);
+          const guildData = normalizeGuildPayload(g as unknown);
+          if (!guildData) continue;
           const guild = new Guild(this, guildData);
           this.guilds.set(guild.id, guild);
           const withCh = g as APIGuild & {
@@ -396,7 +391,10 @@ export class Client extends EventEmitter {
           };
           for (const ch of withCh.channels ?? []) {
             const channel = Channel.from(this, ch);
-            if (channel) this.channels.set(channel.id, channel);
+            if (channel) {
+              this.channels.set(channel.id, channel);
+              guild.channels.set(channel.id, channel as import('../structures/Channel.js').GuildChannel);
+            }
           }
           if (withCh.voice_states?.length) {
             this.emit(Events.VoiceStatesSync, {
@@ -432,6 +430,18 @@ export class Client extends EventEmitter {
   /** Returns true if the client has received Ready and `user` is set. */
   isReady(): this is Client & { user: NonNullable<Client['user']> } {
     return this.readyAt !== null && this.user !== null;
+  }
+
+  /**
+   * Throws if the client is not ready. Use before accessing client.user or other post-ready state.
+   * @throws FluxerError with CLIENT_NOT_READY if client has not received Ready yet
+   */
+  assertReady(): asserts this is Client & { user: NonNullable<Client['user']> } {
+    if (!this.isReady()) {
+      throw new FluxerError('Client is not ready yet. Wait for the Ready event before accessing client.user.', {
+        code: ErrorCodes.ClientNotReady,
+      });
+    }
   }
 
   static get Routes(): typeof Routes {

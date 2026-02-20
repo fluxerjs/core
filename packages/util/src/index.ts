@@ -22,7 +22,14 @@ export {
   type UserFlagsResolvable,
 } from './UserFlagsBitField.js';
 export { formatColor, escapeMarkdown, formatTimestamp, truncate } from './formatters.js';
-export { resolveColor, parseEmoji, formatEmoji, parseRoleMention } from './resolvers.js';
+export {
+  resolveColor,
+  parseEmoji,
+  formatEmoji,
+  parseUserMention,
+  parseRoleMention,
+  parsePrefixCommand,
+} from './resolvers.js';
 export { getUnicodeFromShortcode } from './emojiShortcodes.js';
 export { resolveTenorToImageUrl, type TenorMediaResult } from './tenorUtils.js';
 export { emitDeprecationWarning } from './deprecation.js';

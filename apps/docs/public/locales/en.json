@@ -1,0 +1,50 @@
+{
+  "common": {
+    "guides": "Guides",
+    "restApi": "REST API",
+    "docs": "Docs",
+    "changelog": "Changelog",
+    "github": "GitHub",
+    "fluxer": "Fluxer",
+    "filter": "Filter",
+    "filterGuides": "Search guides...",
+    "loading": "Loading...",
+    "allPackages": "All packages",
+    "classes": "Classes",
+    "interfaces": "Interfaces",
+    "enums": "Enums",
+    "skipToContent": "Skip to main content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "toggleNav": "Toggle navigation menu",
+    "onThisPage": "On this page",
+    "guideNotFound": "Guide not found.",
+    "backToGuides": "Back to guides",
+    "joinCommunity": "Join our Fluxer community",
+    "joinCommunityAction": "Join our Fluxer community →",
+    "selectLanguage": "Select language"
+  },
+  "home": {
+    "title": "Fluxer.js",
+    "lead": "SDK for building bots on Fluxer.",
+    "getStarted": "Get started — your first bot"
+  },
+  "guidesIndex": {
+    "title": "Guides",
+    "lead": "Learn how to build bots with Fluxer.js. Pick a guide to get started.",
+    "quickLinks": "Quick links:"
+  },
+  "footer": {
+    "community": "Join our Fluxer community →",
+    "sdkForBots": "Fluxer.js v{version} · SDK for Fluxer bots"
+  },
+  "categories": {
+    "getting-started": "Getting Started",
+    "webhooks": "Webhooks",
+    "voice": "Voice",
+    "sending-messages": "Sending Messages",
+    "media": "Media",
+    "events": "Events",
+    "other": "Other"
+  }
+}

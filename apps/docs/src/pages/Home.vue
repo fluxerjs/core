@@ -3,9 +3,12 @@
     <div class="hero">
       <h1>Fluxer.js</h1>
       <p class="lead">SDK for building bots on Fluxer.</p>
-      <router-link to="/v/latest/guides/basic-bot" class="cta-link"
-        >Get started — your first bot</router-link
-      >
+      <div class="hero-ctas">
+        <router-link to="/v/latest/guides/basic-bot" class="cta-link"
+          >Get started — your first bot</router-link
+        >
+        <CommunityCallout variant="hero" />
+      </div>
       <nav class="hero-nav">
         <router-link to="/v/latest/guides" class="nav-link">Guides</router-link>
         <router-link to="/v/latest/api" class="nav-link">REST API</router-link>
@@ -30,7 +33,9 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import CommunityCallout from '../components/CommunityCallout.vue';
+</script>
 
 <style scoped>
 .home {
@@ -58,12 +63,13 @@
 }
 
 .cta-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   font-size: 1rem;
   font-weight: 600;
+  line-height: 1;
   color: var(--accent);
   padding: 0.5rem 1rem;
-  margin-bottom: 2rem;
   border: 2px solid var(--accent);
   border-radius: var(--radius);
   text-decoration: none;
@@ -75,6 +81,15 @@
 .cta-link:hover {
   background: var(--accent);
   color: var(--bg-primary);
+}
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 2rem;
 }
 
 .hero-nav {

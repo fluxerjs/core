@@ -26,8 +26,19 @@ export interface FetchedUserWithProfile {
  * Extends Collection so you can use .get(), .set(), .filter(), etc.
  */
 export class UsersManager extends Collection<string, User> {
+  private readonly maxSize: number;
+
   constructor(private readonly client: Client) {
     super();
+    this.maxSize = client.options?.cache?.users ?? 0;
+  }
+
+  override set(key: string, value: User): this {
+    if (this.maxSize > 0 && this.size >= this.maxSize && !this.has(key)) {
+      const firstKey = this.keys().next().value;
+      if (firstKey !== undefined) this.delete(firstKey);
+    }
+    return super.set(key, value);
   }
 
   /**

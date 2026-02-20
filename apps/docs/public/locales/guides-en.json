@@ -1,0 +1,512 @@
+{
+  "installation": {
+    "title": "Installation",
+    "description": "Install the package and configure your bot token.",
+    "sections": [
+      {
+        "title": null,
+        "description": null
+      }
+    ]
+  },
+  "basic-bot": {
+    "title": "Basic Bot",
+    "description": "A minimal bot that responds to !ping with Pong.",
+    "sections": [
+      {
+        "title": null,
+        "description": null
+      }
+    ]
+  },
+  "sending-without-reply": {
+    "title": "Sending Without Reply",
+    "description": "Send messages to the same channel or to specific channels. Covers message.send(), message.sendTo(), client.channels.send(), and client.channels.fetch().",
+    "sections": [
+      {
+        "title": "message.send() vs message.reply()",
+        "description": "message.reply() sends a message that references another message (shows as a \"reply\" in Discord). message.send() sends to the same channel with no reference—a regular standalone message."
+      },
+      {
+        "title": "Sending to the same channel",
+        "description": "Use message.send() when you want to post in the channel without replying. Same signature as reply(): pass a string or object with content and/or embeds."
+      },
+      {
+        "title": "Sending to a specific channel (e.g. logging)",
+        "description": "Use message.sendTo(channelId, payload) to send to another channel—handy for logging, announcements, or forwarding. You only need the target channel ID."
+      },
+      {
+        "title": "client.channels.send() — send by channel ID",
+        "description": "Use client.channels.send(channelId, payload) when you have a channel ID. Works even if the channel is not cached. No need to fetch first when you only need to send."
+      },
+      {
+        "title": "client.channels.fetch() — get channel by ID",
+        "description": "Fetch a channel by ID from the API (or cache). Use channel.isSendable() before sending. For sending when you only have an ID, prefer client.channels.send() which skips the fetch."
+      },
+      {
+        "title": "fetch message by id",
+        "description": "Use channel.messages.fetch(messageId) when you have the channel. For IDs-only, fetch the channel first."
+      },
+      {
+        "title": "message.channel and message.guild",
+        "description": "Access the channel or guild from a message. Resolved from cache; null if not cached (e.g. DM channel)."
+      },
+      {
+        "title": "Quick reference",
+        "description": null
+      }
+    ]
+  },
+  "embeds": {
+    "title": "Embeds",
+    "description": "Complete reference for EmbedBuilder: title, description, author, footer, fields, color, media, and more.",
+    "sections": [
+      {
+        "title": "Overview",
+        "description": "Use EmbedBuilder to create rich embeds. Call toJSON() when passing to reply(), send(), or edit(). An embed must have at least one of: title, description, fields, or image/thumbnail. A description-only embed (no title) is valid."
+      },
+      {
+        "title": "Basic embed",
+        "description": "Minimal embed with title, description, color, fields, footer, and timestamp."
+      },
+      {
+        "title": "Title, Description, and URL",
+        "description": "setTitle() and setDescription() accept strings (max 256 and 4096 chars). setURL() makes the title a clickable link."
+      },
+      {
+        "title": "Color",
+        "description": "setColor() accepts: number (0x5865f2), hex string (\"#5865f2\"), or [r, g, b] array."
+      },
+      {
+        "title": "Author",
+        "description": "setAuthor() adds a header line with name. Optional: iconURL, url."
+      },
+      {
+        "title": "Footer",
+        "description": "setFooter() adds text at the bottom. Optional: iconURL."
+      },
+      {
+        "title": "Timestamp",
+        "description": "setTimestamp() shows a date. Omit or pass null for current time. Pass Date or number (ms) for a specific time."
+      },
+      {
+        "title": "Fields",
+        "description": "addFields() adds name/value pairs. Max 25 fields. Use inline: true for side-by-side layout. spliceFields() to insert/remove."
+      },
+      {
+        "title": "Image and Thumbnail",
+        "description": "setImage() adds a large image. setThumbnail() adds a small image (e.g. top-right). Pass a URL string or EmbedMediaOptions (url, width, height, content_type, etc)."
+      },
+      {
+        "title": "Video and Audio",
+        "description": "setVideo() and setAudio() add video/audio to embeds (Fluxer supports these). Pass URL or EmbedMediaOptions. Include a title when using video. See Embed Media guide for full examples."
+      },
+      {
+        "title": "Multiple embeds",
+        "description": "Messages can include up to 10 embeds. Pass an array to embeds."
+      },
+      {
+        "title": "Load from existing embed",
+        "description": "EmbedBuilder.from() creates a builder from an API embed (e.g. from a received message). Edit and toJSON() to send."
+      },
+      {
+        "title": "Limits",
+        "description": "Title ≤256, description ≤4096, field name ≤256, field value ≤1024, footer ≤2048, author name ≤256. Max 25 fields. Combined title+description+fields+footer ≤6000 chars."
+      }
+    ]
+  },
+  "editing-embeds": {
+    "title": "Editing Embeds",
+    "description": "Edit existing message embeds with message.edit().",
+    "sections": [
+      {
+        "title": "Overview",
+        "description": "The Fluxer API supports editing existing messages via PATCH. You can update the message content, embeds, or both. Only the message author (or admins with proper permissions) can edit messages."
+      },
+      {
+        "title": "Edit Content",
+        "description": "Update the text content of a message you sent."
+      },
+      {
+        "title": "Edit Embeds",
+        "description": "Replace or update embeds on an existing message. Pass an array of EmbedBuilder instances or APIEmbed objects."
+      },
+      {
+        "title": "Edit Content and Embeds Together",
+        "description": "You can update both content and embeds in a single edit call."
+      },
+      {
+        "title": "API Reference",
+        "description": "The edit endpoint is PATCH /channels/{channel_id}/messages/{message_id}. See openapi.json for the full request body schema. The SDK Message.edit() accepts { content?: string; embeds?: (APIEmbed | EmbedBuilder)[] }."
+      }
+    ]
+  },
+  "embed-media": {
+    "title": "Embed Media",
+    "description": "Add images, thumbnails, video, and audio to embeds with EmbedBuilder and EmbedMediaOptions.",
+    "sections": [
+      {
+        "title": "Images and Thumbnails",
+        "description": "Use setImage() and setThumbnail() with a URL string, or pass full EmbedMediaOptions for width, height, content_type, and other metadata."
+      },
+      {
+        "title": "Image with Full Media Options",
+        "description": "Pass an object to setImage or setThumbnail with url, width, height, content_type, description, placeholder, duration, and flags. Use EmbedMediaFlags.IS_ANIMATED for animated GIFs."
+      },
+      {
+        "title": "GIFs in embeds",
+        "description": "Embeds require GIF format for animated images (not MP4). Add EmbedMediaFlags.IS_ANIMATED to the flags field. For Tenor URLs, use resolveTenorToImageUrl() to get the GIF URL and flag — see the GIFs (Tenor) guide."
+      },
+      {
+        "title": "Video in Embeds",
+        "description": "Use setVideo() to add video to a rich embed. Fluxer supports the .video field. Include a title when using video. Pass a URL or EmbedMediaOptions (e.g. duration for progress bars)."
+      },
+      {
+        "title": "Audio in Embeds",
+        "description": "Use setAudio() to add audio to an embed. Pass a URL or EmbedMediaOptions (e.g. duration, content_type)."
+      }
+    ]
+  },
+  "gifs": {
+    "title": "GIFs (Tenor)",
+    "description": "Send Tenor GIFs as content (gifv) or in embeds using resolveTenorToImageUrl() for GIF URLs.",
+    "sections": [
+      {
+        "title": "How Tenor GIFs Work",
+        "description": "Tenor embeds are created by the Fluxer unfurler when you send a Tenor URL as message content. Do not use custom embeds for Tenor GIFs—the API turns the URL into a type: \"gifv\" embed."
+      },
+      {
+        "title": "Send a Tenor GIF",
+        "description": "Send the Tenor URL as content. No embeds needed. The unfurler detects the URL and creates the gifv embed."
+      },
+      {
+        "title": "Tenor URL in an embed",
+        "description": "Tenor page URLs do not work as setImage() URLs. Use resolveTenorToImageUrl() to fetch the Tenor page or oEmbed, derive the GIF URL (embeds require GIF, not MP4), and return { url, flags: IS_ANIMATED }. For full gifv embeds, send the Tenor URL as content."
+      },
+      {
+        "title": "Important",
+        "description": "Custom embeds cannot create gifv embeds. For full animated gifv, send the Tenor URL as content. resolveTenorToImageUrl() returns GIF URL + IS_ANIMATED (derived from media.tenor.com path)."
+      }
+    ]
+  },
+  "attachments": {
+    "title": "File Attachments",
+    "description": "Upload files with messages and set attachment metadata (title, description, flags for spoiler, animated, explicit).",
+    "sections": [
+      {
+        "title": "Basic File Upload",
+        "description": "Pass files in your send options. Each file needs a name and data (Buffer, Blob, Uint8Array). Use with message.reply(), message.send(), or channel.send()."
+      },
+      {
+        "title": "Attachment Metadata",
+        "description": "When using files, you can pass attachments to set metadata per file: filename, title, description, and flags. The id in each attachment matches the file index (0, 1, 2...)."
+      },
+      {
+        "title": "Attachment Flags",
+        "description": "MessageAttachmentFlags: IS_SPOILER (8) blurs until clicked, CONTAINS_EXPLICIT_MEDIA (16) for explicit content, IS_ANIMATED (32) for GIFs and animated WebP. Combine with bitwise OR."
+      }
+    ]
+  },
+  "attachments-by-url": {
+    "title": "File Attachments by URL",
+    "description": "Attach files by passing a URL instead of buffer data. The SDK fetches the URL and uploads it as a normal attachment.",
+    "sections": [
+      {
+        "title": "Using a URL",
+        "description": "Pass { name, url } in the files array. The SDK fetches the URL (30s timeout), validates it with URL.canParse(), and uploads the result. Works with channel.send(), message.reply(), message.send(), webhook.send(), and client.channels.send()."
+      },
+      {
+        "title": "Mixing buffers and URLs",
+        "description": "You can combine file data and URLs in the same message. Order is preserved; attachments metadata id matches the file index."
+      },
+      {
+        "title": "Optional filename override",
+        "description": "Use filename to control the displayed attachment name independently from the local name used during upload."
+      }
+    ]
+  },
+  "profile-urls": {
+    "title": "Profile URLs",
+    "description": "Get avatar, banner, and other CDN URLs easily with User/Webhook/GuildMember methods or standalone CDN helpers for raw API data.",
+    "sections": [
+      {
+        "title": "User avatar and banner",
+        "description": "When you have a User object (e.g. message.author), use avatarURL(), displayAvatarURL(), and bannerURL(). These handle animated avatars (a_ prefix) and default fallbacks."
+      },
+      {
+        "title": "Raw API data: CDN helpers",
+        "description": "When you have raw API data (e.g. from client.rest.get(Routes.user(id))), use the standalone CDN helpers. They work with id + hash and support size and extension options."
+      },
+      {
+        "title": "Guild member and webhook avatars",
+        "description": "GuildMember has displayAvatarURL() (guild avatar or fallback to user) and bannerURL(). Webhook has avatarURL()."
+      }
+    ]
+  },
+  "reactions": {
+    "title": "Reactions",
+    "description": "Add, remove, and listen for message reactions with Message.react(), removeReaction(), and reaction events.",
+    "sections": [
+      {
+        "title": "Add a Reaction",
+        "description": "Use message.react() to add an emoji reaction as the bot. Pass a unicode emoji string or custom emoji { name, id }."
+      },
+      {
+        "title": "Remove Reactions",
+        "description": "Remove the bot's reaction with removeReaction(emoji). Remove a specific user's reaction with removeReaction(emoji, userId). Clear all reactions with removeAllReactions() or removeReactionEmoji(emoji)."
+      },
+      {
+        "title": "Listen for Reactions",
+        "description": "MessageReactionAdd and MessageReactionRemove emit (reaction, user, messageId, channelId, emoji, userId). Use client.on(Events.X, handler) or client.events.MessageReactionAdd(handler)."
+      },
+      {
+        "title": "Reaction Roles Example",
+        "description": "See examples/reaction-roles-bot.js for a full bot that assigns roles when users react to a message. Uses (reaction, user), Guild.fetchMember(), Guild.addRoleToMember()/removeRoleFromMember(), and guild.createRole() if you need to create roles programmatically. See the Roles guide for role CRUD."
+      }
+    ]
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "description": "A complete guide to Discord webhooks—sending messages without a gateway, creating, editing, and managing webhooks.",
+    "sections": [
+      {
+        "title": "What are Webhooks?",
+        "description": "Webhooks let you send messages to a channel using a URL (ID + token). You can use them in scripts, CI pipelines, or anywhere you need to post without a full bot connection. No gateway, no events—just REST."
+      },
+      {
+        "title": "Webhooks Without a Bot",
+        "description": "A Client with intents: 0 is enough. No need to connect to the gateway or handle events. Ideal for scripts or one-off sends."
+      },
+      {
+        "title": "Creating a Webhook",
+        "description": "Create a webhook on a text channel. Requires Manage Webhooks permission. The token is returned only when creating—store it securely. It will never be returned when listing or fetching."
+      },
+      {
+        "title": "Sending Messages",
+        "description": "Send text, embeds, or both. You can override the username and avatar for each message."
+      },
+      {
+        "title": "Simple text only",
+        "description": null
+      },
+      {
+        "title": "Embeds without a title",
+        "description": "Embeds can use only a description—no title required. At least one of title, description, fields, or image is needed."
+      },
+      {
+        "title": "Fetching & Listing Webhooks",
+        "description": "Fetch by ID or list channel/guild webhooks. Requires a logged-in bot. Fetched webhooks have no token and cannot send—but you can edit or delete them with bot auth."
+      },
+      {
+        "title": "Editing a Webhook",
+        "description": "Use webhook.edit() to change name, avatar, or (with bot auth) channel. With a token (e.g. from createWebhook or fromToken), you can update name and avatar. Without a token (fetched webhook), bot auth lets you also change the target channel."
+      },
+      {
+        "title": "Deleting a Webhook",
+        "description": null
+      }
+    ]
+  },
+  "webhook-attachments-embeds": {
+    "title": "Webhook Attachments & Embeds",
+    "description": "Send embeds with or without a title, and attach files to webhook messages—same API as channel messages.",
+    "sections": [
+      {
+        "title": "Overview",
+        "description": "Webhooks support rich embeds and file attachments. Embeds can have just a description (no title required), and you can attach files the same way as with channel.send or message.reply."
+      },
+      {
+        "title": "Embeds Without a Title",
+        "description": "You do not need a title for embeds to work. At least one of title, description, fields, or image/thumbnail is required. A description-only embed is valid."
+      },
+      {
+        "title": "Direct Attachments",
+        "description": "Attach files to webhook messages using the files array. Each file needs name and data (Blob, ArrayBuffer, or Uint8Array). Optional filename overrides the display name."
+      },
+      {
+        "title": "Full Example: Embed + Files",
+        "description": "Combine content, description-only embed, and file attachments in a single webhook send."
+      }
+    ]
+  },
+  "voice": {
+    "title": "Voice",
+    "description": "Join voice channels and play audio with @fluxerjs/voice. Supports WebM/Opus streams—no FFmpeg required.",
+    "sections": [
+      {
+        "title": "Installation",
+        "description": "Add the voice package alongside the core library."
+      },
+      {
+        "title": "Setup",
+        "description": "Create a VoiceManager before login so it receives VoiceStatesSync from READY/GUILD_CREATE. This lets the manager see users already in voice when the bot starts."
+      },
+      {
+        "title": "Join a Voice Channel",
+        "description": "Get the user's voice channel with getVoiceChannelId, then join. The connection resolves when ready."
+      },
+      {
+        "title": "Play Audio",
+        "description": "Play a WebM/Opus URL or stream. The voice package does not use FFmpeg—input must be WebM with Opus. Use yt-dlp or similar to get direct stream URLs from YouTube."
+      },
+      {
+        "title": "Getting Stream URLs from YouTube",
+        "description": "Use youtube-dl-exec or yt-dlp to extract a WebM/Opus URL."
+      },
+      {
+        "title": "Volume Control",
+        "description": "LiveKitRtcConnection supports setVolume(0-200) and getVolume(). 100 = normal, 50 = half, 200 = double. Affects current and future playback."
+      },
+      {
+        "title": "Stop and Leave",
+        "description": "Stop playback and disconnect. getConnection accepts channel ID or guild ID. leave(guildId) leaves all channels; leaveChannel(channelId) leaves a specific channel."
+      },
+      {
+        "title": "LiveKit and serverLeave",
+        "description": "If using LiveKit, the server may emit serverLeave. Listen and reconnect if needed."
+      }
+    ]
+  },
+  "events": {
+    "title": "Events",
+    "description": "Listen to gateway events with client.on. Handle messages, guild updates, voice state changes, and more.",
+    "sections": [
+      {
+        "title": "Basic Usage",
+        "description": "Use client.on(Events.X, handler) to subscribe to events. Handlers receive event-specific payloads."
+      },
+      {
+        "title": "Common Events",
+        "description": "Essential events for most bots."
+      },
+      {
+        "title": "Reaction Events",
+        "description": "Listen for when users add or remove reactions. Handlers receive (reaction, user, messageId, channelId, emoji, userId). Use MessageReactionRemoveAll and MessageReactionRemoveEmoji for moderator actions."
+      },
+      {
+        "title": "Error Handling",
+        "description": null
+      },
+      {
+        "title": "Gateway Dispatch Events Reference",
+        "description": "All events the Fluxer gateway can send. Use GatewayDispatchEvents from @fluxerjs/types for type-safe checks."
+      },
+      {
+        "title": "Event Payload Reference",
+        "description": "Payload structure for each event. Handler receives (data) or (message), (reaction, user, ...) etc. Types: Gateway*DispatchData from @fluxerjs/types."
+      }
+    ]
+  },
+  "permissions": {
+    "title": "Permissions",
+    "description": "Check member permissions (guild-level and channel-specific), bot permissions via guild.members.me, owner override, and PermissionFlags.",
+    "sections": [
+      {
+        "title": "Overview",
+        "description": "Use member.permissions for guild-level checks (roles only) and member.permissionsIn(channel) for channel-specific permissions (includes overwrites). The server owner always has all permissions."
+      },
+      {
+        "title": "Guild-level permissions",
+        "description": "member.permissions returns an object with has(permission). Use it for server-wide actions like ban, kick, manage roles."
+      },
+      {
+        "title": "Bot's own permissions (guild.members.me)",
+        "description": "Use guild.members.me to get the bot's GuildMember. Returns null if not cached. Use guild.members.fetchMe() to load it. Discord.js parity."
+      },
+      {
+        "title": "Editing the bot's guild profile (nickname)",
+        "description": "Use guild.members.me.edit({ nick }) to change the bot's nickname in that guild. Pass nick: null to clear and show the username. Requires Change Nickname permission (or bot has Manage Nicknames). See examples/ping-bot.js for a !setnick command."
+      },
+      {
+        "title": "Owner override",
+        "description": "The guild owner automatically receives all permissions regardless of roles. No need to give the owner a role with Administrator."
+      },
+      {
+        "title": "Channel-specific permissions",
+        "description": "member.permissionsIn(channel) applies channel overwrites. Use it when checking if a user can send messages, read history, or connect to voice in a specific channel."
+      },
+      {
+        "title": "Managing roles",
+        "description": "Create, fetch, edit, and delete roles with guild.createRole(), guild.fetchRoles(), guild.fetchRole(roleId), role.edit(), and role.delete(). Use resolvePermissionsToBitfield() for permission bitfields. See the Roles guide for full examples."
+      },
+      {
+        "title": "PermissionFlags reference",
+        "description": "Common flags: BanMembers, KickMembers, Administrator, ManageRoles, ManageChannels, ManageGuild, ViewAuditLog, ManageMessages, SendMessages, EmbedLinks, AttachFiles, ReadMessageHistory, MentionEveryone, Connect, Speak, MuteMembers, ModerateMembers, CreateExpressions, PinMessages, BypassSlowmode."
+      }
+    ]
+  },
+  "moderation": {
+    "title": "Moderation",
+    "description": "Implement ban, kick, and unban commands. Check permissions first (see Permissions guide).",
+    "sections": [
+      {
+        "title": "Overview",
+        "description": "Use guild.ban(), guild.kick(), and guild.unban() for moderation. Always check member permissions before allowing moderation commands—see the Permissions guide."
+      },
+      {
+        "title": "Ban a member",
+        "description": "guild.ban(userId, options) bans a user. Pass reason for the audit log. Requires BanMembers permission."
+      },
+      {
+        "title": "Kick a member",
+        "description": "guild.kick(userId, options) kicks a user from the guild. Pass reason for the audit log. Requires KickMembers permission."
+      },
+      {
+        "title": "Unban a user",
+        "description": "guild.unban(userId, reason?) removes a ban. Requires BanMembers permission."
+      },
+      {
+        "title": "Full moderation example",
+        "description": "See examples/moderation-bot.js for a complete bot with !ban, !kick, !unban, and !perms commands."
+      }
+    ]
+  },
+  "roles": {
+    "title": "Roles",
+    "description": "Create, fetch, edit, and delete guild roles. Use PermissionFlags and resolvePermissionsToBitfield for permission bitfields.",
+    "sections": [
+      {
+        "title": "Overview",
+        "description": "Guild roles can be created, fetched, edited, and deleted. Use guild.createRole(), guild.fetchRoles(), guild.fetchRole(roleId), role.edit(), and role.delete(). Requires Manage Roles permission. For permission bitfields, use resolvePermissionsToBitfield() or role.has() to check a role's permissions."
+      },
+      {
+        "title": "Create a role",
+        "description": "Use guild.createRole() to create a new role. Pass name, permissions, color, hoist, mentionable, unicode_emoji, position, or hoist_position. Permissions accept PermissionResolvable (string, number, array) for convenience."
+      },
+      {
+        "title": "Fetch roles",
+        "description": "Use guild.fetchRoles() to fetch all roles from the API and cache them. Use guild.fetchRole(roleId) to fetch a single role by ID. Throws FluxerError with ROLE_NOT_FOUND on 404."
+      },
+      {
+        "title": "Edit a role",
+        "description": "Use role.edit() to update a role. Pass any of name, permissions, color, hoist, mentionable, unicode_emoji, position, hoist_position. Permissions accept PermissionResolvable."
+      },
+      {
+        "title": "Delete a role",
+        "description": "Use role.delete() to remove a role. The role is removed from guild.roles cache."
+      },
+      {
+        "title": "Check role permissions",
+        "description": "Use role.has(permission) to check if a role has a specific permission. Administrator implies all permissions."
+      },
+      {
+        "title": "Permission bitfields for create/edit",
+        "description": "When creating or editing roles, pass permissions as a string (API format), number, PermissionString, or array. Use resolvePermissionsToBitfield() to combine multiple permissions. Handles high bits (PinMessages, ModerateMembers, etc.) correctly with BigInt."
+      }
+    ]
+  },
+  "prefix-commands": {
+    "title": "Prefix Commands",
+    "description": "Handle !commands by listening to MessageCreate and parsing the content.",
+    "sections": [
+      {
+        "title": "Basic Structure",
+        "description": "Check for a prefix, split args, and dispatch to command handlers."
+      },
+      {
+        "title": "Guild-Only Commands",
+        "description": null
+      }
+    ]
+  }
+}

@@ -14,8 +14,33 @@ import type { Channel } from '../structures/Channel.js';
  * Extends Collection so you can use .get(), .set(), .filter(), etc.
  */
 export class ChannelManager extends Collection<string, Channel> {
+  private readonly maxSize: number;
+
   constructor(private readonly client: Client) {
     super();
+    this.maxSize = client.options?.cache?.channels ?? 0;
+  }
+
+  override set(key: string, value: Channel): this {
+    if (this.maxSize > 0 && this.size >= this.maxSize && !this.has(key)) {
+      const firstKey = this.keys().next().value;
+      if (firstKey !== undefined) this.delete(firstKey);
+    }
+    return super.set(key, value);
+  }
+
+  /**
+   * Get a channel from cache or fetch from the API if not present.
+   * Convenience helper to avoid repeating `client.channels.get(id) ?? (await client.channels.fetch(id))`.
+   * @param channelId - Snowflake of the channel
+   * @returns The channel
+   * @throws FluxerError with CHANNEL_NOT_FOUND if the channel does not exist
+   * @example
+   * const channel = await client.channels.resolve(message.channelId);
+   * if (channel?.isSendable()) await channel.send('Hello!');
+   */
+  async resolve(channelId: string): Promise<Channel> {
+    return this.get(channelId) ?? this.fetch(channelId);
   }
 
   /**
@@ -43,6 +68,10 @@ export class ChannelManager extends Collection<string, Channel> {
         });
       }
       this.set(channel.id, channel);
+      if ('guildId' in channel && channel.guildId) {
+        const guild = this.client.guilds.get(channel.guildId);
+        if (guild) guild.channels.set(channel.id, channel as import('../structures/Channel.js').GuildChannel);
+      }
       return channel;
     } catch (err) {
       if (err instanceof RateLimitError) throw err;
@@ -64,9 +93,9 @@ export class ChannelManager extends Collection<string, Channel> {
    * @param messageId - Snowflake of the message
    * @returns The message
    * @throws FluxerError with MESSAGE_NOT_FOUND if the message does not exist
-   * @deprecated Use channel.messages.fetch(messageId). Prefer (await client.channels.fetch(channelId))?.messages?.fetch(messageId).
+   * @deprecated Use channel.messages.fetch(messageId). Prefer (await client.channels.resolve(channelId))?.messages?.fetch(messageId).
    * @example
-   * const channel = await client.channels.fetch(channelId);
+   * const channel = await client.channels.resolve(channelId);
    * const message = await channel?.messages?.fetch(messageId);
    */
   async fetchMessage(
@@ -75,7 +104,7 @@ export class ChannelManager extends Collection<string, Channel> {
   ): Promise<import('../structures/Message.js').Message> {
     emitDeprecationWarning(
       'ChannelManager.fetchMessage()',
-      'Use channel.messages.fetch(messageId). Prefer (await client.channels.fetch(channelId))?.messages?.fetch(messageId).',
+      'Use channel.messages.fetch(messageId). Prefer (await client.channels.resolve(channelId))?.messages?.fetch(messageId).',
     );
     try {
       const { Message } = await import('../structures/Message.js');
@@ -105,7 +134,7 @@ export class ChannelManager extends Collection<string, Channel> {
    * @returns The created message
    * @example
    * await client.channels.send(logChannelId, 'User joined!');
-   * await client.channels.send(channelId, { embeds: [embed.toJSON()] });
+   * await client.channels.send(channelId, { embeds: [embed] });
    * await client.channels.send(channelId, { content: 'Report', files: [{ name: 'log.txt', data }] });
    */
   async send(

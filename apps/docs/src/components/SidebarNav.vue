@@ -2,6 +2,7 @@
   <nav class="sidebar-nav">
     <div v-if="store.currentDoc" class="nav-content">
       <h3 class="sidebar-title">API Reference</h3>
+      <CommunityCallout variant="sidebar" />
       <router-link :to="versionedPath('/api')" class="sidebar-rest-api-link">
         REST API →
       </router-link>
@@ -73,6 +74,7 @@
 import { ref, computed } from 'vue';
 import { useDocsStore } from '../stores/docs';
 import { useVersionedPath } from '../composables/useVersionedPath';
+import CommunityCallout from './CommunityCallout.vue';
 
 const store = useDocsStore();
 const { path: versionedPath } = useVersionedPath();

@@ -23,11 +23,12 @@
             :headers="section.table.headers"
             :rows="section.table.rows"
             :code-columns="section.table.codeColumns" />
-          <CodeBlock
+          <GuideTip v-if="section.tip" :tip="section.tip" />
+          <GuideCodeBlock
             v-if="section.code"
             :code="section.code"
-            :language="section.language ?? 'javascript'"
-            :link-types="section.language !== 'bash'" />
+            :language="section.language"
+            :alternate-code="section.alternateCode" />
         </section>
       </template>
 
@@ -65,8 +66,9 @@ import { useRoute } from 'vue-router';
 import { getCategoryLabel } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
-import CodeBlock from '../components/CodeBlock.vue';
+import GuideCodeBlock from '../components/GuideCodeBlock.vue';
 import GuideTable from '../components/GuideTable.vue';
+import GuideTip from '../components/GuideTip.vue';
 
 const route = useRoute();
 const guidesStore = useGuidesStore();
@@ -138,7 +140,7 @@ const tocItems = computed(() => {
 }
 
 .guide-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .guide-category {
@@ -165,7 +167,7 @@ const tocItems = computed(() => {
 }
 
 .guide-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .section-title {
@@ -184,8 +186,8 @@ const tocItems = computed(() => {
 .guide-nav {
   display: flex;
   justify-content: space-between;
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -201,7 +203,7 @@ const tocItems = computed(() => {
 .guide-page {
   display: flex;
   gap: 2rem;
-  max-width: 1000px;
+  width: 100%;
 }
 
 .guide-content {
@@ -211,7 +213,7 @@ const tocItems = computed(() => {
 
 .guide-toc {
   flex-shrink: 0;
-  width: 200px;
+  width: 220px;
   position: sticky;
   top: 1.5rem;
   align-self: flex-start;

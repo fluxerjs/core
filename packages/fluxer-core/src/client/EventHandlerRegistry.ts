@@ -4,7 +4,6 @@ import type {
   APIChannel,
   APIGuild,
   APIGuildMember,
-  APIRole,
   APIUserPartial,
   APIApplicationCommandInteraction,
 } from '@fluxerjs/types';
@@ -121,11 +120,9 @@ handlers.set('GUILD_CREATE', async (client, d) => {
   const { Guild } = await import('../structures/Guild.js');
   const { Channel } = await import('../structures/Channel.js');
   const { GuildMember } = await import('../structures/GuildMember.js');
-  const raw = d as APIGuild & { properties?: Record<string, unknown>; roles?: unknown };
-  const guildData: APIGuild & { roles?: APIRole[] } =
-    raw?.properties != null
-      ? ({ ...raw.properties, roles: raw.roles } as APIGuild & { roles?: APIRole[] })
-      : (raw as APIGuild);
+  const { normalizeGuildPayload } = await import('../util/guildUtils.js');
+  const guildData = normalizeGuildPayload(d as unknown);
+  if (!guildData) return;
   const guild = new Guild(client, guildData);
   client.guilds.set(guild.id, guild);
   const g = d as APIGuild & {
@@ -135,7 +132,10 @@ handlers.set('GUILD_CREATE', async (client, d) => {
   };
   for (const ch of g.channels ?? []) {
     const channel = Channel.from(client, ch);
-    if (channel) client.channels.set(channel.id, channel);
+    if (channel) {
+      client.channels.set(channel.id, channel);
+      guild.channels.set(channel.id, channel as import('../structures/Channel.js').GuildChannel);
+    }
   }
   for (const m of g.members ?? []) {
     if (m?.user?.id) {
@@ -152,11 +152,9 @@ handlers.set('GUILD_CREATE', async (client, d) => {
 
 handlers.set('GUILD_UPDATE', async (client, d) => {
   const { Guild } = await import('../structures/Guild.js');
-  const raw = d as APIGuild & { properties?: Record<string, unknown>; roles?: unknown };
-  const guildData: APIGuild & { roles?: APIRole[] } =
-    raw?.properties != null
-      ? ({ ...raw.properties, roles: raw.roles } as APIGuild & { roles?: APIRole[] })
-      : (raw as APIGuild);
+  const { normalizeGuildPayload } = await import('../util/guildUtils.js');
+  const guildData = normalizeGuildPayload(d as unknown);
+  if (!guildData) return;
   const old = client.guilds.get(guildData.id);
   const updated = new Guild(client, guildData);
   client.guilds.set(updated.id, updated);
@@ -177,6 +175,10 @@ handlers.set('CHANNEL_CREATE', async (client, d) => {
   const ch = Channel.from(client, d as APIChannel);
   if (ch) {
     client.channels.set(ch.id, ch);
+    if ('guildId' in ch && ch.guildId) {
+      const guild = client.guilds.get(ch.guildId);
+      if (guild) guild.channels.set(ch.id, ch as import('../structures/Channel.js').GuildChannel);
+    }
     client.emit(Events.ChannelCreate, ch as import('../structures/Channel.js').GuildChannel);
   }
 });
@@ -188,14 +190,22 @@ handlers.set('CHANNEL_UPDATE', async (client, d) => {
   const newCh = Channel.from(client, ch);
   if (newCh) {
     client.channels.set(newCh.id, newCh);
+    if ('guildId' in newCh && newCh.guildId) {
+      const guild = client.guilds.get(newCh.guildId);
+      if (guild) guild.channels.set(newCh.id, newCh as import('../structures/Channel.js').GuildChannel);
+    }
     client.emit(Events.ChannelUpdate, oldCh ?? newCh, newCh);
   }
 });
 
 handlers.set('CHANNEL_DELETE', async (client, d) => {
-  const ch = d as { id: string };
+  const ch = d as { id: string; guild_id?: string };
   const channel = client.channels.get(ch.id);
   if (channel) {
+    if ('guildId' in channel && channel.guildId) {
+      const guild = client.guilds.get(channel.guildId);
+      if (guild) guild.channels.delete(channel.id);
+    }
     client.channels.delete(ch.id);
     client.emit(Events.ChannelDelete, channel);
   }
@@ -272,7 +282,12 @@ handlers.set('MESSAGE_DELETE_BULK', async (client, d) => {
 handlers.set('GUILD_BAN_ADD', async (client, d) => {
   const data = d as GatewayGuildBanAddDispatchData;
   const { GuildBan } = await import('../structures/GuildBan.js');
-  const ban = new GuildBan(client, data, data.guild_id);
+  const banData: import('@fluxerjs/types').APIBan & { guild_id?: string } = {
+    user: data.user,
+    reason: data.reason ?? null,
+    guild_id: data.guild_id,
+  };
+  const ban = new GuildBan(client, banData, data.guild_id);
   client.emit(Events.GuildBanAdd, ban);
 });
 
