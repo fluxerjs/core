@@ -7,13 +7,13 @@ import { ErrorCodes } from '../errors/ErrorCodes.js';
 import { buildSendBody, resolveMessageFiles } from '../util/messageUtils.js';
 import type { MessageSendOptions } from '../util/messageUtils.js';
 import type { Client } from './Client.js';
-import type { Channel } from '../structures/Channel.js';
+import { Channel, GuildChannel } from '../structures/Channel.js';
 
 /**
  * Manages channels with fetch and send.
  * Extends Collection so you can use .get(), .set(), .filter(), etc.
  */
-export class ChannelManager extends Collection<string, Channel> {
+export class ChannelManager extends Collection<string, Channel | GuildChannel> {
   private readonly maxSize: number;
 
   constructor(private readonly client: Client) {

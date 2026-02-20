@@ -368,7 +368,7 @@ handlers.set('TYPING_START', async (client, d) => {
 handlers.set('USER_UPDATE', async (client, d) => {
   const data = d as GatewayUserUpdateDispatchData;
   if (client.user?.id === data.id) {
-    client.user._patch(data);
+    client.user!._patch(data);
   }
   client.emit(Events.UserUpdate, data);
 });
