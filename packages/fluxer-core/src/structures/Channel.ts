@@ -38,6 +38,10 @@ export abstract class Channel extends Base {
     return 'bitrate' in this;
   }
 
+  isLink(): this is LinkChannel {
+    return 'url' in this;
+  }
+
   /** Create a DM channel from API data (type DM or GroupDM). */
   static createDM(client: Client, data: APIChannelPartial): DMChannel {
     return new DMChannel(client, data);
