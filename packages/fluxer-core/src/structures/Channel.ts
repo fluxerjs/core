@@ -24,7 +24,7 @@ import { Invite } from './Invite';
 /** Base class for all channel types. */
 export abstract class Channel extends Base {
   /** Whether this channel has a send method (TextChannel, DMChannel). */
-  isSendable(): this is TextChannel | DMChannel {
+  isTextBased(): this is TextChannel | DMChannel {
     return 'send' in this;
   }
 
