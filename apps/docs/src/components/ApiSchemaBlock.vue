@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiSchemaField } from '../data/apiEndpoints';
+import { ApiSchemaField } from '../data/apiEndpoints';
 
 defineProps<{
   title?: string;

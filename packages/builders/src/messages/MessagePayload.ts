@@ -1,4 +1,4 @@
-import type { APIEmbed, APIMessageReference } from '@fluxerjs/types';
+import { APIEmbed, APIMessageReference } from '@fluxerjs/types';
 import { EmbedBuilder } from './EmbedBuilder.js';
 import { AttachmentBuilder } from './AttachmentBuilder.js';
 

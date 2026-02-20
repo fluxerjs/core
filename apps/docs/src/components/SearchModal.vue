@@ -61,7 +61,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useDocsStore } from '../stores/docs';
 import { useGuidesStore } from '../stores/guides';
 import { useSearchIndex, useGuidesSearchIndex } from '../composables/useSearchIndex';
-import type { SearchHit } from '../composables/useSearchIndex';
+import { SearchHit } from '../composables/useSearchIndex';
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ (e: 'close'): void }>();

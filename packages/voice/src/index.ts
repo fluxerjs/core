@@ -5,15 +5,16 @@ export {
   type LiveKitRtcConnectionEvents,
   type VideoPlayOptions,
 } from './LiveKitRtcConnection.js';
-
-import type { Client } from '@fluxerjs/core';
-import type { VoiceChannel } from '@fluxerjs/core';
+import { Client } from '@fluxerjs/core';
+import { VoiceChannel } from '@fluxerjs/core';
 import { VoiceManager } from './VoiceManager.js';
+import { VoiceConnection } from "./VoiceConnection";
+import { LiveKitRtcConnection } from './LiveKitRtcConnection';
 
 /** Union of connection types (Discord-style or LiveKit). */
 export type VoiceConnectionLike =
-  | import('./VoiceConnection.js').VoiceConnection
-  | import('./LiveKitRtcConnection.js').LiveKitRtcConnection;
+  | VoiceConnection
+  | LiveKitRtcConnection;
 
 /**
  * Create a voice manager and join a voice channel in one call.

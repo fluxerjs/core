@@ -1,7 +1,7 @@
 import { Collection } from '@fluxerjs/collection';
-import { Routes } from '@fluxerjs/types';
-import type { Client } from './Client.js';
-import type { Guild } from '../structures/Guild.js';
+import { APIGuild, Routes } from '@fluxerjs/types';
+import { Client } from './Client.js';
+import { Guild } from '../structures/Guild.js';
 
 /**
  * Manages guilds with fetch.
@@ -46,8 +46,7 @@ export class GuildManager extends Collection<string, Guild> {
     icon?: string | null;
     empty_features?: boolean;
   }): Promise<Guild> {
-    const { Guild } = await import('../structures/Guild.js');
-    const data = await this.client.rest.post<import('@fluxerjs/types').APIGuild>(Routes.guilds(), {
+    const data = await this.client.rest.post<APIGuild>(Routes.guilds(), {
       body: options,
       auth: true,
     });
@@ -69,8 +68,7 @@ export class GuildManager extends Collection<string, Guild> {
     if (cached) return cached;
 
     try {
-      const { Guild } = await import('../structures/Guild.js');
-      const data = await this.client.rest.get<import('@fluxerjs/types').APIGuild>(
+      const data = await this.client.rest.get<APIGuild>(
         Routes.guild(guildId),
       );
       const guild = new Guild(this.client, data);

@@ -1,7 +1,7 @@
-import type { Snowflake } from '../common/snowflake.js';
-import type { APIUser } from './user.js';
-import type { APIGuildMember } from './user.js';
-import type { APIEmbed } from './embed.js';
+import { Snowflake } from '../common/snowflake.js';
+import { APIUser } from './user.js';
+import { APIGuildMember } from './user.js';
+import { APIEmbed } from './embed.js';
 
 export enum MessageType {
   Default = 0,

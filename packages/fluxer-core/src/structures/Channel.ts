@@ -1,21 +1,23 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { MessageManager } from '../client/MessageManager.js';
 import { MessageCollector } from '../util/MessageCollector.js';
-import type { MessageCollectorOptions } from '../util/MessageCollector.js';
+import { MessageCollectorOptions } from '../util/MessageCollector.js';
 import { Base } from './Base.js';
 import { buildSendBody, resolveMessageFiles } from '../util/messageUtils.js';
-import type { MessageSendOptions } from '../util/messageUtils.js';
-import type {
+import { MessageSendOptions } from '../util/messageUtils.js';
+import {
   APIChannel,
   APIChannelPartial,
   APIChannelOverwrite,
   APIUser,
-  APIMessage,
+  APIMessage, APIWebhook, APIInvite,
 } from '@fluxerjs/types';
 import { ChannelType, Routes } from '@fluxerjs/types';
 import { emitDeprecationWarning } from '@fluxerjs/util';
-import type { User } from './User.js';
-import type { Webhook } from './Webhook.js';
+import { User } from './User.js';
+import { Webhook } from './Webhook.js';
+import { Message } from './Message';
+import { Invite } from './Invite';
 
 /** Base class for all channel types. */
 export abstract class Channel extends Base {
@@ -133,12 +135,11 @@ export class GuildChannel extends Channel {
    * @returns The webhook with token (required for send()). Requires Manage Webhooks permission.
    */
   async createWebhook(options: { name: string; avatar?: string | null }): Promise<Webhook> {
-    const { Webhook } = await import('./Webhook.js');
     const data = await this.client.rest.post(Routes.channelWebhooks(this.id), {
       body: options,
       auth: true,
     });
-    return new Webhook(this.client, data as import('@fluxerjs/types').APIWebhook);
+    return new Webhook(this.client, data as APIWebhook);
   }
 
   /**
@@ -146,7 +147,6 @@ export class GuildChannel extends Channel {
    * @returns Webhooks (includes token when listing from channel; can send via send())
    */
   async fetchWebhooks(): Promise<Webhook[]> {
-    const { Webhook } = await import('./Webhook.js');
     const data = await this.client.rest.get(Routes.channelWebhooks(this.id));
     const list = Array.isArray(data) ? data : Object.values(data ?? {});
     return list.map((w) => new Webhook(this.client, w));
@@ -162,8 +162,7 @@ export class GuildChannel extends Channel {
     max_age?: number;
     unique?: boolean;
     temporary?: boolean;
-  }): Promise<import('./Invite.js').Invite> {
-    const { Invite } = await import('./Invite.js');
+  }): Promise<Invite> {
     const body: Record<string, unknown> = {};
     if (options?.max_uses != null) body.max_uses = options.max_uses;
     if (options?.max_age != null) body.max_age = options.max_age;
@@ -173,18 +172,17 @@ export class GuildChannel extends Channel {
       body: Object.keys(body).length ? body : undefined,
       auth: true,
     });
-    return new Invite(this.client, data as import('@fluxerjs/types').APIInvite);
+    return new Invite(this.client, data as APIInvite);
   }
 
   /**
    * Fetch invites for this channel.
    * Requires Manage Channel permission.
    */
-  async fetchInvites(): Promise<import('./Invite.js').Invite[]> {
-    const { Invite } = await import('./Invite.js');
+  async fetchInvites(): Promise<Invite[]> {
     const data = await this.client.rest.get(Routes.channelInvites(this.id));
     const list = Array.isArray(data) ? data : Object.values(data ?? {});
-    return list.map((i) => new Invite(this.client, i as import('@fluxerjs/types').APIInvite));
+    return list.map((i) => new Invite(this.client, i as APIInvite));
   }
 
   /**
@@ -283,14 +281,13 @@ export class TextChannel extends GuildChannel {
    * Send a message to this channel.
    * @param options - Text content or object with content, embeds, and/or files
    */
-  async send(options: MessageSendOptions): Promise<import('./Message.js').Message> {
+  async send(options: MessageSendOptions): Promise<Message> {
     const opts = typeof options === 'string' ? { content: options } : options;
     const body = buildSendBody(options);
-    const { Message } = await import('./Message.js');
     const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
     const postOptions = files?.length ? { body, files } : { body };
     const data = await this.client.rest.post(Routes.channelMessages(this.id), postOptions);
-    return new Message(this.client, data as import('@fluxerjs/types').APIMessage);
+    return new Message(this.client, data as APIMessage);
   }
 
   /** Message manager for this channel. Use channel.messages.fetch(messageId). */
@@ -315,8 +312,7 @@ export class TextChannel extends GuildChannel {
    * Fetch pinned messages in this channel.
    * @returns Pinned messages
    */
-  async fetchPinnedMessages(): Promise<import('./Message.js').Message[]> {
-    const { Message } = await import('./Message.js');
+  async fetchPinnedMessages(): Promise<Message[]> {
     type PinnedItem = APIMessage | { message?: APIMessage };
     const data = (await this.client.rest.get(Routes.channelPins(this.id))) as
       | { items?: PinnedItem[] }
@@ -334,7 +330,7 @@ export class TextChannel extends GuildChannel {
    * @returns The message, or null if not found
    * @deprecated Use channel.messages.fetch(messageId) instead.
    */
-  async fetchMessage(messageId: string): Promise<import('./Message.js').Message> {
+  async fetchMessage(messageId: string): Promise<Message> {
     emitDeprecationWarning(
       'Channel.fetchMessage()',
       'Use channel.messages.fetch(messageId) instead.',
@@ -389,14 +385,13 @@ export class DMChannel extends Channel {
    * Send a message to this DM channel.
    * @param options - Text content or object with content, embeds, and/or files
    */
-  async send(options: MessageSendOptions): Promise<import('./Message.js').Message> {
+  async send(options: MessageSendOptions): Promise<Message> {
     const opts = typeof options === 'string' ? { content: options } : options;
     const body = buildSendBody(options);
-    const { Message } = await import('./Message.js');
     const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
     const postOptions = files?.length ? { body, files } : { body };
     const data = await this.client.rest.post(Routes.channelMessages(this.id), postOptions);
-    return new Message(this.client, data as import('@fluxerjs/types').APIMessage);
+    return new Message(this.client, data as APIMessage);
   }
 
   /** Message manager for this channel. Use channel.messages.fetch(messageId). */
@@ -416,8 +411,7 @@ export class DMChannel extends Channel {
    * Fetch pinned messages in this DM channel.
    * @returns Pinned messages
    */
-  async fetchPinnedMessages(): Promise<import('./Message.js').Message[]> {
-    const { Message } = await import('./Message.js');
+  async fetchPinnedMessages(): Promise<Message[]> {
     type PinnedItem = APIMessage | { message?: APIMessage };
     const data = (await this.client.rest.get(Routes.channelPins(this.id))) as
       | { items?: PinnedItem[] }
@@ -435,7 +429,7 @@ export class DMChannel extends Channel {
    * @returns The message, or null if not found
    * @deprecated Use channel.messages.fetch(messageId) instead.
    */
-  async fetchMessage(messageId: string): Promise<import('./Message.js').Message> {
+  async fetchMessage(messageId: string): Promise<Message> {
     emitDeprecationWarning(
       'Channel.fetchMessage()',
       'Use channel.messages.fetch(messageId) instead.',

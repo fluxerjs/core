@@ -1,10 +1,11 @@
 import { EventEmitter } from 'events';
-import type {
+import {
   GatewaySendPayload,
   GatewayHelloData,
   GatewayReceivePayload,
   GatewayIdentifyData,
   GatewayResumeData,
+  GatewayPresenceUpdateData,
 } from '@fluxerjs/types';
 import { GatewayOpcodes } from '@fluxerjs/types';
 import { getDefaultWebSocketSync } from './utils/getWebSocket.js';
@@ -22,7 +23,7 @@ export interface WebSocketShardOptions {
   url: string;
   token: string;
   intents: number;
-  presence?: import('@fluxerjs/types').GatewayPresenceUpdateData;
+  presence?: GatewayPresenceUpdateData;
   shardId: number;
   numShards: number;
   /** Gateway API version (e.g. "1" for Fluxer). Defaults to "1" when not set. */

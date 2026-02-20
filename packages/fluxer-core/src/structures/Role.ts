@@ -1,6 +1,6 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { APIRole, RESTUpdateRoleBody } from '@fluxerjs/types';
+import { APIRole, RESTUpdateRoleBody } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import {
   PermissionFlags,

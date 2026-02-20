@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DocMethod } from '../types/doc-schema';
+import { DocMethod } from '../types/doc-schema';
 import DocDescription from './DocDescription.vue';
 import ParamsTable from './ParamsTable.vue';
 import TypeSignature from './TypeSignature.vue';

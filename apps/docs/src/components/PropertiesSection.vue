@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DocProperty, DocInterfaceProperty } from '../types/doc-schema';
+import { DocProperty, DocInterfaceProperty } from '../types/doc-schema';
 import DocDescription from './DocDescription.vue';
 import TypeSignature from './TypeSignature.vue';
 import CodeBlock from './CodeBlock.vue';

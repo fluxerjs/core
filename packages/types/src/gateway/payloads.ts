@@ -1,5 +1,5 @@
-import type { Snowflake } from '../common';
-import type {
+import { Snowflake } from '../common';
+import {
   APIUser,
   APIChannel,
   APIGuild,
@@ -10,9 +10,9 @@ import type {
   APIEmoji,
   APISticker,
 } from '../api';
-import type { APIApplicationCommandInteraction } from '../api';
+import { APIApplicationCommandInteraction } from '../api';
 import { GatewayOpcodes } from './opcodes.js';
-import type { GatewayDispatchEventName } from './events.js';
+import { GatewayDispatchEventName } from './events.js';
 
 // Outgoing (client -> gateway)
 export interface GatewayIdentifyData {

@@ -1,13 +1,13 @@
 import { Events } from '../util/Events.js';
-import type {
+import {
   APIMessage,
   APIChannel,
   APIGuild,
   APIGuildMember,
   APIUserPartial,
-  APIApplicationCommandInteraction,
+  APIApplicationCommandInteraction, APIBan,
 } from '@fluxerjs/types';
-import type {
+import {
   GatewayMessageReactionAddDispatchData,
   GatewayMessageReactionRemoveDispatchData,
   GatewayMessageReactionRemoveEmojiDispatchData,
@@ -27,15 +27,22 @@ import type {
   GatewayUserUpdateDispatchData,
   GatewayGuildMemberRemoveDispatchData,
 } from '@fluxerjs/types';
-import type { Client } from './Client.js';
+import { Client } from './Client.js';
+import { normalizeGuildPayload } from '../util/guildUtils';
+import { GuildMember } from '../structures/GuildMember';
+import { Message } from '../structures/Message';
+import { MessageReaction } from '../structures/MessageReaction';
+import { Guild } from '../structures/Guild';
+import { Channel, GuildChannel } from '../structures/Channel';
+import { GuildBan } from '../structures/GuildBan';
+import { Role } from '../structures/Role';
+import { Invite } from '../structures/Invite';
 
 export type DispatchHandler = (client: Client, data: unknown) => Promise<void>;
 
 const handlers = new Map<string, DispatchHandler>();
 
 handlers.set('MESSAGE_CREATE', async (client, d) => {
-  const { Message } = await import('../structures/Message.js');
-  const { GuildMember } = await import('../structures/GuildMember.js');
   const data = d as APIMessage & { member?: APIGuildMember };
   if (data.guild_id && data.member && data.author) {
     const guild = client.guilds.get(data.guild_id);
@@ -49,7 +56,6 @@ handlers.set('MESSAGE_CREATE', async (client, d) => {
 });
 
 handlers.set('MESSAGE_UPDATE', async (client, d) => {
-  const { Message } = await import('../structures/Message.js');
   client.emit(Events.MessageUpdate, null, new Message(client, d as APIMessage));
 });
 
@@ -67,7 +73,6 @@ handlers.set('MESSAGE_DELETE', async (client, d) => {
 
 handlers.set('MESSAGE_REACTION_ADD', async (client, d) => {
   const data = d as GatewayMessageReactionAddDispatchData;
-  const { MessageReaction } = await import('../structures/MessageReaction.js');
   const reaction = new MessageReaction(client, data);
   const user = client.getOrCreateUser({
     id: data.user_id,
@@ -83,7 +88,6 @@ handlers.set('MESSAGE_REACTION_ADD', async (client, d) => {
 
 handlers.set('MESSAGE_REACTION_REMOVE', async (client, d) => {
   const data = d as GatewayMessageReactionRemoveDispatchData;
-  const { MessageReaction } = await import('../structures/MessageReaction.js');
   const reaction = new MessageReaction(client, data);
   const user = client.getOrCreateUser({
     id: data.user_id,
@@ -109,10 +113,6 @@ handlers.set('MESSAGE_REACTION_REMOVE_EMOJI', async (client, d) => {
 });
 
 handlers.set('GUILD_CREATE', async (client, d) => {
-  const { Guild } = await import('../structures/Guild.js');
-  const { Channel } = await import('../structures/Channel.js');
-  const { GuildMember } = await import('../structures/GuildMember.js');
-  const { normalizeGuildPayload } = await import('../util/guildUtils.js');
   const guildData = normalizeGuildPayload(d as unknown);
   if (!guildData) return;
   const guild = new Guild(client, guildData);
@@ -126,7 +126,7 @@ handlers.set('GUILD_CREATE', async (client, d) => {
     const channel = Channel.from(client, ch);
     if (channel) {
       client.channels.set(channel.id, channel);
-      guild.channels.set(channel.id, channel as import('../structures/Channel.js').GuildChannel);
+      guild.channels.set(channel.id, channel as GuildChannel);
     }
   }
   for (const m of g.members ?? []) {
@@ -143,8 +143,6 @@ handlers.set('GUILD_CREATE', async (client, d) => {
 });
 
 handlers.set('GUILD_UPDATE', async (client, d) => {
-  const { Guild } = await import('../structures/Guild.js');
-  const { normalizeGuildPayload } = await import('../util/guildUtils.js');
   const guildData = normalizeGuildPayload(d as unknown);
   if (!guildData) return;
   const old = client.guilds.get(guildData.id);
@@ -163,20 +161,18 @@ handlers.set('GUILD_DELETE', async (client, d) => {
 });
 
 handlers.set('CHANNEL_CREATE', async (client, d) => {
-  const { Channel } = await import('../structures/Channel.js');
   const ch = Channel.from(client, d as APIChannel);
   if (ch) {
     client.channels.set(ch.id, ch);
     if ('guildId' in ch && ch.guildId) {
       const guild = client.guilds.get(ch.guildId);
-      if (guild) guild.channels.set(ch.id, ch as import('../structures/Channel.js').GuildChannel);
+      if (guild) guild.channels.set(ch.id, ch as GuildChannel);
     }
-    client.emit(Events.ChannelCreate, ch as import('../structures/Channel.js').GuildChannel);
+    client.emit(Events.ChannelCreate, ch as GuildChannel);
   }
 });
 
 handlers.set('CHANNEL_UPDATE', async (client, d) => {
-  const { Channel } = await import('../structures/Channel.js');
   const ch = d as APIChannel;
   const oldCh = client.channels.get(ch.id);
   const newCh = Channel.from(client, ch);
@@ -185,7 +181,7 @@ handlers.set('CHANNEL_UPDATE', async (client, d) => {
     if ('guildId' in newCh && newCh.guildId) {
       const guild = client.guilds.get(newCh.guildId);
       if (guild)
-        guild.channels.set(newCh.id, newCh as import('../structures/Channel.js').GuildChannel);
+        guild.channels.set(newCh.id, newCh as GuildChannel);
     }
     client.emit(Events.ChannelUpdate, oldCh ?? newCh, newCh);
   }
@@ -205,7 +201,6 @@ handlers.set('CHANNEL_DELETE', async (client, d) => {
 });
 
 handlers.set('GUILD_MEMBER_ADD', async (client, d) => {
-  const { GuildMember } = await import('../structures/GuildMember.js');
   const data = d as APIGuildMember & { guild_id: string };
   const guild = client.guilds.get(data.guild_id);
   if (guild) {
@@ -216,7 +211,6 @@ handlers.set('GUILD_MEMBER_ADD', async (client, d) => {
 });
 
 handlers.set('GUILD_MEMBER_UPDATE', async (client, d) => {
-  const { GuildMember } = await import('../structures/GuildMember.js');
   const data = d as APIGuildMember & { guild_id: string };
   const guild = client.guilds.get(data.guild_id);
   if (guild) {
@@ -232,7 +226,6 @@ handlers.set('GUILD_MEMBER_REMOVE', async (client, d) => {
   const guild = client.guilds.get(data.guild_id);
   if (!guild || !data.user?.id) return;
 
-  const { GuildMember } = await import('../structures/GuildMember.js');
   let member = guild.members.get(data.user.id);
   if (member) {
     guild.members.delete(data.user.id);
@@ -274,8 +267,7 @@ handlers.set('MESSAGE_DELETE_BULK', async (client, d) => {
 
 handlers.set('GUILD_BAN_ADD', async (client, d) => {
   const data = d as GatewayGuildBanAddDispatchData;
-  const { GuildBan } = await import('../structures/GuildBan.js');
-  const banData: import('@fluxerjs/types').APIBan & { guild_id?: string } = {
+  const banData: APIBan & { guild_id?: string } = {
     user: data.user,
     reason: data.reason ?? null,
     guild_id: data.guild_id,
@@ -286,7 +278,6 @@ handlers.set('GUILD_BAN_ADD', async (client, d) => {
 
 handlers.set('GUILD_BAN_REMOVE', async (client, d) => {
   const data = d as GatewayGuildBanRemoveDispatchData;
-  const { GuildBan } = await import('../structures/GuildBan.js');
   const ban = new GuildBan(client, { ...data, reason: null }, data.guild_id);
   client.emit(Events.GuildBanRemove, ban);
 });
@@ -307,7 +298,6 @@ handlers.set('GUILD_ROLE_CREATE', async (client, d) => {
   const data = d as GatewayGuildRoleCreateDispatchData;
   const guild = client.guilds.get(data.guild_id);
   if (guild) {
-    const { Role } = await import('../structures/Role.js');
     guild.roles.set(data.role.id, new Role(client, data.role, guild.id));
   }
   client.emit(Events.GuildRoleCreate, data);
@@ -321,7 +311,6 @@ handlers.set('GUILD_ROLE_UPDATE', async (client, d) => {
     if (existing) {
       existing._patch(data.role);
     } else {
-      const { Role } = await import('../structures/Role.js');
       guild.roles.set(data.role.id, new Role(client, data.role, guild.id));
     }
   }
@@ -353,7 +342,6 @@ handlers.set('CHANNEL_PINS_UPDATE', async (client, d) => {
 
 handlers.set('INVITE_CREATE', async (client, d) => {
   const data = d as GatewayInviteCreateDispatchData;
-  const { Invite } = await import('../structures/Invite.js');
   client.emit(Events.InviteCreate, new Invite(client, data));
 });
 

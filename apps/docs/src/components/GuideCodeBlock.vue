@@ -41,7 +41,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import CodeBlock from './CodeBlock.vue';
-import type { GuideAlternateSnippet } from '../data/guides';
+import { GuideAlternateSnippet } from '../data/guides';
 
 defineProps<{
   code: string;

@@ -1,6 +1,6 @@
-import type { Snowflake } from '../common/snowflake.js';
-import type { APIUser } from './user.js';
-import type { APIChannelPartial } from './channel.js';
+import { Snowflake } from '../common/snowflake.js';
+import { APIUser } from './user.js';
+import { APIChannelPartial } from './channel.js';
 
 export interface APIGuildPartial {
   id: Snowflake;

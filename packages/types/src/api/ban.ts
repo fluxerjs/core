@@ -1,4 +1,4 @@
-import type { APIUser } from './user.js';
+import { APIUser } from './user.js';
 
 export interface APIBan {
   user: APIUser;

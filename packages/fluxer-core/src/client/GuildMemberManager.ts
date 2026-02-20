@@ -1,7 +1,7 @@
 import { Collection } from '@fluxerjs/collection';
-import { Routes } from '@fluxerjs/types';
-import type { Guild } from '../structures/Guild.js';
-import type { GuildMember } from '../structures/GuildMember.js';
+import { APIGuildMember, Routes } from '@fluxerjs/types';
+import { Guild } from '../structures/Guild.js';
+import { GuildMember } from '../structures/GuildMember.js';
 
 /**
  * Manages guild members with a Collection-like API.
@@ -70,11 +70,10 @@ export class GuildMemberManager extends Collection<string, GuildMember> {
     const qs = params.toString();
     const url = Routes.guildMembers(this.guild.id) + (qs ? `?${qs}` : '');
     const data = await this.guild.client.rest.get<
-      | import('@fluxerjs/types').APIGuildMember[]
-      | { members?: import('@fluxerjs/types').APIGuildMember[] }
+      | APIGuildMember[]
+      | { members?: APIGuildMember[] }
     >(url, { auth: true });
     const list = Array.isArray(data) ? data : (data?.members ?? []);
-    const { GuildMember } = await import('../structures/GuildMember.js');
     const members: GuildMember[] = [];
     for (const m of list) {
       const member = new GuildMember(

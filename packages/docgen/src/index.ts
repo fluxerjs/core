@@ -7,7 +7,7 @@
 import * as ts from 'typescript';
 import { resolve, dirname } from 'path';
 import { mkdirSync, writeFileSync } from 'fs';
-import type { DocOutput } from './schema.js';
+import { DocOutput } from './schema.js';
 
 export type { DocOutput, DocClass, DocInterface, DocEnum } from './schema.js';
 import { visitSourceFile } from './visitor.js';

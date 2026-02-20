@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiEndpoint } from '../data/apiEndpoints';
+import { ApiEndpoint } from '../data/apiEndpoints';
 import ApiEndpointCard from './ApiEndpointCard.vue';
 
 defineProps<{

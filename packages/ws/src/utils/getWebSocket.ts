@@ -5,6 +5,8 @@
  * Users never need to install ws themselves.
  */
 
+import ws from 'ws';
+
 type WSConstructor = new (url: string) => {
   send(data: string | ArrayBufferLike): void;
   close(code?: number): void;
@@ -49,7 +51,5 @@ export async function getDefaultWebSocket(): Promise<WSConstructor> {
       // continue
     }
   }
-  const mod = await import('ws');
-  cached = (mod.default ?? mod) as WSConstructor;
-  return cached;
+  return ws;
 }

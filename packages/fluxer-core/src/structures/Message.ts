@@ -1,7 +1,7 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
 import { Collection } from '@fluxerjs/collection';
-import type {
+import {
   APIMessage,
   APIMessageAttachment,
   APIMessageReaction,
@@ -10,12 +10,13 @@ import type {
   APIMessageSnapshot,
   APIMessageCall,
   APIEmbed,
+  APIUserPartial,
 } from '@fluxerjs/types';
 import { MessageType, Routes } from '@fluxerjs/types';
 import { EmbedBuilder } from '@fluxerjs/builders';
-import type { User } from './User.js';
-import type { Channel } from './Channel.js';
-import type { Guild } from './Guild.js';
+import { User } from './User.js';
+import { Channel } from './Channel.js';
+import { Guild } from './Guild.js';
 
 import {
   buildSendBody,
@@ -23,7 +24,7 @@ import {
   type MessageSendOptions,
 } from '../util/messageUtils.js';
 import { ReactionCollector } from '../util/ReactionCollector.js';
-import type { ReactionCollectorOptions } from '../util/ReactionCollector.js';
+import { ReactionCollectorOptions } from '../util/ReactionCollector.js';
 
 /** Options for editing a message (content and/or embeds). */
 export interface MessageEditOptions {
@@ -328,8 +329,8 @@ export class Message extends Base {
     const route =
       Routes.channelMessageReaction(this.channelId, this.id, emojiStr) + (qs ? `?${qs}` : '');
     const data = await this.client.rest.get<
-      | { users?: import('@fluxerjs/types').APIUserPartial[] }
-      | import('@fluxerjs/types').APIUserPartial[]
+      | { users?: APIUserPartial[] }
+      | APIUserPartial[]
     >(route);
     const list = Array.isArray(data) ? data : (data?.users ?? []);
     return list.map((u) => this.client.getOrCreateUser(u));

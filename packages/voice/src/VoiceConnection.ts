@@ -1,12 +1,15 @@
 import { EventEmitter } from 'events';
-import type { Client } from '@fluxerjs/core';
-import type { VoiceChannel } from '@fluxerjs/core';
-import type {
+import { Client } from '@fluxerjs/core';
+import { VoiceChannel } from '@fluxerjs/core';
+import {
   GatewayVoiceServerUpdateDispatchData,
   GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
 import * as nacl from 'tweetnacl';
 import * as dgram from 'dgram';
+import * as ws from 'ws';
+import { Readable } from 'node:stream';
+import { opus } from 'prism-media';
 /** Minimal WebSocket type for voice (ws module). */
 interface VoiceWebSocket {
   send(data: string | Buffer | ArrayBufferLike): void;
@@ -202,7 +205,6 @@ export class VoiceConnection extends EventEmitter {
 
   private async getWebSocketConstructor(): Promise<new (url: string) => VoiceWebSocket> {
     try {
-      const ws = await import('ws');
       return ws.default as new (url: string) => VoiceWebSocket;
     } catch {
       throw new Error('Install "ws" for voice support: pnpm add ws');
@@ -294,8 +296,6 @@ export class VoiceConnection extends EventEmitter {
    */
   async play(urlOrStream: string | NodeJS.ReadableStream): Promise<void> {
     this.stop();
-    const { opus: prismOpus } = await import('prism-media');
-    const { Readable } = await import('stream');
 
     let inputStream: NodeJS.ReadableStream;
     if (typeof urlOrStream === 'string') {
@@ -313,7 +313,7 @@ export class VoiceConnection extends EventEmitter {
       inputStream = urlOrStream;
     }
 
-    const demuxer = new prismOpus.WebmDemuxer();
+    const demuxer = new opus.WebmDemuxer();
     (inputStream as NodeJS.ReadableStream).pipe(demuxer);
 
     this._playing = true;

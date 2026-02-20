@@ -26,6 +26,7 @@ import {
   VoiceChannel,
   cdnBannerURL,
   UserFlagsBits,
+  PermissionFlags,
 } from '@fluxerjs/core';
 import { getVoiceManager, LiveKitRtcConnection } from '@fluxerjs/voice';
 
@@ -325,7 +326,6 @@ commands.set('bme', {
       .map((id) => guild.roles.get(id)?.name ?? id);
     const permNames = [];
     try {
-      const { PermissionFlags } = await import('@fluxerjs/core');
       for (const [name, bit] of Object.entries(PermissionFlags)) {
         if (typeof bit === 'number' && me.permissions.has(bit)) permNames.push(name);
       }

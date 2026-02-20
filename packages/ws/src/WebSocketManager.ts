@@ -1,9 +1,11 @@
 import { EventEmitter } from 'events';
-import type { APIGatewayBotResponse, GatewayPresenceUpdateData } from '@fluxerjs/types';
+import { APIGatewayBotResponse, GatewayPresenceUpdateData } from '@fluxerjs/types';
 import { WebSocketShard } from './WebSocketShard.js';
 import { getDefaultWebSocket } from './utils/getWebSocket.js';
 
-export type WebSocketConstructor = import('./WebSocketShard.js').WebSocketConstructor;
+import { WebSocketConstructor as WSConstructor } from "./WebSocketShard";
+
+export type WebSocketConstructor = WSConstructor;
 
 const RETRY_INITIAL_MS = 1000;
 const RETRY_MAX_MS = 45000;

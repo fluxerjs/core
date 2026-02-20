@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { DocOutput } from '../types/doc-schema';
+import { DocOutput } from '../types/doc-schema';
 
 /** Version used for fetch path: "latest" or "v1.0.5" */
 export type DocsVersionKey = string;

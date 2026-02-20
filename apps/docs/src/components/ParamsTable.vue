@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DocParam } from '../types/doc-schema';
+import { DocParam } from '../types/doc-schema';
 import DocDescription from './DocDescription.vue';
 import TypeSignature from './TypeSignature.vue';
 

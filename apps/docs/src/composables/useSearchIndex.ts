@@ -1,6 +1,6 @@
 import { computed, type ComputedRef } from 'vue';
-import type { DocOutput } from '../types/doc-schema';
-import type { Guide } from '../data/guides';
+import { DocOutput } from '../types/doc-schema';
+import { Guide } from '../data/guides';
 
 export interface SearchHit {
   id: string;

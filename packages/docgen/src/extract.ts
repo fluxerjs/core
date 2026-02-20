@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import doctrine from 'doctrine';
-import type {
+import {
   DocParam,
   DocConstructor,
   DocProperty,

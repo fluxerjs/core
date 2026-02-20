@@ -1,4 +1,4 @@
-import type { RateLimitErrorBody } from '@fluxerjs/types';
+import { RateLimitErrorBody } from '@fluxerjs/types';
 import { FluxerAPIError } from './FluxerAPIError.js';
 
 export class RateLimitError extends FluxerAPIError {

@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { DocConstructor } from '../types/doc-schema';
+import { DocConstructor } from '../types/doc-schema';
 import DocDescription from './DocDescription.vue';
 import ParamsTable from './ParamsTable.vue';
 import TypeSignature from './TypeSignature.vue';

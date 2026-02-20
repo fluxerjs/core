@@ -1,17 +1,28 @@
 import { EventEmitter } from 'events';
 import { REST } from '@fluxerjs/rest';
 import { WebSocketManager } from '@fluxerjs/ws';
-import { Routes } from '@fluxerjs/types';
+import {
+  APIApplicationCommandInteraction,
+  APIEmbed,
+  GatewayGuildRoleCreateDispatchData,
+  GatewayGuildRoleDeleteDispatchData,
+  GatewayGuildRoleUpdateDispatchData,
+  GatewayInviteDeleteDispatchData,
+  GatewayMessageDeleteBulkDispatchData,
+  GatewayTypingStartDispatchData,
+  GatewayUserUpdateDispatchData,
+  Routes,
+} from '@fluxerjs/types';
 import { ChannelManager } from './ChannelManager.js';
 import { GuildManager } from './GuildManager.js';
-import type { ClientOptions } from '../util/Options.js';
-import type { ClientUser } from './ClientUser.js';
-import type { Guild } from '../structures/Guild.js';
-import type { Channel } from '../structures/Channel.js';
+import { ClientOptions } from '../util/Options.js';
+import { ClientUser } from './ClientUser.js';
+import { Guild } from '../structures/Guild.js';
+import { Channel, GuildChannel } from '../structures/Channel.js';
 import { FluxerError } from '../errors/FluxerError.js';
 import { ErrorCodes } from '../errors/ErrorCodes.js';
 import { Events } from '../util/Events.js';
-import type {
+import {
   GatewayReceivePayload,
   GatewaySendPayload,
   GatewayVoiceStateUpdateDispatchData,
@@ -29,7 +40,7 @@ import type {
   GatewayPresenceUpdateDispatchData,
   GatewayWebhooksUpdateDispatchData,
 } from '@fluxerjs/types';
-import type { APIChannel, APIGuild, APIUser, APIUserPartial, APIInstance } from '@fluxerjs/types';
+import { APIChannel, APIGuild, APIUser, APIUserPartial, APIInstance } from '@fluxerjs/types';
 import {
   emitDeprecationWarning,
   formatEmoji,
@@ -39,6 +50,13 @@ import {
 import { User } from '../structures/User.js';
 import { UsersManager } from './UsersManager.js';
 import { eventHandlers } from './EventHandlerRegistry.js';
+import { normalizeGuildPayload } from '../util/guildUtils';
+import { Message } from '../structures/Message';
+import { PartialMessage } from '../structures/PartialMessage';
+import { MessageReaction } from '../structures/MessageReaction';
+import { GuildMember } from '../structures/GuildMember';
+import { GuildBan } from '../structures/GuildBan';
+import { Invite } from '../structures/Invite';
 
 /**
  * Callback parameter types for client events. Use with client.on(Events.X, handler).
@@ -46,14 +64,14 @@ import { eventHandlers } from './EventHandlerRegistry.js';
  */
 export interface ClientEvents {
   [Events.Ready]: [];
-  [Events.MessageCreate]: [message: import('../structures/Message.js').Message];
+  [Events.MessageCreate]: [message: Message];
   [Events.MessageUpdate]: [
-    oldMessage: import('../structures/Message.js').Message | null,
-    newMessage: import('../structures/Message.js').Message,
+    oldMessage: Message | null,
+    newMessage: Message,
   ];
-  [Events.MessageDelete]: [message: import('../structures/PartialMessage.js').PartialMessage];
+  [Events.MessageDelete]: [message: PartialMessage];
   [Events.MessageReactionAdd]: [
-    reaction: import('../structures/MessageReaction.js').MessageReaction,
+    reaction: MessageReaction,
     user: User,
     messageId: string,
     channelId: string,
@@ -61,7 +79,7 @@ export interface ClientEvents {
     userId: string,
   ];
   [Events.MessageReactionRemove]: [
-    reaction: import('../structures/MessageReaction.js').MessageReaction,
+    reaction: MessageReaction,
     user: User,
     messageId: string,
     channelId: string,
@@ -71,44 +89,44 @@ export interface ClientEvents {
   [Events.MessageReactionRemoveAll]: [data: GatewayMessageReactionRemoveAllDispatchData];
   [Events.MessageReactionRemoveEmoji]: [data: GatewayMessageReactionRemoveEmojiDispatchData];
   [Events.InteractionCreate]: [
-    interaction: import('@fluxerjs/types').APIApplicationCommandInteraction,
+    interaction: APIApplicationCommandInteraction,
   ];
   [Events.GuildCreate]: [guild: Guild];
   [Events.GuildUpdate]: [oldGuild: Guild, newGuild: Guild];
   [Events.GuildDelete]: [guild: Guild];
-  [Events.ChannelCreate]: [channel: import('../structures/Channel.js').GuildChannel];
+  [Events.ChannelCreate]: [channel: GuildChannel];
   [Events.ChannelUpdate]: [oldChannel: Channel, newChannel: Channel];
   [Events.ChannelDelete]: [channel: Channel];
-  [Events.GuildMemberAdd]: [member: import('../structures/GuildMember.js').GuildMember];
+  [Events.GuildMemberAdd]: [member: GuildMember];
   [Events.GuildMemberUpdate]: [
-    oldMember: import('../structures/GuildMember.js').GuildMember,
-    newMember: import('../structures/GuildMember.js').GuildMember,
+    oldMember: GuildMember,
+    newMember: GuildMember,
   ];
-  [Events.GuildMemberRemove]: [member: import('../structures/GuildMember.js').GuildMember];
+  [Events.GuildMemberRemove]: [member: GuildMember];
   [Events.VoiceStateUpdate]: [data: GatewayVoiceStateUpdateDispatchData];
   [Events.VoiceServerUpdate]: [data: GatewayVoiceServerUpdateDispatchData];
   [Events.VoiceStatesSync]: [
     data: { guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null }> },
   ];
   [Events.MessageDeleteBulk]: [
-    data: import('@fluxerjs/types').GatewayMessageDeleteBulkDispatchData,
+    data: GatewayMessageDeleteBulkDispatchData,
   ];
-  [Events.GuildBanAdd]: [ban: import('../structures/GuildBan.js').GuildBan];
-  [Events.GuildBanRemove]: [ban: import('../structures/GuildBan.js').GuildBan];
+  [Events.GuildBanAdd]: [ban: GuildBan];
+  [Events.GuildBanRemove]: [ban: GuildBan];
   [Events.GuildEmojisUpdate]: [data: GatewayGuildEmojisUpdateDispatchData];
   [Events.GuildStickersUpdate]: [data: GatewayGuildStickersUpdateDispatchData];
   [Events.GuildIntegrationsUpdate]: [data: GatewayGuildIntegrationsUpdateDispatchData];
-  [Events.GuildRoleCreate]: [data: import('@fluxerjs/types').GatewayGuildRoleCreateDispatchData];
-  [Events.GuildRoleUpdate]: [data: import('@fluxerjs/types').GatewayGuildRoleUpdateDispatchData];
-  [Events.GuildRoleDelete]: [data: import('@fluxerjs/types').GatewayGuildRoleDeleteDispatchData];
+  [Events.GuildRoleCreate]: [data: GatewayGuildRoleCreateDispatchData];
+  [Events.GuildRoleUpdate]: [data: GatewayGuildRoleUpdateDispatchData];
+  [Events.GuildRoleDelete]: [data: GatewayGuildRoleDeleteDispatchData];
   [Events.GuildScheduledEventCreate]: [data: GatewayGuildScheduledEventCreateDispatchData];
   [Events.GuildScheduledEventUpdate]: [data: GatewayGuildScheduledEventUpdateDispatchData];
   [Events.GuildScheduledEventDelete]: [data: GatewayGuildScheduledEventDeleteDispatchData];
   [Events.ChannelPinsUpdate]: [data: GatewayChannelPinsUpdateDispatchData];
-  [Events.InviteCreate]: [invite: import('../structures/Invite.js').Invite];
-  [Events.InviteDelete]: [data: import('@fluxerjs/types').GatewayInviteDeleteDispatchData];
-  [Events.TypingStart]: [data: import('@fluxerjs/types').GatewayTypingStartDispatchData];
-  [Events.UserUpdate]: [data: import('@fluxerjs/types').GatewayUserUpdateDispatchData];
+  [Events.InviteCreate]: [invite: Invite];
+  [Events.InviteDelete]: [data: GatewayInviteDeleteDispatchData];
+  [Events.TypingStart]: [data: GatewayTypingStartDispatchData];
+  [Events.UserUpdate]: [data: GatewayUserUpdateDispatchData];
   [Events.PresenceUpdate]: [data: GatewayPresenceUpdateDispatchData];
   [Events.WebhooksUpdate]: [data: GatewayWebhooksUpdateDispatchData];
   [Events.Resumed]: [];
@@ -265,7 +283,7 @@ export class Client extends EventEmitter {
   async fetchMessage(
     channelId: string,
     messageId: string,
-  ): Promise<import('../structures/Message.js').Message> {
+  ): Promise<Message> {
     emitDeprecationWarning(
       'Client.fetchMessage()',
       'Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.resolve(channelId))?.messages?.fetch(messageId)',
@@ -279,8 +297,8 @@ export class Client extends EventEmitter {
    */
   async sendToChannel(
     channelId: string,
-    payload: string | { content?: string; embeds?: import('@fluxerjs/types').APIEmbed[] },
-  ): Promise<import('../structures/Message.js').Message> {
+    payload: string | { content?: string; embeds?: APIEmbed[] },
+  ): Promise<Message> {
     return this.channels.send(channelId, payload);
   }
 
@@ -369,11 +387,7 @@ export class Client extends EventEmitter {
       }: {
         data: { user: APIUser; guilds: Array<APIGuild & { unavailable?: boolean }> };
       }) => {
-        const { ClientUser } = await import('./ClientUser.js');
-        const { Guild } = await import('../structures/Guild.js');
-        const { Channel } = await import('../structures/Channel.js');
         this.user = new ClientUser(this, data.user);
-        const { normalizeGuildPayload } = await import('../util/guildUtils.js');
         for (const g of data.guilds ?? []) {
           const guildData = normalizeGuildPayload(g as unknown);
           if (!guildData) continue;
@@ -389,7 +403,7 @@ export class Client extends EventEmitter {
               this.channels.set(channel.id, channel);
               guild.channels.set(
                 channel.id,
-                channel as import('../structures/Channel.js').GuildChannel,
+                channel as GuildChannel,
               );
             }
           }

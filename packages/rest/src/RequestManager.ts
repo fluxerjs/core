@@ -1,6 +1,6 @@
 import { RateLimitManager } from './RateLimitManager.js';
 import { FluxerAPIError, RateLimitError, HTTPError } from './errors/index.js';
-import type { APIErrorBody, RateLimitErrorBody } from '@fluxerjs/types';
+import { APIErrorBody, RateLimitErrorBody } from '@fluxerjs/types';
 import { buildFormData } from './utils/files.js';
 
 export interface RequestOptions {

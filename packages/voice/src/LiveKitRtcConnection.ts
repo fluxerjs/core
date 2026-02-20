@@ -1,8 +1,8 @@
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { EventEmitter } from 'events';
-import type { Client } from '@fluxerjs/core';
-import type { VoiceChannel } from '@fluxerjs/core';
-import type {
+import { Client } from '@fluxerjs/core';
+import { VoiceChannel } from '@fluxerjs/core';
+import {
   GatewayVoiceServerUpdateDispatchData,
   GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
@@ -21,7 +21,13 @@ import {
 } from '@livekit/rtc-node';
 import { buildLiveKitUrlForRtcSdk } from './livekit.js';
 import { parseOpusPacketBoundaries, concatUint8Arrays } from './opusUtils.js';
-import type { VoiceConnectionEvents } from './VoiceConnection.js';
+import { VoiceConnectionEvents } from './VoiceConnection.js';
+import { Readable } from 'node:stream';
+import { OpusDecoder } from 'opus-decoder';
+import { opus } from 'prism-media';
+import { promisify } from 'node:util';
+import { createFile } from 'mp4box';
+import * as WebCodecs from "node-webcodecs";
 
 const SAMPLE_RATE = 48000;
 const CHANNELS = 1;
@@ -402,13 +408,11 @@ export class LiveKitRtcConnection extends EventEmitter {
       return;
     }
 
-    const { createFile } = await import('mp4box');
-    let VideoDecoder: typeof import('node-webcodecs').VideoDecoder;
-    let EncodedVideoChunk: typeof import('node-webcodecs').EncodedVideoChunk;
+    let VideoDecoder: typeof WebCodecs.VideoDecoder;
+    let EncodedVideoChunk: typeof WebCodecs.EncodedVideoChunk;
     try {
-      const webcodecs = await import('node-webcodecs');
-      VideoDecoder = webcodecs.VideoDecoder;
-      EncodedVideoChunk = webcodecs.EncodedVideoChunk;
+      VideoDecoder = WebCodecs.VideoDecoder;
+      EncodedVideoChunk = WebCodecs.EncodedVideoChunk;
     } catch {
       this.emit(
         'error',
@@ -534,7 +538,7 @@ export class LiveKitRtcConnection extends EventEmitter {
       let pacingInterval: ReturnType<typeof setInterval> | null = null;
 
       const decoder = new VideoDecoder({
-        output: async (frame: import('node-webcodecs').VideoFrame) => {
+        output: async (frame: WebCodecs.VideoFrame) => {
           if (!this._playingVideo || !source) return;
           const { codedWidth, codedHeight } = frame;
           if (codedWidth <= 0 || codedHeight <= 0) {
@@ -838,9 +842,6 @@ export class LiveKitRtcConnection extends EventEmitter {
 
           // Start FFmpeg audio pipeline (same as play()) when video has audio and we have URL
           if (videoUrl && audioSource && audioTrack) {
-            const { opus: prismOpus } = await import('prism-media');
-            const { OpusDecoder } = await import('opus-decoder');
-
             const runAudioFfmpeg = async () => {
               if (!this._playingVideo || cleanupCalled || !audioSource) return;
               const audioProc = spawn(
@@ -862,7 +863,7 @@ export class LiveKitRtcConnection extends EventEmitter {
                 { stdio: ['ignore', 'pipe', 'pipe'] },
               );
               audioFfmpegProc = audioProc;
-              const demuxer = new prismOpus.WebmDemuxer();
+              const demuxer = new opus.WebmDemuxer();
               if (audioProc.stdout) audioProc.stdout.pipe(demuxer);
 
               const decoder = new OpusDecoder({ sampleRate: SAMPLE_RATE, channels: CHANNELS });
@@ -966,8 +967,6 @@ export class LiveKitRtcConnection extends EventEmitter {
     let height = 480;
     let hasAudio = false;
     try {
-      const { execFile } = await import('node:child_process');
-      const { promisify } = await import('node:util');
       const exec = promisify(execFile);
       const { stdout } = await exec(
         'ffprobe',
@@ -1249,9 +1248,7 @@ export class LiveKitRtcConnection extends EventEmitter {
 
       if (hasAudio && audioReady && audioSource && proc.stdio[3]) {
         const audioPipe = proc.stdio[3] as NodeJS.ReadableStream;
-        const { opus: prismOpus } = await import('prism-media');
-        const { OpusDecoder } = await import('opus-decoder');
-        const demuxer = new prismOpus.WebmDemuxer();
+        const demuxer = new opus.WebmDemuxer();
         audioPipe.pipe(demuxer);
         const decoder = new OpusDecoder({ sampleRate: SAMPLE_RATE, channels: CHANNELS });
         await decoder.ready;
@@ -1338,10 +1335,6 @@ export class LiveKitRtcConnection extends EventEmitter {
       return;
     }
 
-    const { opus: prismOpus } = await import('prism-media');
-    const { Readable } = await import('stream');
-    const { OpusDecoder } = await import('opus-decoder');
-
     let inputStream: NodeJS.ReadableStream;
     if (typeof urlOrStream === 'string') {
       try {
@@ -1367,7 +1360,7 @@ export class LiveKitRtcConnection extends EventEmitter {
 
     await this.room.localParticipant!.publishTrack(track, options);
 
-    const demuxer = new prismOpus.WebmDemuxer();
+    const demuxer = new opus.WebmDemuxer();
     (inputStream as NodeJS.ReadableStream).pipe(demuxer);
     this.currentStream = demuxer;
 

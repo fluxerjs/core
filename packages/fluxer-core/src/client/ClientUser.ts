@@ -1,8 +1,8 @@
-import type { Client } from './Client.js';
+import { Client } from './Client.js';
 import { User } from '../structures/User.js';
-import type { APIUserPartial } from '@fluxerjs/types';
+import { APIGuild, APIUserPartial } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
-import type { Guild } from '../structures/Guild.js';
+import { Guild } from '../structures/Guild.js';
 
 export class ClientUser extends User {
   declare readonly client: Client;
@@ -16,9 +16,8 @@ export class ClientUser extends User {
    * @returns Array of Guild objects (cached in client.guilds)
    */
   async fetchGuilds(): Promise<Guild[]> {
-    const { Guild } = await import('../structures/Guild.js');
     const data = await this.client.rest.get<
-      import('@fluxerjs/types').APIGuild[] | { guilds?: import('@fluxerjs/types').APIGuild[] }
+      APIGuild[] | { guilds?: APIGuild[] }
     >(Routes.currentUserGuilds());
     const list = Array.isArray(data) ? data : (data?.guilds ?? []);
     const guilds: Guild[] = [];

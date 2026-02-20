@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events';
-import type { Client } from '@fluxerjs/core';
-import type { VoiceChannel } from '@fluxerjs/core';
+import { Client } from '@fluxerjs/core';
+import { VoiceChannel } from '@fluxerjs/core';
 import { Events } from '@fluxerjs/core';
 import { GatewayOpcodes, Routes } from '@fluxerjs/types';
 import { thumbnail } from './streamPreviewPlaceholder.js';
-import type {
+import {
   GatewayVoiceServerUpdateDispatchData,
   GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';

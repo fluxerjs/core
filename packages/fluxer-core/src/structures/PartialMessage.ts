@@ -1,4 +1,4 @@
-import type { Channel } from './Channel.js';
+import { Channel } from './Channel.js';
 
 /** Minimal message data for MessageDelete when the full message is not available. */
 export interface PartialMessage {

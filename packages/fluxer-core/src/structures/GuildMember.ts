@@ -1,9 +1,9 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { User } from './User.js';
-import type { Guild } from './Guild.js';
-import type { GuildChannel } from './Channel.js';
-import type { APIGuildMember } from '@fluxerjs/types';
+import { User } from './User.js';
+import { Guild } from './Guild.js';
+import { GuildChannel } from './Channel.js';
+import { APIGuildMember } from '@fluxerjs/types';
 import { PermissionFlagsMap, type PermissionResolvable } from '@fluxerjs/util';
 import { Routes } from '@fluxerjs/types';
 import { cdnMemberAvatarURL, cdnMemberBannerURL } from '../util/cdn.js';
@@ -120,7 +120,7 @@ export class GuildMember extends Base {
     const route = isMe
       ? `/guilds/${this.guild.id}/members/@me`
       : Routes.guildMember(this.guild.id, this.id);
-    const data = await this.client.rest.patch<import('@fluxerjs/types').APIGuildMember>(route, {
+    const data = await this.client.rest.patch<APIGuildMember>(route, {
       body: options,
       auth: true,
     });

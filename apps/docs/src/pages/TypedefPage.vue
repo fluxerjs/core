@@ -60,7 +60,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDocsStore } from '../stores/docs';
-import type { DocInterface, DocEnum } from '../types/doc-schema';
+import { DocInterface, DocEnum } from '../types/doc-schema';
 import { onMounted, watch } from 'vue';
 import DocDescription from '../components/DocDescription.vue';
 import PropertiesSection from '../components/PropertiesSection.vue';

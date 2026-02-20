@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import { relative } from 'path';
-import type { DocClass, DocInterface, DocEnum, DocSource } from './schema.js';
+import { DocClass, DocInterface, DocEnum, DocSource } from './schema.js';
 import {
   extractConstructor,
   extractProperty,

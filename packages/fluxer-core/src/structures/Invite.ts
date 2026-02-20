@@ -1,9 +1,9 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { APIInvite, APIGuildPartial, APIChannelPartial, APIUser } from '@fluxerjs/types';
+import { APIInvite, APIGuildPartial, APIChannelPartial, APIUser } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
-import type { Guild } from './Guild.js';
-import type { User } from './User.js';
+import { Guild } from './Guild.js';
+import { User } from './User.js';
 
 /** Represents an invite to a guild or channel. */
 export class Invite extends Base {
