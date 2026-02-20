@@ -1,16 +1,12 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { APIEmbed } from '@fluxerjs/types';
-import type {
-  APIWebhook,
-  APIWebhookUpdateRequest,
-  APIWebhookTokenUpdateRequest,
-} from '@fluxerjs/types';
+import { APIEmbed, APIMessage } from '@fluxerjs/types';
+import { APIWebhook, APIWebhookUpdateRequest, APIWebhookTokenUpdateRequest } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import { EmbedBuilder } from '@fluxerjs/builders';
 import { buildSendBody, resolveMessageFiles, type MessageFileData } from '../util/messageUtils.js';
-import type { Message } from './Message.js';
-import type { User } from './User.js';
+import { Message } from './Message.js';
+import { User } from './User.js';
 import { cdnAvatarURL } from '../util/cdn.js';
 
 /** File data for webhook attachment uploads. Use `data` for buffers or `url` to fetch from a URL. */
@@ -154,13 +150,9 @@ export class Webhook extends Base {
       ? { body, files, auth: false as const }
       : { body, auth: false as const };
 
-    const data = await this.client.rest.post<import('@fluxerjs/types').APIMessage | undefined>(
-      route,
-      postOptions,
-    );
+    const data = await this.client.rest.post<APIMessage | undefined>(route, postOptions);
 
     if (wait && data) {
-      const { Message } = await import('./Message.js');
       return new Message(this.client, data);
     }
     return undefined;

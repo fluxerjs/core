@@ -61,7 +61,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useDocsStore } from '../stores/docs';
 import { useGuidesStore } from '../stores/guides';
 import { useSearchIndex, useGuidesSearchIndex } from '../composables/useSearchIndex';
-import type { SearchHit } from '../composables/useSearchIndex';
+import { SearchHit } from '../composables/useSearchIndex';
 
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ (e: 'close'): void }>();
@@ -155,7 +155,13 @@ const filtered = computed(() => {
   return index.value.filter((h) => {
     const name = h.name.toLowerCase();
     const parent = (h.parent ?? '').toLowerCase();
-    return name.includes(q) || parent.includes(q) || `${parent}.${name}`.includes(q);
+    const searchText = (h.searchText ?? '').toLowerCase();
+    return (
+      name.includes(q) ||
+      parent.includes(q) ||
+      `${parent}.${name}`.includes(q) ||
+      searchText.includes(q)
+    );
   });
 });
 

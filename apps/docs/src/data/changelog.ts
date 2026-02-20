@@ -11,6 +11,92 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.2.1',
+    date: '2026-02-21',
+    sections: [
+      {
+        title: 'BREAKING: MessageReaction events',
+        items: [
+          'MessageReactionAdd and MessageReactionRemove now emit (reaction, user) only — messageId, channelId, emoji, and userId are accessible via reaction.messageId, reaction.channelId, reaction.emoji, and user.id',
+          'Handlers that destructured the extra args (messageId, channelId, emoji, userId) will break; migrate to reaction/user properties',
+        ],
+      },
+      {
+        title: 'BREAKING: GuildMember.roles',
+        items: [
+          'member.roles is now GuildMemberRoleManager (was string[]). Migrate: member.roles.includes(roleId) → member.roles.cache.has(roleId); array iteration → member.roles.roleIds',
+          'member.addRole() and member.removeRole() still work; prefer member.roles.add() and member.roles.remove() for Discord.js parity',
+        ],
+      },
+      {
+        title: 'SDK — GuildMemberRoleManager',
+        items: [
+          'member.roles — add(roleOrId), remove(roleOrId), set(roleIds), cache (Collection of Role objects), roleIds, has(roleOrId). Discord.js parity.',
+          'GuildMemberRoleManager and RoleResolvable exported from @fluxerjs/core',
+        ],
+      },
+      {
+        title: 'SDK — Guild emojis',
+        items: [
+          'guild.emojis — Collection of GuildEmoji (cached after fetch)',
+          'guild.fetchEmojis() — fetch all emojis; cached in guild.emojis',
+          'guild.fetchEmoji(emojiId) — fetch single emoji; throws FluxerError with EmojiNotFound code on 404',
+        ],
+      },
+      {
+        title: 'SDK — Types & resolution',
+        items: [
+          'ChannelManager — return type now includes GuildChannel when fetching a guild channel; client.channels.get(guildChannelId) and fetch() return Channel | GuildChannel',
+          'GatewayReactionEmoji — id is now optional (id?: Snowflake) to match API; default/unicode emoji omit id',
+          '@fluxerjs/util BitField — BitFieldResolvable now accepts bigint',
+        ],
+      },
+      {
+        title: 'SDK — Error codes',
+        items: ['ErrorCodes.EmojiNotFound — used when fetchEmoji returns 404'],
+      },
+      {
+        title: 'Build & tooling',
+        items: [
+          'tsup configs added for all packages; build scripts simplified',
+          'Runtime dynamic imports removed in favor of compile-time imports — smaller bundle, faster startup (#17)',
+          'Emoji shortcodes generated file — minified format for smaller bundle',
+          'scripts/generate-ai-rag.ts — generate RAG index from docs for AI bot; pnpm run generate:rag',
+        ],
+      },
+      {
+        title: 'Docs site — Discord.js compatibility',
+        items: [
+          '@discordJsCompat JSDoc tag — docgen extracts and surfaces in API docs; classes, methods, properties can show "Discord.js compatible" badge with optional link',
+          'ApiDiscordCompat, GuideDiscordCompat, GuideDiscordCompatCallout — new components for badges and callouts',
+          'ClassPage, MethodsSection, PropertiesSection — green Discord.js compat styling and badges on compatible APIs',
+          'ClassPage — "Class not found in this version" shows link to latest docs when class may exist in newer release',
+        ],
+      },
+      {
+        title: 'Docs — Guides',
+        items: [
+          'New guide: Discord.js Compatibility — overview of member.roles, guild.members.me, client.channels.cache; migration from member.roles.includes() to member.roles.cache.has()',
+          'New guide: Channels — create, edit, delete; permission overwrites; roles; invites; emojis & stickers',
+          'Guides category order — channels category; Roles guide; discordJsCompat badges on relevant sections',
+          'Roles guide — new section "Add/remove roles from members (member.roles)" with Discord.js-style examples',
+          'Channels guide — new "Fetch Emojis" section (guild.fetchEmojis, guild.fetchEmoji, emoji.delete)',
+        ],
+      },
+      {
+        title: 'Examples',
+        items: [
+          'ping-bot — userinfo uses guild-specific avatar (cdnMemberAvatarURL) when member has one; improved embed layout with setAuthor',
+          'reaction-roles-bot — updated to member.roles.cache.has() for role checks',
+        ],
+      },
+      {
+        title: 'Chore',
+        items: ['.gitignore — removed IDE and OS-specific entries', '.env.example — minor cleanup'],
+      },
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-02-20',
     sections: [

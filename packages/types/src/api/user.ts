@@ -1,4 +1,4 @@
-import type { Snowflake } from '../common/snowflake.js';
+import { Snowflake } from '../common/snowflake.js';
 
 /**
  * Partial user object returned by the API (messages, members, webhooks, etc.).

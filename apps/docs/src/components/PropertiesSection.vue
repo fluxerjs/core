@@ -1,7 +1,16 @@
 <template>
   <section class="section">
     <h2>Properties</h2>
-    <div v-for="p in properties" :id="`property-${p.name}`" :key="p.name" class="property-item">
+    <div
+      v-for="p in properties"
+      :id="`property-${p.name}`"
+      :key="p.name"
+      class="property-item"
+      :class="{ 'is-discord-compat': p.discordJsCompat }">
+      <ApiDiscordCompat
+        v-if="p.discordJsCompat"
+        :to="fluxerPropertyLink(p.name)"
+        variant="banner" />
       <div class="property-header">
         <code class="property-name">{{ p.name }}</code>
         <span v-if="p.optional" class="optional-badge">optional</span>
@@ -23,12 +32,28 @@
 </template>
 
 <script setup lang="ts">
+import { useRoute } from 'vue-router';
 import type { DocProperty, DocInterfaceProperty } from '../types/doc-schema';
+import ApiDiscordCompat from './ApiDiscordCompat.vue';
 import DocDescription from './DocDescription.vue';
 import TypeSignature from './TypeSignature.vue';
 import CodeBlock from './CodeBlock.vue';
 
-defineProps<{ properties: (DocProperty | DocInterfaceProperty)[] }>();
+const props = defineProps<{
+  properties: (DocProperty | DocInterfaceProperty)[];
+  parentName?: string;
+  /** 'class' = link to class page, 'typedef' = link to typedef page */
+  parentType?: 'class' | 'typedef';
+}>();
+const route = useRoute();
+
+function fluxerPropertyLink(propertyName: string) {
+  const version = (route.params.version as string) ?? 'latest';
+  const parent = props.parentName;
+  if (!parent) return undefined;
+  const segment = props.parentType === 'typedef' ? 'typedefs' : 'classes';
+  return { path: `/v/${version}/docs/${segment}/${parent}`, hash: `#property-${propertyName}` };
+}
 </script>
 
 <style scoped>
@@ -55,6 +80,18 @@ defineProps<{ properties: (DocProperty | DocInterfaceProperty)[] }>();
   margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: none;
+}
+
+.property-item.is-discord-compat {
+  background: var(--discord-compat-bg);
+  border: 1px solid var(--discord-compat-border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.property-item.is-discord-compat:last-child {
+  margin-bottom: 0;
 }
 
 .property-header {

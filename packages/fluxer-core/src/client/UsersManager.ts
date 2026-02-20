@@ -1,7 +1,7 @@
 import { Collection } from '@fluxerjs/collection';
 import { Routes } from '@fluxerjs/types';
-import type { APIUserPartial, APIProfileResponse, APIGuildMember } from '@fluxerjs/types';
-import type { Client } from './Client.js';
+import { APIUserPartial, APIProfileResponse, APIGuildMember } from '@fluxerjs/types';
+import { Client } from './Client.js';
 import { User } from '../structures/User.js';
 import { GuildMember } from '../structures/GuildMember.js';
 

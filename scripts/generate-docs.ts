@@ -8,7 +8,8 @@ import { resolve, dirname } from 'path';
 import { mkdirSync, writeFileSync, readFileSync, unlinkSync, readdirSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { generateDocs } from '@fluxerjs/docgen';
-import type { DocOutput } from '@fluxerjs/docgen';
+import { DocOutput } from '@fluxerjs/docgen';
+import { guides } from '../apps/docs/src/data/guides';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -136,7 +137,6 @@ async function main(): Promise<void> {
 
   // Guides per version (same content for now; override per version in data/ if needed later)
   const guidesPath = pathToFileURL(resolve(root, 'apps/docs/src/data/guides.ts')).href;
-  const { guides } = await import(guidesPath);
   const guidesStr = JSON.stringify(guides, null, 2);
   writeFileSync(resolve(versionedDir, 'guides.json'), guidesStr, 'utf-8');
   writeFileSync(resolve(latestDir, 'guides.json'), guidesStr, 'utf-8');

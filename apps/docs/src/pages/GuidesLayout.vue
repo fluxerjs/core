@@ -55,7 +55,7 @@ import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import Footer from '../components/Footer.vue';
 import CommunityCallout from '../components/CommunityCallout.vue';
-import { getCategoryLabel, CATEGORY_ORDER } from '../data/guides';
+import { getCategoryLabel, CATEGORY_ORDER, Guide } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
 
@@ -73,7 +73,7 @@ watch(
 );
 
 const groupedGuides = computed(() => {
-  const groups: Record<string, import('../data/guides').Guide[]> = {};
+  const groups: Record<string, Guide[]> = {};
   for (const g of guidesStore.guides) {
     const cat = g.category;
     if (!groups[cat]) groups[cat] = [];
@@ -82,10 +82,8 @@ const groupedGuides = computed(() => {
   return groups;
 });
 
-const sortGroupedByCategory = (
-  groups: Record<string, import('../data/guides').Guide[]>,
-): Record<string, import('../data/guides').Guide[]> => {
-  const sorted: Record<string, import('../data/guides').Guide[]> = {};
+const sortGroupedByCategory = (groups: Record<string, Guide[]>): Record<string, Guide[]> => {
+  const sorted: Record<string, Guide[]> = {};
   for (const cat of CATEGORY_ORDER) {
     if (groups[cat]?.length) sorted[cat] = groups[cat];
   }
@@ -99,7 +97,7 @@ const filteredGroupedGuides = computed(() => {
   const q = filter.value.toLowerCase().trim();
   if (!q) return sortGroupedByCategory(groupedGuides.value);
 
-  const filtered: Record<string, import('../data/guides').Guide[]> = {};
+  const filtered: Record<string, Guide[]> = {};
   for (const [cat, items] of Object.entries(groupedGuides.value)) {
     const matched = items.filter(
       (g) =>

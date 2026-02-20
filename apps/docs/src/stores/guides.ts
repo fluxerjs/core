@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Guide } from '../data/guides';
+import { Guide } from '../data/guides';
 import { guides as staticGuides } from '../data/guides';
 
 export const useGuidesStore = defineStore('guides', () => {

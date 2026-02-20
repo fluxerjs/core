@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import { routes } from './router';
@@ -14,7 +14,7 @@ const app = createApp(App);
 const pinia = createPinia();
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL || '/'),
-  routes: routes as import('vue-router').RouteRecordRaw[],
+  routes: routes as RouteRecordRaw[],
 });
 
 app.use(pinia);

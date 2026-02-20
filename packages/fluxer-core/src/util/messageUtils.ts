@@ -1,4 +1,4 @@
-import type { APIEmbed } from '@fluxerjs/types';
+import { APIEmbed } from '@fluxerjs/types';
 import { EmbedBuilder } from '@fluxerjs/builders';
 
 /** Resolved file data (after URL fetch). Used internally by REST layer. */

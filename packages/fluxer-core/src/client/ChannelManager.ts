@@ -1,13 +1,14 @@
 import { Collection } from '@fluxerjs/collection';
-import { Routes } from '@fluxerjs/types';
+import { APIChannel, APIMessage, Routes } from '@fluxerjs/types';
 import { emitDeprecationWarning } from '@fluxerjs/util';
 import { FluxerAPIError, RateLimitError } from '@fluxerjs/rest';
 import { FluxerError } from '../errors/FluxerError.js';
 import { ErrorCodes } from '../errors/ErrorCodes.js';
 import { buildSendBody, resolveMessageFiles } from '../util/messageUtils.js';
-import type { MessageSendOptions } from '../util/messageUtils.js';
-import type { Client } from './Client.js';
+import { MessageSendOptions } from '../util/messageUtils.js';
+import { Client } from './Client.js';
 import { Channel, GuildChannel } from '../structures/Channel.js';
+import { Message } from '../structures/Message';
 
 /**
  * Manages channels with fetch and send.
@@ -57,10 +58,7 @@ export class ChannelManager extends Collection<string, Channel | GuildChannel> {
     if (cached) return cached;
 
     try {
-      const { Channel } = await import('../structures/Channel.js');
-      const data = await this.client.rest.get<import('@fluxerjs/types').APIChannel>(
-        Routes.channel(channelId),
-      );
+      const data = await this.client.rest.get<APIChannel>(Routes.channel(channelId));
       const channel = Channel.fromOrCreate(this.client, data);
       if (!channel) {
         throw new FluxerError('Channel data invalid or unsupported type', {
@@ -68,13 +66,9 @@ export class ChannelManager extends Collection<string, Channel | GuildChannel> {
         });
       }
       this.set(channel.id, channel);
-      if ('guildId' in channel && channel.guildId) {
+      if ('guildId' in channel) {
         const guild = this.client.guilds.get(channel.guildId);
-        if (guild)
-          guild.channels.set(
-            channel.id,
-            channel as import('../structures/Channel.js').GuildChannel,
-          );
+        if (guild) guild.channels.set(channel.id, channel);
       }
       return channel;
     } catch (err) {
@@ -102,17 +96,13 @@ export class ChannelManager extends Collection<string, Channel | GuildChannel> {
    * const channel = await client.channels.resolve(channelId);
    * const message = await channel?.messages?.fetch(messageId);
    */
-  async fetchMessage(
-    channelId: string,
-    messageId: string,
-  ): Promise<import('../structures/Message.js').Message> {
+  async fetchMessage(channelId: string, messageId: string): Promise<Message> {
     emitDeprecationWarning(
       'ChannelManager.fetchMessage()',
       'Use channel.messages.fetch(messageId). Prefer (await client.channels.resolve(channelId))?.messages?.fetch(messageId).',
     );
     try {
-      const { Message } = await import('../structures/Message.js');
-      const data = await this.client.rest.get<import('@fluxerjs/types').APIMessage>(
+      const data = await this.client.rest.get<APIMessage>(
         Routes.channelMessage(channelId, messageId),
       );
       return new Message(this.client, data);
@@ -141,16 +131,12 @@ export class ChannelManager extends Collection<string, Channel | GuildChannel> {
    * await client.channels.send(channelId, { embeds: [embed] });
    * await client.channels.send(channelId, { content: 'Report', files: [{ name: 'log.txt', data }] });
    */
-  async send(
-    channelId: string,
-    payload: MessageSendOptions,
-  ): Promise<import('../structures/Message.js').Message> {
+  async send(channelId: string, payload: MessageSendOptions): Promise<Message> {
     const opts = typeof payload === 'string' ? { content: payload } : payload;
     const body = buildSendBody(payload);
-    const { Message } = await import('../structures/Message.js');
     const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
     const postOptions = files?.length ? { body, files } : { body };
     const data = await this.client.rest.post(Routes.channelMessages(channelId), postOptions);
-    return new Message(this.client, data as import('@fluxerjs/types').APIMessage);
+    return new Message(this.client, data as APIMessage);
   }
 }

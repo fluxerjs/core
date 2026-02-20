@@ -1,6 +1,6 @@
-import type { APIUser } from './user.js';
-import type { APIGuildMember } from './user.js';
-import type { Snowflake } from '../common/snowflake.js';
+import { APIUser } from './user.js';
+import { APIGuildMember } from './user.js';
+import { Snowflake } from '../common/snowflake.js';
 
 /** Application command option value (string, number, or boolean). */
 export type APIApplicationCommandOptionValue = string | number | boolean;

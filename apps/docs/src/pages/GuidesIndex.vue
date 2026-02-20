@@ -36,7 +36,7 @@ import { computed } from 'vue';
 import { getCategoryLabel, CATEGORY_ORDER, QUICK_LINK_SLUGS } from '../data/guides';
 import { useGuidesStore } from '../stores/guides';
 import { useVersionedPath } from '../composables/useVersionedPath';
-import type { Guide } from '../data/guides';
+import { Guide } from '../data/guides';
 
 const guidesStore = useGuidesStore();
 const { path: versionedPath } = useVersionedPath();

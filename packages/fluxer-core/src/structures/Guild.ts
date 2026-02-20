@@ -4,12 +4,12 @@ import {
   type PermissionResolvable,
 } from '@fluxerjs/util';
 import { FluxerAPIError } from '@fluxerjs/rest';
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Collection } from '@fluxerjs/collection';
 import { Base } from './Base.js';
 import { FluxerError } from '../errors/FluxerError.js';
 import { ErrorCodes } from '../errors/ErrorCodes.js';
-import type {
+import {
   APIGuild,
   APIGuildAuditLog,
   APIGuildMember,
@@ -21,15 +21,21 @@ import type {
   GuildMFALevel,
   GuildExplicitContentFilter,
   DefaultMessageNotifications,
+  APIBan,
+  APIChannel,
+  APIEmoji,
+  APISticker,
 } from '@fluxerjs/types';
 import { GuildMemberManager } from '../client/GuildMemberManager.js';
 import { GuildMember } from './GuildMember.js';
 import { Role } from './Role.js';
-import type { GuildChannel } from './Channel.js';
+import { Channel, GuildChannel } from './Channel.js';
 import { CDN_URL } from '../util/Constants.js';
 import { Routes } from '@fluxerjs/types';
-import type { Webhook } from './Webhook.js';
-import type { GuildBan } from './GuildBan.js';
+import { Webhook } from './Webhook.js';
+import { GuildBan } from './GuildBan.js';
+import { GuildEmoji } from './GuildEmoji';
+import { GuildSticker } from './GuildSticker';
 
 /** Represents a Fluxer guild (server). */
 export class Guild extends Base {
@@ -69,6 +75,7 @@ export class Guild extends Base {
   members: GuildMemberManager;
   channels = new Collection<string, GuildChannel>();
   roles = new Collection<string, Role>();
+  emojis = new Collection<string, GuildEmoji>();
 
   /** @param data - API guild from GET /guilds/{id} or gateway GUILD_CREATE */
   constructor(client: Client, data: APIGuild & { roles?: APIRole[]; ownerId?: string }) {
@@ -275,10 +282,9 @@ export class Guild extends Base {
    * @returns List of GuildBan objects
    */
   async fetchBans(): Promise<GuildBan[]> {
-    const { GuildBan } = await import('./GuildBan.js');
-    const data = await this.client.rest.get<
-      import('@fluxerjs/types').APIBan[] | { bans?: import('@fluxerjs/types').APIBan[] }
-    >(Routes.guildBans(this.id));
+    const data = await this.client.rest.get<APIBan[] | { bans?: APIBan[] }>(
+      Routes.guildBans(this.id),
+    );
     const list = Array.isArray(data) ? data : (data?.bans ?? []);
     return list.map((b) => new GuildBan(this.client, { ...b, guild_id: this.id }, this.id));
   }
@@ -357,7 +363,6 @@ export class Guild extends Base {
 
   /** Fetch all webhooks in this guild. Returned webhooks do not include the token (cannot send). */
   async fetchWebhooks(): Promise<Webhook[]> {
-    const { Webhook } = await import('./Webhook.js');
     const data = await this.client.rest.get(Routes.guildWebhooks(this.id));
     const list = Array.isArray(data) ? data : Object.values(data ?? {});
     return list.map((w) => new Webhook(this.client, w));
@@ -378,12 +383,11 @@ export class Guild extends Base {
     nsfw?: boolean;
     permission_overwrites?: Array<{ id: string; type: number; allow: string; deny: string }>;
   }): Promise<GuildChannel> {
-    const { Channel } = await import('./Channel.js');
     const created = await this.client.rest.post(Routes.guildChannels(this.id), {
       body: data,
       auth: true,
     });
-    const channel = Channel.from(this.client, created as import('@fluxerjs/types').APIChannel);
+    const channel = Channel.from(this.client, created as APIChannel);
     if (channel) {
       this.client.channels.set(channel.id, channel);
       this.channels.set(channel.id, channel as GuildChannel);
@@ -396,12 +400,11 @@ export class Guild extends Base {
    * @returns Array of GuildChannel objects (cached in guild.channels and client.channels)
    */
   async fetchChannels(): Promise<GuildChannel[]> {
-    const { Channel } = await import('./Channel.js');
     const data = await this.client.rest.get(Routes.guildChannels(this.id));
     const list = Array.isArray(data) ? data : Object.values(data ?? {});
     const channels: GuildChannel[] = [];
     for (const ch of list) {
-      const channel = Channel.from(this.client, ch as import('@fluxerjs/types').APIChannel);
+      const channel = Channel.from(this.client, ch as APIChannel);
       if (channel) {
         this.client.channels.set(channel.id, channel);
         this.channels.set(channel.id, channel as GuildChannel);
@@ -584,20 +587,65 @@ export class Guild extends Base {
   }
 
   /**
+   * Fetch all emojis in this guild.
+   * @returns Array of GuildEmoji objects (cached in guild.emojis)
+   */
+  async fetchEmojis(): Promise<GuildEmoji[]> {
+    const data = await this.client.rest.get<APIEmoji[] | Record<string, APIEmoji>>(
+      Routes.guildEmojis(this.id),
+    );
+    const list = Array.isArray(data) ? data : Object.values(data ?? {});
+    const emojis: GuildEmoji[] = [];
+    for (const e of list) {
+      const emoji = new GuildEmoji(this.client, { ...e, guild_id: this.id }, this.id);
+      this.emojis.set(emoji.id, emoji);
+      emojis.push(emoji);
+    }
+    return emojis;
+  }
+
+  /**
+   * Fetch a single emoji by ID.
+   * @param emojiId - The emoji ID to fetch
+   * @returns The guild emoji
+   * @throws FluxerError if emoji not found (404)
+   */
+  async fetchEmoji(emojiId: string): Promise<GuildEmoji> {
+    try {
+      const data = await this.client.rest.get<APIEmoji>(Routes.guildEmoji(this.id, emojiId));
+      const emoji = new GuildEmoji(this.client, { ...data, guild_id: this.id }, this.id);
+      this.emojis.set(emoji.id, emoji);
+      return emoji;
+    } catch (err) {
+      const statusCode =
+        err instanceof FluxerAPIError
+          ? err.statusCode
+          : (err as { statusCode?: number })?.statusCode;
+      if (statusCode === 404) {
+        throw new FluxerError(`Emoji ${emojiId} not found in guild`, {
+          code: ErrorCodes.EmojiNotFound,
+          cause: err as Error,
+        });
+      }
+      throw err instanceof FluxerError
+        ? err
+        : new FluxerError('Failed to fetch guild emoji', { cause: err as Error });
+    }
+  }
+
+  /**
    * Bulk create emojis. POST /guilds/{id}/emojis/bulk.
    * @param emojis - Array of { name, image } (base64), 1-50 emojis
    * @returns Array of created GuildEmoji objects
    */
-  async createEmojisBulk(
-    emojis: Array<{ name: string; image: string }>,
-  ): Promise<import('./GuildEmoji.js').GuildEmoji[]> {
-    const { GuildEmoji } = await import('./GuildEmoji.js');
-    const data = await this.client.rest.post<
-      import('@fluxerjs/types').APIEmoji[] | { emojis?: import('@fluxerjs/types').APIEmoji[] }
-    >(Routes.guildEmojisBulk(this.id), {
-      body: { emojis },
-      auth: true,
-    });
+  async createEmojisBulk(emojis: Array<{ name: string; image: string }>): Promise<GuildEmoji[]> {
+    const data = await this.client.rest.post<APIEmoji[] | { emojis?: APIEmoji[] }>(
+      Routes.guildEmojisBulk(this.id),
+      {
+        body: { emojis },
+        auth: true,
+      },
+    );
     const list = Array.isArray(data) ? data : (data?.emojis ?? []);
     return list.map((e) => new GuildEmoji(this.client, { ...e, guild_id: this.id }, this.id));
   }
@@ -614,14 +662,14 @@ export class Guild extends Base {
       description?: string;
       tags?: string[];
     }>,
-  ): Promise<import('./GuildSticker.js').GuildSticker[]> {
-    const { GuildSticker } = await import('./GuildSticker.js');
-    const data = await this.client.rest.post<
-      import('@fluxerjs/types').APISticker[] | { stickers?: import('@fluxerjs/types').APISticker[] }
-    >(Routes.guildStickersBulk(this.id), {
-      body: { stickers },
-      auth: true,
-    });
+  ): Promise<GuildSticker[]> {
+    const data = await this.client.rest.post<APISticker[] | { stickers?: APISticker[] }>(
+      Routes.guildStickersBulk(this.id),
+      {
+        body: { stickers },
+        auth: true,
+      },
+    );
     const list = Array.isArray(data) ? data : (data?.stickers ?? []);
     return list.map((s) => new GuildSticker(this.client, { ...s, guild_id: this.id }, this.id));
   }

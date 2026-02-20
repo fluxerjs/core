@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import { relative } from 'path';
-import type { DocClass, DocInterface, DocEnum, DocSource } from './schema.js';
+import { DocClass, DocInterface, DocEnum, DocSource } from './schema.js';
 import {
   extractConstructor,
   extractProperty,
@@ -10,6 +10,7 @@ import {
   extractEnumMember,
   getDescriptionFromJSDocComment,
   getDeprecatedFromJSDoc,
+  getDiscordJsCompatFromJSDoc,
 } from './extract.js';
 
 function getJSDoc(node: ts.Node): string {
@@ -67,6 +68,7 @@ export function visitSourceFile(
           methods: [],
           source: getSource(node, options?.repoRoot),
           deprecated: getDeprecatedFromJSDoc(comment),
+          discordJsCompat: getDiscordJsCompatFromJSDoc(comment),
         };
 
         for (const member of node.members) {

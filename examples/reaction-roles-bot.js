@@ -48,7 +48,7 @@ async function handleReactionAdd(reaction, user) {
   }
   if (!member) return;
 
-  if (member.roles.includes(roleId)) return;
+  if (member.roles.cache.has(roleId)) return;
 
   try {
     await member.addRole(roleId);
@@ -74,7 +74,7 @@ async function handleReactionRemove(reaction, user) {
   }
   if (!member) return;
 
-  if (!member.roles.includes(roleId)) return;
+  if (!member.roles.cache.has(roleId)) return;
 
   try {
     await member.removeRole(roleId);

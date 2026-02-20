@@ -1,5 +1,5 @@
-import type { Snowflake } from '../common/snowflake.js';
-import type { APIUser } from './user.js';
+import { Snowflake } from '../common/snowflake.js';
+import { APIUser } from './user.js';
 
 export interface APISticker {
   id: Snowflake;

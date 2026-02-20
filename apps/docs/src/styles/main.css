@@ -35,6 +35,11 @@
   --deprecated-bg: rgba(245, 158, 11, 0.12);
   --deprecated-border: rgba(245, 158, 11, 0.35);
 
+  --discord-compat: #57f287;
+  --discord-compat-bg: rgba(87, 242, 135, 0.12);
+  --discord-compat-border: rgba(87, 242, 135, 0.35);
+  --discord-compat-badge-text: #0d3b1a;
+
   /* Sidebar - shared across docs and guides */
   --sidebar-width: 260px;
   --sidebar-padding-x: 1rem;

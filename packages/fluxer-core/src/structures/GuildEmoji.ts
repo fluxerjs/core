@@ -1,6 +1,6 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { APIEmoji } from '@fluxerjs/types';
+import { APIEmoji } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import { CDN_URL } from '../util/Constants.js';
 
@@ -38,6 +38,8 @@ export class GuildEmoji extends Base {
     await this.client.rest.delete(Routes.guildEmoji(this.guildId, this.id), {
       auth: true,
     });
+    const guild = this.client.guilds.get(this.guildId);
+    if (guild) guild.emojis.delete(this.id);
   }
 
   /**

@@ -10,6 +10,7 @@ import ClassPage from './pages/ClassPage.vue';
 import TypedefPage from './pages/TypedefPage.vue';
 import ApiReferenceLayout from './pages/ApiReferenceLayout.vue';
 import ApiReferencePage from './pages/ApiReferencePage.vue';
+import { RouteRecordRedirectOption } from 'vue-router';
 
 export const routes = [
   { path: '/', name: 'home', component: Home },
@@ -25,7 +26,7 @@ export const routes = [
       {
         path: '',
         redirect: ((to: { params: { version?: string } }) =>
-          `/v/${to.params.version}/guides`) as import('vue-router').RouteRecordRedirectOption,
+          `/v/${to.params.version}/guides`) as RouteRecordRedirectOption,
       },
       {
         path: 'guides',
@@ -45,7 +46,7 @@ export const routes = [
             redirect: ((to: { params: Record<string, string | string[] | undefined> }) => ({
               name: 'classes',
               params: { ...to.params },
-            })) as import('vue-router').RouteRecordRedirectOption,
+            })) as RouteRecordRedirectOption,
           },
           {
             path: 'classes',

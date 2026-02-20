@@ -1,6 +1,6 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { APISticker } from '@fluxerjs/types';
+import { APISticker } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import { CDN_URL } from '../util/Constants.js';
 

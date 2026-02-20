@@ -1,5 +1,5 @@
-import type { REST } from '@fluxerjs/rest';
-import type { GatewayPresenceUpdateData } from '@fluxerjs/types';
+import { REST } from '@fluxerjs/rest';
+import { GatewayPresenceUpdateData } from '@fluxerjs/types';
 
 /** Optional cache size limits. When exceeded, oldest entries are evicted (FIFO). Omit or use 0 for unbounded. */
 export interface CacheSizeLimits {

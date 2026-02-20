@@ -1,11 +1,12 @@
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { MessageSendOptions } from '../util/messageUtils.js';
-import type { APIUserPartial } from '@fluxerjs/types';
+import { MessageSendOptions } from '../util/messageUtils.js';
+import { APIChannelPartial, APIUserPartial } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import { CDN_URL } from '../util/Constants.js';
 import { cdnDefaultAvatarURL } from '../util/cdn.js';
-import type { DMChannel } from './Channel.js';
+import { DMChannel } from './Channel.js';
+import { Message } from './Message';
 
 /** Represents a user (or bot) on Fluxer. */
 export class User extends Base {
@@ -90,19 +91,18 @@ export class User extends Base {
    * Returns the DM channel; use {@link DMChannel.send} to send messages.
    */
   async createDM(): Promise<DMChannel> {
-    const { DMChannel: DMChannelClass } = await import('./Channel.js');
     const data = await this.client.rest.post(Routes.userMeChannels(), {
       body: { recipient_id: this.id },
       auth: true,
     });
-    return new DMChannelClass(this.client, data as import('@fluxerjs/types').APIChannelPartial);
+    return new DMChannel(this.client, data as APIChannelPartial);
   }
 
   /**
    * Send a DM to this user.
    * Convenience method that creates the DM channel and sends the message.
    */
-  async send(options: MessageSendOptions): Promise<import('./Message.js').Message> {
+  async send(options: MessageSendOptions): Promise<Message> {
     const dm = await this.createDM();
     return dm.send(options);
   }

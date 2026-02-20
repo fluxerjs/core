@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import type { ApiEndpoint, ApiSchemaField } from '../data/apiEndpoints';
+import { ApiEndpoint, ApiSchemaField } from '../data/apiEndpoints';
 import ApiSchemaBlock from './ApiSchemaBlock.vue';
 
 const props = defineProps<{

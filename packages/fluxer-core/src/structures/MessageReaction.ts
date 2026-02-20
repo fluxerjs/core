@@ -1,12 +1,12 @@
-import { Routes } from '@fluxerjs/types';
+import { APIMessage, Routes } from '@fluxerjs/types';
 import { FluxerAPIError, RateLimitError } from '@fluxerjs/rest';
 import { FluxerError } from '../errors/FluxerError.js';
 import { ErrorCodes } from '../errors/ErrorCodes.js';
-import type { Client } from '../client/Client.js';
+import { Client } from '../client/Client.js';
 import { Base } from './Base.js';
-import type { Message } from './Message.js';
-import type { Guild } from './Guild.js';
-import type {
+import { Message } from './Message.js';
+import { Guild } from './Guild.js';
+import {
   GatewayMessageReactionAddDispatchData,
   GatewayMessageReactionRemoveDispatchData,
   GatewayReactionEmoji,
@@ -52,8 +52,7 @@ export class MessageReaction extends Base {
    */
   async fetchMessage(): Promise<Message> {
     try {
-      const { Message } = await import('./Message.js');
-      const data = await this.client.rest.get<import('@fluxerjs/types').APIMessage>(
+      const data = await this.client.rest.get<APIMessage>(
         Routes.channelMessage(this.channelId, this.messageId),
       );
       return new Message(this.client, data);

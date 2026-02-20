@@ -1,4 +1,4 @@
-import type { APIEmbed, APIEmbedAuthor, APIEmbedFooter, APIEmbedMedia } from '@fluxerjs/types';
+import { APIEmbed, APIEmbedAuthor, APIEmbedFooter, APIEmbedMedia } from '@fluxerjs/types';
 import { resolveColor } from '@fluxerjs/util';
 
 /** Options for embed media (image, thumbnail, video, audio). */

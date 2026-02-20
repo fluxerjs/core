@@ -1,8 +1,9 @@
-import { Routes } from '@fluxerjs/types';
+import { APIMessage, Routes } from '@fluxerjs/types';
 import { FluxerAPIError, RateLimitError } from '@fluxerjs/rest';
 import { FluxerError } from '../errors/FluxerError.js';
 import { ErrorCodes } from '../errors/ErrorCodes.js';
-import type { Client } from './Client.js';
+import { Client } from './Client.js';
+import { Message } from '../structures/Message';
 
 /**
  * Manages messages for a channel. Access via channel.messages.
@@ -22,10 +23,9 @@ export class MessageManager {
    * @returns The message
    * @throws FluxerError with MESSAGE_NOT_FOUND if the message does not exist
    */
-  async fetch(messageId: string): Promise<import('../structures/Message.js').Message> {
+  async fetch(messageId: string): Promise<Message> {
     try {
-      const { Message } = await import('../structures/Message.js');
-      const data = await this.client.rest.get<import('@fluxerjs/types').APIMessage>(
+      const data = await this.client.rest.get<APIMessage>(
         Routes.channelMessage(this.channelId, messageId),
       );
       return new Message(this.client, data);

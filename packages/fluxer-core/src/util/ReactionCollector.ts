@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events';
 import { Collection } from '@fluxerjs/collection';
-import type { Client } from '../client/Client.js';
-import type { MessageReaction } from '../structures/MessageReaction.js';
-import type { User } from '../structures/User.js';
-import type { GatewayReactionEmoji } from '@fluxerjs/types';
+import { Client } from '../client/Client.js';
+import { MessageReaction } from '../structures/MessageReaction.js';
+import { User } from '../structures/User.js';
+import { GatewayReactionEmoji } from '@fluxerjs/types';
 import { Events } from './Events.js';
 
 export interface ReactionCollectorOptions {
