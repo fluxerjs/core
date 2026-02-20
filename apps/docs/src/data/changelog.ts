@@ -11,6 +11,19 @@ export interface ChangelogEntry {
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '1.2.2',
+    date: '2026-02-21',
+    sections: [
+      {
+        title: '@fluxerjs/voice — node-webcodecs ESM fix',
+        items: [
+          'Fixed "Dynamic require of path is not supported" when using @fluxerjs/voice in ESM projects',
+          'node-webcodecs is now loaded via dynamic import and externalized from the bundle',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.1',
     date: '2026-02-21',
     sections: [

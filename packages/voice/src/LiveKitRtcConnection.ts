@@ -27,7 +27,7 @@ import { OpusDecoder } from 'opus-decoder';
 import { opus } from 'prism-media';
 import { promisify } from 'node:util';
 import { createFile } from 'mp4box';
-import * as WebCodecs from 'node-webcodecs';
+import type { VideoFrame as WebCodecsVideoFrame } from 'node-webcodecs';
 
 const SAMPLE_RATE = 48000;
 const CHANNELS = 1;
@@ -408,11 +408,12 @@ export class LiveKitRtcConnection extends EventEmitter {
       return;
     }
 
-    let VideoDecoder: typeof WebCodecs.VideoDecoder;
-    let EncodedVideoChunk: typeof WebCodecs.EncodedVideoChunk;
+    let VideoDecoder: typeof import('node-webcodecs').VideoDecoder;
+    let EncodedVideoChunk: typeof import('node-webcodecs').EncodedVideoChunk;
     try {
-      VideoDecoder = WebCodecs.VideoDecoder;
-      EncodedVideoChunk = WebCodecs.EncodedVideoChunk;
+      const webcodecs = await import('node-webcodecs');
+      VideoDecoder = webcodecs.VideoDecoder;
+      EncodedVideoChunk = webcodecs.EncodedVideoChunk;
     } catch {
       this.emit(
         'error',
@@ -538,7 +539,7 @@ export class LiveKitRtcConnection extends EventEmitter {
       let pacingInterval: ReturnType<typeof setInterval> | null = null;
 
       const decoder = new VideoDecoder({
-        output: async (frame: WebCodecs.VideoFrame) => {
+        output: async (frame: WebCodecsVideoFrame) => {
           if (!this._playingVideo || !source) return;
           const { codedWidth, codedHeight } = frame;
           if (codedWidth <= 0 || codedHeight <= 0) {
