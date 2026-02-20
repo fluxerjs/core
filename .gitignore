@@ -24,3 +24,6 @@ fluxer-ai-bot.js
 
 # OS files
 Thumbs.db
+
+# Vite build artifacts
+*.timestamp-*.mjs
