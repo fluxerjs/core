@@ -87,10 +87,11 @@ export function useSearchIndex(doc: { currentDoc: DocOutput | null }): ComputedR
 
 const CATEGORY_LABELS: Record<string, string> = {
   'getting-started': 'Getting Started',
-  webhooks: 'Webhooks',
-  voice: 'Voice',
   'sending-messages': 'Sending Messages',
   media: 'Media',
+  channels: 'Channels',
+  webhooks: 'Webhooks',
+  voice: 'Voice',
   events: 'Events',
   other: 'Other',
 };

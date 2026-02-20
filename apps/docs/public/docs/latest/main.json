@@ -2,7 +2,7 @@
   "meta": {
     "generator": "fluxer-docgen",
     "version": "1",
-    "date": 1771558549718
+    "date": 1771596231333
   },
   "package": "@fluxerjs/core",
   "version": "1.2.0",
@@ -208,7 +208,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 42
+            "line": 43
           }
         },
         {
@@ -224,7 +224,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 84
+            "line": 85
           }
         },
         {
@@ -234,7 +234,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 88
+            "line": 89
           }
         },
         {
@@ -250,7 +250,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 37
+            "line": 38
           }
         },
         {
@@ -266,7 +266,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 51
+            "line": 52
           }
         },
         {
@@ -282,7 +282,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 28
+            "line": 29
           }
         },
         {
@@ -292,7 +292,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 60
+            "line": 61
           }
         },
         {
@@ -302,7 +302,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 69
+            "line": 70
           }
         },
         {
@@ -312,7 +312,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 76
+            "line": 77
           }
         },
         {
@@ -322,13 +322,13 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 80
+            "line": 81
           }
         }
       ],
       "source": {
         "file": "BitField.ts",
-        "line": 14,
+        "line": 15,
         "path": "packages/util/src/BitField.ts"
       },
       "package": "@fluxerjs/util"
@@ -612,7 +612,7 @@
           "deprecated": "Use channel.messages.fetch(messageId). Prefer (await client.channels.resolve(channelId))?.messages?.fetch(messageId).",
           "source": {
             "file": "ChannelManager.ts",
-            "line": 101
+            "line": 105
           }
         },
         {
@@ -660,7 +660,7 @@
           "async": true,
           "source": {
             "file": "ChannelManager.ts",
-            "line": 140
+            "line": 144
           }
         },
         {
@@ -786,7 +786,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 239
+            "line": 233
           }
         },
         {
@@ -797,7 +797,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 439
+            "line": 436
           }
         },
         {
@@ -808,7 +808,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 417
+            "line": 414
           }
         },
         {
@@ -819,7 +819,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 256
+            "line": 250
           }
         },
         {
@@ -847,7 +847,7 @@
           "deprecated": "Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.resolve(channelId))?.messages?.fetch(messageId)",
           "source": {
             "file": "Client.ts",
-            "line": 271
+            "line": 265
           }
         },
         {
@@ -864,7 +864,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 297
+            "line": 291
           }
         },
         {
@@ -880,7 +880,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 323
+            "line": 317
           }
         },
         {
@@ -891,7 +891,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 431
+            "line": 428
           }
         },
         {
@@ -909,7 +909,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 338
+            "line": 332
           }
         },
         {
@@ -933,7 +933,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 188
+            "line": 182
           }
         },
         {
@@ -955,7 +955,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 286
+            "line": 280
           }
         },
         {
@@ -979,13 +979,13 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 319
+            "line": 313
           }
         }
       ],
       "source": {
         "file": "Client.ts",
-        "line": 143,
+        "line": 137,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -10229,7 +10229,7 @@
       "properties": [],
       "source": {
         "file": "Client.ts",
-        "line": 126,
+        "line": 120,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -10499,7 +10499,7 @@
       ],
       "source": {
         "file": "Client.ts",
-        "line": 53,
+        "line": 47,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -10826,7 +10826,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 410,
+        "line": 412,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -10850,7 +10850,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 436,
+        "line": 438,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -10874,7 +10874,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 450,
+        "line": 452,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -10898,7 +10898,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 443,
+        "line": 445,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -10909,7 +10909,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 167,
+        "line": 169,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -10920,7 +10920,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 175,
+        "line": 177,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -10944,7 +10944,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 352,
+        "line": 354,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -10974,7 +10974,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 346,
+        "line": 348,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -10998,7 +10998,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 177,
+        "line": 179,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11022,7 +11022,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 182,
+        "line": 184,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11040,7 +11040,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 171,
+        "line": 173,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11051,7 +11051,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 169,
+        "line": 171,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11081,7 +11081,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 37,
+        "line": 39,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11102,7 +11102,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 456,
+        "line": 458,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11113,7 +11113,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 462,
+        "line": 464,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11124,7 +11124,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 459,
+        "line": 461,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11154,7 +11154,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 229,
+        "line": 231,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11178,7 +11178,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 235,
+        "line": 237,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11189,7 +11189,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 157,
+        "line": 159,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11213,7 +11213,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 161,
+        "line": 163,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11237,7 +11237,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 311,
+        "line": 313,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11255,7 +11255,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 323,
+        "line": 325,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11266,7 +11266,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 188,
+        "line": 190,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11314,7 +11314,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 215,
+        "line": 217,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11338,7 +11338,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 201,
+        "line": 203,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11386,7 +11386,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 206,
+        "line": 208,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11446,7 +11446,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 190,
+        "line": 192,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11470,7 +11470,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 262,
+        "line": 264,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11494,7 +11494,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 272,
+        "line": 274,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11518,7 +11518,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 277,
+        "line": 279,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11542,7 +11542,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 267,
+        "line": 269,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11566,7 +11566,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 328,
+        "line": 330,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11590,7 +11590,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 340,
+        "line": 342,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11614,7 +11614,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 334,
+        "line": 336,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11638,7 +11638,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 317,
+        "line": 319,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11649,7 +11649,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 416,
+        "line": 418,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11660,7 +11660,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 159,
+        "line": 161,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11678,7 +11678,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 77,
+        "line": 79,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11732,7 +11732,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 16,
+        "line": 18,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11743,7 +11743,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 465,
+        "line": 467,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11754,7 +11754,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 241,
+        "line": 243,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11784,7 +11784,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 244,
+        "line": 246,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11808,7 +11808,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 151,
+        "line": 153,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11819,7 +11819,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 92,
+        "line": 94,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11849,7 +11849,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 105,
+        "line": 107,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11891,7 +11891,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 96,
+        "line": 98,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11933,7 +11933,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 119,
+        "line": 121,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -11963,7 +11963,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 145,
+        "line": 147,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12005,7 +12005,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 128,
+        "line": 130,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12041,7 +12041,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 137,
+        "line": 139,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12052,7 +12052,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 94,
+        "line": 96,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12063,7 +12063,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 413,
+        "line": 415,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12105,7 +12105,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 43,
+        "line": 45,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12148,7 +12148,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 358,
+        "line": 360,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12165,9 +12165,9 @@
         },
         {
           "name": "id",
-          "type": "string | null",
+          "type": "string",
           "readonly": false,
-          "optional": false
+          "optional": true
         },
         {
           "name": "name",
@@ -12178,7 +12178,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 112,
+        "line": 114,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12226,7 +12226,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 82,
+        "line": 84,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12261,7 +12261,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 467,
+        "line": 469,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12272,7 +12272,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 399,
+        "line": 401,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12296,7 +12296,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 419,
+        "line": 421,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12314,7 +12314,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 431,
+        "line": 433,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12338,7 +12338,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 425,
+        "line": 427,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12367,7 +12367,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 30,
+        "line": 32,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12378,7 +12378,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 376,
+        "line": 378,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12389,7 +12389,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 402,
+        "line": 404,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12407,7 +12407,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 405,
+        "line": 407,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12417,7 +12417,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 65,
+        "line": 67,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12435,7 +12435,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 379,
+        "line": 381,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12477,7 +12477,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 251,
+        "line": 253,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12488,7 +12488,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 387,
+        "line": 389,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12512,7 +12512,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 393,
+        "line": 395,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12523,7 +12523,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 390,
+        "line": 392,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12534,7 +12534,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 384,
+        "line": 386,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12545,7 +12545,7 @@
       "properties": [],
       "source": {
         "file": "payloads.ts",
-        "line": 259,
+        "line": 261,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12582,7 +12582,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 302,
+        "line": 304,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12638,7 +12638,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 52,
+        "line": 54,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12730,7 +12730,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 283,
+        "line": 285,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"
@@ -12754,7 +12754,7 @@
       ],
       "source": {
         "file": "payloads.ts",
-        "line": 368,
+        "line": 370,
         "path": "packages/types/src/gateway/payloads.ts"
       },
       "package": "@fluxerjs/types"

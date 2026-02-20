@@ -1002,7 +1002,7 @@
     "slug": "roles",
     "title": "Roles",
     "description": "Create, fetch, edit, and delete guild roles. Use PermissionFlags and resolvePermissionsToBitfield for permission bitfields.",
-    "category": "other",
+    "category": "channels",
     "sections": [
       {
         "title": "Overview",
@@ -1063,6 +1063,149 @@
         "title": "Guild-Only Commands",
         "code": "if (!message.guildId) {\n  await message.reply('This command only works in a server.');\n  return;\n}",
         "language": "javascript"
+      }
+    ]
+  },
+  {
+    "id": "channels",
+    "slug": "channels",
+    "title": "Channels",
+    "description": "Create and manage channels, roles, invites, emojis, and stickers. Covers guild.createChannel(), channel.edit(), channel.createInvite(), guild.createEmojisBulk(), and more.",
+    "category": "channels",
+    "sections": [
+      {
+        "title": "Channels — Create",
+        "description": "Use guild.createChannel() to create text (0), voice (2), category (4), or link (5) channels. Requires Manage Channels permission. Pass parent_id to put a channel under a category.",
+        "code": "import { Client, Events } from '@fluxerjs/core';\n\nconst client = new Client({ intents: 0 });\n\nclient.on(Events.MessageCreate, async (message) => {\n  if (!message.guildId || message.content !== '!createchannel') return;\n  const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);\n  if (!guild) return;\n\n  // Text channel (0), voice (2), category (4), link (5)\n  const textChannel = await guild.createChannel({\n    type: 0,\n    name: 'general',\n  });\n\n  // Category, then voice channel under it\n  const category = await guild.createChannel({\n    type: 4,\n    name: 'Voice Chats',\n  });\n  const voiceChannel = await guild.createChannel({\n    type: 2,\n    name: 'Lounge',\n    parent_id: category.id,\n    bitrate: 64000,\n  });\n\n  await message.reply(`Created ${textChannel.name} and ${voiceChannel.name} in ${category.name}`);\n});\n\nawait client.login(process.env.FLUXER_BOT_TOKEN);",
+        "language": "javascript"
+      },
+      {
+        "title": "Channels — Fetch and Edit",
+        "description": "Use guild.fetchChannels() to load all guild channels. Use channel.edit() to rename, set topic, move to a category, set slowmode, or update permission overwrites.",
+        "code": "const guild = client.guilds.get(guildId) ?? await client.guilds.resolve(guildId);\nif (!guild) return;\n\nconst channels = await guild.fetchChannels();\n\n// Edit a text channel\nconst channel = guild.channels.get(channelId);\nif (channel) {\n  await channel.edit({\n    name: 'renamed-channel',\n    topic: 'New topic here',\n    parent_id: categoryId,        // Move under category\n    rate_limit_per_user: 5,      // 5 second slowmode\n    nsfw: false,\n  });\n}",
+        "language": "javascript"
+      },
+      {
+        "title": "Channels — Delete and Reorder",
+        "description": "Use channel.delete() to remove a channel. Use guild.setChannelPositions() to reorder channels or move them between categories.",
+        "code": "// Delete channel (silent: true skips system message)\nawait channel.delete();\nawait channel.delete({ silent: true });\n\n// Reorder channels\nawait guild.setChannelPositions([\n  { id: channelId1, position: 0 },\n  { id: channelId2, position: 1, parent_id: categoryId },\n]);",
+        "language": "javascript"
+      },
+      {
+        "title": "Channel Permission Overwrites",
+        "description": "Use channel.editPermission() to add or update overwrites (type 0=role, 1=member). Use channel.deletePermission() to remove. Use resolvePermissionsToBitfield() for allow/deny bitfields.",
+        "code": "import { resolvePermissionsToBitfield, PermissionFlags } from '@fluxerjs/core';\n\n// Deny SendMessages for a role (type 0=role, 1=member)\nawait channel.editPermission(roleId, {\n  type: 0,\n  deny: resolvePermissionsToBitfield(['SendMessages']),\n});\n\n// Allow ViewChannel for a specific member\nawait channel.editPermission(userId, {\n  type: 1,\n  allow: resolvePermissionsToBitfield([PermissionFlags.ViewChannel]),\n});\n\n// Remove overwrite\nawait channel.deletePermission(roleId);",
+        "language": "javascript"
+      },
+      {
+        "title": "Roles — Quick Reference",
+        "description": "Create roles with guild.createRole(), fetch with guild.fetchRoles() or guild.fetchRole(roleId). Add/remove with guild.addRoleToMember() / guild.removeRoleFromMember(). Reorder with guild.setRolePositions().",
+        "code": "// See the Roles guide for full examples and permission bitfields.\nconst role = await guild.createRole({ name: 'Mod', permissions: ['KickMembers', 'BanMembers'] });\nawait guild.addRoleToMember(userId, role.id);\nawait guild.removeRoleFromMember(userId, role.id);\nawait guild.setRolePositions([{ id: role.id, position: 5 }]);",
+        "language": "javascript",
+        "tip": "See the Roles guide for full examples, permission bitfields, and role.edit() / role.delete()."
+      },
+      {
+        "title": "Invites",
+        "description": "Use channel.createInvite() to create an invite. Use channel.fetchInvites() to list channel invites. Use invite.delete() to revoke. invite.url gives the full invite URL.",
+        "code": "import { Client, Events } from '@fluxerjs/core';\n\nconst client = new Client({ intents: 0 });\n\nclient.on(Events.MessageCreate, async (message) => {\n  if (!message.content.startsWith('!invite') || !message.guildId) return;\n  const channel = message.channel;\n  if (!channel?.createInvite) return;\n\n  if (message.content === '!invite') {\n    const invite = await channel.createInvite({\n      max_age: 86400,    // 24 hours\n      max_uses: 10,\n      temporary: false,\n    });\n    await message.reply(`Invite: ${invite.url}`);\n  }\n\n  if (message.content === '!invitelist') {\n    const invites = await channel.fetchInvites();\n    const list = invites.map((i) => `${i.code} (${i.max_uses ?? '∞'} uses)`).join('\\n');\n    await message.reply(list || 'No invites.');\n  }\n\n  if (message.content.startsWith('!inviterevoke ')) {\n    const code = message.content.slice(13).trim();\n    const invites = await channel.fetchInvites();\n    const inv = invites.find((i) => i.code === code);\n    if (inv) {\n      await inv.delete();\n      await message.reply('Invite revoked.');\n    }\n  }\n});\n\nawait client.login(process.env.FLUXER_BOT_TOKEN);",
+        "language": "javascript"
+      },
+      {
+        "title": "Emojis & Stickers",
+        "description": "Use guild.createEmojisBulk() and guild.createStickersBulk() with base64 image data. Use emoji.edit() / emoji.delete() and sticker.edit() / sticker.delete() for individual updates.",
+        "code": "import { Client, Events } from '@fluxerjs/core';\n\nconst client = new Client({ intents: 0 });\n\n// Create emoji from URL (fetch and convert to base64)\nasync function createEmojiFromUrl(guild, name, imageUrl) {\n  const res = await fetch(imageUrl);\n  const buf = await res.arrayBuffer();\n  const base64 = Buffer.from(buf).toString('base64');\n  const [emoji] = await guild.createEmojisBulk([{ name, image: base64 }]);\n  return emoji;\n}\n\nclient.on(Events.MessageCreate, async (message) => {\n  if (!message.guildId || !message.content.startsWith('!addemoji ')) return;\n  const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);\n  if (!guild) return;\n\n  const [_, name, url] = message.content.split(/\\s+/);\n  if (!name || !url) return;\n  const emoji = await createEmojiFromUrl(guild, name, url);\n  await message.reply(`Created emoji :${emoji.name}:`);\n});\n\n// Bulk create stickers\nconst stickers = await guild.createStickersBulk([\n  { name: 'cool', image: base64Image, description: 'A cool sticker' },\n]);\n\n// Edit and delete\nawait emoji.edit({ name: 'newname' });\nawait emoji.delete();",
+        "language": "javascript"
+      },
+      {
+        "title": "Quick Reference",
+        "table": {
+          "headers": [
+            "API",
+            "Method",
+            "Purpose"
+          ],
+          "codeColumns": [
+            0,
+            1
+          ],
+          "rows": [
+            [
+              "Channels",
+              "guild.createChannel()",
+              "Create text, voice, category, or link channel"
+            ],
+            [
+              "Channels",
+              "guild.fetchChannels()",
+              "Fetch all guild channels"
+            ],
+            [
+              "Channels",
+              "channel.edit()",
+              "Rename, set topic, slowmode, parent, overwrites"
+            ],
+            [
+              "Channels",
+              "channel.delete()",
+              "Delete a channel"
+            ],
+            [
+              "Channels",
+              "guild.setChannelPositions()",
+              "Reorder or reparent channels"
+            ],
+            [
+              "Channels",
+              "channel.editPermission()",
+              "Add or update permission overwrite"
+            ],
+            [
+              "Channels",
+              "channel.deletePermission()",
+              "Remove permission overwrite"
+            ],
+            [
+              "Roles",
+              "guild.createRole()",
+              "Create a role"
+            ],
+            [
+              "Roles",
+              "guild.addRoleToMember()",
+              "Add role to member"
+            ],
+            [
+              "Roles",
+              "guild.removeRoleFromMember()",
+              "Remove role from member"
+            ],
+            [
+              "Invites",
+              "channel.createInvite()",
+              "Create invite with max_uses, max_age"
+            ],
+            [
+              "Invites",
+              "channel.fetchInvites()",
+              "List channel invites"
+            ],
+            [
+              "Invites",
+              "invite.delete()",
+              "Revoke invite"
+            ],
+            [
+              "Emojis",
+              "guild.createEmojisBulk()",
+              "Bulk create emojis (base64 image)"
+            ],
+            [
+              "Stickers",
+              "guild.createStickersBulk()",
+              "Bulk create stickers"
+            ]
+          ]
+        }
       }
     ]
   }

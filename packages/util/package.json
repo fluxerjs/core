@@ -36,7 +36,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm exec tsx ../../scripts/generate-emoji-shortcodes.ts && tsup src/index.ts --format cjs,esm --dts",
+    "build": "pnpm exec tsx ../../scripts/generate-emoji-shortcodes.ts && tsup",
     "clean": "rm -rf dist",
     "lint": "eslint src --max-warnings 0 --config ../../eslint.config.js",
     "lint:fix": "eslint src --fix --config ../../eslint.config.js",
