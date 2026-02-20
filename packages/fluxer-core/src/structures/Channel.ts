@@ -360,7 +360,7 @@ export class VoiceChannel extends GuildChannel {
 }
 
 export class LinkChannel extends GuildChannel {
-  url?: string | null;
+  url: string | null;
   constructor(client: Client, data: APIChannel) {
     super(client, data);
     this.url = data.url ?? null;
