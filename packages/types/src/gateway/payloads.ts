@@ -110,7 +110,7 @@ export interface GatewayMessageDeleteBulkDispatchData {
 
 /** Emoji data sent with reaction events (id is null for unicode emoji). */
 export interface GatewayReactionEmoji {
-  id: Snowflake | null;
+  id?: Snowflake;
   name: string;
   animated?: boolean;
 }
