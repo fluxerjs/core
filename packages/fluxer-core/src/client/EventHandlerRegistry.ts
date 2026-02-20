@@ -79,11 +79,7 @@ handlers.set('MESSAGE_REACTION_ADD', async (client, d) => {
     username: 'Unknown',
     discriminator: '0',
   } as APIUserPartial);
-  client.emit(
-    Events.MessageReactionAdd,
-    reaction,
-    user,
-  );
+  client.emit(Events.MessageReactionAdd, reaction, user);
 });
 
 handlers.set('MESSAGE_REACTION_REMOVE', async (client, d) => {
@@ -94,11 +90,7 @@ handlers.set('MESSAGE_REACTION_REMOVE', async (client, d) => {
     username: 'Unknown',
     discriminator: '0',
   } as APIUserPartial);
-  client.emit(
-    Events.MessageReactionRemove,
-    reaction,
-    user
-  );
+  client.emit(Events.MessageReactionRemove, reaction, user);
 });
 
 handlers.set('MESSAGE_REACTION_REMOVE_ALL', async (client, d) => {
