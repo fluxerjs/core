@@ -23,13 +23,13 @@
             {{ section.title }}
             <GuideDiscordCompat
               v-if="section.discordJsCompat"
-              :href="typeof section.discordJsCompat === 'string' ? section.discordJsCompat : undefined"
-            />
+              :href="
+                typeof section.discordJsCompat === 'string' ? section.discordJsCompat : undefined
+              " />
           </h2>
           <GuideDiscordCompatCallout
             v-if="typeof section.discordJsCompat === 'string'"
-            :href="section.discordJsCompat"
-          />
+            :href="section.discordJsCompat" />
           <p v-if="section.description" class="section-desc">{{ section.description }}</p>
           <GuideTable
             v-if="section.table"

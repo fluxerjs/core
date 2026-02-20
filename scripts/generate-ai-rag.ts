@@ -29,7 +29,11 @@ interface RagChunk {
   embedding?: number[];
 }
 
-function formatMethodSig(m: { name: string; params?: Array<{ name: string; type: string }>; returns?: string }): string {
+function formatMethodSig(m: {
+  name: string;
+  params?: Array<{ name: string; type: string }>;
+  returns?: string;
+}): string {
   const params = m.params?.map((p) => `${p.name}: ${p.type}`).join(', ') ?? '';
   const ret = m.returns ? ` -> ${m.returns}` : '';
   return `${m.name}(${params})${ret}`;
@@ -40,7 +44,12 @@ function chunkMainJson(main: {
     name: string;
     description?: string;
     properties?: Array<{ name: string; type: string }>;
-    methods?: Array<{ name: string; params?: Array<{ name: string; type: string }>; returns?: string; description?: string }>;
+    methods?: Array<{
+      name: string;
+      params?: Array<{ name: string; type: string }>;
+      returns?: string;
+      description?: string;
+    }>;
   }>;
   interfaces?: Array<{
     name: string;
@@ -94,7 +103,8 @@ function chunkMainJson(main: {
   }
 
   for (const e of main.enums ?? []) {
-    const members = e.members?.map((m) => `${m.name}${m.value != null ? `=${m.value}` : ''}`).join(', ') ?? '';
+    const members =
+      e.members?.map((m) => `${m.name}${m.value != null ? `=${m.value}` : ''}`).join(', ') ?? '';
     chunks.push({
       id: `enum-${e.name}`,
       type: 'enum',
@@ -107,17 +117,19 @@ function chunkMainJson(main: {
   return chunks;
 }
 
-function chunkGuidesJson(guides: Array<{
-  slug: string;
-  title: string;
-  description?: string;
-  sections?: Array<{
-    title?: string;
+function chunkGuidesJson(
+  guides: Array<{
+    slug: string;
+    title: string;
     description?: string;
-    code?: string;
-    language?: string;
-  }>;
-}>): RagChunk[] {
+    sections?: Array<{
+      title?: string;
+      description?: string;
+      code?: string;
+      language?: string;
+    }>;
+  }>,
+): RagChunk[] {
   const chunks: RagChunk[] = [];
 
   for (const g of guides) {
@@ -192,7 +204,9 @@ async function main(): Promise<void> {
   const guideChunks = chunkGuidesJson(guides);
   const allChunks = [...mainChunks, ...guideChunks];
 
-  console.log(`[generate-ai-rag] Chunked ${mainChunks.length} from main.json, ${guideChunks.length} from guides.json`);
+  console.log(
+    `[generate-ai-rag] Chunked ${mainChunks.length} from main.json, ${guideChunks.length} from guides.json`,
+  );
 
   for (let i = 0; i < allChunks.length; i += BATCH_SIZE) {
     const batch = allChunks.slice(i, i + BATCH_SIZE);
@@ -201,7 +215,9 @@ async function main(): Promise<void> {
     for (let j = 0; j < batch.length; j++) {
       batch[j].embedding = embeddings[j];
     }
-    console.log(`[generate-ai-rag] Embedded ${Math.min(i + BATCH_SIZE, allChunks.length)}/${allChunks.length}`);
+    console.log(
+      `[generate-ai-rag] Embedded ${Math.min(i + BATCH_SIZE, allChunks.length)}/${allChunks.length}`,
+    );
     if (i + BATCH_SIZE < allChunks.length) {
       await new Promise((r) => setTimeout(r, BATCH_DELAY_MS));
     }

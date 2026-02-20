@@ -62,5 +62,4 @@ defineProps<{
   color: var(--discord-compat);
   background: rgba(87, 242, 135, 0.2);
 }
-
 </style>

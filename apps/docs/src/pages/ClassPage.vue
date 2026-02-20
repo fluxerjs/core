@@ -2,7 +2,10 @@
   <div v-if="clazz" class="class-page">
     <div
       class="page-content"
-      :class="{ 'class-deprecated': clazz.deprecated, 'class-discord-compat': clazz.discordJsCompat }">
+      :class="{
+        'class-deprecated': clazz.deprecated,
+        'class-discord-compat': clazz.discordJsCompat,
+      }">
       <div v-if="clazz.deprecated" class="deprecated-banner">
         <span class="deprecated-badge">Deprecated</span>
         <span v-if="typeof clazz.deprecated === 'string'" class="deprecated-message">{{
@@ -12,8 +15,7 @@
       <ApiDiscordCompat
         v-if="clazz.discordJsCompat && !clazz.deprecated"
         :to="fluxerClassLink"
-        variant="banner"
-      />
+        variant="banner" />
       <div class="page-header">
         <span class="kind-badge kind-class">class</span>
         <h1>{{ clazz.name }}</h1>
@@ -44,8 +46,7 @@
         v-if="properties.length"
         :properties="properties"
         :parent-name="clazz?.name"
-        parent-type="class"
-      />
+        parent-type="class" />
       <MethodsSection v-if="methods.length" :methods="methods" :parent-name="clazz.name" />
     </div>
     <nav v-if="tocItems.length" class="on-this-page" aria-label="On this page">

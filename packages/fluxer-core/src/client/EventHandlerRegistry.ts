@@ -276,7 +276,10 @@ handlers.set('GUILD_BAN_REMOVE', async (client, d) => {
 });
 
 handlers.set('GUILD_EMOJIS_UPDATE', async (client, d) => {
-  const data = d as { guild_id: string; emojis: Array<{ id: string; name?: string; animated?: boolean }> };
+  const data = d as {
+    guild_id: string;
+    emojis: Array<{ id: string; name?: string; animated?: boolean }>;
+  };
   const guild = client.guilds.get(data.guild_id);
   if (guild) {
     guild.emojis.clear();
@@ -284,7 +287,11 @@ handlers.set('GUILD_EMOJIS_UPDATE', async (client, d) => {
       if (!e.id || e.name == null) continue;
       guild.emojis.set(
         e.id,
-        new GuildEmoji(client, { id: e.id, name: e.name, animated: e.animated ?? false, guild_id: guild.id }, guild.id),
+        new GuildEmoji(
+          client,
+          { id: e.id, name: e.name, animated: e.animated ?? false, guild_id: guild.id },
+          guild.id,
+        ),
       );
     }
   }

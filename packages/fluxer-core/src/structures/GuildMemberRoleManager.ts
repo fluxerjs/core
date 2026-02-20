@@ -30,7 +30,10 @@ export type RoleResolvable = string | Role;
 export class GuildMemberRoleManager {
   private _roleIds: string[] = [];
 
-  constructor(private readonly member: GuildMember, initialRoleIds: string[] = []) {
+  constructor(
+    private readonly member: GuildMember,
+    initialRoleIds: string[] = [],
+  ) {
     this._roleIds = [...initialRoleIds];
   }
 

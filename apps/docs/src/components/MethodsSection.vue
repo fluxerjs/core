@@ -7,9 +7,9 @@
       :key="m.name"
       class="method-item"
       :class="{
-  'is-deprecated': m.deprecated,
-  'is-discord-compat': m.discordJsCompat && !m.deprecated
-}">
+        'is-deprecated': m.deprecated,
+        'is-discord-compat': m.discordJsCompat && !m.deprecated,
+      }">
       <div class="deprecated-banner" v-if="m.deprecated">
         <span class="deprecated-badge">Deprecated</span>
         <span v-if="typeof m.deprecated === 'string'" class="deprecated-message">{{
@@ -19,8 +19,7 @@
       <ApiDiscordCompat
         v-if="m.discordJsCompat && !m.deprecated"
         :to="fluxerMethodLink(m.name)"
-        variant="banner"
-      />
+        variant="banner" />
       <div class="method-header">
         <code class="method-name">{{ m.name }}</code>
         <span v-if="m.deprecated" class="deprecated-badge-inline">deprecated</span>

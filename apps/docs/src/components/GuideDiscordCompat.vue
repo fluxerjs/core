@@ -31,8 +31,8 @@ const props = defineProps<{
 
 const { path: versionedPath } = useVersionedPath();
 
-const isExternal = computed(() =>
-  typeof props.href === 'string' && /^https?:\/\//i.test(props.href),
+const isExternal = computed(
+  () => typeof props.href === 'string' && /^https?:\/\//i.test(props.href),
 );
 
 const fluxerPath = computed(() => {
@@ -43,9 +43,7 @@ const fluxerPath = computed(() => {
   return versionedPath(p);
 });
 
-const externalHref = computed(() =>
-  props.href && isExternal.value ? props.href : undefined,
-);
+const externalHref = computed(() => (props.href && isExternal.value ? props.href : undefined));
 </script>
 
 <style scoped>

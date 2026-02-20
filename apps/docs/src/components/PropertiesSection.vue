@@ -10,8 +10,7 @@
       <ApiDiscordCompat
         v-if="p.discordJsCompat"
         :to="fluxerPropertyLink(p.name)"
-        variant="banner"
-      />
+        variant="banner" />
       <div class="property-header">
         <code class="property-name">{{ p.name }}</code>
         <span v-if="p.optional" class="optional-badge">optional</span>

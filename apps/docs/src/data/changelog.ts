@@ -24,7 +24,7 @@ export const changelogEntries: ChangelogEntry[] = [
       {
         title: 'BREAKING: GuildMember.roles',
         items: [
-          "member.roles is now GuildMemberRoleManager (was string[]). Migrate: member.roles.includes(roleId) → member.roles.cache.has(roleId); array iteration → member.roles.roleIds",
+          'member.roles is now GuildMemberRoleManager (was string[]). Migrate: member.roles.includes(roleId) → member.roles.cache.has(roleId); array iteration → member.roles.roleIds',
           'member.addRole() and member.removeRole() still work; prefer member.roles.add() and member.roles.remove() for Discord.js parity',
         ],
       },
@@ -76,8 +76,8 @@ export const changelogEntries: ChangelogEntry[] = [
       {
         title: 'Docs — Guides',
         items: [
-          "New guide: Discord.js Compatibility — overview of member.roles, guild.members.me, client.channels.cache; migration from member.roles.includes() to member.roles.cache.has()",
-          "New guide: Channels — create, edit, delete; permission overwrites; roles; invites; emojis & stickers",
+          'New guide: Discord.js Compatibility — overview of member.roles, guild.members.me, client.channels.cache; migration from member.roles.includes() to member.roles.cache.has()',
+          'New guide: Channels — create, edit, delete; permission overwrites; roles; invites; emojis & stickers',
           'Guides category order — channels category; Roles guide; discordJsCompat badges on relevant sections',
           'Roles guide — new section "Add/remove roles from members (member.roles)" with Discord.js-style examples',
           'Channels guide — new "Fetch Emojis" section (guild.fetchEmojis, guild.fetchEmoji, emoji.delete)',
@@ -92,10 +92,7 @@ export const changelogEntries: ChangelogEntry[] = [
       },
       {
         title: 'Chore',
-        items: [
-          '.gitignore — removed IDE and OS-specific entries',
-          '.env.example — minor cleanup',
-        ],
+        items: ['.gitignore — removed IDE and OS-specific entries', '.env.example — minor cleanup'],
       },
     ],
   },
