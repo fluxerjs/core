@@ -7,6 +7,7 @@
  */
 export type BitFieldResolvable<S extends string> =
   | S
+  | bigint
   | number
   | BitField<S>
   | (S | number | BitField<S>)[];
