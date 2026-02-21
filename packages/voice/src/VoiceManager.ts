@@ -9,7 +9,10 @@ import {
   GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
 import { VoiceConnection } from './VoiceConnection.js';
-import { LiveKitRtcConnection } from './LiveKitRtcConnection.js';
+import {
+  LiveKitRtcConnection,
+  type LiveKitReceiveSubscription,
+} from './LiveKitRtcConnection.js';
 import { isLiveKitEndpoint } from './livekit.js';
 import { Collection } from '@fluxerjs/collection';
 
@@ -91,6 +94,38 @@ export class VoiceManager extends EventEmitter {
     const guildMap = this.voiceStates.get(guildId);
     if (!guildMap) return null;
     return guildMap.get(userId) ?? null;
+  }
+
+  /**
+   * List participant user IDs currently in a specific voice channel.
+   */
+  listParticipantsInChannel(guildId: string, channelId: string): string[] {
+    const guildMap = this.voiceStates.get(guildId);
+    if (!guildMap) return [];
+    const participants: string[] = [];
+    for (const [userId, voiceChannelId] of guildMap.entries()) {
+      if (voiceChannelId === channelId) participants.push(userId);
+    }
+    return participants;
+  }
+
+  /**
+   * Subscribe to inbound audio for all known participants currently in a voice channel.
+   * Only supported for LiveKit connections.
+   */
+  subscribeChannelParticipants(
+    channelId: string,
+    opts?: { autoResubscribe?: boolean },
+  ): LiveKitReceiveSubscription[] {
+    const conn = this.connections.get(channelId);
+    if (!(conn instanceof LiveKitRtcConnection)) return [];
+    const guildId = conn.channel.guildId;
+    const participants = this.listParticipantsInChannel(guildId, channelId).filter(
+      (participantId) => participantId !== this.client.user?.id,
+    );
+    return participants.map((participantId) =>
+      conn.subscribeParticipantAudio(participantId, opts),
+    );
   }
 
   private handleVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatchData): void {
