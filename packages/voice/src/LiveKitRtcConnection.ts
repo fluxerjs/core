@@ -7,6 +7,7 @@ import {
   GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
 import {
+  AudioStream,
   Room,
   RoomEvent,
   AudioSource,
@@ -18,6 +19,9 @@ import {
   VideoBufferType,
   VideoFrame,
   VideoSource,
+  type RemoteParticipant,
+  type RemoteTrack,
+  TrackKind,
 } from '@livekit/rtc-node';
 import { buildLiveKitUrlForRtcSdk } from './livekit.js';
 import { parseOpusPacketBoundaries, concatUint8Arrays } from './opusUtils.js';
@@ -177,6 +181,25 @@ export type LiveKitRtcConnectionEvents = VoiceConnectionEvents & {
   serverLeave: [];
   /** Emitted when voice state should be synced (self_stream/self_video). VoiceManager listens. */
   requestVoiceStateSync: [payload: { self_stream?: boolean; self_video?: boolean }];
+  /** Emitted when a remote participant starts speaking. */
+  speakerStart: [payload: { participantId: string }];
+  /** Emitted when a remote participant stops speaking. */
+  speakerStop: [payload: { participantId: string }];
+  /** Emitted for each decoded inbound audio frame. */
+  audioFrame: [frame: LiveKitAudioFrame];
+};
+
+export type LiveKitAudioFrame = {
+  participantId: string;
+  trackSid?: string;
+  sampleRate: number;
+  channels: number;
+  samples: Int16Array;
+};
+
+export type LiveKitReceiveSubscription = {
+  participantId: string;
+  stop: () => void;
 };
 
 /**
@@ -245,6 +268,9 @@ export class LiveKitRtcConnection extends EventEmitter {
   private lastServerEndpoint: string | null = null;
   private lastServerToken: string | null = null;
   private _disconnectEmitted = false;
+  private readonly receiveSubscriptions = new Map<string, LiveKitReceiveSubscription>();
+  private readonly participantTrackSids = new Map<string, string>();
+  private readonly activeSpeakers = new Set<string>();
 
   /**
    * @param client - The Fluxer client instance
@@ -305,6 +331,97 @@ export class LiveKitRtcConnection extends EventEmitter {
     return this._volume ?? 100;
   }
 
+  private isAudioTrack(track: RemoteTrack): boolean {
+    return track.kind === TrackKind.KIND_AUDIO;
+  }
+
+  private getParticipantId(participant: RemoteParticipant): string {
+    return participant.identity;
+  }
+
+  private subscribeParticipantTrack(participant: RemoteParticipant, track: RemoteTrack): void {
+    if (!this.isAudioTrack(track)) return;
+    const participantId = this.getParticipantId(participant);
+    const current = this.receiveSubscriptions.get(participantId);
+    if (current) current.stop();
+
+    const audioStream = new AudioStream(track, {
+      sampleRate: SAMPLE_RATE,
+      numChannels: CHANNELS,
+      frameSizeMs: 10,
+    });
+    let stopped = false;
+
+    const pump = async () => {
+      try {
+        const reader = audioStream.getReader();
+        while (!stopped) {
+          const { done, value } = await reader.read();
+          if (done || !value) break;
+          this.emit('audioFrame', {
+            participantId,
+            trackSid: track.sid,
+            sampleRate: value.sampleRate,
+            channels: value.channels,
+            samples: value.data,
+          });
+        }
+      } catch (err) {
+        if (!stopped) {
+          this.emit('error', err instanceof Error ? err : new Error(String(err)));
+        }
+      }
+    };
+
+    const stop = () => {
+      stopped = true;
+      audioStream.cancel().catch(() => {});
+      this.receiveSubscriptions.delete(participantId);
+    };
+
+    this.receiveSubscriptions.set(participantId, { participantId, stop });
+    this.participantTrackSids.set(participantId, track.sid ?? '');
+    void pump();
+  }
+
+  subscribeParticipantAudio(
+    participantId: string,
+    options: { autoResubscribe?: boolean } = {},
+  ): LiveKitReceiveSubscription {
+    const stop = () => {
+      this.receiveSubscriptions.get(participantId)?.stop();
+      this.receiveSubscriptions.delete(participantId);
+      this.participantTrackSids.delete(participantId);
+    };
+
+    const room = this.room;
+    if (!room || !room.isConnected) return { participantId, stop };
+
+    const participant = room.remoteParticipants.get(participantId);
+    if (!participant) return { participantId, stop };
+
+    for (const pub of participant.trackPublications.values()) {
+      const maybeTrack = (pub as { track?: RemoteTrack }).track;
+      if (maybeTrack && this.isAudioTrack(maybeTrack)) {
+        this.subscribeParticipantTrack(participant, maybeTrack);
+        break;
+      }
+    }
+
+    if (options.autoResubscribe === false && !this.receiveSubscriptions.has(participantId)) {
+      return { participantId, stop };
+    }
+
+    return { participantId, stop };
+  }
+
+  private clearReceiveSubscriptions(): void {
+    for (const sub of this.receiveSubscriptions.values()) sub.stop();
+    this.receiveSubscriptions.clear();
+    this.participantTrackSids.clear();
+    this.activeSpeakers.clear();
+  }
+
   playOpus(_stream: NodeJS.ReadableStream): void {
     this.emit(
       'error',
@@ -353,7 +470,46 @@ export class LiveKitRtcConnection extends EventEmitter {
         this.debug('Room reconnected');
       });
 
-      await room.connect(url, token, { autoSubscribe: false, dynacast: false });
+      room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
+        if (!this.isAudioTrack(track)) return;
+        this.subscribeParticipantTrack(participant, track);
+      });
+
+      room.on(RoomEvent.TrackUnsubscribed, (track, _publication, participant) => {
+        if (!this.isAudioTrack(track)) return;
+        const participantId = this.getParticipantId(participant);
+        this.receiveSubscriptions.get(participantId)?.stop();
+        this.receiveSubscriptions.delete(participantId);
+        this.participantTrackSids.delete(participantId);
+      });
+
+      room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+        const participantId = this.getParticipantId(participant);
+        this.receiveSubscriptions.get(participantId)?.stop();
+        this.receiveSubscriptions.delete(participantId);
+        this.participantTrackSids.delete(participantId);
+        if (this.activeSpeakers.delete(participantId)) {
+          this.emit('speakerStop', { participantId });
+        }
+      });
+
+      room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+        const next = new Set(speakers.map((speaker) => speaker.identity));
+        for (const participantId of next) {
+          if (!this.activeSpeakers.has(participantId)) {
+            this.emit('speakerStart', { participantId });
+          }
+        }
+        for (const participantId of this.activeSpeakers) {
+          if (!next.has(participantId)) {
+            this.emit('speakerStop', { participantId });
+          }
+        }
+        this.activeSpeakers.clear();
+        for (const participantId of next) this.activeSpeakers.add(participantId);
+      });
+
+      await room.connect(url, token, { autoSubscribe: true, dynacast: false });
       this.lastServerEndpoint = raw;
       this.lastServerToken = token;
       this.debug('connected to room');
@@ -1523,6 +1679,7 @@ export class LiveKitRtcConnection extends EventEmitter {
   stop(): void {
     this._playing = false;
     this.stopVideo();
+    this.clearReceiveSubscriptions();
     if (this.currentStream?.destroy) this.currentStream.destroy();
     this.currentStream = null;
     if (this.audioTrack) {
