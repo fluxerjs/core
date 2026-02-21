@@ -35,6 +35,7 @@ import type { VideoFrame as WebCodecsVideoFrame } from 'node-webcodecs';
 
 const SAMPLE_RATE = 48000;
 const CHANNELS = 1;
+const RECEIVE_READ_TIMEOUT_MS = 100;
 
 /** avcC box structure from mp4box (AVCConfigurationBox). */
 interface AvcCBox {
@@ -357,12 +358,22 @@ export class LiveKitRtcConnection extends EventEmitter {
       frameSizeMs: 10,
     });
     let stopped = false;
+    let reader: ReturnType<AudioStream['getReader']> | null = null;
 
     const pump = async () => {
       try {
-        const reader = audioStream.getReader();
+        reader = audioStream.getReader();
         while (!stopped) {
-          const { done, value } = await reader.read();
+          let readTimeout: NodeJS.Timeout | null = null;
+          const next = await Promise.race([
+            reader.read(),
+            new Promise<null>((resolve) => {
+              readTimeout = setTimeout(() => resolve(null), RECEIVE_READ_TIMEOUT_MS);
+            }),
+          ]);
+          if (readTimeout) clearTimeout(readTimeout);
+          if (next === null) continue;
+          const { done, value } = next;
           if (done || !value) break;
           this.emit('audioFrame', {
             participantId,
@@ -376,11 +387,25 @@ export class LiveKitRtcConnection extends EventEmitter {
         if (!stopped) {
           this.emit('error', err instanceof Error ? err : new Error(String(err)));
         }
+      } finally {
+        if (reader) {
+          try {
+            reader.releaseLock();
+          } catch {}
+          reader = null;
+        }
       }
     };
 
     const stop = () => {
+      if (stopped) return;
       stopped = true;
+      if (reader) {
+        reader.cancel().catch(() => {});
+        try {
+          reader.releaseLock();
+        } catch {}
+      }
       audioStream.cancel().catch(() => {});
       this.receiveSubscriptions.delete(participantId);
     };
