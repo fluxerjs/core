@@ -408,7 +408,7 @@ export class LiveKitRtcConnection extends EventEmitter {
       }
     }
 
-    if (options.autoResubscribe === false && !this.receiveSubscriptions.has(participantId)) {
+    if (!options.autoResubscribe && !this.receiveSubscriptions.has(participantId)) {
       return { participantId, stop };
     }
 
