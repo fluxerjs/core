@@ -399,15 +399,15 @@ export class LiveKitRtcConnection extends EventEmitter {
       this.receiveSubscriptions.get(participantId)?.stop();
       this.receiveSubscriptions.delete(participantId);
       this.participantTrackSids.delete(participantId);
-      if (!autoResubscribe) this.requestedSubscriptions.delete(participantId);
+      this.requestedSubscriptions.delete(participantId);
     };
+    this.requestedSubscriptions.set(participantId, autoResubscribe);
 
     const room = this.room;
     if (!room || !room.isConnected) return { participantId, stop };
 
     const participant = room.remoteParticipants.get(participantId);
     if (!participant) return { participantId, stop };
-    this.requestedSubscriptions.set(participantId, autoResubscribe);
 
     for (const pub of participant.trackPublications.values()) {
       const maybeTrack = (pub as { track?: RemoteTrack }).track;
@@ -415,11 +415,6 @@ export class LiveKitRtcConnection extends EventEmitter {
         this.subscribeParticipantTrack(participant, maybeTrack);
         break;
       }
-    }
-
-    if (!autoResubscribe && !this.receiveSubscriptions.has(participantId)) {
-      this.requestedSubscriptions.delete(participantId);
-      return { participantId, stop };
     }
 
     return { participantId, stop };
