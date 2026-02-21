@@ -6,4 +6,5 @@ export default defineConfig({
   dts: true,
   splitting: false,
   clean: true,
+  external: ['node-webcodecs'],
 });
