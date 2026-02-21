@@ -269,6 +269,7 @@ export class LiveKitRtcConnection extends EventEmitter {
   private lastServerToken: string | null = null;
   private _disconnectEmitted = false;
   private readonly receiveSubscriptions = new Map<string, LiveKitReceiveSubscription>();
+  private readonly requestedSubscriptions = new Map<string, boolean>();
   private readonly participantTrackSids = new Map<string, string>();
   private readonly activeSpeakers = new Set<string>();
 
@@ -339,9 +340,14 @@ export class LiveKitRtcConnection extends EventEmitter {
     return participant.identity;
   }
 
-  private subscribeParticipantTrack(participant: RemoteParticipant, track: RemoteTrack): void {
+  private subscribeParticipantTrack(
+    participant: RemoteParticipant,
+    track: RemoteTrack,
+    options: { autoSubscribe?: boolean } = {},
+  ): void {
     if (!this.isAudioTrack(track)) return;
     const participantId = this.getParticipantId(participant);
+    if (!options.autoSubscribe && !this.requestedSubscriptions.has(participantId)) return;
     const current = this.receiveSubscriptions.get(participantId);
     if (current) current.stop();
 
@@ -388,10 +394,12 @@ export class LiveKitRtcConnection extends EventEmitter {
     participantId: string,
     options: { autoResubscribe?: boolean } = {},
   ): LiveKitReceiveSubscription {
+    const autoResubscribe = options.autoResubscribe === true;
     const stop = () => {
       this.receiveSubscriptions.get(participantId)?.stop();
       this.receiveSubscriptions.delete(participantId);
       this.participantTrackSids.delete(participantId);
+      if (!autoResubscribe) this.requestedSubscriptions.delete(participantId);
     };
 
     const room = this.room;
@@ -399,6 +407,7 @@ export class LiveKitRtcConnection extends EventEmitter {
 
     const participant = room.remoteParticipants.get(participantId);
     if (!participant) return { participantId, stop };
+    this.requestedSubscriptions.set(participantId, autoResubscribe);
 
     for (const pub of participant.trackPublications.values()) {
       const maybeTrack = (pub as { track?: RemoteTrack }).track;
@@ -408,7 +417,8 @@ export class LiveKitRtcConnection extends EventEmitter {
       }
     }
 
-    if (!options.autoResubscribe && !this.receiveSubscriptions.has(participantId)) {
+    if (!autoResubscribe && !this.receiveSubscriptions.has(participantId)) {
+      this.requestedSubscriptions.delete(participantId);
       return { participantId, stop };
     }
 
@@ -418,6 +428,7 @@ export class LiveKitRtcConnection extends EventEmitter {
   private clearReceiveSubscriptions(): void {
     for (const sub of this.receiveSubscriptions.values()) sub.stop();
     this.receiveSubscriptions.clear();
+    this.requestedSubscriptions.clear();
     this.participantTrackSids.clear();
     this.activeSpeakers.clear();
   }
@@ -480,6 +491,9 @@ export class LiveKitRtcConnection extends EventEmitter {
         const participantId = this.getParticipantId(participant);
         this.receiveSubscriptions.get(participantId)?.stop();
         this.receiveSubscriptions.delete(participantId);
+        if (this.requestedSubscriptions.get(participantId) !== true) {
+          this.requestedSubscriptions.delete(participantId);
+        }
         this.participantTrackSids.delete(participantId);
       });
 
@@ -487,6 +501,9 @@ export class LiveKitRtcConnection extends EventEmitter {
         const participantId = this.getParticipantId(participant);
         this.receiveSubscriptions.get(participantId)?.stop();
         this.receiveSubscriptions.delete(participantId);
+        if (this.requestedSubscriptions.get(participantId) !== true) {
+          this.requestedSubscriptions.delete(participantId);
+        }
         this.participantTrackSids.delete(participantId);
         if (this.activeSpeakers.delete(participantId)) {
           this.emit('speakerStop', { participantId });
