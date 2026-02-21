@@ -391,7 +391,9 @@ export class LiveKitRtcConnection extends EventEmitter {
         if (reader) {
           try {
             reader.releaseLock();
-          } catch {}
+          } catch {
+            // Reader may already be released.
+          }
           reader = null;
         }
       }
@@ -404,7 +406,9 @@ export class LiveKitRtcConnection extends EventEmitter {
         reader.cancel().catch(() => {});
         try {
           reader.releaseLock();
-        } catch {}
+        } catch {
+          // Reader may already be released.
+        }
       }
       audioStream.cancel().catch(() => {});
       this.receiveSubscriptions.delete(participantId);
