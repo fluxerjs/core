@@ -3,6 +3,8 @@ export { VoiceConnection, type VoiceConnectionEvents } from './VoiceConnection.j
 export {
   LiveKitRtcConnection,
   type LiveKitRtcConnectionEvents,
+  type LiveKitAudioFrame,
+  type LiveKitReceiveSubscription,
   type VideoPlayOptions,
 } from './LiveKitRtcConnection.js';
 import { Client } from '@fluxerjs/core';
