@@ -137,7 +137,7 @@ export class Webhook extends Base {
     const opts = typeof options === 'string' ? { content: options } : options;
 
     // Use same body-building flow as ChannelManager.send / message send
-    const body = buildSendBody(options) as Record<string, unknown>;
+    const body = buildSendBody(opts) as Record<string, unknown>;
     if (opts.username !== undefined) body.username = opts.username;
     if (opts.avatar_url !== undefined) body.avatar_url = opts.avatar_url;
     if (opts.tts !== undefined) body.tts = opts.tts;

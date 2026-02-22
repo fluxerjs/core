@@ -24,18 +24,22 @@ import { Invite } from './Invite';
 /** Base class for all channel types. */
 export abstract class Channel extends Base {
   /** Whether this channel has a send method (TextChannel, DMChannel). */
-  isSendable(): this is TextChannel | DMChannel {
+  isTextBased(): this is TextChannel | DMChannel {
     return 'send' in this;
   }
 
   /** Whether this channel is a DM or Group DM. */
-  isDM(): boolean {
+  isDM(): this is DMChannel {
     return this.type === ChannelType.DM || this.type === ChannelType.GroupDM;
   }
 
   /** Whether this channel is voice-based (VoiceChannel). */
-  isVoice(): boolean {
+  isVoice(): this is VoiceChannel {
     return 'bitrate' in this;
+  }
+
+  isLink(): this is LinkChannel {
+    return 'url' in this;
   }
 
   /** Create a DM channel from API data (type DM or GroupDM). */
@@ -356,7 +360,7 @@ export class VoiceChannel extends GuildChannel {
 }
 
 export class LinkChannel extends GuildChannel {
-  url?: string | null;
+  url: string | null;
   constructor(client: Client, data: APIChannel) {
     super(client, data);
     this.url = data.url ?? null;

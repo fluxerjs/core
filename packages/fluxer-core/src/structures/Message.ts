@@ -22,6 +22,8 @@ import {
   buildSendBody,
   resolveMessageFiles,
   type MessageSendOptions,
+  SendBodyResult,
+  ResolvedMessageFile,
 } from '../util/messageUtils.js';
 import { ReactionCollector } from '../util/ReactionCollector.js';
 import { ReactionCollectorOptions } from '../util/ReactionCollector.js';
@@ -33,6 +35,11 @@ export interface MessageEditOptions {
   /** New embeds (replaces existing) */
   embeds?: (APIEmbed | EmbedBuilder)[];
 }
+
+export type MessagePayload = {
+  files?: ResolvedMessageFile[];
+  body: SendBodyResult & { referenced_message?: APIMessageReference };
+};
 
 /** Re-export for convenience. */
 export type { MessageSendOptions } from '../util/messageUtils.js';
@@ -137,13 +144,9 @@ export class Message extends Base {
    * await message.send({ embeds: [embed] }); // EmbedBuilder auto-converted
    * await message.send({ content: 'File', files: [{ name: 'data.txt', data }] });
    */
-  async send(options: MessageSendOptions): Promise<Message> {
-    const opts = typeof options === 'string' ? { content: options } : options;
-    const body = buildSendBody(options);
-    const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
-    const postOptions = files?.length ? { body, files } : { body };
-    const data = await this.client.rest.post(Routes.channelMessages(this.channelId), postOptions);
-    return new Message(this.client, data as APIMessage);
+  async send(options: string | MessageSendOptions): Promise<Message> {
+    const payload = await Message._createMessageBody(options);
+    return this._send(payload);
   }
 
   /**
@@ -165,21 +168,39 @@ export class Message extends Base {
    * await message.reply('Pong!');
    * await message.reply({ embeds: [embed] });
    */
-  async reply(options: MessageSendOptions): Promise<Message> {
-    const opts = typeof options === 'string' ? { content: options } : options;
-    const base = buildSendBody(options);
-    const body = {
-      ...base,
-      message_reference: {
-        channel_id: this.channelId,
-        message_id: this.id,
-        guild_id: this.guildId ?? undefined,
-      },
-    };
-    const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
-    const postOptions = files?.length ? { body, files } : { body };
-    const data = await this.client.rest.post(Routes.channelMessages(this.channelId), postOptions);
-    return new Message(this.client, data as APIMessage);
+  async reply(options: string | MessageSendOptions): Promise<Message> {
+    const payload = await Message._createMessageBody(options, {
+      channel_id: this.channelId,
+      message_id: this.id,
+      guild_id: this.guildId ?? undefined,
+    });
+    return this._send(payload);
+  }
+
+  /** Exposed for testing purposes, use Message.reply() or send() for normal use */
+  static async _createMessageBody(
+    content: string | MessageSendOptions,
+    referenced_message?: { channel_id: string; message_id: string; guild_id?: string },
+  ): Promise<MessagePayload> {
+    if (typeof content === 'string') {
+      if (content.length === 0) {
+        throw new RangeError('Cannot send an empty message');
+      }
+      content = { content };
+    }
+    const base = buildSendBody(content);
+    const files = content.files?.length ? await resolveMessageFiles(content.files) : undefined;
+    return referenced_message
+      ? { files, body: { ...base, referenced_message } }
+      : { files, body: { ...base } };
+  }
+
+  async _send(payload: MessagePayload): Promise<Message> {
+    const data = await this.client.rest.post<APIMessage>(
+      Routes.channelMessages(this.channelId),
+      payload,
+    );
+    return new Message(this.client, data);
   }
 
   /**
