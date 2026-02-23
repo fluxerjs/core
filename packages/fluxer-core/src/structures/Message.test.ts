@@ -24,10 +24,7 @@ describe('Message._createMessageBody', () => {
 
     it('includes message_reference with options object', async () => {
       const ref = { channel_id: 'ch1', message_id: 'msg1', guild_id: 'g1' };
-      const payload = await Message._createMessageBody(
-        { content: 'Hello', embeds: [] },
-        ref,
-      );
+      const payload = await Message._createMessageBody({ content: 'Hello', embeds: [] }, ref);
       expect(payload.body.message_reference).toEqual(ref);
       expect(payload.body.content).toBe('Hello');
     });
@@ -57,9 +54,7 @@ describe('Message._createMessageBody', () => {
   describe('validation', () => {
     it('throws RangeError for empty string', async () => {
       await expect(Message._createMessageBody('')).rejects.toThrow(RangeError);
-      await expect(Message._createMessageBody('')).rejects.toThrow(
-        'Cannot send an empty message',
-      );
+      await expect(Message._createMessageBody('')).rejects.toThrow('Cannot send an empty message');
     });
 
     it('accepts non-empty string', async () => {

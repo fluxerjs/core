@@ -5,7 +5,14 @@ function createMockClient() {
   return {} as Parameters<typeof Guild>[0];
 }
 
-function createGuild(overrides: { id?: string; icon?: string | null; banner?: string | null; splash?: string | null } = {}) {
+function createGuild(
+  overrides: {
+    id?: string;
+    icon?: string | null;
+    banner?: string | null;
+    splash?: string | null;
+  } = {},
+) {
   return new Guild(createMockClient(), {
     id: overrides.id ?? 'guild1',
     name: 'Test Guild',

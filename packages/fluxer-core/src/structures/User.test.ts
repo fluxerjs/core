@@ -5,17 +5,21 @@ function createMockClient() {
   return {} as Parameters<typeof User>[0];
 }
 
-function createUser(overrides: Partial<{ id: string; username: string; avatar: string | null; banner: string | null }> = {}) {
-  return new User(
-    createMockClient(),
-    {
-      id: overrides.id ?? '123456789012345678',
-      username: overrides.username ?? 'TestUser',
-      discriminator: '0',
-      avatar: overrides.avatar ?? null,
-      banner: overrides.banner ?? null,
-    },
-  );
+function createUser(
+  overrides: Partial<{
+    id: string;
+    username: string;
+    avatar: string | null;
+    banner: string | null;
+  }> = {},
+) {
+  return new User(createMockClient(), {
+    id: overrides.id ?? '123456789012345678',
+    username: overrides.username ?? 'TestUser',
+    discriminator: '0',
+    avatar: overrides.avatar ?? null,
+    banner: overrides.banner ?? null,
+  });
 }
 
 describe('User', () => {

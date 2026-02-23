@@ -28,23 +28,29 @@ function createMockGuild(client: ReturnType<typeof createMockClient>) {
   });
 }
 
-function createMember(overrides: {
-  nick?: string | null;
-  user?: { username?: string; global_name?: string | null };
-} = {}) {
+function createMember(
+  overrides: {
+    nick?: string | null;
+    user?: { username?: string; global_name?: string | null };
+  } = {},
+) {
   const client = createMockClient();
   const guild = createMockGuild(client);
-  return new GuildMember(client as never, {
-    user: {
-      id: 'user1',
-      username: overrides.user?.username ?? 'TestUser',
-      discriminator: '0',
-      global_name: overrides.user?.global_name ?? null,
+  return new GuildMember(
+    client as never,
+    {
+      user: {
+        id: 'user1',
+        username: overrides.user?.username ?? 'TestUser',
+        discriminator: '0',
+        global_name: overrides.user?.global_name ?? null,
+      },
+      nick: overrides.nick ?? null,
+      roles: [],
+      joined_at: new Date().toISOString(),
     },
-    nick: overrides.nick ?? null,
-    roles: [],
-    joined_at: new Date().toISOString(),
-  }, guild);
+    guild,
+  );
 }
 
 describe('GuildMember', () => {
@@ -81,13 +87,17 @@ describe('GuildMember', () => {
     it('builds member avatar URL when avatar is set', () => {
       const client = createMockClient();
       const guild = createMockGuild(client);
-      const member = new GuildMember(client as never, {
-        user: { id: 'u1', username: 'Test', discriminator: '0' },
-        nick: null,
-        avatar: 'memberavatar',
-        roles: [],
-        joined_at: new Date().toISOString(),
-      }, guild);
+      const member = new GuildMember(
+        client as never,
+        {
+          user: { id: 'u1', username: 'Test', discriminator: '0' },
+          nick: null,
+          avatar: 'memberavatar',
+          roles: [],
+          joined_at: new Date().toISOString(),
+        },
+        guild,
+      );
       const url = member.avatarURL();
       expect(url).toContain('guilds/guild123/users/u1/avatars/memberavatar');
     });
@@ -97,18 +107,22 @@ describe('GuildMember', () => {
     it('falls back to user avatar when no guild avatar', () => {
       const client = createMockClient();
       const guild = createMockGuild(client);
-      const member = new GuildMember(client as never, {
-        user: {
-          id: 'u1',
-          username: 'Test',
-          discriminator: '0',
-          avatar: 'useravatar',
+      const member = new GuildMember(
+        client as never,
+        {
+          user: {
+            id: 'u1',
+            username: 'Test',
+            discriminator: '0',
+            avatar: 'useravatar',
+          },
+          nick: null,
+          avatar: null,
+          roles: [],
+          joined_at: new Date().toISOString(),
         },
-        nick: null,
-        avatar: null,
-        roles: [],
-        joined_at: new Date().toISOString(),
-      }, guild);
+        guild,
+      );
       const url = member.displayAvatarURL();
       expect(url).toContain('avatars/u1/useravatar');
     });
