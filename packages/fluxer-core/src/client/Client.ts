@@ -283,11 +283,16 @@ export class Client extends EventEmitter {
   /**
    * Send a message to any channel by ID. Shorthand for client.channels.send().
    * Works even when the channel is not cached.
+   * @deprecated Use client.channels.send(channelId, payload).
    */
   async sendToChannel(
     channelId: string,
     content: string | { content?: string; embeds?: APIEmbed[] },
   ): Promise<Message> {
+    emitDeprecationWarning(
+      'Client.sendToChannel()',
+      'Use client.channels.send(channelId, payload).',
+    );
     const payload = await Message._createMessageBody(content);
     return this.channels.send(channelId, payload);
   }
