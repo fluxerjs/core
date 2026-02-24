@@ -25,13 +25,27 @@ export class BitField<S extends string> {
     return `BitField${this.bitfield}`;
   }
 
-  static resolve<S extends string>(bit: BitFieldResolvable<S>): number {
-    const Flags = this.Flags as Record<string, number>;
-    if (typeof bit === 'number' && bit >= 0) return bit;
-    if (bit instanceof BitField) return bit.bitfield;
-    if (Array.isArray(bit)) return bit.map((b) => this.resolve(b)).reduce((a, b) => a | b, 0);
-    if (typeof bit === 'string' && typeof Flags[bit] !== 'undefined') return Flags[bit]!;
-    throw new RangeError(`Invalid bitfield flag or number: ${bit}`);
+  static resolve<S extends string>(bits: BitFieldResolvable<S>): bigint {
+    if (typeof bits === 'number' && bits >= 0) return BigInt(bits);
+    if (typeof bits === 'bigint' && bits >= 0n) return bits;
+    if (bits instanceof BitField) return bits.bitfield;
+    if (Array.isArray(bits)) return bits.map((b) => this.resolve(b)).reduce((a, b) => BigInt(a) | BigInt(b), 0n);
+    if (typeof bits === 'string') {
+      // If the string matches a known flag name, return its bigint value
+      if (bits in this.Flags) {
+        return this.Flags[bits as S];
+      }
+      console.log(this.Flags);
+
+      // Otherwise, try to interpret the string as a valid non-negative bigint literal
+      try {
+        const value = BigInt(bits);
+        if (value >= 0n) return value;
+      } catch {
+        // fall through to error below
+      }
+    }
+    throw new RangeError(`Invalid bitfield flag or number: ${bits}`);
   }
 
   has(bit: BitFieldResolvable<S>): boolean {
