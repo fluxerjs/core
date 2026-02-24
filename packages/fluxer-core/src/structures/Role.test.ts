@@ -1,17 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { Role } from './Role.js';
+import { Client, Role } from '../';
 import { PermissionFlags } from '@fluxerjs/util';
 
-/** Minimal client mock — Role.has() only uses role.permissions, not client. */
 function createMockClient() {
-  return {} as Parameters<typeof Role>[0];
+  return {} as Client;
 }
 
-function createRole(permissions: string, overrides: Partial<{ id: string; name: string }> = {}) {
+function createRole(permissions: string | bigint, overrides: Partial<{ id: string; name: string }> = {}) {
   return new Role(
     createMockClient(),
     {
-      permissions,
+      permissions: permissions.toString(),
       id: overrides.id ?? '1',
       name: overrides.name ?? 'Role',
       color: 0,
@@ -23,46 +22,46 @@ function createRole(permissions: string, overrides: Partial<{ id: string; name: 
   );
 }
 
-describe('Role', () => {
+describe('Role.permissions', () => {
   describe('has()', () => {
     it('returns true when role has Administrator (grants all permissions)', () => {
-      const role = createRole('8'); // 1 << 3 = Administrator
-      expect(role.has(PermissionFlags.Administrator)).toBe(true);
-      expect(role.has(PermissionFlags.SendMessages)).toBe(true);
-      expect(role.has(PermissionFlags.BanMembers)).toBe(true);
-      expect(role.has(PermissionFlags.ManageChannels)).toBe(true);
+      const role = createRole(PermissionFlags.Administrator); // 1 << 3 = Administrator
+      expect(role.permissions.has(PermissionFlags.Administrator)).toBe(true);
+      expect(role.permissions.has(PermissionFlags.SendMessages)).toBe(true);
+      expect(role.permissions.has(PermissionFlags.BanMembers)).toBe(true);
+      expect(role.permissions.has(PermissionFlags.ManageChannels)).toBe(true);
     });
 
     it('returns true when role has specific permission', () => {
       const role = createRole('2048'); // SendMessages
-      expect(role.has(PermissionFlags.SendMessages)).toBe(true);
-      expect(role.has(PermissionFlags.BanMembers)).toBe(false);
-      expect(role.has(PermissionFlags.ViewChannel)).toBe(false);
+      expect(role.permissions.has(PermissionFlags.SendMessages)).toBe(true);
+      expect(role.permissions.has(PermissionFlags.BanMembers)).toBe(false);
+      expect(role.permissions.has(PermissionFlags.ViewChannel)).toBe(false);
     });
 
     it('returns true for string permission name', () => {
-      const role = createRole('2048');
-      expect(role.has('SendMessages')).toBe(true);
-      expect(role.has('BanMembers')).toBe(false);
+      const role = createRole(PermissionFlags.SendMessages);
+      expect(role.permissions.has('SendMessages')).toBe(true);
+      expect(role.permissions.has('BanMembers')).toBe(false);
     });
 
     it('returns false when role has no permissions', () => {
       const role = createRole('0');
-      expect(role.has(PermissionFlags.SendMessages)).toBe(false);
-      expect(role.has(PermissionFlags.Administrator)).toBe(false);
+      expect(role.permissions.has(PermissionFlags.SendMessages)).toBe(false);
+      expect(role.permissions.has(PermissionFlags.Administrator)).toBe(false);
     });
 
-    it('returns false for undefined or invalid permission name', () => {
-      const role = createRole('2048');
-      expect(role.has('NonExistent' as never)).toBe(false);
+    it('throws an error for invalid permission name', () => {
+      const role = createRole(PermissionFlags.Administrator);
+      expect(() => role.permissions.has('NonExistent' as never)).toThrow(RangeError);
     });
 
     it('handles combined permission bitfield', () => {
       // SendMessages (2048) | ViewChannel (1024) = 3072
-      const role = createRole('3072');
-      expect(role.has(PermissionFlags.SendMessages)).toBe(true);
-      expect(role.has(PermissionFlags.ViewChannel)).toBe(true);
-      expect(role.has(PermissionFlags.BanMembers)).toBe(false);
+      const role = createRole( String(PermissionFlags.SendMessages | PermissionFlags.ViewChannel) );
+      expect(role.permissions.has(PermissionFlags.SendMessages)).toBe(true);
+      expect(role.permissions.has(PermissionFlags.ViewChannel)).toBe(true);
+      expect(role.permissions.has(PermissionFlags.BanMembers)).toBe(false);
     });
   });
 

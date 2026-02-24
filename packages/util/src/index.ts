@@ -3,7 +3,6 @@ export { SnowflakeUtil, FLUXER_EPOCH } from './SnowflakeUtil.js';
 export {
   PermissionsBitField,
   PermissionFlags,
-  PermissionFlagsMap,
   ALL_PERMISSIONS_BIGINT,
   resolvePermissionsToBitfield,
   type PermissionString,

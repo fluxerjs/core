@@ -4,10 +4,13 @@ import { User } from './User.js';
 import { Guild } from './Guild.js';
 import { GuildChannel } from './Channel.js';
 import { APIGuildMember } from '@fluxerjs/types';
-import { PermissionFlagsMap, type PermissionResolvable } from '@fluxerjs/util';
+import {
+  BitField,
+  PermissionFlags
+} from '@fluxerjs/util';
 import { Routes } from '@fluxerjs/types';
 import { cdnMemberAvatarURL, cdnMemberBannerURL } from '../util/cdn.js';
-import { computePermissions, hasPermission } from '../util/permissions.js';
+import { computePermissions } from '../util/permissions.js';
 import { GuildMemberRoleManager } from './GuildMemberRoleManager.js';
 
 /** Represents a member of a guild. */
@@ -148,19 +151,12 @@ export class GuildMember extends Base {
    * const perms = member.permissions;
    * if (perms.has(PermissionFlags.BanMembers)) { ... }
    */
-  get permissions(): { has(permission: PermissionResolvable): boolean } {
+  get permissions() {
     const base = this._computeBasePermissions();
     const ownerId = this.guild.ownerId;
     const isOwner = ownerId != null && ownerId !== '' && String(ownerId) === String(this.id);
     const perms = computePermissions(base, [], [], this.id, isOwner);
-    return {
-      has(permission: PermissionResolvable): boolean {
-        const perm =
-          typeof permission === 'number' ? permission : PermissionFlagsMap[String(permission)];
-        if (perm === undefined) return false;
-        return hasPermission(perms, BigInt(perm));
-      },
-    };
+    return new BitField<keyof typeof PermissionFlags>(perms);
   }
 
   /**
@@ -172,7 +168,7 @@ export class GuildMember extends Base {
    * const perms = member.permissionsIn(channel);
    * if (perms.has(PermissionFlags.SendMessages)) { ... }
    */
-  permissionsIn(channel: GuildChannel): { has(permission: PermissionResolvable): boolean } {
+  permissionsIn(channel: GuildChannel) {
     const base = this._computeBasePermissions();
     const ownerId = this.guild.ownerId;
     const isOwner = ownerId != null && ownerId !== '' && String(ownerId) === String(this.id);
@@ -183,24 +179,17 @@ export class GuildMember extends Base {
       this.id,
       isOwner,
     );
-    return {
-      has(permission: PermissionResolvable): boolean {
-        const perm =
-          typeof permission === 'number' ? permission : PermissionFlagsMap[String(permission)];
-        if (perm === undefined) return false;
-        return hasPermission(perms, BigInt(perm));
-      },
-    };
+    return new BitField<keyof typeof PermissionFlags>(perms);
   }
 
   private _computeBasePermissions(): bigint {
     let base = 0n;
     const everyone = this.guild.roles.get(this.guild.id);
-    if (everyone) base |= BigInt(everyone.permissions);
+    if (everyone) base |= everyone.permissions.bitfield;
     for (const roleId of this.roles.roleIds) {
       if (roleId === this.guild.id) continue;
       const role = this.guild.roles.get(roleId);
-      if (role) base |= BigInt(role.permissions);
+      if (role) base |= role.permissions.bitfield;
     }
     return base;
   }

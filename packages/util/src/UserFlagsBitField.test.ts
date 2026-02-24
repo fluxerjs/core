@@ -4,7 +4,7 @@ import { UserFlagsBitField, UserFlagsBits } from './UserFlagsBitField.js';
 describe('UserFlagsBitField', () => {
   it('creates with default 0', () => {
     const bf = new UserFlagsBitField();
-    expect(bf.bitfield).toBe(0);
+    expect(bf.bitfield).toBe(0n);
   });
 
   it('has checks Staff flag', () => {

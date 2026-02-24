@@ -1,5 +1,5 @@
 import { OverwriteType, type APIChannelOverwrite } from '@fluxerjs/types';
-import { ALL_PERMISSIONS_BIGINT } from '@fluxerjs/util';
+import { ALL_PERMISSIONS_BIGINT, PermissionFlags } from '@fluxerjs/util';
 
 /**
  * Compute the effective permission bitfield for a member in a channel.
@@ -30,7 +30,7 @@ export function computePermissions(
     const deny = BigInt(overwrite.deny || '0');
     perms = (perms & ~deny) | allow;
   }
-  return perms;
+  return (perms & PermissionFlags.Administrator) !== 0n ? ALL_PERMISSIONS_BIGINT : perms;
 }
 
 /**
@@ -38,7 +38,6 @@ export function computePermissions(
  * Administrator (bit 3) implies all permissions per Fluxer/Discord convention.
  */
 export function hasPermission(bitfield: bigint, permission: bigint): boolean {
-  const Administrator = 1n << 3n;
-  if ((bitfield & Administrator) !== 0n) return true;
-  return (bitfield & permission) === permission;
+  if ((bitfield & PermissionFlags.Administrator) !== 0n) return true;
+  return (bitfield & permission) !== 0n;
 }

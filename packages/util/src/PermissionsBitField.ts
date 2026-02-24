@@ -9,69 +9,54 @@ import { BitField, type BitFieldResolvable } from './BitField.js';
  * if (member.permissions.has(PermissionFlags.BanMembers)) { ... }
  * if (perms.has(PermissionFlags.Administrator)) { ... }
  */
-export enum PermissionFlags {
-  CreateInstantInvite = 1 << 0,
-  KickMembers = 1 << 1,
-  BanMembers = 1 << 2,
-  Administrator = 1 << 3,
-  ManageChannels = 1 << 4,
-  ManageGuild = 1 << 5,
-  AddReactions = 1 << 6,
-  ViewAuditLog = 1 << 7,
-  PrioritySpeaker = 1 << 8,
-  Stream = 1 << 9,
-  ViewChannel = 1 << 10,
-  SendMessages = 1 << 11,
-  SendTtsMessages = 1 << 12,
-  ManageMessages = 1 << 13,
-  EmbedLinks = 1 << 14,
-  AttachFiles = 1 << 15,
-  ReadMessageHistory = 1 << 16,
-  MentionEveryone = 1 << 17,
-  UseExternalEmojis = 1 << 18,
-  Connect = 1 << 20,
-  Speak = 1 << 21,
-  MuteMembers = 1 << 22,
-  DeafenMembers = 1 << 23,
-  MoveMembers = 1 << 24,
-  UseVad = 1 << 25,
-  ChangeNickname = 1 << 26,
-  ManageNicknames = 1 << 27,
-  ManageRoles = 1 << 28,
-  ManageWebhooks = 1 << 29,
-  ManageEmojisAndStickers = 1 << 30,
-  ManageExpressions = 1 << 30,
-  UseExternalStickers = 2 ** 37,
-  ModerateMembers = 2 ** 40,
-  CreateExpressions = 2 ** 43,
-  PinMessages = 2 ** 51,
-  BypassSlowmode = 2 ** 52,
-  UpdateRtcRegion = 2 ** 53,
-}
+export const PermissionFlags = {
+  CreateInstantInvite     : 1n << 0n,
+  KickMembers             : 1n << 1n,
+  BanMembers              : 1n << 2n,
+  Administrator           : 1n << 3n,
+  ManageChannels          : 1n << 4n,
+  ManageGuild             : 1n << 5n,
+  AddReactions            : 1n << 6n,
+  ViewAuditLog            : 1n << 7n,
+  PrioritySpeaker         : 1n << 8n,
+  Stream                  : 1n << 9n,
+  ViewChannel             : 1n << 10n,
+  SendMessages            : 1n << 11n,
+  SendTtsMessages         : 1n << 12n,
+  ManageMessages          : 1n << 13n,
+  EmbedLinks              : 1n << 14n,
+  AttachFiles             : 1n << 15n,
+  ReadMessageHistory      : 1n << 16n,
+  MentionEveryone         : 1n << 17n,
+  UseExternalEmojis       : 1n << 18n,
+  Connect                 : 1n << 20n,
+  Speak                   : 1n << 21n,
+  MuteMembers             : 1n << 22n,
+  DeafenMembers           : 1n << 23n,
+  MoveMembers             : 1n << 24n,
+  UseVad                  : 1n << 25n,
+  ChangeNickname          : 1n << 26n,
+  ManageNicknames         : 1n << 27n,
+  ManageRoles             : 1n << 28n,
+  ManageWebhooks          : 1n << 29n,
+  ManageEmojisAndStickers : 1n << 30n,
+  ManageExpressions       : 1n << 30n,
+  UseExternalStickers     : 2n << 37n,
+  ModerateMembers         : 2n << 40n,
+  CreateExpressions       : 2n << 43n,
+  PinMessages             : 2n << 51n,
+  BypassSlowmode          : 2n << 52n,
+  UpdateRtcRegion         : 2n << 53n,
+} as const;
 
-/** Forward mapping (name -> number) for lookups. Enum has reverse mappings we must avoid. */
-export const PermissionFlagsMap: Record<string, number> = {};
-for (const [k, v] of Object.entries(PermissionFlags)) {
-  if (typeof v === 'number') PermissionFlagsMap[k] = v;
-}
 
 /** BigInt OR of all permission flags. Used for guild owner override (owner has all perms). */
-export const ALL_PERMISSIONS_BIGINT: bigint = (() => {
-  let acc = 0n;
-  const seen = new Set<number>();
-  for (const v of Object.values(PermissionFlagsMap)) {
-    if (!seen.has(v)) {
-      seen.add(v);
-      acc |= BigInt(v);
-    }
-  }
-  return acc;
-})();
+export const ALL_PERMISSIONS_BIGINT = Object.values(PermissionFlags).reduce((a, b) => a | b, 0n);
 
-export type PermissionString = keyof typeof PermissionFlagsMap;
+export type PermissionString = keyof typeof PermissionFlags;
 
 export class PermissionsBitField extends BitField<PermissionString> {
-  static override Flags = PermissionFlagsMap;
+  static override Flags = PermissionFlags;
 }
 
 export type PermissionResolvable = BitFieldResolvable<PermissionString>;
@@ -89,7 +74,7 @@ export function resolvePermissionsToBitfield(perms: PermissionResolvable): strin
   if (typeof perms === 'string') {
     const num = Number(perms);
     if (!Number.isNaN(num) && perms.trim() !== '') return perms;
-    const mapped = PermissionFlagsMap[perms];
+    const mapped = PermissionFlags[perms];
     if (mapped !== undefined) return String(mapped);
     throw new RangeError(`Invalid permission string: ${perms}`);
   }
@@ -102,7 +87,7 @@ export function resolvePermissionsToBitfield(perms: PermissionResolvable): strin
       let v: bigint;
       if (typeof p === 'number') v = BigInt(p);
       else if (typeof p === 'string') {
-        const mapped = PermissionFlagsMap[p];
+        const mapped = PermissionFlags[p];
         v = mapped !== undefined ? BigInt(mapped) : BigInt(Number(p) || 0);
       } else v = BigInt((p as PermissionsBitField).bitfield);
       acc |= v;

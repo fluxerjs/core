@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Message } from './Message.js';
+import { Message } from '../';
 
 describe('Message._createMessageBody', () => {
   describe('reply (message_reference)', () => {

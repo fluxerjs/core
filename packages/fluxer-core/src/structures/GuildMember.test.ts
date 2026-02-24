@@ -1,14 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { GuildMember } from './GuildMember.js';
-import { Guild } from './Guild.js';
-import { User } from './User.js';
+import { Guild, Client, User, GuildMember } from '../';
 
 function createMockClient() {
   const client = {
-    getOrCreateUser: (data: { id: string; username: string; global_name?: string | null }) =>
-      new User(client as never, data),
-  };
-  return client as Parameters<typeof GuildMember>[0];
+    getOrCreateUser: (data: { id: string; username: string; discriminator: string; global_name?: string | null }) =>
+      new User(client as Client, data),
+  }
+  return client as Client;
 }
 
 function createMockGuild(client: ReturnType<typeof createMockClient>) {

@@ -3,28 +3,28 @@ import { BitField } from './BitField.js';
 
 // Minimal BitField subclass for testing
 class TestBitField extends BitField<'A' | 'B' | 'C'> {
-  static override Flags = { A: 1, B: 2, C: 4 };
+  static override Flags = { A: 1n, B: 2n, C: 4n };
 }
 
 describe('BitField', () => {
   it('creates with default bit 0', () => {
     const bf = new TestBitField();
-    expect(bf.bitfield).toBe(0);
+    expect(bf.bitfield).toBe(0n);
   });
 
   it('resolves number', () => {
     const bf = new TestBitField(3);
-    expect(bf.bitfield).toBe(3);
+    expect(bf.bitfield).toBe(3n);
   });
 
   it('resolves string flag', () => {
     const bf = new TestBitField('A');
-    expect(bf.bitfield).toBe(1);
+    expect(bf.bitfield).toBe(1n);
   });
 
   it('resolves array of flags with OR', () => {
     const bf = new TestBitField(['A', 'B']);
-    expect(bf.bitfield).toBe(3); // 1 | 2
+    expect(bf.bitfield).toBe(3n); // 1 | 2
   });
 
   it('has checks single bit', () => {
@@ -41,12 +41,12 @@ describe('BitField', () => {
 
   it('add sets bits', () => {
     const bf = new TestBitField('A').add('B');
-    expect(bf.bitfield).toBe(3);
+    expect(bf.bitfield).toBe(3n);
   });
 
   it('remove unsets bits', () => {
     const bf = new TestBitField(['A', 'B', 'C']).remove('B');
-    expect(bf.bitfield).toBe(5); // A | C
+    expect(bf.bitfield).toBe(5n); // A | C
   });
 
   it('serialize returns object', () => {
@@ -60,9 +60,9 @@ describe('BitField', () => {
     expect(bf.toArray()).toEqual(['A', 'C']);
   });
 
-  it('toJSON returns bitfield number', () => {
+  it('toJSON returns serialized string', () => {
     const bf = new TestBitField(5);
-    expect(bf.toJSON()).toBe(5);
+    expect(bf.toJSON()).toBe('5');
   });
 
   it('equals compares bitfields', () => {

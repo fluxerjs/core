@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { Invite } from './Invite.js';
+import { Client, Invite } from '../';
 
 function createMockClient() {
-  return {} as Parameters<typeof Invite>[0];
+  return {} as Client;
 }
 
 function createInvite(overrides: { code?: string } = {}) {

@@ -6,6 +6,8 @@ import {
   PermissionFlags,
   resolvePermissionsToBitfield,
   type PermissionResolvable,
+  ALL_PERMISSIONS_BIGINT,
+  PermissionsBitField,
 } from '@fluxerjs/util';
 
 /** Represents a role in a guild. */
@@ -16,7 +18,7 @@ export class Role extends Base {
   name: string;
   color: number;
   position: number;
-  permissions: string;
+  _permissions: string;
   hoist: boolean;
   mentionable: boolean;
   unicodeEmoji: string | null;
@@ -34,11 +36,16 @@ export class Role extends Base {
     this.name = data.name;
     this.color = data.color;
     this.position = data.position;
-    this.permissions = data.permissions;
+    this._permissions = data.permissions;
     this.hoist = !!data.hoist;
     this.mentionable = !!data.mentionable;
     this.unicodeEmoji = data.unicode_emoji ?? null;
     this.hoistPosition = data.hoist_position ?? null;
+  }
+
+  get permissions(): PermissionsBitField {
+    const bits = BigInt(this._permissions);
+    return new PermissionsBitField( (bits & PermissionFlags.Administrator) !== 0n ? ALL_PERMISSIONS_BIGINT : bits );
   }
 
   /** Update mutable fields from fresh API data. Used by edit and gateway events. */
@@ -46,7 +53,7 @@ export class Role extends Base {
     if (data.name !== undefined) this.name = data.name;
     if (data.color !== undefined) this.color = data.color;
     if (data.position !== undefined) this.position = data.position;
-    if (data.permissions !== undefined) this.permissions = data.permissions;
+    if (data.permissions !== undefined) this._permissions = data.permissions;
     if (data.hoist !== undefined) this.hoist = !!data.hoist;
     if (data.mentionable !== undefined) this.mentionable = !!data.mentionable;
     if (data.unicode_emoji !== undefined) this.unicodeEmoji = data.unicode_emoji ?? null;
@@ -56,28 +63,6 @@ export class Role extends Base {
   /** Returns a mention string (e.g. `<@&123456>`). */
   toString(): string {
     return `<@&${this.id}>`;
-  }
-
-  /**
-   * Check if this role has a permission. Administrator grants all permissions.
-   * @param permission - Permission flag, name, or resolvable
-   * @returns true if the role has the permission
-   * @example
-   * if (role.has(PermissionFlags.BanMembers)) { ... }
-   * if (role.has('ManageChannels')) { ... }
-   */
-  has(permission: PermissionResolvable): boolean {
-    const perm =
-      typeof permission === 'number'
-        ? permission
-        : PermissionFlags[permission as keyof typeof PermissionFlags];
-    if (perm === undefined) return false;
-    const permNum = Number(perm);
-    const rolePerms = BigInt(this.permissions);
-    const permBig = BigInt(permNum);
-    if (permBig < 0) return false;
-    if ((rolePerms & BigInt(PermissionFlags.Administrator)) !== 0n) return true;
-    return (rolePerms & permBig) === permBig;
   }
 
   /**

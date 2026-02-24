@@ -4,7 +4,7 @@ import { MessageFlagsBitField, MessageFlagsBits } from './MessageFlagsBitField.j
 describe('MessageFlagsBitField', () => {
   it('creates with default 0', () => {
     const bf = new MessageFlagsBitField();
-    expect(bf.bitfield).toBe(0);
+    expect(bf.bitfield).toBe(0n);
   });
 
   it('has checks SuppressEmbeds', () => {

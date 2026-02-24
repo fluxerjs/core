@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { Guild } from './Guild.js';
+import { Guild, Client } from '../';
 
 function createMockClient() {
-  return {} as Parameters<typeof Guild>[0];
+  return {} as Client;
 }
 
 function createGuild(

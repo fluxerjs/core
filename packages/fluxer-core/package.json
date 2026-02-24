@@ -39,7 +39,7 @@
     "lint": "eslint src --max-warnings 0 --config ../../eslint.config.js",
     "lint:fix": "eslint src --fix --config ../../eslint.config.js",
     "test": "vitest run --passWithNoTests",
-    "test:coverage": "vitest run --coverage --passWithNoTests"
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fluxerjs/rest": "workspace:*",

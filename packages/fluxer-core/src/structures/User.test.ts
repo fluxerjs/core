@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { User } from './User.js';
+import { Client, User } from '../';
 
 function createMockClient() {
-  return {} as Parameters<typeof User>[0];
+  return {} as Client;
 }
 
 function createUser(
