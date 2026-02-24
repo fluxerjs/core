@@ -3,9 +3,13 @@ import { Guild, Client, User, GuildMember } from '../';
 
 function createMockClient() {
   const client = {
-    getOrCreateUser: (data: { id: string; username: string; discriminator: string; global_name?: string | null }) =>
-      new User(client as Client, data),
-  }
+    getOrCreateUser: (data: {
+      id: string;
+      username: string;
+      discriminator: string;
+      global_name?: string | null;
+    }) => new User(client as Client, data),
+  };
   return client as Client;
 }
 

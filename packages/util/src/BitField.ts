@@ -29,7 +29,8 @@ export class BitField<S extends string> {
     if (typeof bits === 'number' && bits >= 0) return BigInt(bits);
     if (typeof bits === 'bigint' && bits >= 0n) return bits;
     if (bits instanceof BitField) return bits.bitfield;
-    if (Array.isArray(bits)) return bits.map((b) => this.resolve(b)).reduce((a, b) => BigInt(a) | BigInt(b), 0n);
+    if (Array.isArray(bits))
+      return bits.map((b) => this.resolve(b)).reduce((a, b) => BigInt(a) | BigInt(b), 0n);
     if (typeof bits === 'string') {
       // If the string matches a known flag name, return its bigint value
       if (bits in this.Flags) {

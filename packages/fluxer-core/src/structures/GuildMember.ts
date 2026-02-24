@@ -4,10 +4,7 @@ import { User } from './User.js';
 import { Guild } from './Guild.js';
 import { GuildChannel } from './Channel.js';
 import { APIGuildMember } from '@fluxerjs/types';
-import {
-  BitField,
-  PermissionFlags
-} from '@fluxerjs/util';
+import { BitField, PermissionFlags } from '@fluxerjs/util';
 import { Routes } from '@fluxerjs/types';
 import { cdnMemberAvatarURL, cdnMemberBannerURL } from '../util/cdn.js';
 import { computePermissions } from '../util/permissions.js';

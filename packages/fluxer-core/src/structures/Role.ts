@@ -45,7 +45,9 @@ export class Role extends Base {
 
   get permissions(): PermissionsBitField {
     const bits = BigInt(this._permissions);
-    return new PermissionsBitField( (bits & PermissionFlags.Administrator) !== 0n ? ALL_PERMISSIONS_BIGINT : bits );
+    return new PermissionsBitField(
+      (bits & PermissionFlags.Administrator) !== 0n ? ALL_PERMISSIONS_BIGINT : bits,
+    );
   }
 
   /** Update mutable fields from fresh API data. Used by edit and gateway events. */

@@ -6,7 +6,10 @@ function createMockClient() {
   return {} as Client;
 }
 
-function createRole(permissions: string | bigint, overrides: Partial<{ id: string; name: string }> = {}) {
+function createRole(
+  permissions: string | bigint,
+  overrides: Partial<{ id: string; name: string }> = {},
+) {
   return new Role(
     createMockClient(),
     {
@@ -58,7 +61,7 @@ describe('Role.permissions', () => {
 
     it('handles combined permission bitfield', () => {
       // SendMessages (2048) | ViewChannel (1024) = 3072
-      const role = createRole( String(PermissionFlags.SendMessages | PermissionFlags.ViewChannel) );
+      const role = createRole(String(PermissionFlags.SendMessages | PermissionFlags.ViewChannel));
       expect(role.permissions.has(PermissionFlags.SendMessages)).toBe(true);
       expect(role.permissions.has(PermissionFlags.ViewChannel)).toBe(true);
       expect(role.permissions.has(PermissionFlags.BanMembers)).toBe(false);
