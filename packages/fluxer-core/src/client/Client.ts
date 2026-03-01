@@ -294,10 +294,7 @@ export class Client extends EventEmitter {
    * Works even when the channel is not cached.
    * @deprecated Use client.channels.send(channelId, payload).
    */
-  async sendToChannel(
-    channelId: string,
-    payload: string | MessageSendOptions,
-  ): Promise<Message> {
+  async sendToChannel(channelId: string, payload: string | MessageSendOptions): Promise<Message> {
     emitDeprecationWarning(
       'Client.sendToChannel()',
       'Use client.channels.send(channelId, payload).',

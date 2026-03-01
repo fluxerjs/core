@@ -189,15 +189,23 @@ export class Message extends Base {
   ): Promise<Message> {
     const opts = typeof options === 'string' ? { content: options } : options;
     const mergedReply: ReplyOptions | undefined =
-      replyOptions ?? (opts.ping !== undefined || opts.replyTo !== undefined)
+      (replyOptions ?? (opts.ping !== undefined || opts.replyTo !== undefined))
         ? { ping: opts.ping, replyTo: opts.replyTo }
         : undefined;
 
     const refMessage = mergedReply?.replyTo ?? this;
     const ref =
       refMessage instanceof Message
-        ? { channel_id: refMessage.channelId, message_id: refMessage.id, guild_id: refMessage.guildId ?? undefined }
-        : { channel_id: refMessage.channelId, message_id: refMessage.messageId, guild_id: undefined as string | undefined };
+        ? {
+            channel_id: refMessage.channelId,
+            message_id: refMessage.id,
+            guild_id: refMessage.guildId ?? undefined,
+          }
+        : {
+            channel_id: refMessage.channelId,
+            message_id: refMessage.messageId,
+            guild_id: undefined as string | undefined,
+          };
 
     const payload = await Message._createMessageBody(opts, ref, mergedReply?.ping !== false);
     return this._send(payload);

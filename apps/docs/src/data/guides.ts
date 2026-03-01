@@ -1581,11 +1581,15 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
       },
       {
         title: 'Client.sendToChannel',
-        description: 'Use client.channels.send(channelId, payload) instead. Accepts the same MessageSendOptions (content, embeds, files).',
+        description:
+          'Use client.channels.send(channelId, payload) instead. Accepts the same MessageSendOptions (content, embeds, files).',
         table: {
           headers: ['Deprecated', 'Replacement'],
           rows: [
-            ['client.sendToChannel(channelId, content)', 'client.channels.send(channelId, payload)'],
+            [
+              'client.sendToChannel(channelId, content)',
+              'client.channels.send(channelId, payload)',
+            ],
           ],
           codeColumns: [0, 1],
         },
@@ -1600,11 +1604,15 @@ await client.channels.send(channelId, { embeds: [embed] });`,
       },
       {
         title: 'Client.fetchMessage',
-        description: 'Use channel.messages.fetch(messageId) instead. Resolve the channel first if you only have IDs.',
+        description:
+          'Use channel.messages.fetch(messageId) instead. Resolve the channel first if you only have IDs.',
         table: {
           headers: ['Deprecated', 'Replacement'],
           rows: [
-            ['client.fetchMessage(channelId, messageId)', '(await client.channels.resolve(channelId))?.messages?.fetch(messageId)'],
+            [
+              'client.fetchMessage(channelId, messageId)',
+              '(await client.channels.resolve(channelId))?.messages?.fetch(messageId)',
+            ],
           ],
           codeColumns: [0, 1],
         },
@@ -1622,19 +1630,21 @@ const message = channel?.messages ? await channel.messages.fetch(messageId) : nu
         table: {
           headers: ['Deprecated', 'Replacement'],
           rows: [
-            ['client.channels.fetchMessage(channelId, messageId)', 'channel.messages.fetch(messageId)'],
+            [
+              'client.channels.fetchMessage(channelId, messageId)',
+              'channel.messages.fetch(messageId)',
+            ],
           ],
           codeColumns: [0, 1],
         },
       },
       {
         title: 'Channel.fetchMessage',
-        description: 'Use channel.messages.fetch(messageId) instead. Available on TextChannel and DMChannel.',
+        description:
+          'Use channel.messages.fetch(messageId) instead. Available on TextChannel and DMChannel.',
         table: {
           headers: ['Deprecated', 'Replacement'],
-          rows: [
-            ['channel.fetchMessage(messageId)', 'channel.messages.fetch(messageId)'],
-          ],
+          rows: [['channel.fetchMessage(messageId)', 'channel.messages.fetch(messageId)']],
           codeColumns: [0, 1],
         },
       },
