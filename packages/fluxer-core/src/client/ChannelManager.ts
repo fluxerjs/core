@@ -131,12 +131,13 @@ export class ChannelManager extends Collection<string, Channel | GuildChannel> {
    * await client.channels.send(channelId, { embeds: [embed] });
    * await client.channels.send(channelId, { content: 'Report', files: [{ name: 'log.txt', data }] });
    */
-  async send(channelId: string, payload: MessageSendOptions): Promise<Message> {
+  async send(channelId: string, payload: string | MessageSendOptions): Promise<Message> {
     const opts = typeof payload === 'string' ? { content: payload } : payload;
     const body = buildSendBody(payload);
     const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
     const postOptions = files?.length ? { body, files } : { body };
     const data = await this.client.rest.post(Routes.channelMessages(channelId), postOptions);
+    this.client._addMessageToCache(channelId, data as APIMessage);
     return new Message(this.client, data as APIMessage);
   }
 }

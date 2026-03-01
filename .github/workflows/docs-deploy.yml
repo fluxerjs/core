@@ -2,16 +2,15 @@ name: Deploy Docs
 
 on:
   workflow_run:
-    workflows: [CI]
+    workflows: [Publish]
     types: [completed]
-    branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only run when CI succeeded (not on failure/cancelled)
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    # Only run after Publish succeeds (Publish only runs on v* tags)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
         with:

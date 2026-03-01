@@ -16,7 +16,12 @@ export {
   LinkChannel,
   DMChannel,
 } from './structures/Channel.js';
-export { Message, type MessageEditOptions, type MessageSendOptions } from './structures/Message.js';
+export {
+  Message,
+  type MessageEditOptions,
+  type MessageSendOptions,
+  type ReplyOptions,
+} from './structures/Message.js';
 export type { PartialMessage } from './structures/PartialMessage.js';
 export { MessageReaction } from './structures/MessageReaction.js';
 export { Webhook, type WebhookSendOptions } from './structures/Webhook.js';

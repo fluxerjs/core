@@ -41,6 +41,15 @@ describe('resolvePermissionsToBitfield', () => {
 });
 
 describe('PermissionsBitField', () => {
+  it('uses the intended bit positions for high-bit permissions', () => {
+    expect(PermissionFlags.UseExternalStickers).toBe(1n << 37n);
+    expect(PermissionFlags.ModerateMembers).toBe(1n << 40n);
+    expect(PermissionFlags.CreateExpressions).toBe(1n << 43n);
+    expect(PermissionFlags.PinMessages).toBe(1n << 51n);
+    expect(PermissionFlags.BypassSlowmode).toBe(1n << 52n);
+    expect(PermissionFlags.UpdateRtcRegion).toBe(1n << 53n);
+  });
+
   it('has checks single permission', () => {
     const bf = new PermissionsBitField([PermissionFlags.SendMessages]);
     expect(bf.has(PermissionFlags.SendMessages)).toBe(true);

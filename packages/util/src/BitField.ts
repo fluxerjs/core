@@ -36,7 +36,6 @@ export class BitField<S extends string> {
       if (bits in this.Flags) {
         return this.Flags[bits as S];
       }
-      console.log(this.Flags);
 
       // Otherwise, try to interpret the string as a valid non-negative bigint literal
       try {
@@ -50,9 +49,8 @@ export class BitField<S extends string> {
   }
 
   has(bit: BitFieldResolvable<S>): boolean {
-    console.log(bit);
     bit = (this.constructor as typeof BitField).resolve(bit);
-    return (this.bitfield & bit) !== 0n;
+    return (this.bitfield & bit) === bit;
   }
 
   add(...bits: BitFieldResolvable<S>[]): this {

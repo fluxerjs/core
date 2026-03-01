@@ -2,7 +2,7 @@ import { BitField, type BitFieldResolvable } from './BitField.js';
 
 /**
  * Permission flags aligned with Fluxer API (fluxer_api/src/constants/Channel.ts).
- * Bits 0–30 use 1<<n; bits 31+ use 2**n.
+ * Bit positions use BigInt shifts (1n << n).
  * Administrator (bit 3) implies all permissions. Guild owner bypasses role computation.
  *
  * @example
@@ -41,12 +41,12 @@ export const PermissionFlags = {
   ManageWebhooks: 1n << 29n,
   ManageEmojisAndStickers: 1n << 30n,
   ManageExpressions: 1n << 30n,
-  UseExternalStickers: 2n << 37n,
-  ModerateMembers: 2n << 40n,
-  CreateExpressions: 2n << 43n,
-  PinMessages: 2n << 51n,
-  BypassSlowmode: 2n << 52n,
-  UpdateRtcRegion: 2n << 53n,
+  UseExternalStickers: 1n << 37n,
+  ModerateMembers: 1n << 40n,
+  CreateExpressions: 1n << 43n,
+  PinMessages: 1n << 51n,
+  BypassSlowmode: 1n << 52n,
+  UpdateRtcRegion: 1n << 53n,
 } as const;
 
 /** BigInt OR of all permission flags. Used for guild owner override (owner has all perms). */

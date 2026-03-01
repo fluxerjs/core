@@ -39,6 +39,18 @@ describe('BitField', () => {
     expect(bf.has(2)).toBe(true);
   });
 
+  it('has requires all bits for composite checks', () => {
+    const bf = new TestBitField('A');
+    expect(bf.has(['A', 'B'])).toBe(false);
+    bf.add('B');
+    expect(bf.has(['A', 'B'])).toBe(true);
+  });
+
+  it('resolves numeric bigint string literal', () => {
+    const bf = new TestBitField('8');
+    expect(bf.bitfield).toBe(8n);
+  });
+
   it('add sets bits', () => {
     const bf = new TestBitField('A').add('B');
     expect(bf.bitfield).toBe(3n);

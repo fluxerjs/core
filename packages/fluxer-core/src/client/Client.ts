@@ -3,7 +3,6 @@ import { REST } from '@fluxerjs/rest';
 import { WebSocketManager } from '@fluxerjs/ws';
 import {
   APIApplicationCommandInteraction,
-  APIEmbed,
   GatewayGuildRoleCreateDispatchData,
   GatewayGuildRoleDeleteDispatchData,
   GatewayGuildRoleUpdateDispatchData,
@@ -40,7 +39,14 @@ import {
   GatewayPresenceUpdateDispatchData,
   GatewayWebhooksUpdateDispatchData,
 } from '@fluxerjs/types';
-import { APIChannel, APIGuild, APIUser, APIUserPartial, APIInstance } from '@fluxerjs/types';
+import {
+  APIChannel,
+  APIGuild,
+  APIMessage,
+  APIUser,
+  APIUserPartial,
+  APIInstance,
+} from '@fluxerjs/types';
 import {
   emitDeprecationWarning,
   formatEmoji,
@@ -53,6 +59,7 @@ import { eventHandlers } from './EventHandlerRegistry.js';
 import { normalizeGuildPayload } from '../util/guildUtils';
 import { Message } from '../structures/Message';
 import { PartialMessage } from '../structures/PartialMessage';
+import type { MessageSendOptions } from '../util/messageUtils.js';
 import { MessageReaction } from '../structures/MessageReaction';
 import { GuildMember } from '../structures/GuildMember';
 import { GuildBan } from '../structures/GuildBan';
@@ -156,6 +163,8 @@ export class Client extends EventEmitter {
   private _ws: WebSocketManager | null = null;
   /** When waitForGuilds, set of guild IDs we're waiting for GUILD_CREATE on. Null when not waiting. */
   _pendingGuildIds: Set<string> | null = null;
+  /** Per-channel message cache (channelId -> messageId -> APIMessage). Used when options.cache.messages > 0. */
+  private _messageCaches: Map<string, Map<string, APIMessage>> | null = null;
 
   /** @param options - Token, REST config, WebSocket, presence, etc. */
   constructor(public readonly options: ClientOptions = {}) {
@@ -287,14 +296,53 @@ export class Client extends EventEmitter {
    */
   async sendToChannel(
     channelId: string,
-    content: string | { content?: string; embeds?: APIEmbed[] },
+    payload: string | MessageSendOptions,
   ): Promise<Message> {
     emitDeprecationWarning(
       'Client.sendToChannel()',
       'Use client.channels.send(channelId, payload).',
     );
-    const payload = await Message._createMessageBody(content);
     return this.channels.send(channelId, payload);
+  }
+
+  /**
+   * Get the message cache for a channel. Returns null if message caching is disabled.
+   * Used by MessageManager.get() and event handlers.
+   * @internal
+   */
+  _getMessageCache(channelId: string): Map<string, APIMessage> | null {
+    const limit = this.options.cache?.messages ?? 0;
+    if (limit <= 0) return null;
+    if (!this._messageCaches) this._messageCaches = new Map();
+    let cache = this._messageCaches.get(channelId);
+    if (!cache) {
+      cache = new Map();
+      this._messageCaches.set(channelId, cache);
+    }
+    return cache;
+  }
+
+  /**
+   * Add a message to the channel cache. Evicts oldest (FIFO) when over limit.
+   * @internal
+   */
+  _addMessageToCache(channelId: string, data: APIMessage): void {
+    const cache = this._getMessageCache(channelId);
+    if (!cache) return;
+    const limit = this.options.cache?.messages ?? 0;
+    if (limit > 0 && cache.size >= limit && !cache.has(data.id)) {
+      const firstKey = cache.keys().next().value;
+      if (firstKey !== undefined) cache.delete(firstKey);
+    }
+    cache.set(data.id, { ...data });
+  }
+
+  /**
+   * Remove a message from the channel cache.
+   * @internal
+   */
+  _removeMessageFromCache(channelId: string, messageId: string): void {
+    this._messageCaches?.get(channelId)?.delete(messageId);
   }
 
   /**

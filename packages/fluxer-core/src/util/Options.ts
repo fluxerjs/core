@@ -6,6 +6,8 @@ export interface CacheSizeLimits {
   channels?: number;
   guilds?: number;
   users?: number;
+  /** Max messages per channel to cache. Enables channel.messages.get() and oldMessage in messageUpdate. 0 = disabled. */
+  messages?: number;
 }
 
 export interface ClientOptions {

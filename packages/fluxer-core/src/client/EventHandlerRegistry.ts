@@ -54,15 +54,32 @@ handlers.set('MESSAGE_CREATE', async (client, d) => {
       guild.members.set(member.id, member);
     }
   }
+  client._addMessageToCache(data.channel_id, data);
   client.emit(Events.MessageCreate, new Message(client, data));
 });
 
 handlers.set('MESSAGE_UPDATE', async (client, d) => {
-  client.emit(Events.MessageUpdate, null, new Message(client, d as APIMessage));
+  const partial = d as APIMessage;
+  const cache = client._getMessageCache(partial.channel_id);
+  let oldMessage: Message | null = null;
+  let mergedData: APIMessage = partial;
+
+  if (cache) {
+    const oldData = cache.get(partial.id);
+    if (oldData) {
+      oldMessage = new Message(client, oldData);
+      mergedData = { ...oldData, ...partial } as APIMessage;
+    }
+    cache.set(partial.id, mergedData);
+  }
+
+  const newMessage = new Message(client, mergedData);
+  client.emit(Events.MessageUpdate, oldMessage, newMessage);
 });
 
 handlers.set('MESSAGE_DELETE', async (client, d) => {
   const data = d as GatewayMessageDeleteDispatchData;
+  client._removeMessageFromCache(data.channel_id, data.id);
   const channel = client.channels.get(data.channel_id) ?? null;
   client.emit(Events.MessageDelete, {
     id: data.id,
@@ -256,7 +273,11 @@ handlers.set('VOICE_SERVER_UPDATE', async (client, d) => {
 });
 
 handlers.set('MESSAGE_DELETE_BULK', async (client, d) => {
-  client.emit(Events.MessageDeleteBulk, d as GatewayMessageDeleteBulkDispatchData);
+  const data = d as GatewayMessageDeleteBulkDispatchData;
+  for (const id of data.ids ?? []) {
+    client._removeMessageFromCache(data.channel_id, id);
+  }
+  client.emit(Events.MessageDeleteBulk, data);
 });
 
 handlers.set('GUILD_BAN_ADD', async (client, d) => {

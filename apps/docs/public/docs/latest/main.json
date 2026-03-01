@@ -2,7 +2,7 @@
   "meta": {
     "generator": "fluxer-docgen",
     "version": "1",
-    "date": 1771852076514
+    "date": 1772385348670
   },
   "package": "@fluxerjs/core",
   "version": "1.2.3",
@@ -177,7 +177,7 @@
         },
         {
           "name": "bitfield",
-          "type": "number",
+          "type": "bigint",
           "readonly": false,
           "optional": false
         },
@@ -189,7 +189,7 @@
         },
         {
           "name": "Flags",
-          "type": "Record<string, number>",
+          "type": "Record<string, bigint>",
           "readonly": false,
           "optional": false
         }
@@ -208,7 +208,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 43
+            "line": 56
           }
         },
         {
@@ -224,7 +224,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 85
+            "line": 98
           }
         },
         {
@@ -234,7 +234,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 89
+            "line": 102
           }
         },
         {
@@ -250,7 +250,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 38
+            "line": 51
           }
         },
         {
@@ -266,23 +266,23 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 52
+            "line": 65
           }
         },
         {
           "name": "resolve",
           "params": [
             {
-              "name": "bit",
+              "name": "bits",
               "type": "BitFieldResolvable<S>",
               "optional": false
             }
           ],
-          "returns": "number",
+          "returns": "bigint",
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 29
+            "line": 28
           }
         },
         {
@@ -292,7 +292,7 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 61
+            "line": 74
           }
         },
         {
@@ -302,27 +302,27 @@
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 70
+            "line": 83
           }
         },
         {
           "name": "toJSON",
           "params": [],
-          "returns": "number",
+          "returns": "string",
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 77
+            "line": 90
           }
         },
         {
           "name": "valueOf",
           "params": [],
-          "returns": "number",
+          "returns": "string",
           "async": false,
           "source": {
             "file": "BitField.ts",
-            "line": 81
+            "line": 94
           }
         }
       ],
@@ -340,7 +340,7 @@
       "methods": [],
       "source": {
         "file": "Channel.ts",
-        "line": 386,
+        "line": 388,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -668,7 +668,7 @@
             },
             {
               "name": "payload",
-              "type": "MessageSendOptions",
+              "type": "string | MessageSendOptions",
               "optional": false,
               "description": "Text content or object with content, embeds, and/or files"
             }
@@ -807,7 +807,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 243
+            "line": 252
           }
         },
         {
@@ -818,7 +818,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 468
+            "line": 521
           }
         },
         {
@@ -829,7 +829,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 445
+            "line": 498
           }
         },
         {
@@ -840,7 +840,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 260
+            "line": 269
           }
         },
         {
@@ -868,7 +868,7 @@
           "deprecated": "Use channel.messages.fetch(messageId). For IDs-only: (await client.channels.resolve(channelId))?.messages?.fetch(messageId)",
           "source": {
             "file": "Client.ts",
-            "line": 275
+            "line": 284
           }
         },
         {
@@ -885,7 +885,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 299
+            "line": 352
           }
         },
         {
@@ -901,7 +901,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 325
+            "line": 378
           }
         },
         {
@@ -912,7 +912,7 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 460
+            "line": 513
           }
         },
         {
@@ -930,7 +930,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 340
+            "line": 393
           }
         },
         {
@@ -954,7 +954,7 @@
           "async": true,
           "source": {
             "file": "Client.ts",
-            "line": 192
+            "line": 201
           }
         },
         {
@@ -966,17 +966,18 @@
               "optional": false
             },
             {
-              "name": "content",
-              "type": "string | { content?: string; embeds?: APIEmbed[]; }",
+              "name": "payload",
+              "type": "string | MessageSendOptions",
               "optional": false
             }
           ],
           "returns": "Promise<Message>",
           "description": "Send a message to any channel by ID. Shorthand for client.channels.send().\nWorks even when the channel is not cached.",
           "async": true,
+          "deprecated": "Use client.channels.send(channelId, payload).",
           "source": {
             "file": "Client.ts",
-            "line": 287
+            "line": 297
           }
         },
         {
@@ -1000,13 +1001,13 @@
           "async": false,
           "source": {
             "file": "Client.ts",
-            "line": 321
+            "line": 374
           }
         }
       ],
       "source": {
         "file": "Client.ts",
-        "line": 145,
+        "line": 152,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -1511,7 +1512,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 488
+            "line": 491
           }
         },
         {
@@ -1529,7 +1530,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 450
+            "line": 453
           }
         },
         {
@@ -1548,7 +1549,7 @@
           "deprecated": "Use channel.messages.fetch(messageId) instead.",
           "source": {
             "file": "Channel.ts",
-            "line": 476
+            "line": 479
           }
         },
         {
@@ -1559,7 +1560,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 458
+            "line": 461
           }
         },
         {
@@ -1582,7 +1583,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 499
+            "line": 502
           }
         },
         {
@@ -1600,13 +1601,13 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 432
+            "line": 434
           }
         }
       ],
       "source": {
         "file": "Channel.ts",
-        "line": 409,
+        "line": 411,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -2918,7 +2919,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 301
+            "line": 302
           }
         },
         {
@@ -2935,7 +2936,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 259
+            "line": 260
           }
         },
         {
@@ -2952,7 +2953,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 269
+            "line": 270
           }
         },
         {
@@ -3344,7 +3345,7 @@
         },
         {
           "name": "permissions",
-          "type": "{ has(permission: PermissionResolvable): boolean; }",
+          "type": "BitField<\"CreateInstantInvite\" | \"KickMembers\" | \"BanMembers\" | \"Administrator\" | \"ManageChannels\" | \"ManageGuild\" | \"AddReactions\" | \"ViewAuditLog\" | \"PrioritySpeaker\" | \"Stream\" | ... 26 more ... | \"UpdateRtcRegion\">",
           "readonly": true,
           "optional": false,
           "description": "Get the member's guild-level permissions (from roles only, no channel overwrites).\nUse this for server-wide permission checks (e.g. ban, kick, manage roles).",
@@ -3470,7 +3471,7 @@
               "description": "The guild channel to check permissions for"
             }
           ],
-          "returns": "{ has(permission: PermissionResolvable): boolean; }",
+          "returns": "BitField<\"CreateInstantInvite\" | \"KickMembers\" | \"BanMembers\" | \"Administrator\" | \"ManageChannels\" | \"ManageGuild\" | \"AddReactions\" | \"ViewAuditLog\" | \"PrioritySpeaker\" | \"Stream\" | ... 26 more ... | \"UpdateRtcRegion\">",
           "description": "Compute the member's effective permissions in a guild channel.\nApplies role permissions and channel overwrites.",
           "examples": [
             "const perms = member.permissionsIn(channel);\nif (perms.has(PermissionFlags.SendMessages)) { ... }"
@@ -3478,7 +3479,7 @@
           "async": false,
           "source": {
             "file": "GuildMember.ts",
-            "line": 175
+            "line": 168
           }
         },
         {
@@ -4040,7 +4041,7 @@
       "methods": [],
       "source": {
         "file": "Channel.ts",
-        "line": 400,
+        "line": 402,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -4760,7 +4761,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 236
+            "line": 264
           }
         },
         {
@@ -4771,7 +4772,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 254
+            "line": 282
           }
         },
         {
@@ -4788,7 +4789,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 262
+            "line": 290
           }
         },
         {
@@ -4806,7 +4807,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 215
+            "line": 243
           }
         },
         {
@@ -4820,7 +4821,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 249
+            "line": 277
           }
         },
         {
@@ -4844,7 +4845,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 346
+            "line": 374
           }
         },
         {
@@ -4861,7 +4862,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 286
+            "line": 314
           }
         },
         {
@@ -4872,7 +4873,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 271
+            "line": 299
           }
         },
         {
@@ -4890,7 +4891,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 301
+            "line": 329
           }
         },
         {
@@ -4901,7 +4902,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 325
+            "line": 353
           }
         },
         {
@@ -4925,7 +4926,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 312
+            "line": 340
           }
         },
         {
@@ -4943,7 +4944,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 333
+            "line": 361
           }
         },
         {
@@ -4951,20 +4952,25 @@
           "params": [
             {
               "name": "options",
-              "type": "string | MessageSendOptions",
+              "type": "string | (MessageSendOptions & ReplyOptions)",
               "optional": false,
-              "description": "Text content or object with content, embeds, and/or files"
+              "description": "Text content or object with content, embeds, and/or reply options (ping, replyTo)"
+            },
+            {
+              "name": "replyOptions",
+              "type": "ReplyOptions",
+              "optional": true
             }
           ],
           "returns": "Promise<Message>",
           "description": "Reply to this message (shows as a reply in the client).",
           "examples": [
-            "await message.reply('Pong!');\nawait message.reply({ embeds: [embed] });"
+            "await message.reply('Pong!');\nawait message.reply({ embeds: [embed] });\nawait message.reply('No ping!', { ping: false });\nawait message.reply({ content: 'Reply to other', replyTo: otherMessage });"
           ],
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 176
+            "line": 186
           }
         },
         {
@@ -4975,7 +4981,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 99
+            "line": 107
           }
         },
         {
@@ -4991,7 +4997,7 @@
           "async": false,
           "source": {
             "file": "Message.ts",
-            "line": 291
+            "line": 319
           }
         },
         {
@@ -5002,7 +5008,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 107
+            "line": 115
           }
         },
         {
@@ -5023,7 +5029,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 152
+            "line": 160
           }
         },
         {
@@ -5050,7 +5056,7 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 165
+            "line": 173
           }
         },
         {
@@ -5061,13 +5067,13 @@
           "async": true,
           "source": {
             "file": "Message.ts",
-            "line": 277
+            "line": 305
           }
         }
       ],
       "source": {
         "file": "Message.ts",
-        "line": 48,
+        "line": 56,
         "path": "packages/fluxer-core/src/structures/Message.ts"
       },
       "package": "@fluxerjs/core"
@@ -5194,7 +5200,7 @@
       "properties": [
         {
           "name": "Flags",
-          "type": "{ readonly SuppressEmbeds: number; readonly SuppressNotifications: number; readonly VoiceMessage: number; readonly CompactAttachments: number; }",
+          "type": "{ readonly SuppressEmbeds: bigint; readonly SuppressNotifications: bigint; readonly VoiceMessage: bigint; readonly CompactAttachments: bigint; }",
           "readonly": false,
           "optional": false
         }
@@ -5237,8 +5243,26 @@
             }
           ],
           "returns": "Promise<Message>",
-          "description": "Fetch a message by ID from this channel.",
+          "description": "Fetch a message by ID from this channel.\nWhen message caching is enabled, the fetched message is added to the cache.",
           "async": true,
+          "source": {
+            "file": "MessageManager.ts",
+            "line": 38
+          }
+        },
+        {
+          "name": "get",
+          "params": [
+            {
+              "name": "messageId",
+              "type": "string",
+              "optional": false,
+              "description": "Snowflake of the message"
+            }
+          ],
+          "returns": "Message | undefined",
+          "description": "Get a message from cache. Returns undefined if not cached or caching is disabled.\nRequires options.cache.messages > 0.",
+          "async": false,
           "source": {
             "file": "MessageManager.ts",
             "line": 26
@@ -5247,7 +5271,7 @@
       ],
       "source": {
         "file": "MessageManager.ts",
-        "line": 14,
+        "line": 15,
         "path": "packages/fluxer-core/src/client/MessageManager.ts"
       },
       "package": "@fluxerjs/core"
@@ -5515,7 +5539,7 @@
       "properties": [
         {
           "name": "Flags",
-          "type": "Record<string, number>",
+          "type": "{ readonly CreateInstantInvite: bigint; readonly KickMembers: bigint; readonly BanMembers: bigint; readonly Administrator: bigint; readonly ManageChannels: bigint; readonly ManageGuild: bigint; ... 30 more ...; readonly UpdateRtcRegion: bigint; }",
           "readonly": false,
           "optional": false
         }
@@ -5523,7 +5547,7 @@
       "methods": [],
       "source": {
         "file": "PermissionsBitField.ts",
-        "line": 73,
+        "line": 57,
         "path": "packages/util/src/PermissionsBitField.ts"
       },
       "package": "@fluxerjs/util"
@@ -6225,8 +6249,8 @@
         },
         {
           "name": "permissions",
-          "type": "string",
-          "readonly": false,
+          "type": "PermissionsBitField",
+          "readonly": true,
           "optional": false
         },
         {
@@ -6251,7 +6275,7 @@
           "async": true,
           "source": {
             "file": "Role.ts",
-            "line": 120
+            "line": 107
           }
         },
         {
@@ -6272,28 +6296,7 @@
           "async": true,
           "source": {
             "file": "Role.ts",
-            "line": 91
-          }
-        },
-        {
-          "name": "has",
-          "params": [
-            {
-              "name": "permission",
-              "type": "PermissionResolvable",
-              "optional": false,
-              "description": "Permission flag, name, or resolvable"
-            }
-          ],
-          "returns": "boolean",
-          "description": "Check if this role has a permission. Administrator grants all permissions.",
-          "examples": [
-            "if (role.has(PermissionFlags.BanMembers)) { ... }\nif (role.has('ManageChannels')) { ... }"
-          ],
-          "async": false,
-          "source": {
-            "file": "Role.ts",
-            "line": 69
+            "line": 78
           }
         },
         {
@@ -6304,13 +6307,13 @@
           "async": false,
           "source": {
             "file": "Role.ts",
-            "line": 57
+            "line": 66
           }
         }
       ],
       "source": {
         "file": "Role.ts",
-        "line": 12,
+        "line": 14,
         "path": "packages/fluxer-core/src/structures/Role.ts"
       },
       "package": "@fluxerjs/core"
@@ -6489,7 +6492,7 @@
           "async": false,
           "source": {
             "file": "Channel.ts",
-            "line": 351
+            "line": 353
           }
         },
         {
@@ -6508,7 +6511,7 @@
           "deprecated": "Use channel.messages.fetch(messageId) instead.",
           "source": {
             "file": "Channel.ts",
-            "line": 377
+            "line": 379
           }
         },
         {
@@ -6519,7 +6522,7 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 359
+            "line": 361
           }
         },
         {
@@ -6537,13 +6540,13 @@
           "async": true,
           "source": {
             "file": "Channel.ts",
-            "line": 328
+            "line": 329
           }
         }
       ],
       "source": {
         "file": "Channel.ts",
-        "line": 310,
+        "line": 311,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -6745,7 +6748,7 @@
       "properties": [
         {
           "name": "Flags",
-          "type": "{ readonly Staff: number; readonly CtpMember: number; readonly Partner: number; readonly BugHunter: number; readonly FriendlyBot: number; readonly FriendlyBotManualApproval: number; ... 24 more ...; readonly StaffHidden: number; }",
+          "type": "{ readonly Staff: bigint; readonly CtpMember: bigint; readonly Partner: bigint; readonly BugHunter: bigint; readonly FriendlyBot: bigint; readonly FriendlyBotManualApproval: bigint; ... 24 more ...; readonly StaffHidden: bigint; }",
           "readonly": false,
           "optional": false
         }
@@ -6753,7 +6756,7 @@
       "methods": [],
       "source": {
         "file": "UserFlagsBitField.ts",
-        "line": 45,
+        "line": 44,
         "path": "packages/util/src/UserFlagsBitField.ts"
       },
       "package": "@fluxerjs/util"
@@ -6897,7 +6900,7 @@
       "methods": [],
       "source": {
         "file": "Channel.ts",
-        "line": 387,
+        "line": 389,
         "path": "packages/fluxer-core/src/structures/Channel.ts"
       },
       "package": "@fluxerjs/core"
@@ -10547,6 +10550,13 @@
           "optional": true
         },
         {
+          "name": "messages",
+          "type": "number",
+          "readonly": false,
+          "optional": true,
+          "description": "Max messages per channel to cache. Enables channel.messages.get() and oldMessage in messageUpdate. 0 = disabled."
+        },
+        {
           "name": "users",
           "type": "number",
           "readonly": false,
@@ -10589,7 +10599,7 @@
       "properties": [],
       "source": {
         "file": "Client.ts",
-        "line": 128,
+        "line": 135,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -10859,7 +10869,7 @@
       ],
       "source": {
         "file": "Client.ts",
-        "line": 65,
+        "line": 72,
         "path": "packages/fluxer-core/src/client/Client.ts"
       },
       "package": "@fluxerjs/core"
@@ -10918,7 +10928,7 @@
       ],
       "source": {
         "file": "Options.ts",
-        "line": 11,
+        "line": 13,
         "path": "packages/fluxer-core/src/util/Options.ts"
       },
       "package": "@fluxerjs/core"
@@ -13479,7 +13489,7 @@
       "properties": [],
       "source": {
         "file": "PermissionsBitField.ts",
-        "line": 77,
+        "line": 61,
         "path": "packages/util/src/PermissionsBitField.ts"
       },
       "package": "@fluxerjs/util"
@@ -13489,7 +13499,7 @@
       "properties": [],
       "source": {
         "file": "PermissionsBitField.ts",
-        "line": 71,
+        "line": 55,
         "path": "packages/util/src/PermissionsBitField.ts"
       },
       "package": "@fluxerjs/util"
@@ -13628,6 +13638,32 @@
         "path": "packages/collection/src/Collection.ts"
       },
       "package": "@fluxerjs/collection"
+    },
+    {
+      "name": "ReplyOptions",
+      "description": "Options for message.reply() — ping toggle and reply-to-different-message.",
+      "properties": [
+        {
+          "name": "ping",
+          "type": "boolean",
+          "readonly": false,
+          "optional": true,
+          "description": "Whether to ping the replied-to user (default true). Use false to suppress the mention notification."
+        },
+        {
+          "name": "replyTo",
+          "type": "Message | { channelId: string; messageId: string; }",
+          "readonly": false,
+          "optional": true,
+          "description": "Reply to a different message instead of this one. Default: this message."
+        }
+      ],
+      "source": {
+        "file": "Message.ts",
+        "line": 45,
+        "path": "packages/fluxer-core/src/structures/Message.ts"
+      },
+      "package": "@fluxerjs/core"
     },
     {
       "name": "RequestOptions",
@@ -13922,7 +13958,7 @@
     },
     {
       "name": "SendBodyResult",
-      "description": "API-ready body from MessageSendOptions (serializes EmbedBuilder, includes attachments when files present).",
+      "description": "API-ready body from MessageSendOptions or text content (serializes EmbedBuilder, includes attachments when files present).",
       "properties": [
         {
           "name": "attachments",
@@ -13941,11 +13977,18 @@
           "type": "APIEmbed[]",
           "readonly": false,
           "optional": true
+        },
+        {
+          "name": "flags",
+          "type": "number",
+          "readonly": false,
+          "optional": true,
+          "description": "Message flags (e.g. SuppressNotifications for reply without ping)."
         }
       ],
       "source": {
         "file": "messageUtils.ts",
-        "line": 79,
+        "line": 81,
         "path": "packages/fluxer-core/src/util/messageUtils.ts"
       },
       "package": "@fluxerjs/core"
@@ -13990,7 +14033,7 @@
       "properties": [],
       "source": {
         "file": "UserFlagsBitField.ts",
-        "line": 49,
+        "line": 48,
         "path": "packages/util/src/UserFlagsBitField.ts"
       },
       "package": "@fluxerjs/util"
@@ -14000,7 +14043,7 @@
       "properties": [],
       "source": {
         "file": "UserFlagsBitField.ts",
-        "line": 43,
+        "line": 42,
         "path": "packages/util/src/UserFlagsBitField.ts"
       },
       "package": "@fluxerjs/util"
@@ -14887,166 +14930,6 @@
         "path": "packages/types/src/api/channel.ts"
       },
       "package": "@fluxerjs/types"
-    },
-    {
-      "name": "PermissionFlags",
-      "description": "Permission flags aligned with Fluxer API (fluxer_api/src/constants/Channel.ts).\nBits 0–30 use 1<<n; bits 31+ use 2**n.\nAdministrator (bit 3) implies all permissions. Guild owner bypasses role computation.",
-      "members": [
-        {
-          "name": "CreateInstantInvite",
-          "value": "CreateInstantInvite"
-        },
-        {
-          "name": "KickMembers",
-          "value": "KickMembers"
-        },
-        {
-          "name": "BanMembers",
-          "value": "BanMembers"
-        },
-        {
-          "name": "Administrator",
-          "value": "Administrator"
-        },
-        {
-          "name": "ManageChannels",
-          "value": "ManageChannels"
-        },
-        {
-          "name": "ManageGuild",
-          "value": "ManageGuild"
-        },
-        {
-          "name": "AddReactions",
-          "value": "AddReactions"
-        },
-        {
-          "name": "ViewAuditLog",
-          "value": "ViewAuditLog"
-        },
-        {
-          "name": "PrioritySpeaker",
-          "value": "PrioritySpeaker"
-        },
-        {
-          "name": "Stream",
-          "value": "Stream"
-        },
-        {
-          "name": "ViewChannel",
-          "value": "ViewChannel"
-        },
-        {
-          "name": "SendMessages",
-          "value": "SendMessages"
-        },
-        {
-          "name": "SendTtsMessages",
-          "value": "SendTtsMessages"
-        },
-        {
-          "name": "ManageMessages",
-          "value": "ManageMessages"
-        },
-        {
-          "name": "EmbedLinks",
-          "value": "EmbedLinks"
-        },
-        {
-          "name": "AttachFiles",
-          "value": "AttachFiles"
-        },
-        {
-          "name": "ReadMessageHistory",
-          "value": "ReadMessageHistory"
-        },
-        {
-          "name": "MentionEveryone",
-          "value": "MentionEveryone"
-        },
-        {
-          "name": "UseExternalEmojis",
-          "value": "UseExternalEmojis"
-        },
-        {
-          "name": "Connect",
-          "value": "Connect"
-        },
-        {
-          "name": "Speak",
-          "value": "Speak"
-        },
-        {
-          "name": "MuteMembers",
-          "value": "MuteMembers"
-        },
-        {
-          "name": "DeafenMembers",
-          "value": "DeafenMembers"
-        },
-        {
-          "name": "MoveMembers",
-          "value": "MoveMembers"
-        },
-        {
-          "name": "UseVad",
-          "value": "UseVad"
-        },
-        {
-          "name": "ChangeNickname",
-          "value": "ChangeNickname"
-        },
-        {
-          "name": "ManageNicknames",
-          "value": "ManageNicknames"
-        },
-        {
-          "name": "ManageRoles",
-          "value": "ManageRoles"
-        },
-        {
-          "name": "ManageWebhooks",
-          "value": "ManageWebhooks"
-        },
-        {
-          "name": "ManageEmojisAndStickers",
-          "value": "ManageEmojisAndStickers"
-        },
-        {
-          "name": "ManageExpressions",
-          "value": "ManageExpressions"
-        },
-        {
-          "name": "UseExternalStickers",
-          "value": "UseExternalStickers"
-        },
-        {
-          "name": "ModerateMembers",
-          "value": "ModerateMembers"
-        },
-        {
-          "name": "CreateExpressions",
-          "value": "CreateExpressions"
-        },
-        {
-          "name": "PinMessages",
-          "value": "PinMessages"
-        },
-        {
-          "name": "BypassSlowmode",
-          "value": "BypassSlowmode"
-        },
-        {
-          "name": "UpdateRtcRegion",
-          "value": "UpdateRtcRegion"
-        }
-      ],
-      "source": {
-        "file": "PermissionsBitField.ts",
-        "line": 12,
-        "path": "packages/util/src/PermissionsBitField.ts"
-      },
-      "package": "@fluxerjs/util"
     },
     {
       "name": "WebhookType",

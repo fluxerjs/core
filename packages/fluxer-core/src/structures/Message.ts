@@ -12,7 +12,7 @@ import {
   APIEmbed,
   APIUserPartial,
 } from '@fluxerjs/types';
-import { MessageType, Routes } from '@fluxerjs/types';
+import { MessageType, MessageFlags, Routes } from '@fluxerjs/types';
 import { EmbedBuilder } from '@fluxerjs/builders';
 import { User } from './User.js';
 import { Channel, TextChannel, DMChannel, GuildChannel } from './Channel.js';
@@ -38,8 +38,16 @@ export interface MessageEditOptions {
 
 export type MessagePayload = {
   files?: ResolvedMessageFile[];
-  body: SendBodyResult & { message_reference?: APIMessageReference };
+  body: SendBodyResult & { message_reference?: APIMessageReference; flags?: number };
 };
+
+/** Options for message.reply() — ping toggle and reply-to-different-message. */
+export interface ReplyOptions {
+  /** Whether to ping the replied-to user (default true). Use false to suppress the mention notification. */
+  ping?: boolean;
+  /** Reply to a different message instead of this one. Default: this message. */
+  replyTo?: Message | { channelId: string; messageId: string };
+}
 
 /** Re-export for convenience. */
 export type { MessageSendOptions } from '../util/messageUtils.js';
@@ -168,17 +176,30 @@ export class Message extends Base {
 
   /**
    * Reply to this message (shows as a reply in the client).
-   * @param options - Text content or object with content, embeds, and/or files
+   * @param options - Text content or object with content, embeds, and/or reply options (ping, replyTo)
    * @example
    * await message.reply('Pong!');
    * await message.reply({ embeds: [embed] });
+   * await message.reply('No ping!', { ping: false });
+   * await message.reply({ content: 'Reply to other', replyTo: otherMessage });
    */
-  async reply(options: string | MessageSendOptions): Promise<Message> {
-    const payload = await Message._createMessageBody(options, {
-      channel_id: this.channelId,
-      message_id: this.id,
-      guild_id: this.guildId ?? undefined,
-    });
+  async reply(
+    options: string | (MessageSendOptions & ReplyOptions),
+    replyOptions?: ReplyOptions,
+  ): Promise<Message> {
+    const opts = typeof options === 'string' ? { content: options } : options;
+    const mergedReply: ReplyOptions | undefined =
+      replyOptions ?? (opts.ping !== undefined || opts.replyTo !== undefined)
+        ? { ping: opts.ping, replyTo: opts.replyTo }
+        : undefined;
+
+    const refMessage = mergedReply?.replyTo ?? this;
+    const ref =
+      refMessage instanceof Message
+        ? { channel_id: refMessage.channelId, message_id: refMessage.id, guild_id: refMessage.guildId ?? undefined }
+        : { channel_id: refMessage.channelId, message_id: refMessage.messageId, guild_id: undefined as string | undefined };
+
+    const payload = await Message._createMessageBody(opts, ref, mergedReply?.ping !== false);
     return this._send(payload);
   }
 
@@ -186,6 +207,7 @@ export class Message extends Base {
   static async _createMessageBody(
     content: string | MessageSendOptions,
     referenced_message?: { channel_id: string; message_id: string; guild_id?: string },
+    ping?: boolean,
   ): Promise<MessagePayload> {
     if (typeof content === 'string') {
       if (content.length === 0) {
@@ -195,9 +217,14 @@ export class Message extends Base {
     }
     const base = buildSendBody(content);
     const files = content.files?.length ? await resolveMessageFiles(content.files) : undefined;
-    return referenced_message
-      ? { files, body: { ...base, message_reference: referenced_message } }
-      : { files, body: { ...base } };
+    const body: MessagePayload['body'] = { ...base };
+    if (referenced_message) {
+      body.message_reference = referenced_message;
+      if (ping === false) {
+        body.flags = (body.flags ?? 0) | MessageFlags.SuppressNotifications;
+      }
+    }
+    return { files, body };
   }
 
   async _send(payload: MessagePayload): Promise<Message> {
@@ -205,6 +232,7 @@ export class Message extends Base {
       Routes.channelMessages(this.channelId),
       payload,
     );
+    this.client._addMessageToCache(this.channelId, data);
     return new Message(this.client, data);
   }
 

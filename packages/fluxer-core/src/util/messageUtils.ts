@@ -73,9 +73,11 @@ export type MessageSendOptions = {
   files?: MessageFileData[];
   /** Attachment metadata for files (id = index). Use when files are provided. */
   attachments?: MessageAttachmentMeta[];
+  /** Message flags (e.g. MessageFlags.SuppressNotifications for reply without ping). */
+  flags?: number;
 };
 
-/** API-ready body from MessageSendOptions (serializes EmbedBuilder, includes attachments when files present). */
+/** API-ready body from MessageSendOptions or text content (serializes EmbedBuilder, includes attachments when files present). */
 export interface SendBodyResult {
   content?: string;
   embeds?: APIEmbed[];
@@ -86,10 +88,12 @@ export interface SendBodyResult {
     description?: string | null;
     flags?: number;
   }>;
+  /** Message flags (e.g. SuppressNotifications for reply without ping). */
+  flags?: number;
 }
 
-/** Build API-ready body from MessageSendOptions (serializes EmbedBuilder to APIEmbed). */
-export function buildSendBody(options: MessageSendOptions): SendBodyResult {
+/** Build API-ready body from MessageSendOptions or text content (serializes EmbedBuilder to APIEmbed). */
+export function buildSendBody(options: string | MessageSendOptions): SendBodyResult {
   const body = typeof options === 'string' ? { content: options } : options;
   const result: SendBodyResult = {};
   if (body.content !== undefined) result.content = body.content;
@@ -110,5 +114,6 @@ export function buildSendBody(options: MessageSendOptions): SendBodyResult {
       filename: f.filename ?? f.name,
     }));
   }
+  if (body.flags !== undefined) result.flags = body.flags;
   return result;
 }

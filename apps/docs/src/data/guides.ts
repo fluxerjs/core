@@ -1567,6 +1567,80 @@ await client.login(process.env.FLUXER_BOT_TOKEN);`,
     ],
   },
   {
+    id: 'deprecated-apis',
+    slug: 'deprecated-apis',
+    title: 'Deprecated APIs',
+    description:
+      'APIs that are deprecated and will be removed in a future release. Migrate to the recommended alternatives.',
+    category: 'other',
+    sections: [
+      {
+        title: 'Overview',
+        description:
+          'The following methods emit a one-time deprecation warning at runtime. Set FLUXER_SUPPRESS_DEPRECATION=1 to silence warnings. Migrate to the recommended replacements.',
+      },
+      {
+        title: 'Client.sendToChannel',
+        description: 'Use client.channels.send(channelId, payload) instead. Accepts the same MessageSendOptions (content, embeds, files).',
+        table: {
+          headers: ['Deprecated', 'Replacement'],
+          rows: [
+            ['client.sendToChannel(channelId, content)', 'client.channels.send(channelId, payload)'],
+          ],
+          codeColumns: [0, 1],
+        },
+        code: `// ❌ Deprecated
+await client.sendToChannel(channelId, 'Hello!');
+await client.sendToChannel(channelId, { embeds: [embed] });
+
+// ✅ Use instead
+await client.channels.send(channelId, 'Hello!');
+await client.channels.send(channelId, { embeds: [embed] });`,
+        language: 'javascript',
+      },
+      {
+        title: 'Client.fetchMessage',
+        description: 'Use channel.messages.fetch(messageId) instead. Resolve the channel first if you only have IDs.',
+        table: {
+          headers: ['Deprecated', 'Replacement'],
+          rows: [
+            ['client.fetchMessage(channelId, messageId)', '(await client.channels.resolve(channelId))?.messages?.fetch(messageId)'],
+          ],
+          codeColumns: [0, 1],
+        },
+        code: `// ❌ Deprecated
+const message = await client.fetchMessage(channelId, messageId);
+
+// ✅ Use instead
+const channel = await client.channels.resolve(channelId);
+const message = channel?.messages ? await channel.messages.fetch(messageId) : null;`,
+        language: 'javascript',
+      },
+      {
+        title: 'ChannelManager.fetchMessage',
+        description: 'Use channel.messages.fetch(messageId) instead.',
+        table: {
+          headers: ['Deprecated', 'Replacement'],
+          rows: [
+            ['client.channels.fetchMessage(channelId, messageId)', 'channel.messages.fetch(messageId)'],
+          ],
+          codeColumns: [0, 1],
+        },
+      },
+      {
+        title: 'Channel.fetchMessage',
+        description: 'Use channel.messages.fetch(messageId) instead. Available on TextChannel and DMChannel.',
+        table: {
+          headers: ['Deprecated', 'Replacement'],
+          rows: [
+            ['channel.fetchMessage(messageId)', 'channel.messages.fetch(messageId)'],
+          ],
+          codeColumns: [0, 1],
+        },
+      },
+    ],
+  },
+  {
     id: 'permissions',
     slug: 'permissions',
     title: 'Permissions',

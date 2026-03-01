@@ -250,6 +250,7 @@ export class GuildChannel extends Channel {
     const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
     const postOptions = files?.length ? { body, files } : { body };
     const data = await this.client.rest.post(Routes.channelMessages(this.id), postOptions);
+    this.client._addMessageToCache(this.id, data as APIMessage);
     return new Message(this.client, data as APIMessage);
   }
 
@@ -331,6 +332,7 @@ export class TextChannel extends GuildChannel {
     const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
     const postOptions = files?.length ? { body, files } : { body };
     const data = await this.client.rest.post(Routes.channelMessages(this.id), postOptions);
+    this.client._addMessageToCache(this.id, data as APIMessage);
     return new Message(this.client, data as APIMessage);
   }
 
@@ -435,6 +437,7 @@ export class DMChannel extends Channel {
     const files = opts.files?.length ? await resolveMessageFiles(opts.files) : undefined;
     const postOptions = files?.length ? { body, files } : { body };
     const data = await this.client.rest.post(Routes.channelMessages(this.id), postOptions);
+    this.client._addMessageToCache(this.id, data as APIMessage);
     return new Message(this.client, data as APIMessage);
   }
 
