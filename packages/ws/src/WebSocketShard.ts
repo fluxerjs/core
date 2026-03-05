@@ -287,6 +287,7 @@ function shouldReconnectOnClose(code: number): boolean {
     case 4010: // Invalid shard
     case 4011: // Sharding required
     case 4012: // Invalid API version (after fix, reconnect is safe)
+    case 4013: // Ack backpressure (server event buffer full; transient, safe to retry)
       return true;
     default:
       return false;

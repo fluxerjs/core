@@ -14,6 +14,7 @@ describe('GatewayCloseCodes', () => {
     expect(GatewayCloseCodes.AuthenticationFailed).toBe(4004);
     expect(GatewayCloseCodes.RateLimited).toBe(4008);
     expect(GatewayCloseCodes.InvalidShard).toBe(4010);
+    expect(GatewayCloseCodes.AckBackpressure).toBe(4013);
   });
 
   it('has all expected keys', () => {
@@ -36,6 +37,7 @@ describe('GatewayCloseCodes', () => {
       'InvalidShard',
       'ShardingRequired',
       'InvalidAPIVersion',
+      'AckBackpressure',
     ];
     for (const key of expected) {
       expect(GatewayCloseCodes).toHaveProperty(key);

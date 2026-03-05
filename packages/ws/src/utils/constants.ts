@@ -18,4 +18,5 @@ export const GatewayCloseCodes = {
   InvalidShard: 4010,
   ShardingRequired: 4011,
   InvalidAPIVersion: 4012,
+  AckBackpressure: 4013,
 } as const;
