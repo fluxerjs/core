@@ -186,6 +186,7 @@ export class WebSocketShard extends EventEmitter {
         this.debug(`Invalid session (d=${payload.d}), reconnecting`);
         this.sessionId = null;
         this.seq = null;
+        this.ws?.close(1000);
         setTimeout(() => this.connect(), 1000 + Math.random() * 4000);
         break;
       case GatewayOpcodes.Reconnect:
