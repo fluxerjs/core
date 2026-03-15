@@ -187,7 +187,7 @@ export class WebSocketShard extends EventEmitter {
         this.sessionId = null;
         this.seq = null;
         this.ws?.close(1000);
-        setTimeout(() => this.connect(), 1000 + Math.random() * 4000);
+        // Let handleClose() own reconnect scheduling for this close.
         break;
       case GatewayOpcodes.Reconnect:
         this.debug('Reconnect requested');
