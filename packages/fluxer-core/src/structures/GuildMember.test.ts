@@ -129,4 +129,66 @@ describe('GuildMember', () => {
       expect(url).toContain('avatars/u1/useravatar');
     });
   });
+
+  describe('move()', () => {
+    it('calls edit with channel_id to move member', async () => {
+      const member = createMember();
+      let editCalled: boolean = false;
+      let editParams: { channel_id: string | null; connection_id?: string | null } | undefined;
+
+      member.edit = async (params: { channel_id: string | null; connection_id?: string | null }) => {
+        editCalled = true;
+        editParams = params;
+        return member;
+      };
+
+      await member.move('voicechannel123');
+
+      expect(editCalled).toBe(true);
+      expect(editParams).toEqual({
+        channel_id: 'voicechannel123',
+        connection_id: undefined,
+      });
+    });
+
+    it('calls edit with null to disconnect member', async () => {
+      const member = createMember();
+      let editCalled: boolean = false;
+      let editParams: { channel_id: string | null; connection_id?: string | null } | undefined;
+
+      member.edit = async (params: { channel_id: string | null; connection_id?: string | null }) => {
+        editCalled = true;
+        editParams = params;
+        return member;
+      };
+
+      await member.move(null);
+
+      expect(editCalled).toBe(true);
+      expect(editParams).toEqual({
+        channel_id: null,
+        connection_id: undefined,
+      });
+    });
+
+    it('calls edit with connection_id when provided', async () => {
+      const member = createMember();
+      let editCalled: boolean = false;
+      let editParams: { channel_id: string | null; connection_id?: string | null } | undefined;
+
+      member.edit = async (params: { channel_id: string | null; connection_id?: string | null }) => {
+        editCalled = true;
+        editParams = params;
+        return member;
+      };
+
+      await member.move('voicechannel123', 'connection456');
+
+      expect(editCalled).toBe(true);
+      expect(editParams).toEqual({
+        channel_id: 'voicechannel123',
+        connection_id: 'connection456',
+      });
+    });
+  });
 });

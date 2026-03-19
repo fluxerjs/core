@@ -179,6 +179,26 @@ export class GuildMember extends Base {
     return new BitField<keyof typeof PermissionFlags>(perms);
   }
 
+  /**
+   * Move this member to a different voice channel or disconnect them from voice.
+   * Requires Move Members permission.
+   * @param channelId - The voice channel ID to move the member to, or null to disconnect
+   * @param connectionId - Optional connection ID for the specific voice session (usually not needed)
+   * @returns Promise that resolves when the member has been moved
+   * @example
+   * // Move member to a different voice channel
+   * await member.move('123456789012345678');
+   *
+   * // Disconnect member from voice
+   * await member.move(null);
+   */
+  async move(channelId: string | null, connectionId?: string | null): Promise<void> {
+    await this.edit({
+      channel_id: channelId,
+      connection_id: connectionId,
+    });
+  }
+
   private _computeBasePermissions(): bigint {
     let base = 0n;
     const everyone = this.guild.roles.get(this.guild.id);
