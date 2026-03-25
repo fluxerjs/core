@@ -83,3 +83,4 @@ export {
   cdnDefaultAvatarURL,
 } from './util/cdn.js';
 export type { CdnUrlOptions } from './util/cdn.js';
+export type { ClientOptions, CacheSizeLimits } from './util/Options.js';
