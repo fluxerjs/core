@@ -178,7 +178,7 @@ handlers.set('GUILD_CREATE', async (client, d) => {
   client.guilds.set(guild.id, guild);
   const g = d as APIGuild & {
     channels?: APIChannel[];
-    voice_states?: Array<{ user_id: string; channel_id: string | null }>;
+    voice_states?: Array<GatewayVoiceStateUpdateDispatchData>;
     members?: Array<APIGuildMember & { user: { id: string }; guild_id?: string }>;
   };
   for (const ch of g.channels ?? []) {

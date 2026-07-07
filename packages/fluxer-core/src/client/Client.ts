@@ -562,7 +562,7 @@ export class Client extends EventEmitter {
           this.guilds.set(guild.id, guild);
           const withCh = g as APIGuild & {
             channels?: APIChannel[];
-            voice_states?: Array<{ user_id: string; channel_id: string | null }>;
+            voice_states?: Array<GatewayVoiceStateUpdateDispatchData>;
           };
           for (const ch of withCh.channels ?? []) {
             const channel = Channel.from(this, ch);
