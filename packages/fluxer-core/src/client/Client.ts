@@ -108,7 +108,7 @@ export interface ClientEvents {
   [Events.VoiceStateUpdate]: [data: GatewayVoiceStateUpdateDispatchData];
   [Events.VoiceServerUpdate]: [data: GatewayVoiceServerUpdateDispatchData];
   [Events.VoiceStatesSync]: [
-    data: { guildId: string; voiceStates: Array<{ user_id: string; channel_id: string | null }> },
+    data: { guildId: string; voiceStates: Array<GatewayVoiceStateUpdateDispatchData> },
   ];
   [Events.MessageDeleteBulk]: [data: GatewayMessageDeleteBulkDispatchData];
   [Events.GuildBanAdd]: [ban: GuildBan];

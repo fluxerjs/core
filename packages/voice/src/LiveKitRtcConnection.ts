@@ -5,7 +5,6 @@ import { VoiceChannel } from '@fluxerjs/core';
 import { ErrorCodes, FluxerError } from '@fluxerjs/util';
 import {
   GatewayVoiceServerUpdateDispatchData,
-  GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
 import {
   AudioStream,
@@ -472,11 +471,9 @@ export class LiveKitRtcConnection extends EventEmitter {
    * Called internally by VoiceManager; typically not used directly.
    *
    * @param server - Voice server update data (endpoint, token)
-   * @param _state - Voice state update data (session, channel)
    */
   async connect(
     server: GatewayVoiceServerUpdateDispatchData,
-    _state: GatewayVoiceStateUpdateDispatchData,
   ): Promise<void> {
     const raw = (server.endpoint ?? '').trim();
     const token = server.token;

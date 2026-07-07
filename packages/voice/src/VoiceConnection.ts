@@ -4,7 +4,6 @@ import { VoiceChannel } from '@fluxerjs/core';
 import { ErrorCodes, FluxerError } from '@fluxerjs/util';
 import {
   GatewayVoiceServerUpdateDispatchData,
-  GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
 import * as nacl from 'tweetnacl';
 import * as dgram from 'dgram';
@@ -112,11 +111,11 @@ export class VoiceConnection extends EventEmitter {
   /** Called when we have both server update and state update. */
   async connect(
     server: GatewayVoiceServerUpdateDispatchData,
-    state: GatewayVoiceStateUpdateDispatchData,
+    sessionId: string,
   ): Promise<void> {
     this._token = server.token;
     const raw = (server.endpoint ?? '').trim();
-    this._sessionId = state.session_id;
+    this._sessionId = sessionId;
     if (!raw || !this._token || !this._sessionId) {
       this.emit('error', new Error('Missing voice server or session data'));
       return;

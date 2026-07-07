@@ -227,14 +227,7 @@ export class VoiceManager extends EventEmitter {
     const newConn = new ConnClass(this.client, channel, userId);
     this.registerConnection(channel.id, newConn);
 
-    const state: GatewayVoiceStateUpdateDispatchData = {
-      guild_id: guildId,
-      channel_id: channel.id,
-      user_id: userId,
-      session_id: '',
-    };
-
-    newConn.connect(data, state).catch((e) => {
+    newConn.connect(data).catch((e) => {
       this.connections.delete(channel.id);
       newConn.emit('error', e instanceof Error ? e : new Error(String(e)));
     });
@@ -315,23 +308,17 @@ export class VoiceManager extends EventEmitter {
       return;
     }
 
-    const guildId = pending.channel?.guildId ?? '';
-    const state: GatewayVoiceStateUpdateDispatchData = pending.state ?? {
-      guild_id: guildId,
-      channel_id: pending.channel.id,
-      user_id: userId,
-      session_id: '',
-    };
+    const connectionId = pending.server.connection_id ?? pending.state?.connection_id ?? "";
 
     this.storeConnectionId(
       channelId,
-      pending.server.connection_id ?? (state as { connection_id?: string }).connection_id,
+      connectionId,
     );
     this.pending.delete(channelId);
     const ConnClass = useLiveKit ? LiveKitRtcConnection : VoiceConnection;
     const conn = new ConnClass(this.client, pending.channel, userId);
     this.registerConnection(channelId, conn);
-    conn.connect(pending.server, state).then(
+    conn.connect(pending.server, connectionId).then(
       () => pending.resolve(conn),
       (e) => pending.reject(e),
     );

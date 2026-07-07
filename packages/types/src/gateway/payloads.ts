@@ -300,21 +300,25 @@ export interface GatewayGuildRoleUpdateBulkDispatchData {
 
 /** VOICE_STATE_UPDATE — guild_id?, channel_id, user_id, member?, session_id, deaf?, mute?, ... */
 export interface GatewayVoiceStateUpdateDispatchData {
-  guild_id?: Snowflake;
   channel_id: Snowflake | null;
-  user_id: Snowflake;
-  member?: APIGuildMember & { guild_id?: Snowflake };
-  session_id: string;
   /** Connection ID for voice session (Fluxer). */
-  connection_id?: string | null;
-  deaf?: boolean;
-  mute?: boolean;
-  self_deaf?: boolean;
-  self_mute?: boolean;
-  self_video?: boolean;
+  connection_id: string;
+  deaf: boolean;
+  e2ee_capable: boolean;
+  guild_id: Snowflake;
+  is_mobile: boolean;
+  member: APIGuildMember;
+  mute: boolean;
+  self_deaf: boolean;
+  self_mute: boolean;
   /** Whether the user is screen sharing / streaming. */
-  self_stream?: boolean;
-  suppress?: boolean;
+  self_stream: boolean;
+  self_video: boolean;
+  session_id: string;
+  suppress: boolean;
+  user_id: Snowflake;
+  version: number;
+  viewer_stream_keys: string[];
 }
 
 /** VOICE_SERVER_UPDATE — token, guild_id, endpoint, connection_id? */
