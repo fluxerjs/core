@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { Routes } from '@fluxerjs/types';
-import { RequestManager, type RequestOptions } from './RequestManager.js';
+import { RequestManager, type RequestOptions, type RetryPolicy } from './RequestManager.js';
 import {
   DEFAULT_API,
   DEFAULT_USER_AGENT,
@@ -15,6 +15,8 @@ export interface RESTOptions {
   authPrefix?: 'Bot' | 'Bearer';
   timeout?: number;
   retries?: number;
+  /** Select the retry budget for each logical request. */
+  retryPolicy?: RetryPolicy;
   userAgent?: string;
 }
 
@@ -31,6 +33,7 @@ export class REST extends EventEmitter {
       authPrefix: options.authPrefix ?? 'Bot',
       timeout: options.timeout ?? REQUEST_TIMEOUT,
       retries: options.retries ?? MAX_RETRIES,
+      ...(options.retryPolicy ? { retryPolicy: options.retryPolicy } : {}),
       userAgent: options.userAgent ?? DEFAULT_USER_AGENT,
     });
   }

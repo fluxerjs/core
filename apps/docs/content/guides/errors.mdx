@@ -26,6 +26,28 @@ try {
 
 `FluxerError` often wraps a REST failure in `cause`. HTTP status may live on `err.statusCode` or `err.cause?.statusCode` depending on the path.
 
+## Control automatic retries
+
+REST requests retry up to three times by default. For non-idempotent or durably orchestrated mutations, use a request-aware policy to disable automatic retries while retaining them for reads:
+
+```javascript
+import { Client } from '@fluxerjs/core';
+
+const client = new Client({
+  rest: {
+    retries: 3,
+    retryPolicy: ({ method, defaultRetries }) =>
+      method === 'GET' ? defaultRetries : 0,
+  },
+});
+```
+
+The policy runs once per logical request and returns its retry budget. Return `undefined` to retain the configured default. It receives the request method, a sanitized `routeKey` for matching, and the default retry count. The exact caller-supplied route is not included as a separate field: Snowflake IDs are replaced by `:id`, webhook credentials are replaced by `:token`, query parameters are omitted, and absolute URLs are reduced to their origin plus `/:external`. Request bodies and headers are never exposed. Both configured and policy-selected retry counts must be non-negative safe integers.
+
+Treat `routeKey` as matching metadata rather than a logging field when using custom relative routes, whose application-specific path segments cannot be classified by the SDK.
+
+Disabling automatic retries does not make an ambiguous mutation safe to replay. A timeout or transport failure can occur after the server applied the request, so durable applications should persist an unknown outcome and reconcile it explicitly.
+
 ## Common codes
 
 Exact members live on `ErrorCodes`. Ones you will hit early:

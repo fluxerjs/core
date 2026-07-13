@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RequestManager } from './RequestManager.js';
-import { HTTPError, FluxerAPIError, RateLimitError } from './errors/index.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { FluxerAPIError, HTTPError, RateLimitError } from './errors/index.js';
 import { sharedFetch } from './fetch/sharedFetch.js';
+import { RequestManager } from './RequestManager.js';
 
 vi.mock('./fetch/sharedFetch.js', () => ({
   sharedFetch: vi.fn(),
@@ -119,6 +119,181 @@ describe('RequestManager', () => {
       jsonResponse({ code: 'RATE_LIMITED', message: 'slow down', retry_after: 1 }, { status: 429 }),
     );
     await expect(rm.request('GET', '/channels/1')).rejects.toThrow(RateLimitError);
+  });
+
+  it('uses a request retry policy without changing the configured default', async () => {
+    const retryPolicy = vi.fn(
+      ({ method, defaultRetries }: { method: string; defaultRetries: number }) =>
+        method === 'POST' ? 0 : defaultRetries,
+    );
+    const rm = new RequestManager({ retries: 1, retryPolicy });
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ code: 'RATE_LIMITED', message: 'slow down', retry_after: 0 }, { status: 429 }),
+    );
+
+    await expect(rm.request('POST', '/channels/123456789012345678/messages')).rejects.toThrow(
+      RateLimitError,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(retryPolicy).toHaveBeenCalledOnce();
+    expect(retryPolicy).toHaveBeenCalledWith({
+      method: 'POST',
+      routeKey: '/channels/:id/messages',
+      defaultRetries: 1,
+    });
+  });
+
+  it('redacts credential-bearing route data from the retry policy context', async () => {
+    const retryPolicy = vi.fn(() => 0);
+    const rm = new RequestManager({ retryPolicy });
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true }));
+    const webhookToken = 'validation-only-secret-token';
+
+    await rm.request(
+      'POST',
+      `/webhooks/123456789012345678/${webhookToken}/messages/987654321098765432`,
+    );
+    expect(retryPolicy).toHaveBeenLastCalledWith({
+      method: 'POST',
+      routeKey: '/webhooks/:id/:token/messages/:id',
+      defaultRetries: 3,
+    });
+    expect(JSON.stringify(retryPolicy.mock.lastCall)).not.toContain(webhookToken);
+
+    await rm.request(
+      'GET',
+      '/users/123456789012345678/profile?guild_id=987654321098765432&token=query-secret',
+    );
+    expect(retryPolicy).toHaveBeenLastCalledWith({
+      method: 'GET',
+      routeKey: '/users/:id/profile',
+      defaultRetries: 3,
+    });
+    expect(JSON.stringify(retryPolicy.mock.lastCall)).not.toContain('query-secret');
+
+    await rm.request(
+      'GET',
+      'https://user:password@cdn.example.com/private/path?signature=external-secret',
+    );
+    expect(retryPolicy).toHaveBeenLastCalledWith({
+      method: 'GET',
+      routeKey: 'https://cdn.example.com/:external',
+      defaultRetries: 3,
+    });
+    expect(JSON.stringify(retryPolicy.mock.lastCall)).not.toMatch(
+      /password|private|external-secret/,
+    );
+  });
+
+  it('falls back to the configured default when the retry policy returns undefined', async () => {
+    const retryPolicy = vi.fn(() => undefined);
+    const rm = new RequestManager({ retries: 1, retryPolicy });
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse(
+          { code: 'RATE_LIMITED', message: 'slow down', retry_after: 0 },
+          { status: 429 },
+        ),
+      )
+      .mockResolvedValueOnce(jsonResponse({ id: '1' }));
+
+    await expect(rm.request('GET', '/channels/1')).resolves.toEqual({ id: '1' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(retryPolicy).toHaveBeenCalledOnce();
+  });
+
+  it('can suppress retries for retryable server errors', async () => {
+    const rm = new RequestManager({ retries: 3, retryPolicy: () => 0 });
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      text: () => Promise.resolve('unavailable'),
+      headers: new Headers(),
+    } as unknown as Response);
+
+    await expect(rm.request('POST', '/channels/1/messages')).rejects.toThrow(HTTPError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('can suppress retries for transport failures', async () => {
+    const rm = new RequestManager({ retries: 3, retryPolicy: () => 0 });
+    fetchMock.mockRejectedValueOnce(new TypeError('fetch failed'));
+
+    await expect(rm.request('POST', '/channels/1/messages')).rejects.toThrow('fetch failed');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('can suppress retries after a client timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const rm = new RequestManager({ timeout: 10, retries: 3, retryPolicy: () => 0 });
+      fetchMock.mockImplementationOnce(
+        (_url, init) =>
+          new Promise((_resolve, reject) => {
+            const signal = init?.signal as AbortSignal;
+            signal.addEventListener(
+              'abort',
+              () => reject(Object.assign(new Error('Aborted'), { name: 'AbortError' })),
+              { once: true },
+            );
+          }),
+      );
+
+      const rejection = expect(rm.request('POST', '/channels/1/messages')).rejects.toMatchObject({
+        name: 'AbortError',
+      });
+      await vi.advanceTimersByTimeAsync(10);
+      await rejection;
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('selects retry budgets independently by request method', async () => {
+    const rm = new RequestManager({
+      retries: 1,
+      retryPolicy: ({ method, defaultRetries }) => (method === 'POST' ? 0 : defaultRetries),
+    });
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ code: 'RATE_LIMITED', message: 'slow down', retry_after: 0 }, { status: 429 }),
+    );
+    await expect(rm.request('POST', '/channels/1/messages')).rejects.toThrow(RateLimitError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fetchMock.mockReset();
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse(
+          { code: 'RATE_LIMITED', message: 'slow down', retry_after: 0 },
+          { status: 429 },
+        ),
+      )
+      .mockResolvedValueOnce(jsonResponse({ id: '1' }));
+    await expect(rm.request('GET', '/channels/1')).resolves.toEqual({ id: '1' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    -1,
+    1.5,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+  ])('rejects invalid retry policy result %s before dispatch', async (retries) => {
+    const rm = new RequestManager({ retryPolicy: () => retries });
+
+    await expect(rm.request('GET', '/channels/1')).rejects.toThrow(RangeError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    -1,
+    1.5,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+  ])('rejects invalid configured retry count %s', (retries) => {
+    expect(() => new RequestManager({ retries })).toThrow(RangeError);
   });
 
   it('builds multipart when files provided without body', async () => {

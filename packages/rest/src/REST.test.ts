@@ -63,6 +63,23 @@ describe('REST', () => {
     );
   });
 
+  it('passes the request retry policy to the request manager', async () => {
+    const retryPolicy = vi.fn(() => 0);
+    const rest = new REST({ retries: 3, retryPolicy });
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      text: () => Promise.resolve('unavailable'),
+      headers: new Headers(),
+    } as unknown as Response);
+
+    await expect(rest.post('/channels/1/messages', { body: { content: 'hello' } })).rejects.toThrow(
+      'HTTP 503',
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(retryPolicy).toHaveBeenCalledOnce();
+  });
+
   it('Routes is exposed', () => {
     expect(REST.Routes).toBe(Routes);
   });

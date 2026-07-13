@@ -1,8 +1,7 @@
 import type { APIErrorBody, RateLimitErrorBody } from '@fluxerjs/types';
-import { RateLimitManager } from './RateLimitManager.js';
-import { FluxerAPIError, RateLimitError, HTTPError } from './errors/index.js';
-import { buildFormData, type AttachmentPayload } from './utils/files.js';
+import { FluxerAPIError, HTTPError, RateLimitError } from './errors/index.js';
 import { sharedFetch } from './fetch/sharedFetch.js';
+import { RateLimitManager } from './RateLimitManager.js';
 import {
   DEFAULT_API,
   DEFAULT_USER_AGENT,
@@ -10,6 +9,7 @@ import {
   MAX_RETRIES,
   REQUEST_TIMEOUT,
 } from './utils/constants.js';
+import { type AttachmentPayload, buildFormData } from './utils/files.js';
 
 export interface RequestOptions {
   body?: unknown | FormData;
@@ -20,17 +20,35 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
+/** Context used to choose the retry budget for one logical request. */
+export interface RetryPolicyContext {
+  /** HTTP method supplied to the request manager. */
+  method: string;
+  /** Sanitized route metadata for policy matching. */
+  routeKey: string;
+  /** Validated fallback retry budget from the REST configuration. */
+  defaultRetries: number;
+}
+
+/**
+ * Resolves the retry budget for one logical request.
+ * Return `undefined` to retain the configured default.
+ */
+export type RetryPolicy = (context: RetryPolicyContext) => number | undefined;
+
 export interface RestOptions {
   api: string;
   version: string;
   authPrefix: 'Bot' | 'Bearer';
   timeout: number;
   retries: number;
+  retryPolicy?: RetryPolicy;
   userAgent: string;
 }
 
 const ROUTE_HASH_CACHE_MAX = 1000;
 const SNOWFLAKE_RE = /\d{17,19}/g;
+const WEBHOOK_TOKEN_RE = /(\/webhooks\/:id\/)[^/]+/;
 
 function abortError(): Error {
   const err = new Error('The operation was aborted');
@@ -105,6 +123,25 @@ function backoffMs(attempt: number): number {
   return 500 * (attempt + 1);
 }
 
+function validateRetryCount(value: number, source: string): number {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new RangeError(`${source} must be a non-negative safe integer`);
+  }
+  return value;
+}
+
+function getRetryPolicyRouteKey(route: string, routeHash: string): string {
+  if (route.startsWith('http')) {
+    try {
+      return `${new URL(route).origin}/:external`;
+    } catch {
+      return ':external';
+    }
+  }
+
+  return routeHash.replace(/[?#].*$/, '').replace(WEBHOOK_TOKEN_RE, '$1:token');
+}
+
 /** Flatten Error.cause chain so "fetch failed" surfaces the real undici/network reason. */
 function formatErrorChain(err: Error, maxDepth = 4): string {
   const parts: string[] = [];
@@ -123,12 +160,14 @@ export class RequestManager {
   private readonly routeHashCache = new Map<string, string>();
 
   constructor(options: Partial<RestOptions>) {
+    const retries = validateRetryCount(options.retries ?? MAX_RETRIES, 'retries');
     this.options = {
       api: options.api ?? DEFAULT_API,
       version: options.version ?? DEFAULT_VERSION,
       authPrefix: options.authPrefix ?? 'Bot',
       timeout: options.timeout ?? REQUEST_TIMEOUT,
-      retries: options.retries ?? MAX_RETRIES,
+      retries,
+      ...(options.retryPolicy ? { retryPolicy: options.retryPolicy } : {}),
       userAgent: options.userAgent ?? DEFAULT_USER_AGENT,
     };
   }
@@ -228,13 +267,14 @@ export class RequestManager {
 
   async request<T>(method: string, route: string, options: RequestOptions = {}): Promise<T> {
     const routeHash = this.getRouteHash(route);
+    const retries = this.resolveRetries(method, getRetryPolicyRouteKey(route, routeHash));
     const url = route.startsWith('http') ? route : `${this.baseUrl}${route}`;
     const body = this.buildBody(options);
     const headers = this.buildHeaders(options, body);
     const userSignal = options.signal;
     let lastError: Error | null = null;
 
-    for (let attempt = 0; attempt <= this.options.retries; attempt++) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
       if (userSignal?.aborted) throw abortError();
 
       const wait = this.rateLimiter.getWaitTime(routeHash);
@@ -280,7 +320,7 @@ export class RequestManager {
             response.status,
             { method, path: route },
           );
-          if (attempt < this.options.retries) {
+          if (attempt < retries) {
             lastError = err;
             await sleep(retryMs, userSignal);
             continue;
@@ -290,7 +330,7 @@ export class RequestManager {
 
         if (!response.ok) {
           const err = await this.parseError(response, method, route);
-          if (err.isRetryable && attempt < this.options.retries) {
+          if (err.isRetryable && attempt < retries) {
             lastError = err;
             await sleep(backoffMs(attempt), userSignal);
             continue;
@@ -302,7 +342,7 @@ export class RequestManager {
       } catch (err) {
         if (isAbortError(err)) {
           if (userSignal?.aborted) throw err;
-          if (timedOut && attempt < this.options.retries) {
+          if (timedOut && attempt < retries) {
             lastError = err instanceof Error ? err : new Error(String(err));
             await sleep(backoffMs(attempt), userSignal);
             continue;
@@ -327,7 +367,7 @@ export class RequestManager {
               ? wrapped
               : new Error(detail, { cause: wrapped });
 
-        if (attempt < this.options.retries) {
+        if (attempt < retries) {
           await sleep(backoffMs(attempt), userSignal);
           continue;
         }
@@ -339,5 +379,16 @@ export class RequestManager {
     }
 
     throw lastError ?? new Error('Request failed');
+  }
+
+  private resolveRetries(method: string, routeKey: string): number {
+    const retries = this.options.retryPolicy?.({
+      method,
+      routeKey,
+      defaultRetries: this.options.retries,
+    });
+
+    if (retries === undefined) return this.options.retries;
+    return validateRetryCount(retries, 'Retry policy result');
   }
 }

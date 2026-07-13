@@ -57,6 +57,14 @@ describe('multi-instance Client runtimes', () => {
     expect(client.instance.endpoints.media).toBe(DEFAULT_INSTANCE_ENDPOINTS.media);
   });
 
+  it('accepts a request-aware REST retry policy', () => {
+    const retryPolicy = ({ method, defaultRetries }: { method: string; defaultRetries: number }) =>
+      method === 'GET' ? defaultRetries : 0;
+    const client = new Client({ rest: { retries: 3, retryPolicy } });
+
+    expect(client.options.rest?.retryPolicy).toBe(retryPolicy);
+  });
+
   it('applies explicit instance endpoint overrides', () => {
     const client = new Client({
       instance: {
