@@ -81,6 +81,10 @@ export interface ClientEvents {
 
   [Events.GuildCreate]: [guild: Guild];
 
+  [Events.GuildAvailable]: [guild: Guild];
+
+  [Events.GuildUnavailable]: [guild: Guild];
+
   [Events.GuildUpdate]: [oldGuild: Guild, newGuild: Guild];
 
   [Events.GuildDelete]: [guild: Guild];

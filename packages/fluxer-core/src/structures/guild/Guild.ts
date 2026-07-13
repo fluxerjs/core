@@ -51,6 +51,8 @@ export class Guild extends Base {
   readonly client: Client;
   /** Snowflake ID of this guild. */
   readonly id: string;
+  /** Whether the guild is currently available through the gateway. */
+  available = true;
   /** Guild name. */
   name: string;
   /** Icon hash (use {@link iconURL} to get full CDN URL). */

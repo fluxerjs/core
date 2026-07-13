@@ -68,6 +68,8 @@ client.on(Events.MessageReactionAdd, (payload) => {});
 client.on(Events.MessageReactionRemove, (payload) => {});
 
 client.on(Events.GuildCreate, (guild) => {});
+client.on(Events.GuildUnavailable, (guild) => {});
+client.on(Events.GuildAvailable, (guild) => {});
 client.on(Events.GuildUpdate, (oldGuild, newGuild) => {});
 client.on(Events.GuildDelete, (guild) => {});
 
@@ -97,6 +99,8 @@ client.on(Events.UserUpdate, (user) => {});
 client.on(Events.VoiceStateUpdate, (data) => {});
 client.on(Events.VoiceServerUpdate, (data) => {});
 ```
+
+`GuildUnavailable` means the gateway temporarily lost access to a guild. The guild remains in `client.guilds` with `guild.available === false`, and repeated unavailable dispatches do not re-emit the event. When it returns, the same `Guild` instance is refreshed, `available` becomes `true`, and `GuildAvailable` fires. `GuildDelete` is reserved for permanent removal.
 
 ## Reaction Events
 
@@ -152,7 +156,7 @@ Events exposed on `Client` via `Events` / `ClientEvents`. Only these names are s
 | Connection | `Ready`, `Resumed`, `Error`, `Debug` |
 | Messages | `MessageCreate`, `MessageUpdate`, `MessageDelete`, `MessageDeleteBulk` |
 | Reactions | `MessageReactionAdd`, `MessageReactionAddMany`, `MessageReactionRemove`, `MessageReactionRemoveAll`, `MessageReactionRemoveEmoji` |
-| Guild | `GuildCreate`, `GuildUpdate`, `GuildDelete`, `GuildCountsUpdate`, `GuildEmojisUpdate`, `GuildStickersUpdate`, `GuildAuditLogEntryCreate` |
+| Guild | `GuildCreate`, `GuildAvailable`, `GuildUnavailable`, `GuildUpdate`, `GuildDelete`, `GuildCountsUpdate`, `GuildEmojisUpdate`, `GuildStickersUpdate`, `GuildAuditLogEntryCreate` |
 | Members | `GuildMemberAdd`, `GuildMemberUpdate`, `GuildMemberRemove`, `GuildMembersChunk` |
 | Roles | `GuildRoleCreate`, `GuildRoleUpdate`, `GuildRoleDelete` |
 | Moderation | `GuildBanAdd`, `GuildBanRemove` |
@@ -182,6 +186,8 @@ Handler argument types from `ClientEvents`. Structure names are classes from `@f
 | `MessageReactionRemoveAll` | `MessageReactionRemoveAllPayload` |
 | `MessageReactionRemoveEmoji` | `MessageReactionRemoveEmojiPayload` |
 | `GuildCreate` | `Guild` |
+| `GuildAvailable` | `Guild` |
+| `GuildUnavailable` | `Guild` |
 | `GuildUpdate` | `Guild`, `Guild` |
 | `GuildDelete` | `Guild` |
 | `GuildMemberAdd` | `GuildMember` |

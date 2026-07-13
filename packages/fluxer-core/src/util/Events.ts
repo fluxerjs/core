@@ -11,6 +11,8 @@ export const Events = {
   MessageReactionRemoveAll: 'messageReactionRemoveAll',
   MessageReactionRemoveEmoji: 'messageReactionRemoveEmoji',
   GuildCreate: 'guildCreate',
+  GuildAvailable: 'guildAvailable',
+  GuildUnavailable: 'guildUnavailable',
   GuildUpdate: 'guildUpdate',
   GuildDelete: 'guildDelete',
   GuildBanAdd: 'guildBanAdd',

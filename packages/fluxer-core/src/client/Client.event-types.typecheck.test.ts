@@ -1,4 +1,5 @@
 import { describe, it } from 'vitest';
+import type { Guild } from '../structures/Guild.js';
 import type { Message } from '../structures/Message.js';
 import type { GuildMembersChunkPayload } from './eventPayloads.js';
 import { Client } from './Client.js';
@@ -22,6 +23,17 @@ describe('Client event typings (compile-time)', () => {
       type _notAny = Assert<IsAny<typeof chunk> extends false ? true : false>;
       type _exact = Assert<IsExactly<typeof chunk, GuildMembersChunkPayload>>;
       const _guildId: string = chunk.guildId;
+    });
+
+    client.on(Events.GuildUnavailable, (guild) => {
+      type _notAny = Assert<IsAny<typeof guild> extends false ? true : false>;
+      type _exact = Assert<IsExactly<typeof guild, Guild>>;
+      const _available: boolean = guild.available;
+    });
+
+    client.on(Events.GuildAvailable, (guild) => {
+      type _exact = Assert<IsExactly<typeof guild, Guild>>;
+      const _guildId: string = guild.id;
     });
 
     client.emit(Events.MessageDeleteBulk, { ids: ['1', '2'], channelId: '3', guildId: null });

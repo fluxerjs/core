@@ -1,7 +1,7 @@
 import type { GatewayReceivePayload } from '@fluxerjs/types';
 import { Events } from '../util/Events.js';
-import { eventHandlers } from './eventHandlers/index.js';
 import type { Client } from './Client.js';
+import { eventHandlers } from './eventHandlers/index.js';
 
 export function emitClientError(client: Client, err: unknown): void {
   client.emit(Events.Error, err instanceof Error ? err : new Error(String(err)));
@@ -9,7 +9,8 @@ export function emitClientError(client: Client, err: unknown): void {
 
 /**
  * While {@link ClientOptions.waitForGuilds} delays Ready, defer user-facing dispatch handling until Ready fires.
- * GUILD_CREATE must still run immediately so guild cache and {@link Client._onGuildReceived} can finish the handshake.
+ * GUILD_CREATE and a GUILD_DELETE for a pending guild must still run immediately so guild cache and
+ * {@link Client._onGuildReceived} can finish the handshake.
  */
 export function shouldDeferGatewayDispatchUntilReady(
   client: Client,
@@ -17,7 +18,12 @@ export function shouldDeferGatewayDispatchUntilReady(
 ): boolean {
   if (client.options.waitForGuilds !== true || client.readyAt !== null) return false;
   if (payload.op !== 0 || !payload.t) return false;
-  return payload.t !== 'GUILD_CREATE';
+  if (payload.t === 'GUILD_CREATE') return false;
+  if (payload.t === 'GUILD_DELETE') {
+    const data = payload.d as { id?: unknown } | null;
+    if (typeof data?.id === 'string' && client._pendingGuildIds?.has(data.id)) return false;
+  }
+  return true;
 }
 
 /**
