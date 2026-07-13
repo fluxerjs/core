@@ -2,7 +2,7 @@ import type { APIChannelPartial, APIUserPartial } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 
 import type { Client } from '../client/Client.js';
-import type { MessageSendOptions } from '../util/messageUtils.js';
+import type { MessagePrepareInput } from '../util/messageUtils.js';
 import { cdnAvatarURL, cdnBannerURL, cdnDefaultAvatarURL } from '../util/cdn.js';
 import { Base } from './Base.js';
 import { DMChannel } from './Channel.js';
@@ -120,10 +120,10 @@ export class User extends Base {
 
   /**
    * Send a DM to this user.
-   * @param options - Message content or {@link MessageSendOptions}
+   * @param options - {@link MessagePrepareInput}
    * @returns Sent message
    */
-  async send(options: string | MessageSendOptions): Promise<Message> {
+  async send(options: MessagePrepareInput): Promise<Message> {
     return (await this.createDM()).send(options);
   }
 }
