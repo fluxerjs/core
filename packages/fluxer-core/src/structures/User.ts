@@ -102,7 +102,7 @@ export class User extends Base {
    * Send a DM to this user.
    * Convenience method that creates the DM channel and sends the message.
    */
-  async send(options: MessageSendOptions): Promise<Message> {
+  async send(options: string | MessageSendOptions): Promise<Message> {
     const dm = await this.createDM();
     return dm.send(options);
   }
