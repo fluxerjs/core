@@ -123,7 +123,7 @@ export class User extends Base {
    * @param options - Message content or {@link MessageSendOptions}
    * @returns Sent message
    */
-  async send(options: MessageSendOptions): Promise<Message> {
+  async send(options: string | MessageSendOptions): Promise<Message> {
     return (await this.createDM()).send(options);
   }
 }
