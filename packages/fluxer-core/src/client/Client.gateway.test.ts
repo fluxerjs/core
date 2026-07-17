@@ -1,17 +1,66 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Routes } from '@fluxerjs/types';
 import type { APIUser } from '@fluxerjs/types';
-import { Client } from './Client.js';
-import { Events } from '../util/Events.js';
-import { Invite } from '../structures/Invite.js';
+import { Routes } from '@fluxerjs/types';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Guild } from '../structures/Guild.js';
+import { Invite } from '../structures/Invite.js';
+import { Events } from '../util/Events.js';
+import { Client } from './Client.js';
 import { ClientUser } from './ClientUser.js';
+import { hydrateReadyGuilds } from './GatewayReady.js';
 
 describe('Client gateway helpers and dispatch', () => {
   let client: Client;
 
   beforeEach(() => {
     client = new Client();
+  });
+
+  it('hydrates nested READY guild properties before caching', async () => {
+    hydrateReadyGuilds(
+      client,
+      [
+        {
+          id: 'g1',
+          properties: {
+            id: 'g1',
+            name: 'Nested Guild',
+            icon: 'icon-hash',
+            banner: null,
+            splash: 'splash-hash',
+            owner_id: 'owner1',
+            features: ['BANNER'],
+            afk_timeout: 300,
+            nsfw_level: 0,
+            verification_level: 1,
+            mfa_level: 0,
+            explicit_content_filter: 2,
+            default_message_notifications: 1,
+          },
+          channels: [],
+          roles: [],
+          members: [],
+          emojis: [],
+        },
+      ],
+      false,
+    );
+    const get = vi.spyOn(client.rest, 'get');
+
+    const guild = await client.guilds.fetch('g1');
+
+    expect(guild).toMatchObject({
+      id: 'g1',
+      name: 'Nested Guild',
+      icon: 'icon-hash',
+      splash: 'splash-hash',
+      ownerId: 'owner1',
+      features: ['BANNER'],
+      afkTimeout: 300,
+      verificationLevel: 1,
+      explicitContentFilter: 2,
+      defaultMessageNotifications: 1,
+    });
+    expect(get).not.toHaveBeenCalled();
   });
 
   it('fetchGatewayInfo() fetches gateway metadata from /gateway/bot', async () => {

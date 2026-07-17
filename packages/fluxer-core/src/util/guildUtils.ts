@@ -1,15 +1,30 @@
 import type { APIGuild, APIRole } from '@fluxerjs/types';
 
+export type GatewayGuildPayload =
+  | APIGuild
+  | {
+      id: string;
+      properties: APIGuild;
+      roles?: APIRole[];
+    };
+
 /**
  * Validate and coerce a gateway guild payload to {@link APIGuild}.
- * Requires a string `id`. Other fields are type-checked only when present
- * (GUILD_UPDATE payloads are often partial).
+ * Supports flat REST/update payloads and gateway snapshots with metadata nested under
+ * `properties`. Requires a string `id`; other fields are type-checked only when present.
  */
-export function normalizeGuildPayload(
-  raw: APIGuild | null | undefined | unknown,
-): (APIGuild & { roles?: APIRole[] }) | null {
+export function normalizeGuildPayload(raw: unknown): (APIGuild & { roles?: APIRole[] }) | null {
   if (!raw || typeof raw !== 'object') return null;
-  const o = raw as Record<string, unknown>;
+  const gatewayPayload = raw as Record<string, unknown>;
+  let o = gatewayPayload;
+
+  if ('properties' in gatewayPayload) {
+    if (!gatewayPayload.properties || typeof gatewayPayload.properties !== 'object') return null;
+    o = {
+      ...(gatewayPayload.properties as Record<string, unknown>),
+      roles: gatewayPayload.roles,
+    };
+  }
 
   if (typeof o.id !== 'string' || o.id.length === 0) return null;
   if ('name' in o && typeof o.name !== 'string') return null;
@@ -30,5 +45,5 @@ export function normalizeGuildPayload(
   if ('icon' in o && o.icon !== null && typeof o.icon !== 'string') return null;
   if ('banner' in o && o.banner !== null && typeof o.banner !== 'string') return null;
 
-  return raw as APIGuild & { roles?: APIRole[] };
+  return o as unknown as APIGuild & { roles?: APIRole[] };
 }

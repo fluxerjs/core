@@ -1,28 +1,39 @@
-import { WebSocketManager } from '@fluxerjs/ws';
 import type {
   APIChannel,
-  APIGuild,
+  APIEmoji,
+  APIGuildMember,
+  APISticker,
   APIUser,
   GatewayReceivePayload,
   GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
+import { WebSocketManager } from '@fluxerjs/ws';
 import { ErrorCodes } from '../errors/ErrorCodes.js';
 import { FluxerError } from '../errors/FluxerError.js';
-import { Events } from '../util/Events.js';
-import { normalizeGuildPayload } from '../util/guildUtils';
-import { Guild } from '../structures/Guild.js';
 import { Channel, type GuildChannel } from '../structures/Channel.js';
+import { Guild } from '../structures/Guild.js';
+import { Events } from '../util/Events.js';
+import { type GatewayGuildPayload, normalizeGuildPayload } from '../util/guildUtils';
+import type { Client } from './Client.js';
 import { ClientUser } from './ClientUser.js';
 import {
   emitClientError,
   flushDeferredGatewayDispatches,
   handleGatewayDispatch,
 } from './GatewayDispatch.js';
-import type { Client } from './Client.js';
 
 export type ReadyPayload = {
   user: APIUser;
-  guilds: Array<APIGuild & { unavailable?: boolean }>;
+  guilds: ReadyGuildPayload[];
+};
+
+type ReadyGuildPayload = GatewayGuildPayload & {
+  unavailable?: boolean;
+  channels?: APIChannel[];
+  emojis?: APIEmoji[];
+  members?: APIGuildMember[];
+  stickers?: APISticker[];
+  voice_states?: GatewayVoiceStateUpdateDispatchData[];
 };
 
 /** Milliseconds to wait for GUILD_CREATE stream when READY has no guilds. */
@@ -31,7 +42,7 @@ export const GUILD_STREAM_SETTLE_MS = 500;
 /** Hydrate guild and channel caches from the READY payload. Returns pending unavailable guild IDs when waitForGuilds. */
 export function hydrateReadyGuilds(
   client: Client,
-  guilds: Array<APIGuild & { unavailable?: boolean }>,
+  guilds: ReadyGuildPayload[],
   waitForGuilds: boolean,
 ): Set<string> | null {
   const pending = waitForGuilds ? new Set<string>() : null;
@@ -44,21 +55,17 @@ export function hydrateReadyGuilds(
     if (!guildData) continue;
     const guild = new Guild(client, guildData);
     client.guilds.set(guild.id, guild);
-    const withCh = g as APIGuild & {
-      channels?: APIChannel[];
-      voice_states?: GatewayVoiceStateUpdateDispatchData[];
-    };
-    for (const ch of withCh.channels ?? []) {
+    for (const ch of g.channels ?? []) {
       const channel = Channel.from(client, ch);
       if (channel) {
         client.channels.set(channel.id, channel);
         guild.channels.set(channel.id, channel as GuildChannel);
       }
     }
-    if (withCh.voice_states?.length) {
+    if (g.voice_states?.length) {
       client.emit(Events.VoiceStatesSync, {
         guildId: guild.id,
-        voiceStates: withCh.voice_states,
+        voiceStates: g.voice_states,
       });
     }
   }

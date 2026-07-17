@@ -1,6 +1,5 @@
 import type {
   APIChannel,
-  APIGuild,
   APIGuildMember,
   APIRole,
   GatewayGuildDeleteDispatchData,
@@ -10,12 +9,12 @@ import { Channel, type GuildChannel } from '../../structures/Channel.js';
 import { Guild } from '../../structures/Guild.js';
 import { Role } from '../../structures/Role.js';
 import { Events } from '../../util/Events.js';
-import { normalizeGuildPayload } from '../../util/guildUtils.js';
+import { type GatewayGuildPayload, normalizeGuildPayload } from '../../util/guildUtils.js';
 import type { Client } from '../Client.js';
 import { cacheMember } from './helpers.js';
 import type { HandlerMap } from './types.js';
 
-type GuildCreatePayload = APIGuild & {
+type GuildCreatePayload = GatewayGuildPayload & {
   unavailable?: boolean;
   channels?: APIChannel[];
   voice_states?: GatewayVoiceStateUpdateDispatchData[];
@@ -31,8 +30,6 @@ function markGuildUnavailable(client: Client, id: string): void {
 }
 
 function refreshRecoveredGuild(guild: Guild, data: GuildCreatePayload): void {
-  guild._patch(data);
-
   if (data.roles !== undefined) {
     guild.roles.clear();
     for (const role of data.roles) {
@@ -72,7 +69,10 @@ export const guildHandlers: HandlerMap = {
     const recovered = existing?.available === false;
     const guild = recovered && existing ? existing : new Guild(client, guildData);
 
-    if (recovered) refreshRecoveredGuild(guild, g);
+    if (recovered) {
+      guild._patch(guildData);
+      refreshRecoveredGuild(guild, g);
+    }
     client.guilds.set(guild.id, guild);
 
     for (const ch of g.channels ?? []) {
