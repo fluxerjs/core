@@ -18,7 +18,7 @@ export function fixtureUser(overrides: Partial<APIUserPartial> = {}): APIUserPar
   };
 }
 
-/** Minimal guild payload that passes {@link normalizeGuildPayload}. */
+/** Minimal flat guild payload accepted by the guild payload normalizers. */
 export function fixtureGuild(overrides: Partial<APIGuild> = {}): APIGuild {
   return {
     id: '200000000000000001',

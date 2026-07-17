@@ -13,7 +13,7 @@ import { FluxerError } from '../errors/FluxerError.js';
 import { Channel, type GuildChannel } from '../structures/Channel.js';
 import { Guild } from '../structures/Guild.js';
 import { Events } from '../util/Events.js';
-import { type GatewayGuildPayload, normalizeGuildPayload } from '../util/guildUtils';
+import { type GatewayGuildPayload, normalizeGuildSnapshotPayload } from '../util/guildUtils';
 import type { Client } from './Client.js';
 import { ClientUser } from './ClientUser.js';
 import {
@@ -51,7 +51,7 @@ export function hydrateReadyGuilds(
       if (pending !== null && g.id) pending.add(g.id);
       continue;
     }
-    const guildData = normalizeGuildPayload(g as unknown);
+    const guildData = normalizeGuildSnapshotPayload(g as unknown);
     if (!guildData) continue;
     const guild = new Guild(client, guildData);
     client.guilds.set(guild.id, guild);

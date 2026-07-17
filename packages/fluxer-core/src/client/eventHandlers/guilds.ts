@@ -9,7 +9,11 @@ import { Channel, type GuildChannel } from '../../structures/Channel.js';
 import { Guild } from '../../structures/Guild.js';
 import { Role } from '../../structures/Role.js';
 import { Events } from '../../util/Events.js';
-import { type GatewayGuildPayload, normalizeGuildPayload } from '../../util/guildUtils.js';
+import {
+  type GatewayGuildPayload,
+  normalizeGuildSnapshotPayload,
+  normalizeGuildUpdatePayload,
+} from '../../util/guildUtils.js';
 import type { Client } from '../Client.js';
 import { cacheMember } from './helpers.js';
 import type { HandlerMap } from './types.js';
@@ -61,7 +65,7 @@ export const guildHandlers: HandlerMap = {
       return;
     }
 
-    const guildData = normalizeGuildPayload(d as unknown);
+    const guildData = normalizeGuildSnapshotPayload(d as unknown);
     if (!guildData) return;
 
     const g = d as GuildCreatePayload;
@@ -94,7 +98,7 @@ export const guildHandlers: HandlerMap = {
   },
 
   GUILD_UPDATE(client, d) {
-    const guildData = normalizeGuildPayload(d as unknown);
+    const guildData = normalizeGuildUpdatePayload(d as unknown);
     if (!guildData) return;
 
     const existing = client.guilds.get(guildData.id);
