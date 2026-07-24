@@ -65,12 +65,17 @@ describe('RequestManager', () => {
     expect(result).toBeUndefined();
   });
 
-  it('request throws FluxerAPIError for non-ok with JSON body', async () => {
+  it('request throws FluxerAPIError with a sanitized path', async () => {
     const rm = new RequestManager({ retries: 0 });
     fetchMock.mockResolvedValueOnce(
       jsonResponse({ code: 'UNKNOWN_CHANNEL', message: 'Unknown Channel' }, { status: 404 }),
     );
-    await expect(rm.request('GET', '/channels/999')).rejects.toThrow(FluxerAPIError);
+    const token = 'secret-webhook-token';
+    const error = await rm
+      .request('GET', `/webhooks/123456789012345678/${token}?signature=secret`)
+      .catch((cause: unknown) => cause);
+    expect(error).toBeInstanceOf(FluxerAPIError);
+    expect((error as FluxerAPIError).path).toBe('/webhooks/123456789012345678/:token');
   });
 
   it('request throws HTTPError for non-JSON error body', async () => {
@@ -196,7 +201,7 @@ describe('RequestManager', () => {
     );
   });
 
-  it('falls back to the configured default when the retry policy returns undefined', async () => {
+  it('keeps the safe-method default when the retry policy returns undefined', async () => {
     const retryPolicy = vi.fn(() => undefined);
     const rm = new RequestManager({ retries: 1, retryPolicy });
     fetchMock
@@ -208,13 +213,23 @@ describe('RequestManager', () => {
       )
       .mockResolvedValueOnce(jsonResponse({ id: '1' }));
 
-    await expect(rm.request('GET', '/channels/1')).resolves.toEqual({ id: '1' });
+    await expect(rm.request('GET', '/channels/1/messages')).resolves.toEqual({ id: '1' });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(retryPolicy).toHaveBeenCalledOnce();
   });
 
-  it('can suppress retries for retryable server errors', async () => {
-    const rm = new RequestManager({ retries: 3, retryPolicy: () => 0 });
+  it('keeps mutations at zero retries when the retry policy returns undefined', async () => {
+    const rm = new RequestManager({ retries: 3, retryPolicy: () => undefined });
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ code: 'RATE_LIMITED', message: 'slow down', retry_after: 0 }, { status: 429 }),
+    );
+
+    await expect(rm.request('POST', '/channels/1/messages')).rejects.toThrow(RateLimitError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry mutations by default', async () => {
+    const rm = new RequestManager({ retries: 3 });
     fetchMock.mockResolvedValueOnce({
       ok: false,
       status: 503,
@@ -319,13 +334,33 @@ describe('RequestManager', () => {
     expect(init.body.get('files[0]')).toBeTruthy();
   });
 
-  it('request uses full URL when route starts with http', async () => {
+  it('omits auth on external URLs unless explicitly requested', async () => {
     const rm = new RequestManager({ retries: 0 });
-    fetchMock.mockResolvedValueOnce(jsonResponse({}));
+    rm.setToken('bot-token');
+    fetchMock.mockResolvedValue(jsonResponse({}));
     await rm.request('GET', 'https://cdn.example.com/asset/123');
     expect(fetchMock).toHaveBeenCalledWith(
       'https://cdn.example.com/asset/123',
-      expect.objectContaining({ method: 'GET' }),
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.not.objectContaining({ Authorization: expect.anything() }),
+      }),
+    );
+
+    await rm.request('GET', 'https://api.fluxer.app/v1/gateway');
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      'https://api.fluxer.app/v1/gateway',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bot bot-token' }),
+      }),
+    );
+
+    await rm.request('GET', 'https://cdn.example.com/private', { auth: true });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      'https://cdn.example.com/private',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bot bot-token' }),
+      }),
     );
   });
 

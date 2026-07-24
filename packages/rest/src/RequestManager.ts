@@ -15,6 +15,7 @@ export interface RequestOptions {
   body?: unknown | FormData;
   headers?: Record<string, string>;
   files?: AttachmentPayload[];
+  /** Include the configured token. Defaults to false for cross-origin absolute URLs. */
   auth?: boolean;
   /** Aborts the request when triggered (e.g. shutdown). Combined with the client timeout. */
   signal?: AbortSignal;
@@ -26,13 +27,13 @@ export interface RetryPolicyContext {
   method: string;
   /** Sanitized route metadata for policy matching. */
   routeKey: string;
-  /** Validated fallback retry budget from the REST configuration. */
+  /** Validated retry budget from the REST configuration. */
   defaultRetries: number;
 }
 
 /**
  * Resolves the retry budget for one logical request.
- * Return `undefined` to retain the configured default.
+ * Return `undefined` to retain the method's default.
  */
 export type RetryPolicy = (context: RetryPolicyContext) => number | undefined;
 
@@ -41,7 +42,9 @@ export interface RestOptions {
   version: string;
   authPrefix: 'Bot' | 'Bearer';
   timeout: number;
+  /** Configured retry count for safe methods and retry policies. */
   retries: number;
+  /** Per-request override; required to opt mutations into automatic retries. */
   retryPolicy?: RetryPolicy;
   userAgent: string;
 }
@@ -50,6 +53,7 @@ const ROUTE_HASH_CACHE_MAX = 1000;
 const SNOWFLAKE_RE = /\d{17,19}/g;
 const MAJOR_PARAMETER_RE = /\/(channels|guilds|webhooks)\/(\d{17,19})(?:\/|$)/;
 const WEBHOOK_TOKEN_RE = /(\/webhooks\/(?::id|\d{17,19})\/)[^/]+/;
+const DEFAULT_RETRY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 function abortError(): Error {
   const err = new Error('The operation was aborted');
@@ -155,6 +159,20 @@ function getRetryPolicyRouteKey(route: string): string {
     .replace(WEBHOOK_TOKEN_RE, '$1:token');
 }
 
+function getErrorPath(route: string, baseUrl: string): string {
+  let path = stripQueryAndFragment(route);
+  if (route.startsWith('http')) {
+    try {
+      const url = new URL(route);
+      if (url.origin !== new URL(baseUrl).origin) return `${url.origin}/:external`;
+      path = url.pathname;
+    } catch {
+      return ':external';
+    }
+  }
+  return path.replace(WEBHOOK_TOKEN_RE, '$1:token');
+}
+
 /** Flatten Error.cause chain so "fetch failed" surfaces the real undici/network reason. */
 function formatErrorChain(err: Error, maxDepth = 4): string {
   const parts: string[] = [];
@@ -248,12 +266,21 @@ export class RequestManager {
   private buildHeaders(
     options: RequestOptions,
     body: string | FormData | undefined,
+    route: string,
   ): Record<string, string> {
     const headers: Record<string, string> = {
       'User-Agent': this.options.userAgent,
       ...options.headers,
     };
-    if (options.auth !== false && this.token) {
+    let useAuth = options.auth !== false;
+    if (useAuth && options.auth !== true && route.startsWith('http')) {
+      try {
+        useAuth = new URL(route).origin === new URL(this.baseUrl).origin;
+      } catch {
+        useAuth = false;
+      }
+    }
+    if (useAuth && this.token) {
       headers.Authorization = `${this.options.authPrefix} ${this.token}`;
     }
     if (body !== undefined && !(body instanceof FormData)) {
@@ -296,9 +323,10 @@ export class RequestManager {
   async request<T>(method: string, route: string, options: RequestOptions = {}): Promise<T> {
     const routeHash = this.getRouteHash(method, route);
     const retries = this.resolveRetries(method, getRetryPolicyRouteKey(route));
+    const errorPath = getErrorPath(route, this.baseUrl);
     const url = route.startsWith('http') ? route : `${this.baseUrl}${route}`;
     const body = this.buildBody(options);
-    const headers = this.buildHeaders(options, body);
+    const headers = this.buildHeaders(options, body, route);
     const userSignal = options.signal;
     let lastError: Error | null = null;
 
@@ -346,7 +374,7 @@ export class RequestManager {
           const err = new RateLimitError(
             { ...data, code: 'RATE_LIMITED', retry_after: retryAfterSec },
             response.status,
-            { method, path: route },
+            { method, path: errorPath },
           );
           if (attempt < retries) {
             lastError = err;
@@ -357,7 +385,7 @@ export class RequestManager {
         }
 
         if (!response.ok) {
-          const err = await this.parseError(response, method, route);
+          const err = await this.parseError(response, method, errorPath);
           if (err.isRetryable && attempt < retries) {
             lastError = err;
             await sleep(backoffMs(attempt), userSignal);
@@ -410,13 +438,18 @@ export class RequestManager {
   }
 
   private resolveRetries(method: string, routeKey: string): number {
-    const retries = this.options.retryPolicy?.({
+    const fallbackRetries = DEFAULT_RETRY_METHODS.has(method.toUpperCase())
+      ? this.options.retries
+      : 0;
+    if (!this.options.retryPolicy) return fallbackRetries;
+
+    const retries = this.options.retryPolicy({
       method,
       routeKey,
       defaultRetries: this.options.retries,
     });
 
-    if (retries === undefined) return this.options.retries;
+    if (retries === undefined) return fallbackRetries;
     return validateRetryCount(retries, 'Retry policy result');
   }
 }

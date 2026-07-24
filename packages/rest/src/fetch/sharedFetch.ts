@@ -6,8 +6,8 @@
  * undici Agent into Node's built-in fetch (a different bundled undici)
  * fails with UND_ERR_INVALID_ARG: invalid onRequestStart method.
  *
- * Keep undici on v7 (>=7.28 for security patches) so we stay compatible
- * with engines.node >=20 (undici v8 requires Node >=22.19).
+ * Keep undici on v7 (>=7.28 for security patches) because undici v8
+ * requires Node >=22.19, above the current engines.node >=22.13.
  */
 
 import { Agent, fetch as undiciFetch } from 'undici';

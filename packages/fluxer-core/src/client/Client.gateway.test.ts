@@ -15,6 +15,15 @@ describe('Client gateway helpers and dispatch', () => {
     client = new Client();
   });
 
+  it('applies configured cache limits', () => {
+    client = new Client({ cache: { guilds: 1, channels: 1, users: 1 } });
+    for (const manager of [client.guilds, client.channels, client.users]) {
+      manager.set('1', {} as never);
+      manager.set('2', {} as never);
+      expect([...manager.keys()]).toEqual(['2']);
+    }
+  });
+
   it('hydrates nested READY guild properties before caching', async () => {
     hydrateReadyGuilds(
       client,

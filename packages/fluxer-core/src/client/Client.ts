@@ -81,11 +81,11 @@ export class Client extends EventEmitter {
    */
   readonly instance: ResolvedInstance;
   /** Guild cache and manager. */
-  readonly guilds = new GuildManager(this);
+  readonly guilds: GuildManager;
   /** Channel cache and manager. */
-  readonly channels = new ChannelManager(this);
+  readonly channels: ChannelManager;
   /** User cache and manager. */
-  readonly users = new UserManager(this);
+  readonly users: UserManager;
   /** Emoji/sticker pack REST wrappers (`/packs/*`). */
   readonly packs = new PackManager(this);
   /** Typed event handlers. Prefer `client.events.*` or `client.on(Events.*, ...)`. */
@@ -113,6 +113,9 @@ export class Client extends EventEmitter {
       cache: { ...DEFAULT_CACHE_LIMITS, ...options.cache },
       defaultReplyPing: options.defaultReplyPing ?? true,
     };
+    this.guilds = new GuildManager(this);
+    this.channels = new ChannelManager(this);
+    this.users = new UserManager(this);
     const restApi = options.rest?.api;
     if (options.instance !== undefined) {
       this.instance = resolveInstanceEndpoints(options.instance);
