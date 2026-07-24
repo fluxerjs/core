@@ -66,16 +66,29 @@ describe('RateLimitManager', () => {
   });
 
   it('updateFromHeaders parses X-RateLimit headers', () => {
-    const resetSeconds = Math.floor(Date.now() / 1000) + 60;
+    const route = 'GET /channels/11111111111111111/messages';
+    const sharedRoute = 'POST /channels/11111111111111111/messages';
+    const otherChannel = 'GET /channels/22222222222222222/messages';
     const headers = new Headers({
       'X-RateLimit-Limit': '5',
       'X-RateLimit-Remaining': '2',
-      'X-RateLimit-Reset': String(resetSeconds),
+      'X-RateLimit-Reset-After': '1.5',
+      'X-RateLimit-Bucket': 'bucket-1',
     });
-    manager.updateFromHeaders('/channels/123', headers);
-    const bucket = manager.getBucket('/channels/123');
+    manager.updateFromHeaders(route, headers);
+    const bucket = manager.getBucket(route);
     expect(bucket?.limit).toBe(5);
     expect(bucket?.remaining).toBe(2);
+    expect(bucket?.resetAt).toBeGreaterThan(Date.now() + 1_000);
+
+    const sharedHeaders = new Headers(headers);
+    sharedHeaders.set('X-RateLimit-Remaining', '1');
+    manager.updateFromHeaders(sharedRoute, sharedHeaders);
+    const otherHeaders = new Headers(headers);
+    otherHeaders.set('X-RateLimit-Remaining', '4');
+    manager.updateFromHeaders(otherChannel, otherHeaders);
+    expect(manager.getBucket(route)?.remaining).toBe(1);
+    expect(manager.getBucket(otherChannel)?.remaining).toBe(4);
   });
 
   it('updateFromHeaders ignores Retry-After (handled on 429 path)', () => {

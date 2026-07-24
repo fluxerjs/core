@@ -49,7 +49,15 @@ function emitReaction(event: string): DispatchHandler {
 
     const reaction = new MessageReaction(client, data);
 
-    const user = client.getOrCreateUser(unknownUser(data.user_id));
+    const guild = data.guild_id ? client.guilds.get(data.guild_id) : undefined;
+    const member =
+      guild && data.member
+        ? cacheMember(client, guild, { ...data.member, guild_id: data.guild_id })
+        : null;
+    const user =
+      member?.user ??
+      client.users.get(data.user_id) ??
+      client.getOrCreateUser(unknownUser(data.user_id));
 
     const payload: MessageReactionPayload = {
       reaction,

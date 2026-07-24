@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { Client } from '@fluxerjs/core';
 import { VoiceManager, VoiceConnection, LiveKitRtcConnection, getVoiceManager } from './index.js';
 
 describe('@fluxerjs/voice exports', () => {
@@ -22,17 +23,17 @@ describe('@fluxerjs/voice exports', () => {
     expect(typeof getVoiceManager).toBe('function');
   });
 
-  it('getVoiceManager returns VoiceManager for mock client', () => {
-    const mockClient = { on: () => {} };
-    const manager = getVoiceManager(mockClient);
+  it('getVoiceManager returns VoiceManager for a client', () => {
+    const client = new Client();
+    const manager = getVoiceManager(client);
     expect(manager).toBeInstanceOf(VoiceManager);
     expect(typeof manager.join).toBe('function');
   });
 
   it('getVoiceManager returns same instance for same client', () => {
-    const mockClient = { on: () => {} };
-    const m1 = getVoiceManager(mockClient);
-    const m2 = getVoiceManager(mockClient);
+    const client = new Client();
+    const m1 = getVoiceManager(client);
+    const m2 = getVoiceManager(client);
     expect(m1).toBe(m2);
   });
 });

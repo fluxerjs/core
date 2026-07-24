@@ -208,6 +208,8 @@ export interface GatewayMessageReactionAddDispatchData {
   user_id: Snowflake;
   /** Guild ID (if guild message). */
   guild_id?: Snowflake;
+  /** Member snapshot (if guild message). */
+  member?: APIGuildMember;
   /** Emoji used. */
   emoji: GatewayReactionEmoji;
 }
@@ -244,6 +246,8 @@ export interface GatewayMessageReactionRemoveDispatchData {
   user_id: Snowflake;
   /** Guild ID (if guild message). */
   guild_id?: Snowflake;
+  /** Member snapshot (if guild message). */
+  member?: APIGuildMember;
   /** Emoji removed. */
   emoji: GatewayReactionEmoji;
 }

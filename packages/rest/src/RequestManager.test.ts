@@ -173,6 +173,17 @@ describe('RequestManager', () => {
 
     await rm.request(
       'GET',
+      `/users/123456789012345678/profile#${'#'.repeat(256)}\nfragment-secret`,
+    );
+    expect(retryPolicy).toHaveBeenLastCalledWith({
+      method: 'GET',
+      routeKey: '/users/:id/profile',
+      defaultRetries: 3,
+    });
+    expect(JSON.stringify(retryPolicy.mock.lastCall)).not.toContain('fragment-secret');
+
+    await rm.request(
+      'GET',
       'https://user:password@cdn.example.com/private/path?signature=external-secret',
     );
     expect(retryPolicy).toHaveBeenLastCalledWith({
@@ -356,17 +367,19 @@ describe('RequestManager', () => {
   it('getRouteHash LRU keeps repeatedly used route when cache is full', () => {
     const rm = new RequestManager({});
     const getRouteHash = (
-      rm as unknown as { getRouteHash: (r: string) => string }
+      rm as unknown as { getRouteHash: (method: string, route: string) => string }
     ).getRouteHash.bind(rm);
     const hot = '/channels/11111111111111111';
     for (let i = 0; i < 1000; i++) {
-      getRouteHash(`/channels/${100000000000000000n + BigInt(i)}`);
+      getRouteHash('GET', `/channels/${100000000000000000n + BigInt(i)}`);
     }
-    getRouteHash(hot);
-    getRouteHash(hot);
+    getRouteHash('GET', hot);
+    getRouteHash('GET', hot);
     for (let i = 0; i < 999; i++) {
-      getRouteHash(`/guilds/${200000000000000000n + BigInt(i)}`);
+      getRouteHash('GET', `/guilds/${200000000000000000n + BigInt(i)}`);
     }
-    expect(getRouteHash(hot)).toBe('/channels/:id');
+    expect(getRouteHash('GET', hot)).toBe(`GET ${hot}`);
+    expect(getRouteHash('POST', hot)).toBe(`POST ${hot}`);
+    expect(getRouteHash('GET', '/channels/22222222222222222')).not.toBe(`GET ${hot}`);
   });
 });

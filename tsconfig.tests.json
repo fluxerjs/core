@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "packages/voice/src/mp4box.d.ts",
+    "packages/voice/src/ws.d.ts"
+  ],
+  "exclude": ["**/node_modules/**", "**/dist/**"]
+}

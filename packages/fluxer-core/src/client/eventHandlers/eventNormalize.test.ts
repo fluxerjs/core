@@ -55,6 +55,31 @@ describe('eventNormalize', () => {
     });
   });
 
+  it('does not replace a cached user with reaction placeholder data', async () => {
+    const user = client.getOrCreateUser({
+      id: 'u1',
+      username: 'alice',
+      discriminator: '0',
+      global_name: 'Alice',
+      avatar: 'avatar',
+    });
+
+    await (
+      client as unknown as { handleDispatch: (payload: unknown) => Promise<void> }
+    ).handleDispatch({
+      op: 0,
+      t: 'MESSAGE_REACTION_ADD',
+      d: {
+        channel_id: 'c1',
+        message_id: 'm1',
+        user_id: 'u1',
+        emoji: { name: '✅' },
+      },
+    });
+
+    expect(user).toMatchObject({ username: 'alice', globalName: 'Alice', avatar: 'avatar' });
+  });
+
   it('GuildMemberUpdate emits distinct old vs new after nick change', async () => {
     const guild = sampleGuild(client);
     client.guilds.set(guild.id, guild);

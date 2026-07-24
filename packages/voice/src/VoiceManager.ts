@@ -16,6 +16,15 @@ import { Collection } from '@fluxerjs/collection';
 /** Maps guild_id -> user_id -> channel_id (null if not in voice). */
 export type VoiceStateMap = Map<string, Map<string, string | null>>;
 
+type PendingVoiceJoin = {
+  channel: VoiceChannel;
+  resolve: (connection: VoiceConnection | LiveKitRtcConnection) => void;
+  reject: (error: Error) => void;
+  server?: GatewayVoiceServerUpdateDispatchData;
+  state?: GatewayVoiceStateUpdateDispatchData;
+  connection?: VoiceConnection | LiveKitRtcConnection;
+};
+
 /**
  * Options for creating a VoiceManager.
  *
@@ -37,16 +46,7 @@ export class VoiceManager extends EventEmitter {
   /** guild_id -> user_id -> channel_id */
   readonly voiceStates: VoiceStateMap = new Map();
   /** channel_id -> pending join */
-  private readonly pending = new Map<
-    string,
-    {
-      channel: VoiceChannel;
-      resolve: (c: VoiceConnection | LiveKitRtcConnection) => void;
-      reject: (e: Error) => void;
-      server?: GatewayVoiceServerUpdateDispatchData;
-      state?: GatewayVoiceStateUpdateDispatchData;
-    }
-  >();
+  private readonly pending = new Map<string, PendingVoiceJoin>();
   private readonly shardId: number;
 
   constructor(client: Client, options: VoiceManagerOptions = {}) {
@@ -253,6 +253,7 @@ export class VoiceManager extends EventEmitter {
     const cid = conn.channel?.id ?? channelId;
     this.connections.set(cid, conn);
     conn.once('disconnect', () => {
+      if (this.connections.get(cid) !== conn) return;
       this.connections.delete(cid);
       this.connectionIds.delete(cid);
     });
@@ -283,17 +284,9 @@ export class VoiceManager extends EventEmitter {
     this.client.emit?.('debug', `[VoiceManager] Uploaded stream preview for ${streamKey}`);
   }
 
-  private tryCompletePending(
-    channelId: string,
-    pending: {
-      channel: VoiceChannel;
-      resolve: (c: VoiceConnection | LiveKitRtcConnection) => void;
-      reject: (e: Error) => void;
-      server?: GatewayVoiceServerUpdateDispatchData;
-      state?: GatewayVoiceStateUpdateDispatchData;
-    },
-  ): void {
+  private tryCompletePending(channelId: string, pending: PendingVoiceJoin): void {
     if (!pending?.server) return;
+    if (pending.connection) return;
 
     const useLiveKit = isLiveKitEndpoint(pending.server.endpoint, pending.server.token);
     const hasState = !!pending.state;
@@ -327,13 +320,33 @@ export class VoiceManager extends EventEmitter {
       channelId,
       pending.server.connection_id ?? (state as { connection_id?: string }).connection_id,
     );
-    this.pending.delete(channelId);
     const ConnClass = useLiveKit ? LiveKitRtcConnection : VoiceConnection;
     const conn = new ConnClass(this.client, pending.channel, userId);
+    pending.connection = conn;
     this.registerConnection(channelId, conn);
     conn.connect(pending.server, state).then(
-      () => pending.resolve(conn),
-      (e) => pending.reject(e),
+      () => {
+        if (this.pending.get(channelId) !== pending) {
+          if (this.connections.get(channelId) === conn) {
+            this.connections.delete(channelId);
+            this.connectionIds.delete(channelId);
+            conn.destroy();
+          }
+          return;
+        }
+        this.pending.delete(channelId);
+        pending.resolve(conn);
+      },
+      (e) => {
+        if (this.connections.get(channelId) === conn) {
+          this.connections.delete(channelId);
+          this.connectionIds.delete(channelId);
+          conn.destroy();
+        }
+        if (this.pending.get(channelId) !== pending) return;
+        this.pending.delete(channelId);
+        pending.reject(e);
+      },
     );
   }
 
@@ -357,28 +370,35 @@ export class VoiceManager extends EventEmitter {
         'debug',
         `[VoiceManager] Requesting voice join guild=${channel.guildId} channel=${channelId}`,
       );
-      const timeout = setTimeout(() => {
-        if (this.pending.has(channelId)) {
-          this.pending.delete(channelId);
-          reject(
-            new Error(
-              'Voice connection timeout. Ensure the server has voice enabled and the bot has Connect permissions. ' +
-                'The gateway must send VoiceServerUpdate and VoiceStateUpdate in response.',
-            ),
-          );
-        }
-      }, 20_000);
-      this.pending.set(channelId, {
+      let timeout: ReturnType<typeof setTimeout>;
+      const pending: PendingVoiceJoin = {
         channel,
-        resolve: (c) => {
+        resolve: (connection: VoiceConnection | LiveKitRtcConnection) => {
           clearTimeout(timeout);
-          resolve(c);
+          resolve(connection);
         },
-        reject: (e) => {
+        reject: (error: Error) => {
           clearTimeout(timeout);
-          reject(e);
+          reject(error);
         },
-      });
+      };
+      timeout = setTimeout(() => {
+        if (this.pending.get(channelId) === pending) {
+          this.pending.delete(channelId);
+          if (pending.connection && this.connections.get(channelId) === pending.connection) {
+            this.connections.delete(channelId);
+            this.connectionIds.delete(channelId);
+            pending.connection.destroy();
+          }
+        }
+        pending.reject(
+          new Error(
+            'Voice connection timeout. Ensure the server has voice enabled and the bot has Connect permissions. ' +
+              'The gateway must send VoiceServerUpdate and VoiceStateUpdate in response.',
+          ),
+        );
+      }, 20_000);
+      this.pending.set(channelId, pending);
       this.client.sendToGateway(this.shardId, {
         op: GatewayOpcodes.VoiceStateUpdate,
         d: {

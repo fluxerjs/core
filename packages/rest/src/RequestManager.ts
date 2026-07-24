@@ -48,7 +48,8 @@ export interface RestOptions {
 
 const ROUTE_HASH_CACHE_MAX = 1000;
 const SNOWFLAKE_RE = /\d{17,19}/g;
-const WEBHOOK_TOKEN_RE = /(\/webhooks\/:id\/)[^/]+/;
+const MAJOR_PARAMETER_RE = /\/(channels|guilds|webhooks)\/(\d{17,19})(?:\/|$)/;
+const WEBHOOK_TOKEN_RE = /(\/webhooks\/(?::id|\d{17,19})\/)[^/]+/;
 
 function abortError(): Error {
   const err = new Error('The operation was aborted');
@@ -130,7 +131,17 @@ function validateRetryCount(value: number, source: string): number {
   return value;
 }
 
-function getRetryPolicyRouteKey(route: string, routeHash: string): string {
+function stripQueryAndFragment(route: string): string {
+  const query = route.indexOf('?');
+  const fragment = route.indexOf('#');
+  const end = Math.min(
+    query === -1 ? route.length : query,
+    fragment === -1 ? route.length : fragment,
+  );
+  return route.slice(0, end);
+}
+
+function getRetryPolicyRouteKey(route: string): string {
   if (route.startsWith('http')) {
     try {
       return `${new URL(route).origin}/:external`;
@@ -139,7 +150,9 @@ function getRetryPolicyRouteKey(route: string, routeHash: string): string {
     }
   }
 
-  return routeHash.replace(/[?#].*$/, '').replace(WEBHOOK_TOKEN_RE, '$1:token');
+  return stripQueryAndFragment(route)
+    .replace(SNOWFLAKE_RE, ':id')
+    .replace(WEBHOOK_TOKEN_RE, '$1:token');
 }
 
 /** Flatten Error.cause chain so "fetch failed" surfaces the real undici/network reason. */
@@ -184,20 +197,35 @@ export class RequestManager {
     return `${this.options.api}/v${this.options.version}`;
   }
 
-  /** Hash route for rate limit bucket (path without snowflake ids). LRU via Map insertion order. */
-  private getRouteHash(route: string): string {
-    const cached = this.routeHashCache.get(route);
+  /** Hash route for rate limiting while preserving Fluxer's major resource parameter. */
+  private getRouteHash(method: string, route: string): string {
+    const cacheKey = `${method.toUpperCase()} ${route}`;
+    const cached = this.routeHashCache.get(cacheKey);
     if (cached !== undefined) {
-      this.routeHashCache.delete(route);
-      this.routeHashCache.set(route, cached);
+      this.routeHashCache.delete(cacheKey);
+      this.routeHashCache.set(cacheKey, cached);
       return cached;
     }
-    const hash = route.replace(SNOWFLAKE_RE, ':id');
+    let path = stripQueryAndFragment(route);
+    if (route.startsWith('http')) {
+      try {
+        const url = new URL(route);
+        path = `${url.origin}${url.pathname}`;
+      } catch {
+        // Keep the caller-supplied route; fetch will report the invalid URL.
+      }
+    }
+    const major = path.match(MAJOR_PARAMETER_RE);
+    let normalized = path.replace(SNOWFLAKE_RE, ':id');
+    if (major) {
+      normalized = normalized.replace(`/${major[1]}/:id`, `/${major[1]}/${major[2]}`);
+    }
+    const hash = `${method.toUpperCase()} ${normalized.replace(WEBHOOK_TOKEN_RE, '$1:token')}`;
     if (this.routeHashCache.size >= ROUTE_HASH_CACHE_MAX) {
       const first = this.routeHashCache.keys().next().value;
       if (first !== undefined) this.routeHashCache.delete(first);
     }
-    this.routeHashCache.set(route, hash);
+    this.routeHashCache.set(cacheKey, hash);
     return hash;
   }
 
@@ -266,8 +294,8 @@ export class RequestManager {
   }
 
   async request<T>(method: string, route: string, options: RequestOptions = {}): Promise<T> {
-    const routeHash = this.getRouteHash(route);
-    const retries = this.resolveRetries(method, getRetryPolicyRouteKey(route, routeHash));
+    const routeHash = this.getRouteHash(method, route);
+    const retries = this.resolveRetries(method, getRetryPolicyRouteKey(route));
     const url = route.startsWith('http') ? route : `${this.baseUrl}${route}`;
     const body = this.buildBody(options);
     const headers = this.buildHeaders(options, body);

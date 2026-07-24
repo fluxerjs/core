@@ -31,8 +31,10 @@
     "check:boundaries": "pnpm exec tsx scripts/check-package-boundaries.ts",
     "check:exports": "pnpm exec tsx scripts/api-surface/check.ts",
     "snapshot:exports": "pnpm exec tsx scripts/api-surface/snapshot.ts",
-    "typecheck": "pnpm exec tsc -b packages/types packages/util packages/collection packages/rest packages/ws packages/builders packages/fluxer-core --pretty false",
-    "gate:pre-merge": "pnpm run format:check && pnpm run lint && pnpm run openapi:verify && pnpm run check:boundaries && pnpm run generate:types && pnpm run test:all",
+    "typecheck:packages": "pnpm exec tsc -b packages/types packages/util packages/collection packages/rest packages/ws packages/builders packages/fluxer-core packages/voice --pretty false",
+    "typecheck:tests": "pnpm exec tsc -p tsconfig.tests.json --pretty false",
+    "typecheck": "pnpm run typecheck:packages && pnpm run typecheck:tests",
+    "gate:pre-merge": "pnpm run format:check && pnpm run lint && pnpm run openapi:verify && pnpm run check:boundaries && pnpm run generate:types && pnpm run typecheck && pnpm run test:all",
     "generate:emoji": "pnpm exec tsx scripts/generate-emoji-shortcodes.ts",
     "generate:docs": "pnpm exec tsx scripts/generate-docs.ts",
     "docs:generate": "turbo run generate:docs",
@@ -55,12 +57,12 @@
     "@fluxerjs/util": "workspace:*",
     "@fluxerjs/voice": "workspace:*",
     "@fluxerjs/ws": "workspace:*",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "lint-staged": "^16.2.7",
     "tsx": "^4.19.0",
-    "turbo": "^2.3.0",
+    "turbo": "^2.9.14",
     "typescript": "^5.6.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   },
   "packageManager": "pnpm@11.6.0",
   "engines": {
