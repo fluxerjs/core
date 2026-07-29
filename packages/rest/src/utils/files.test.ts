@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { Request } from 'undici';
+import { describe, expect, it } from 'vitest';
 import { buildFormData } from './files.js';
 
 describe('buildFormData', () => {
@@ -33,5 +34,15 @@ describe('buildFormData', () => {
     const form = buildFormData(payload, files);
     const parsed = JSON.parse(form.get('payload_json') as string);
     expect(parsed.attachments[0].description).toBe('desc');
+  });
+
+  it('serializes as multipart with undici', async () => {
+    const form = buildFormData({ content: 'With file' }, [
+      { name: 'test.txt', data: new Uint8Array([1, 2, 3]) },
+    ]);
+    const request = new Request('https://example.com', { method: 'POST', body: form });
+
+    expect(request.headers.get('content-type')).toMatch(/^multipart\/form-data; boundary=/);
+    expect(await request.text()).toContain('name="payload_json"');
   });
 });

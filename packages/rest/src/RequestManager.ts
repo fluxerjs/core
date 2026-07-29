@@ -1,4 +1,5 @@
 import type { APIErrorBody, RateLimitErrorBody } from '@fluxerjs/types';
+import { FormData } from 'undici';
 import { FluxerAPIError, HTTPError, RateLimitError } from './errors/index.js';
 import { sharedFetch } from './fetch/sharedFetch.js';
 import { RateLimitManager } from './RateLimitManager.js';

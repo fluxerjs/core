@@ -1,3 +1,4 @@
+import { FormData } from 'undici';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FluxerAPIError, HTTPError, RateLimitError } from './errors/index.js';
 import { sharedFetch } from './fetch/sharedFetch.js';

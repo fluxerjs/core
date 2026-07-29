@@ -1,3 +1,5 @@
+import { FormData } from 'undici';
+
 /**
  * Multipart builder matching fluxer_api parseMultipartMessageData:
  * payload_json + files[0], files[1], ...

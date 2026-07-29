@@ -26,9 +26,9 @@ function getSharedAgent(): Agent {
 
 type UndiciRequestInit = NonNullable<Parameters<typeof undiciFetch>[1]>;
 
-export function sharedFetch(input: string | URL, init?: RequestInit): Promise<Response> {
+export function sharedFetch(input: string | URL, init?: UndiciRequestInit): Promise<Response> {
   const undiciInit: UndiciRequestInit = {
-    ...(init as UndiciRequestInit | undefined),
+    ...init,
     dispatcher: getSharedAgent(),
   };
   return undiciFetch(input, undiciInit) as unknown as Promise<Response>;
