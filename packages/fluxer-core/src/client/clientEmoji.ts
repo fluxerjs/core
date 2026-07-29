@@ -26,23 +26,6 @@ import type { Client } from './Client.js';
 import { toBulkFetchWire, type BulkFetchMessagesRequest } from './sdkOptions.js';
 
 /**
- * Asserts that a custom emoji (by id) belongs to the given guild.
- * @throws FluxerError with EMOJI_NOT_IN_GUILD if the emoji is not in the guild
- */
-export async function assertEmojiInGuild(
-  client: Client,
-  emojiId: string,
-  guildId: string,
-): Promise<void> {
-  const emojis = await client.rest.get<APIEmoji[]>(Routes.guildEmojis(guildId));
-  if (!emojis.some((e) => e.id === emojiId)) {
-    throw new FluxerError('Custom emoji is from another server. Use an emoji from this server.', {
-      code: ErrorCodes.EmojiNotInGuild,
-    });
-  }
-}
-
-/**
  * Resolve an emoji argument to the API format (unicode or "name:id").
  * Supports: <:name:id>, :name:, name:id, { name, id }, unicode.
  * When id is missing (e.g. :name:), fetches guild emojis if guildId provided.
@@ -53,7 +36,6 @@ export async function resolveClientEmoji(
   guildId?: string | null,
 ): Promise<string> {
   if (typeof emoji === 'object' && emoji.id) {
-    if (guildId) await assertEmojiInGuild(client, emoji.id, guildId);
     return formatEmoji({ name: emoji.name, id: emoji.id, animated: emoji.animated });
   }
   const parsed = parseEmoji(
@@ -63,7 +45,6 @@ export async function resolveClientEmoji(
     throw new FluxerError('Invalid emoji', { code: ErrorCodes.InvalidEmoji });
   }
   if (parsed.id) {
-    if (guildId) await assertEmojiInGuild(client, parsed.id, guildId);
     return formatEmoji(parsed);
   }
   if (!/^\w+$/.test(parsed.name)) return parsed.name;
