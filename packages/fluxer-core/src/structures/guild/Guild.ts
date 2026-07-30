@@ -11,13 +11,13 @@ import type {
 import { GuildNSFWLevel } from '@fluxerjs/types';
 import type { Client } from '../../client/Client.js';
 import type { AuditLogFetchPayload, VanityURLPayload } from '../../client/eventPayloads.js';
+import { GuildMemberManager } from '../../client/GuildMemberManager.js';
 import type {
   DiscoveryApplicationOptions,
   DiscoveryApplicationPayload,
   DiscoveryStatusPayload,
   SudoVerificationOptions,
 } from '../../client/sdkOptions.js';
-import { GuildMemberManager } from '../../client/GuildMemberManager.js';
 import { Base } from '../Base.js';
 import type { GuildChannel } from '../Channel.js';
 import type { GuildBan } from '../GuildBan.js';
@@ -93,6 +93,8 @@ export class Guild extends Base {
   splashWidth?: number | null;
   /** Splash height in pixels. */
   splashHeight?: number | null;
+  /** Last known member count, or null if no count has been received. */
+  memberCount: number | null;
   /** Member manager for this guild (fetch/add/remove members). */
   members: GuildMemberManager;
   /** Cached channels in this guild. */
@@ -133,6 +135,7 @@ export class Guild extends Base {
     this.bannerHeight = data.banner_height ?? null;
     this.splashWidth = data.splash_width ?? null;
     this.splashHeight = data.splash_height ?? null;
+    this.memberCount = data.member_count ?? null;
     for (const r of data.roles ?? []) {
       this.roles.set(r.id, new Role(client, r, this.id));
     }
@@ -167,6 +170,7 @@ export class Guild extends Base {
     if (data.banner_height !== undefined) this.bannerHeight = data.banner_height ?? null;
     if (data.splash_width !== undefined) this.splashWidth = data.splash_width ?? null;
     if (data.splash_height !== undefined) this.splashHeight = data.splash_height ?? null;
+    if (data.member_count !== undefined) this.memberCount = data.member_count ?? null;
   }
 
   /** Get the full CDN URL for the guild's icon (or null). */

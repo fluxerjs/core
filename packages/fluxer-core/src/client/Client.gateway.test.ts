@@ -3,6 +3,7 @@ import { Routes } from '@fluxerjs/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Guild } from '../structures/Guild.js';
 import { Invite } from '../structures/Invite.js';
+import { fixtureGuild } from '../test/fixtures.js';
 import { Events } from '../util/Events.js';
 import { Client } from './Client.js';
 import { ClientUser } from './ClientUser.js';
@@ -44,6 +45,7 @@ describe('Client gateway helpers and dispatch', () => {
             mfa_level: 0,
             explicit_content_filter: 2,
             default_message_notifications: 1,
+            member_count: 42,
           },
           channels: [],
           roles: [],
@@ -68,8 +70,30 @@ describe('Client gateway helpers and dispatch', () => {
       verificationLevel: 1,
       explicitContentFilter: 2,
       defaultMessageNotifications: 1,
+      memberCount: 42,
     });
     expect(get).not.toHaveBeenCalled();
+  });
+
+  it('updates cached guild member counts from GUILD_COUNTS_UPDATE', async () => {
+    const guild = new Guild(client, fixtureGuild());
+    client.guilds.set(guild.id, guild);
+    const emit = vi.spyOn(client, 'emit');
+
+    await (
+      client as unknown as { handleDispatch: (payload: unknown) => Promise<void> }
+    ).handleDispatch({
+      op: 0,
+      t: 'GUILD_COUNTS_UPDATE',
+      d: {
+        counts: [{ guild_id: guild.id, member_count: 43, online_count: 7 }],
+      },
+    });
+
+    expect(guild.memberCount).toBe(43);
+    expect(emit).toHaveBeenCalledWith(Events.GuildCountsUpdate, {
+      counts: [{ guildId: guild.id, memberCount: 43, onlineCount: 7 }],
+    });
   });
 
   it('fetchGatewayInfo() fetches gateway metadata from /gateway/bot', async () => {

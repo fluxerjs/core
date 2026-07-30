@@ -309,6 +309,8 @@ export interface APIGuild {
   message_history_cutoff?: string | null;
   /** Permissions for the current user in this guild (bitfield string). */
   permissions?: string | null;
+  /** Member count when included in the guild payload. */
+  member_count?: number;
 }
 
 /** Audit log entry from GET /guilds/{id}/audit-logs. */

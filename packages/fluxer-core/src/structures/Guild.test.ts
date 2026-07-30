@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { Guild, type Client } from '../';
+import { describe, expect, it } from 'vitest';
+import { type Client, Guild } from '../';
+import { fixtureGuild } from '../test/fixtures.js';
 import { DEFAULT_INSTANCE_ENDPOINTS } from '../util/instance.js';
 
 function createMockClient() {
@@ -84,6 +85,28 @@ describe('Guild', () => {
       const guild = createGuild({ id: 'custom123' });
       expect(guild.id).toBe('custom123');
       expect(guild.name).toBe('Test Guild');
+    });
+
+    it('preserves the member count when provided', () => {
+      const guild = new Guild(createMockClient(), fixtureGuild({ member_count: 42 }));
+      expect(guild.memberCount).toBe(42);
+    });
+
+    it('uses null when no member count is provided', () => {
+      const guild = new Guild(createMockClient(), fixtureGuild());
+      expect(guild.memberCount).toBeNull();
+    });
+  });
+
+  describe('_patch()', () => {
+    it('updates the member count only when provided', () => {
+      const guild = new Guild(createMockClient(), fixtureGuild({ member_count: 42 }));
+
+      guild._patch(fixtureGuild({ member_count: 43 }));
+      expect(guild.memberCount).toBe(43);
+
+      guild._patch(fixtureGuild());
+      expect(guild.memberCount).toBe(43);
     });
   });
 });

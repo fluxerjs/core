@@ -19,7 +19,7 @@ import type {
   WebhooksUpdatePayload,
 } from '../eventPayloads.js';
 
-import { pass, type HandlerMap } from './types.js';
+import { type HandlerMap, pass } from './types.js';
 
 function toPresence(data: GatewayPresenceUpdateDispatchData): PresenceUpdatePayload {
   const custom = data.custom_status;
@@ -123,14 +123,18 @@ export const passthroughHandlers: HandlerMap = {
   GUILD_COUNTS_UPDATE(client, d) {
     const data = d as GatewayGuildCountsUpdateDispatchData;
 
+    const counts = (data.counts ?? []).map((c) => ({
+      guildId: c.guild_id,
+      memberCount: c.member_count,
+      onlineCount: c.online_count,
+    }));
+    for (const count of counts) {
+      const guild = client.guilds.get(count.guildId);
+      if (guild) guild.memberCount = count.memberCount;
+    }
+
     const payload: GuildCountsUpdatePayload = {
-      counts: (data.counts ?? []).map((c) => ({
-        guildId: c.guild_id,
-
-        memberCount: c.member_count,
-
-        onlineCount: c.online_count,
-      })),
+      counts,
     };
 
     client.emit(Events.GuildCountsUpdate, payload);

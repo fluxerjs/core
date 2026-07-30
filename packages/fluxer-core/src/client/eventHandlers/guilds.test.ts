@@ -90,6 +90,27 @@ describe('guild availability lifecycle', () => {
     });
   });
 
+  it('preserves the last known member count when a repeated GUILD_CREATE omits it', async () => {
+    const client = new Client({ gatewayDeferHandlers: false });
+    const existing = new Guild(client, { ...guildPayload('Existing guild'), member_count: 42 });
+    existing.memberCount = 43;
+    client.guilds.set(existing.id, existing);
+
+    await dispatch(client, 'GUILD_CREATE', guildPayload('Refreshed guild'));
+
+    expect(client.guilds.get(existing.id)).toMatchObject({
+      name: 'Refreshed guild',
+      memberCount: 43,
+    });
+
+    await dispatch(client, 'GUILD_CREATE', {
+      ...guildPayload('Counted guild'),
+      member_count: 44,
+    });
+
+    expect(client.guilds.get(existing.id)?.memberCount).toBe(44);
+  });
+
   it('treats GUILD_UPDATE as flat when it contains a properties field', async () => {
     const client = new Client({ gatewayDeferHandlers: false });
     const guild = new Guild(client, guildPayload('Before update'));

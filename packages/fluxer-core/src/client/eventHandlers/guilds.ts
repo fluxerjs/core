@@ -73,6 +73,9 @@ export const guildHandlers: HandlerMap = {
     const recovered = existing?.available === false;
     const guild = recovered && existing ? existing : new Guild(client, guildData);
 
+    if (existing && guild !== existing && guildData.member_count === undefined) {
+      guild.memberCount = existing.memberCount;
+    }
     if (recovered) {
       guild._patch(guildData);
       refreshRecoveredGuild(guild, g);
