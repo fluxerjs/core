@@ -25,6 +25,11 @@ import {
   TrackKind,
 } from '@livekit/rtc-node';
 import { buildLiveKitUrlForRtcSdk } from './livekit.js';
+import {
+  disconnectLiveKitRoom,
+  registerLiveKitRoom,
+  releaseLiveKitRoom,
+} from './livekitRuntime.js';
 import { parseOpusPacketBoundaries, concatUint8Arrays } from './opusUtils.js';
 import { VoiceConnectionEvents } from './VoiceConnection.js';
 import { createReadStream } from 'node:fs';
@@ -490,10 +495,13 @@ export class LiveKitRtcConnection extends EventEmitter {
 
     try {
       const room = new Room();
+      registerLiveKitRoom(room);
       this.room = room;
 
       room.on(RoomEvent.Disconnected, () => {
         this.debug('Room disconnected');
+        releaseLiveKitRoom(room);
+        if (this.room === room) this.room = null;
         this.lastServerEndpoint = null;
         this.lastServerToken = null;
         setImmediate(() => this.emit('serverLeave'));
@@ -559,6 +567,9 @@ export class LiveKitRtcConnection extends EventEmitter {
       this.debug('connected to room');
       this.emit('ready');
     } catch (e) {
+      if (this.room) {
+        disconnectLiveKitRoom(this.room);
+      }
       this.room = null;
       const err = e instanceof Error ? e : new Error(String(e));
       this.emit('error', err);
@@ -1772,7 +1783,7 @@ export class LiveKitRtcConnection extends EventEmitter {
     this._destroyed = true;
     this.stop();
     if (this.room) {
-      this.room.disconnect().catch(() => {});
+      disconnectLiveKitRoom(this.room);
       this.room = null;
     }
     this.lastServerEndpoint = null;

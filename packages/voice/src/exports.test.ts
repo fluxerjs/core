@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { Client } from '@fluxerjs/core';
-import { VoiceManager, VoiceConnection, LiveKitRtcConnection, getVoiceManager } from './index.js';
+import {
+  VoiceManager,
+  VoiceConnection,
+  LiveKitRtcConnection,
+  getVoiceManager,
+  shutdownLiveKit,
+} from './index.js';
 
 describe('@fluxerjs/voice exports', () => {
   it('exports VoiceManager class', () => {
@@ -21,6 +27,10 @@ describe('@fluxerjs/voice exports', () => {
   it('exports getVoiceManager function', () => {
     expect(getVoiceManager).toBeDefined();
     expect(typeof getVoiceManager).toBe('function');
+  });
+
+  it('exports shutdownLiveKit function', () => {
+    expect(typeof shutdownLiveKit).toBe('function');
   });
 
   it('getVoiceManager returns VoiceManager for a client', () => {

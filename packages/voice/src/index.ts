@@ -7,6 +7,7 @@ export {
   type LiveKitReceiveSubscription,
   type VideoPlayOptions,
 } from './LiveKitRtcConnection.js';
+export { shutdownLiveKit } from './livekitRuntime.js';
 import { Client } from '@fluxerjs/core';
 import { VoiceChannel } from '@fluxerjs/core';
 import { VoiceManager } from './VoiceManager.js';

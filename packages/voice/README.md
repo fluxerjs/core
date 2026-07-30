@@ -40,3 +40,16 @@ voiceManager.leave(guildId);
 ```
 
 Use yt-dlp to get stream URLs from YouTube. For LiveKit, listen for `serverLeave` to reconnect.
+
+When the process is shutting down, leave every voice channel and dispose the shared LiveKit runtime:
+
+```javascript
+import { shutdownLiveKit } from '@fluxerjs/voice';
+
+voiceManager.leave(guildId);
+await shutdownLiveKit();
+await client.destroy();
+```
+
+`shutdownLiveKit()` is process-wide and final. Call it once during shutdown, after all LiveKit voice
+connections have been left. New LiveKit connections cannot be created afterward.
