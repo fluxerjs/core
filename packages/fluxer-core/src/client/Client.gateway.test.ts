@@ -75,6 +75,23 @@ describe('Client gateway helpers and dispatch', () => {
     expect(get).not.toHaveBeenCalled();
   });
 
+  it('preserves the last known member count when a repeated READY omits it', () => {
+    const existing = new Guild(client, fixtureGuild({ member_count: 42 }));
+    existing.memberCount = 43;
+    client.guilds.set(existing.id, existing);
+
+    hydrateReadyGuilds(client, [fixtureGuild({ name: 'Refreshed guild' })], false);
+
+    expect(client.guilds.get(existing.id)).toMatchObject({
+      name: 'Refreshed guild',
+      memberCount: 43,
+    });
+
+    hydrateReadyGuilds(client, [fixtureGuild({ name: 'Counted guild', member_count: 44 })], false);
+
+    expect(client.guilds.get(existing.id)?.memberCount).toBe(44);
+  });
+
   it('updates cached guild member counts from GUILD_COUNTS_UPDATE', async () => {
     const guild = new Guild(client, fixtureGuild());
     client.guilds.set(guild.id, guild);

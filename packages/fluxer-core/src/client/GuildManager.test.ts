@@ -4,7 +4,7 @@ import { fixtureGuild } from '../test/fixtures.js';
 import { Client } from './Client.js';
 
 describe('GuildManager', () => {
-  it('preserves member_count from fetched guilds', async () => {
+  it('preserves member_count from guilds fetched on a cache miss', async () => {
     const client = new Client();
     const data = fixtureGuild({ member_count: 42 });
     const get = vi.spyOn(client.rest, 'get').mockResolvedValue(data);

@@ -53,7 +53,11 @@ export function hydrateReadyGuilds(
     }
     const guildData = normalizeGuildSnapshotPayload(g as unknown);
     if (!guildData) continue;
+    const existing = client.guilds.get(guildData.id);
     const guild = new Guild(client, guildData);
+    if (existing && guildData.member_count === undefined) {
+      guild.memberCount = existing.memberCount;
+    }
     client.guilds.set(guild.id, guild);
     for (const ch of g.channels ?? []) {
       const channel = Channel.from(client, ch);
