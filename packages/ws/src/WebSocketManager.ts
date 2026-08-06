@@ -84,6 +84,18 @@ export class WebSocketManager extends EventEmitter {
     this.options = options;
   }
 
+  /** Average heartbeat latency across managed shards with a current sample. */
+  get ping(): number | null {
+    let total = 0;
+    let count = 0;
+    for (const shard of this.shards.values()) {
+      if (shard.ping === null) continue;
+      total += shard.ping;
+      count++;
+    }
+    return count === 0 ? null : total / count;
+  }
+
   async connect(): Promise<void> {
     this.aborted = false;
     const emitManagerError = (error: Error): void => {

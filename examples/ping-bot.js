@@ -35,27 +35,21 @@ function formatUptime(ms) {
   return parts.join(' ');
 }
 
-async function measureApiLatency(client) {
-  const start = Date.now();
-  try {
-    await client.rest.get(Routes.gatewayBot());
-  } catch {
-    // Round-trip only
-  }
-  return Date.now() - start;
-}
-
 /** @type {Map<string, { description: string, execute: Function }>} */
 const commands = new Map();
 
 commands.set('ping', {
-  description: 'Check API latency',
+  description: 'Check gateway latency',
   async execute(message, client) {
-    const apiLatency = await measureApiLatency(client);
+    const gatewayLatency = client.ws.ping;
     const embed = new EmbedBuilder()
       .setTitle('Pong!')
       .setColor(BRAND_COLOR)
-      .addFields({ name: 'API Latency', value: `\`${apiLatency}ms\``, inline: true })
+      .addFields({
+        name: 'Gateway Latency',
+        value: gatewayLatency === null ? '`Measuring…`' : `\`${gatewayLatency}ms\``,
+        inline: true,
+      })
       .setFooter({ text: 'Fluxer Bot' })
       .setTimestamp();
     await message.reply({ embeds: [embed] });
@@ -65,8 +59,8 @@ commands.set('ping', {
 commands.set('info', {
   description: 'Display bot information',
   async execute(message, client) {
-    const uptime = client.readyAt ? Date.now() - client.readyAt.getTime() : 0;
-    const apiLatency = await measureApiLatency(client);
+    const uptime = client.uptime;
+    const gatewayLatency = client.ws.ping;
     const embed = new EmbedBuilder()
       .setTitle('Bot Information')
       .setColor(BRAND_COLOR)
@@ -75,8 +69,16 @@ commands.set('info', {
         { name: 'Username', value: client.user?.username ?? 'Unknown', inline: true },
         { name: 'Guilds', value: `${client.guilds.size}`, inline: true },
         { name: 'Channels', value: `${client.channels.size}`, inline: true },
-        { name: 'Uptime', value: formatUptime(uptime), inline: true },
-        { name: 'API Latency', value: `${apiLatency}ms`, inline: true },
+        {
+          name: 'Uptime',
+          value: uptime === null ? 'Unavailable' : formatUptime(uptime),
+          inline: true,
+        },
+        {
+          name: 'Gateway Latency',
+          value: gatewayLatency === null ? 'Measuring…' : `${gatewayLatency}ms`,
+          inline: true,
+        },
         { name: 'Node.js', value: process.version, inline: true },
       )
       .setFooter({ text: 'Powered by @fluxerjs/core' })

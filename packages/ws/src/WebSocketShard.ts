@@ -148,6 +148,8 @@ export class WebSocketShard extends EventEmitter {
   private heartbeatTimeout: ReturnType<typeof setTimeout> | null = null;
   /** True until a heartbeat is sent; cleared by HeartbeatAck. */
   private lastHeartbeatAck = true;
+  private heartbeatSentAt: number | null = null;
+  private _ping: number | null = null;
   private sessionId: string | null = null;
   private seq: number | null = null;
   private reconnectDelayMs = RECONNECT_INITIAL_MS;
@@ -165,6 +167,11 @@ export class WebSocketShard extends EventEmitter {
     return this.options.shardId;
   }
 
+  /** Latest heartbeat round-trip latency in milliseconds. */
+  get ping(): number | null {
+    return this._ping;
+  }
+
   /** Mapped readyState: 0 idle/closed, 1 connecting, 2 open, 3 closing. */
   get status(): number {
     if (!this.ws) return 0;
@@ -178,6 +185,7 @@ export class WebSocketShard extends EventEmitter {
 
     this.clearReconnectTimer();
     this.phase = Phase.Connecting;
+    this.resetHeartbeatLatency();
     this.debug('Connecting');
 
     try {
@@ -206,6 +214,7 @@ export class WebSocketShard extends EventEmitter {
     this.phase = Phase.Destroyed;
     this.clearReconnectTimer();
     this.stopHeartbeat();
+    this.resetHeartbeatLatency();
     this.ws?.close(1000);
     this.ws = null;
     this.sessionId = null;
@@ -220,6 +229,10 @@ export class WebSocketShard extends EventEmitter {
         break;
       case GatewayOpcodes.HeartbeatAck:
         this.lastHeartbeatAck = true;
+        if (this.heartbeatSentAt !== null) {
+          this._ping = Math.max(0, Math.round(performance.now() - this.heartbeatSentAt));
+          this.heartbeatSentAt = null;
+        }
         break;
       case GatewayOpcodes.Dispatch:
         this.handleDispatch(payload);
@@ -296,6 +309,7 @@ export class WebSocketShard extends EventEmitter {
     this.phase = Phase.Idle;
     this.ws = null;
     this.stopHeartbeat();
+    this.resetHeartbeatLatency();
     this.emit('close', code);
     this.debug(`Closed: ${code}`);
     if (shouldReconnectOnClose(code)) this.scheduleReconnect();
@@ -312,6 +326,7 @@ export class WebSocketShard extends EventEmitter {
     }
     this.ws = null;
     this.stopHeartbeat();
+    this.resetHeartbeatLatency();
     this.debug('Connection error; will retry…');
     this.scheduleReconnect();
   }
@@ -384,8 +399,15 @@ export class WebSocketShard extends EventEmitter {
       this.ws?.close(1000);
       return;
     }
+    if (this.ws?.readyState !== 1) return;
     this.lastHeartbeatAck = false;
-    this.send({ op: GatewayOpcodes.Heartbeat, d: this.seq ?? null });
+    this.ws.send(
+      JSON.stringify({
+        op: GatewayOpcodes.Heartbeat,
+        d: this.seq ?? null,
+      } satisfies GatewaySendPayload),
+    );
+    this.heartbeatSentAt ??= performance.now();
   }
 
   private stopHeartbeat(): void {
@@ -397,6 +419,11 @@ export class WebSocketShard extends EventEmitter {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
     }
+  }
+
+  private resetHeartbeatLatency(): void {
+    this.heartbeatSentAt = null;
+    this._ping = null;
   }
 
   private scheduleReconnect(): void {

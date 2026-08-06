@@ -16,6 +16,16 @@ describe('Client gateway helpers and dispatch', () => {
     client = new Client();
   });
 
+  it('reports uptime from readyAt', () => {
+    expect(client.uptime).toBeNull();
+    client.readyAt = new Date(1_000);
+    const now = vi.spyOn(Date, 'now').mockReturnValue(2_500);
+
+    expect(client.uptime).toBe(1_500);
+
+    now.mockRestore();
+  });
+
   it('applies configured cache limits', () => {
     client = new Client({ cache: { guilds: 1, channels: 1, users: 1 } });
     for (const manager of [client.guilds, client.channels, client.users]) {

@@ -103,6 +103,10 @@ export class Client extends EventEmitter {
   user: ClientUser | null = null;
   /** Timestamp when the client became ready. Null until READY is received. */
   readyAt: Date | null = null;
+  /** Milliseconds since the client became ready. Null until READY is received. */
+  get uptime(): number | null {
+    return this.readyAt === null ? null : Date.now() - this.readyAt.getTime();
+  }
   /** @internal WebSocket manager. */
   _ws: WebSocketManager | null = null;
   /** When waitForGuilds, guild IDs still expected via GUILD_CREATE. */

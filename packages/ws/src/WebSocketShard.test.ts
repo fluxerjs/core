@@ -173,4 +173,53 @@ describe('WebSocketShard', () => {
     shard.handlePayload({ op: GatewayOpcodes.HeartbeatAck });
     expect((shard as unknown as { lastHeartbeatAck: boolean }).lastHeartbeatAck).toBe(true);
   });
+
+  it('measures heartbeat round-trip latency', () => {
+    const clock = vi.spyOn(performance, 'now').mockReturnValueOnce(100).mockReturnValueOnce(137);
+    const socket = new MockWebSocket('wss://gateway.fluxer.app');
+    const shard = new WebSocketShard({
+      url: 'wss://gateway.fluxer.app',
+      token: 'test-token',
+      intents: 0,
+      shardId: 0,
+      numShards: 1,
+      WebSocket: MockWebSocket,
+    });
+    (shard as unknown as { ws: MockWebSocket }).ws = socket;
+
+    (shard as unknown as { sendHeartbeat: () => void }).sendHeartbeat();
+    expect(shard.ping).toBeNull();
+
+    shard.handlePayload({ op: GatewayOpcodes.HeartbeatAck });
+    expect(shard.ping).toBe(37);
+
+    shard.destroy();
+    expect(shard.ping).toBeNull();
+    clock.mockRestore();
+  });
+
+  it('keeps the first timestamp when heartbeats overlap before an ack', () => {
+    let now = 100;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const socket = new MockWebSocket('wss://gateway.fluxer.app');
+    const shard = new WebSocketShard({
+      url: 'wss://gateway.fluxer.app',
+      token: 'test-token',
+      intents: 0,
+      shardId: 0,
+      numShards: 1,
+      WebSocket: MockWebSocket,
+    });
+    (shard as unknown as { ws: MockWebSocket }).ws = socket;
+
+    (shard as unknown as { sendHeartbeat: () => void }).sendHeartbeat();
+    now = 125;
+    shard.handlePayload({ op: GatewayOpcodes.Heartbeat });
+    now = 137;
+    shard.handlePayload({ op: GatewayOpcodes.HeartbeatAck });
+
+    expect(shard.ping).toBe(37);
+    shard.destroy();
+    clock.mockRestore();
+  });
 });
