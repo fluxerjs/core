@@ -164,6 +164,30 @@ describe('cache system', () => {
     expect(guild.name).toBe('Identity 3');
   });
 
+  it('only indexes channels that belong to the snapshot guild', () => {
+    const client = new Client({ gatewayDeferHandlers: false });
+    hydrateReadyGuilds(
+      client,
+      [
+        {
+          ...guildData('g1', 'Ownership'),
+          channels: [
+            { id: 'implied', type: 0, name: 'implied' } as never,
+            channelData('foreign', 'g2'),
+            { id: 'dm', type: 1, name: 'dm' } as never,
+          ],
+        },
+      ],
+      false,
+    );
+
+    const guild = client.guilds.get('g1')!;
+    expect(guild.channels.get('implied')?.guildId).toBe('g1');
+    expect(client.channels.get('implied')).toBe(guild.channels.get('implied'));
+    expect(client.channels.has('foreign')).toBe(false);
+    expect(client.channels.has('dm')).toBe(false);
+  });
+
   it('recovery reuses Guild, prunes absent channels, merges members', async () => {
     const client = new Client({ gatewayDeferHandlers: false });
     await guildHandlers.GUILD_CREATE!(client, {

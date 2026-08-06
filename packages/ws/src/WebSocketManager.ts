@@ -9,8 +9,17 @@ export type { WebSocketConstructor };
 const RETRY_INITIAL_MS = 1000;
 const RETRY_MAX_MS = 45_000;
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function sleep(ms: number, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return Promise.resolve();
+  return new Promise((resolve) => {
+    const timer = setTimeout(finish, ms);
+    function finish(): void {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', finish);
+      resolve();
+    }
+    signal.addEventListener('abort', finish, { once: true });
+  });
 }
 
 function isGatewayBotResponse(value: unknown): value is APIGatewayBotResponse {
@@ -33,20 +42,22 @@ function isNonRetryableError(err: unknown): boolean {
 }
 
 async function retryUntil<T>(
-  isAborted: () => boolean,
+  signal: AbortSignal,
   attempt: () => Promise<T>,
   onError: (error: Error) => void,
 ): Promise<T | null> {
   let delayMs = RETRY_INITIAL_MS;
-  while (!isAborted()) {
+  while (!signal.aborted) {
     try {
-      return await attempt();
+      const result = await attempt();
+      return signal.aborted ? null : result;
     } catch (err) {
+      if (signal.aborted) break;
       const error = err instanceof Error ? err : new Error(String(err));
       onError(error);
       // Auth / client errors must fail login — do not spin forever.
       if (isNonRetryableError(err)) throw error;
-      await sleep(delayMs);
+      await sleep(delayMs, signal);
       delayMs = Math.min(RETRY_MAX_MS, Math.floor(delayMs * 1.5));
     }
   }
@@ -78,6 +89,7 @@ export class WebSocketManager extends EventEmitter {
   private readonly shards = new Map<number, WebSocketShard>();
   private shardCount = 1;
   private aborted = false;
+  private retryAbort: AbortController | null = null;
 
   constructor(options: WebSocketManagerOptions) {
     super();
@@ -85,16 +97,21 @@ export class WebSocketManager extends EventEmitter {
   }
 
   async connect(): Promise<void> {
+    this.retryAbort?.abort();
+    this.destroyShards();
+    const retryAbort = new AbortController();
+    this.retryAbort = retryAbort;
     this.aborted = false;
     const emitManagerError = (error: Error): void => {
       this.emit('error', { shardId: -1, error });
     };
-    const isAborted = (): boolean => this.aborted;
+    const isAborted = (): boolean => this.aborted || retryAbort.signal.aborted;
 
     let WS = this.options.WebSocket;
     if (!WS) {
-      WS = (await retryUntil(isAborted, getDefaultWebSocket, emitManagerError)) ?? undefined;
-      if (this.aborted) {
+      WS =
+        (await retryUntil(retryAbort.signal, getDefaultWebSocket, emitManagerError)) ?? undefined;
+      if (isAborted()) {
         throw new FluxerError('Connection aborted', { code: ErrorCodes.GatewayConnectionAborted });
       }
       if (!WS) {
@@ -103,7 +120,7 @@ export class WebSocketManager extends EventEmitter {
     }
 
     const gateway = await retryUntil(
-      isAborted,
+      retryAbort.signal,
       async () => {
         const raw: unknown = await this.options.rest.get('/gateway/bot');
         if (!isGatewayBotResponse(raw)) {
@@ -116,7 +133,7 @@ export class WebSocketManager extends EventEmitter {
       emitManagerError,
     );
 
-    if (this.aborted) {
+    if (isAborted()) {
       throw new FluxerError('Connection aborted', { code: ErrorCodes.GatewayConnectionAborted });
     }
     if (!gateway) {
@@ -129,7 +146,7 @@ export class WebSocketManager extends EventEmitter {
     const version = this.options.version ?? '1';
 
     for (const id of ids) {
-      if (this.aborted) break;
+      if (isAborted()) break;
 
       const shard = new WebSocketShard({
         url: gateway.url,
@@ -171,6 +188,12 @@ export class WebSocketManager extends EventEmitter {
 
   destroy(): void {
     this.aborted = true;
+    this.retryAbort?.abort();
+    this.retryAbort = null;
+    this.destroyShards();
+  }
+
+  private destroyShards(): void {
     for (const shard of this.shards.values()) shard.destroy();
     this.shards.clear();
   }

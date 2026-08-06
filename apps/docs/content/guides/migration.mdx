@@ -488,6 +488,7 @@ Quick index of every known break. Details and code live in the sections above.
 | `GuildRoleUpdate` emits `{ role, oldRole }` | `@fluxerjs/core` | Was bare `Role` |
 | `guildRoleDelete` emits `{ roleId, guildId, role }` | `@fluxerjs/core` | Was positional |
 | `GuildMemberUpdate` old is `null` when uncached | `@fluxerjs/core` | Never equals new |
+| `GuildMember.joinedAt` may be `null` | `@fluxerjs/core` | Uncached partial member updates |
 | Audit/vanity/pack/search/discovery returns camelCase | `@fluxerjs/core` | Not raw `API*` where wrapped |
 | Wire request types not re-exported for search/bulk | `@fluxerjs/core` | Use SDK options |
 | Voice events stay wire-shaped | `@fluxerjs/core` | For `@fluxerjs/voice` |

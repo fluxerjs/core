@@ -60,6 +60,7 @@ import {
   finalizeClientReady,
   onClientGuildReceived,
 } from './GatewayReady.js';
+import { handleGatewayDispatch } from './GatewayDispatch.js';
 import { GuildManager } from './GuildManager.js';
 import { MessageCache } from './MessageCache.js';
 import type { BulkFetchMessagesOptions, BulkFetchMessagesResult } from './MessageManager.js';
@@ -111,6 +112,7 @@ export class Client extends EventEmitter {
   _guildStreamSettleTimeout: ReturnType<typeof setTimeout> | null = null;
   /** @internal Dispatches queued until Ready when waitForGuilds delays Ready. */
   _deferredGatewayDispatches: GatewayReceivePayload[] = [];
+  private _lifecycleId = 0;
   private readonly _messageCache: MessageCache;
   /** Resolved client options (cache defaults applied). */
   readonly options: ClientOptions;
@@ -465,6 +467,17 @@ export class Client extends EventEmitter {
     }
   }
 
+  /** @internal Process gateway dispatch payloads. */
+  _handleDispatch(payload: GatewayReceivePayload): Promise<void> {
+    return handleGatewayDispatch(this, payload, this._deferredGatewayDispatches);
+  }
+
+  private rollbackLogin(): void {
+    this._ws?.destroy();
+    this._ws = null;
+    this.rest.setToken(null);
+  }
+
   /**
    * Connect to the gateway with a bot token.
    * @param token - Bot token from the developer portal
@@ -481,14 +494,19 @@ export class Client extends EventEmitter {
     if (typeof token !== 'string' || token.trim().length === 0) {
       throw new FluxerError('Bot token is required.', { code: ErrorCodes.InvalidToken });
     }
+    const lifecycleId = ++this._lifecycleId;
     this.rest.setToken(token);
     try {
-      this._ws = await connectClientGateway(this, token, options?.signal);
+      const ws = await connectClientGateway(this, token, options?.signal);
+      if (lifecycleId !== this._lifecycleId || this._ws !== ws) {
+        ws.destroy();
+        throw new FluxerError('Connection aborted', {
+          code: ErrorCodes.GatewayConnectionAborted,
+        });
+      }
       return token;
     } catch (err) {
-      this._ws?.destroy();
-      this._ws = null;
-      this.rest.setToken(null);
+      if (lifecycleId === this._lifecycleId) this.rollbackLogin();
       throw err;
     }
   }
@@ -508,6 +526,7 @@ export class Client extends EventEmitter {
    * Safe to call {@link login} again after destroy.
    */
   async destroy(): Promise<void> {
+    this._lifecycleId++;
     clearGuildStreamSettle(this);
     this._deferredGatewayDispatches = [];
     this._ws?.destroy();

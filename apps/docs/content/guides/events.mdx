@@ -191,7 +191,7 @@ Handler argument types from `ClientEvents`. Structure names are classes from `@f
 | `GuildUpdate` | `Guild`, `Guild` |
 | `GuildDelete` | `Guild` |
 | `GuildMemberAdd` | `GuildMember` |
-| `GuildMemberUpdate` | `GuildMember \| null`, `GuildMember` (old is a clone, or `null` if uncached) |
+| `GuildMemberUpdate` | `GuildMember \| null`, `GuildMember` (old is a clone, or `null` if uncached; `newMember.joinedAt` is `null` when absent from an uncached update) |
 | `GuildMemberRemove` | `GuildMember` |
 | `GuildMembersChunk` | `GuildMembersChunkPayload` |
 | `GuildCountsUpdate` | `GuildCountsUpdatePayload` |

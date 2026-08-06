@@ -764,6 +764,98 @@ export interface GatewayFavoriteMemePayload {
   [key: string]: unknown;
 }
 
+/** Gateway event name to its exact wire payload. */
+export interface GatewayDispatchDataMap {
+  READY: GatewayReadyDispatchData;
+  RESUMED: GatewayResumedDispatchData;
+  SESSIONS_REPLACE: GatewaySessionsReplaceDispatchData;
+  USER_UPDATE: GatewayUserUpdateDispatchData;
+  USER_SETTINGS_UPDATE: GatewayUserSettingsUpdateDispatchData;
+  USER_GUILD_SETTINGS_UPDATE: GatewayUserGuildSettingsUpdateDispatchData;
+  USER_CONNECTIONS_UPDATE: GatewayUserConnectionsUpdateDispatchData;
+  WEBAUTHN_CREDENTIALS_UPDATE: GatewayWebAuthnCredentialsUpdateDispatchData;
+  USER_PINNED_DMS_UPDATE: GatewayUserPinnedDmsUpdateDispatchData;
+  USER_NOTE_UPDATE: GatewayUserNoteUpdateDispatchData;
+  RECENT_MENTION_DELETE: GatewayRecentMentionDeleteDispatchData;
+  SAVED_MESSAGE_CREATE: GatewaySavedMessageCreateDispatchData;
+  SAVED_MESSAGE_DELETE: GatewaySavedMessageDeleteDispatchData;
+  AUTH_SESSION_CHANGE: GatewayAuthSessionChangeDispatchData;
+  PRESENCE_UPDATE: GatewayPresenceUpdateDispatchData;
+  PRESENCE_UPDATE_BULK: GatewayPresenceUpdateBulkDispatchData;
+  GUILD_CREATE: GatewayGuildCreateDispatchData;
+  GUILD_UPDATE: GatewayGuildUpdateDispatchData;
+  GUILD_DELETE: GatewayGuildDeleteDispatchData;
+  GUILD_MEMBER_ADD: GatewayGuildMemberAddDispatchData;
+  GUILD_MEMBER_UPDATE: GatewayGuildMemberUpdateDispatchData;
+  GUILD_MEMBER_REMOVE: GatewayGuildMemberRemoveDispatchData;
+  GUILD_MEMBERS_CHUNK: GatewayGuildMembersChunkDispatchData;
+  GUILD_MEMBER_LIST_UPDATE: GatewayGuildMemberListUpdateDispatchData;
+  GUILD_SYNC: GatewayGuildSyncDispatchData;
+  GUILD_COUNTS_UPDATE: GatewayGuildCountsUpdateDispatchData;
+  CHANNEL_MEMBER_COUNTS_UPDATE: GatewayChannelMemberCountsUpdateDispatchData;
+  GUILD_ROLE_CREATE: GatewayGuildRoleCreateDispatchData;
+  GUILD_ROLE_UPDATE: GatewayGuildRoleUpdateDispatchData;
+  GUILD_ROLE_UPDATE_BULK: GatewayGuildRoleUpdateBulkDispatchData;
+  GUILD_ROLE_DELETE: GatewayGuildRoleDeleteDispatchData;
+  GUILD_EMOJIS_UPDATE: GatewayGuildEmojisUpdateDispatchData;
+  GUILD_STICKERS_UPDATE: GatewayGuildStickersUpdateDispatchData;
+  GUILD_BAN_ADD: GatewayGuildBanAddDispatchData;
+  GUILD_BAN_REMOVE: GatewayGuildBanRemoveDispatchData;
+  GUILD_AUDIT_LOG_ENTRY_CREATE: GatewayGuildAuditLogEntryCreateDispatchData;
+  CHANNEL_CREATE: GatewayChannelCreateDispatchData;
+  CHANNEL_UPDATE: GatewayChannelUpdateDispatchData;
+  CHANNEL_UPDATE_BULK: GatewayChannelUpdateBulkDispatchData;
+  CHANNEL_DELETE: GatewayChannelDeleteDispatchData;
+  CHANNEL_RECIPIENT_ADD: GatewayChannelRecipientAddDispatchData;
+  CHANNEL_RECIPIENT_REMOVE: GatewayChannelRecipientRemoveDispatchData;
+  CHANNEL_PINS_UPDATE: GatewayChannelPinsUpdateDispatchData;
+  CHANNEL_PINS_ACK: GatewayChannelPinsAckDispatchData;
+  PASSIVE_UPDATES: GatewayPassiveUpdatesDispatchData;
+  INVITE_CREATE: GatewayInviteCreateDispatchData;
+  INVITE_DELETE: GatewayInviteDeleteDispatchData;
+  MESSAGE_CREATE: GatewayMessageCreateDispatchData;
+  MESSAGE_UPDATE: GatewayMessageUpdateDispatchData;
+  MESSAGE_DELETE: GatewayMessageDeleteDispatchData;
+  MESSAGE_DELETE_BULK: GatewayMessageDeleteBulkDispatchData;
+  MESSAGE_REACTION_ADD: GatewayMessageReactionAddDispatchData;
+  MESSAGE_REACTION_ADD_MANY: GatewayMessageReactionAddManyDispatchData;
+  MESSAGE_REACTION_REMOVE: GatewayMessageReactionRemoveDispatchData;
+  MESSAGE_REACTION_REMOVE_ALL: GatewayMessageReactionRemoveAllDispatchData;
+  MESSAGE_REACTION_REMOVE_EMOJI: GatewayMessageReactionRemoveEmojiDispatchData;
+  MESSAGE_ACK: GatewayMessageAckDispatchData;
+  TYPING_START: GatewayTypingStartDispatchData;
+  WEBHOOKS_UPDATE: GatewayWebhooksUpdateDispatchData;
+  RELATIONSHIP_ADD: GatewayRelationshipAddDispatchData;
+  RELATIONSHIP_UPDATE: GatewayRelationshipUpdateDispatchData;
+  RELATIONSHIP_REMOVE: GatewayRelationshipRemoveDispatchData;
+  VOICE_STATE_UPDATE: GatewayVoiceStateUpdateDispatchData;
+  VOICE_STATE_ACK: GatewayVoiceStateAckDispatchData;
+  VOICE_SERVER_UPDATE: GatewayVoiceServerUpdateDispatchData;
+  ENTRANCE_SOUND_PLAY: GatewayEntranceSoundPlayDispatchData;
+  CALL_CREATE: GatewayCallCreateDispatchData;
+  CALL_UPDATE: GatewayCallUpdateDispatchData;
+  CALL_DELETE: GatewayCallDeleteDispatchData;
+  FAVORITE_MEME_CREATE: GatewayFavoriteMemeCreateDispatchData;
+  FAVORITE_MEME_UPDATE: GatewayFavoriteMemeUpdateDispatchData;
+  FAVORITE_MEME_DELETE: GatewayFavoriteMemeDeleteDispatchData;
+}
+
+/** Wire data for a specific gateway dispatch event. */
+export type GatewayDispatchEventData<Event extends GatewayDispatchEventName> =
+  GatewayDispatchDataMap[Event];
+
+/** Discriminated gateway dispatch payload. */
+export type GatewayDispatchPayload<
+  Event extends GatewayDispatchEventName = GatewayDispatchEventName,
+> = Event extends GatewayDispatchEventName
+  ? {
+      op: GatewayOpcodes.Dispatch;
+      d: GatewayDispatchEventData<Event>;
+      s?: number;
+      t: Event;
+    }
+  : never;
+
 export interface GatewayReceivePayload<T = unknown> {
   op: GatewayOpcodes;
   d?: T;

@@ -1,8 +1,3 @@
-import type {
-  APIGuildMember,
-  GatewayGuildMemberRemoveDispatchData,
-  GatewayGuildMembersChunkDispatchData,
-} from '@fluxerjs/types';
 import { GuildMember } from '../../Domain/Guild/GuildMember.js';
 import { Events } from '../../Helpers/Events.js';
 
@@ -14,7 +9,7 @@ import type { HandlerMap } from './Types.js';
 
 export const memberHandlers: HandlerMap = {
   GUILD_MEMBER_ADD(client, d) {
-    const data = d as APIGuildMember & { guild_id: string };
+    const data = d;
 
     const guild = client.guilds.get(data.guild_id);
 
@@ -30,7 +25,7 @@ export const memberHandlers: HandlerMap = {
   },
 
   GUILD_MEMBER_UPDATE(client, d) {
-    const data = d as APIGuildMember & { guild_id: string };
+    const data = d;
 
     const guild = client.guilds.get(data.guild_id);
 
@@ -40,13 +35,20 @@ export const memberHandlers: HandlerMap = {
 
     const oldM = existing?._clone() ?? null;
 
-    const newM = indexMember(client, guild, data)!;
+    let newM: GuildMember;
+    if (existing) {
+      existing._patch(data);
+      newM = existing;
+    } else {
+      newM = new GuildMember(client, data, guild);
+      guild.members.set(newM.id, newM);
+    }
 
     client.emit(Events.GuildMemberUpdate, oldM, newM);
   },
 
   GUILD_MEMBER_REMOVE(client, d) {
-    const data = d as GatewayGuildMemberRemoveDispatchData;
+    const data = d;
 
     const guild = client.guilds.get(data.guild_id);
 
@@ -92,7 +94,7 @@ export const memberHandlers: HandlerMap = {
   },
 
   GUILD_MEMBERS_CHUNK(client, d) {
-    const data = d as GatewayGuildMembersChunkDispatchData;
+    const data = d;
 
     const guild = client.guilds.get(data.guild_id);
 

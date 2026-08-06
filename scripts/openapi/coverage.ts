@@ -149,7 +149,6 @@ function main(): void {
     total: ops.length,
     byCategory: {} as Record<string, number>,
     byStatus: {} as Record<string, number>,
-    generatedAt: new Date().toISOString(),
   };
   for (const o of ops) {
     summary.byCategory[o.category] = (summary.byCategory[o.category] ?? 0) + 1;

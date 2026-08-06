@@ -104,7 +104,6 @@ function main(): void {
   const extraHandlers = [...handled].filter((h) => !typed.includes(h) && h !== 'READY').sort();
 
   const report = {
-    generatedAt: new Date().toISOString(),
     typedCount: typed.length,
     handledCount: handled.size,
     unhandledCount: unhandled.length,

@@ -10,7 +10,8 @@ function main(): void {
     throw new Error('Missing vendor/openapi/fluxer-api.json or manifest.json — run openapi:update');
   }
   const text = fs.readFileSync(OPENAPI_FILE, 'utf8');
-  const sha256 = crypto.createHash('sha256').update(text).digest('hex');
+  const normalizedText = text.replace(/\r\n?/g, '\n');
+  const sha256 = crypto.createHash('sha256').update(normalizedText).digest('hex');
   const manifestRaw = fs.readFileSync(MANIFEST_FILE, 'utf8').replace(/^\uFEFF/, '');
   const manifest = JSON.parse(manifestRaw) as {
     sha256: string;
@@ -21,7 +22,7 @@ function main(): void {
   if (manifest.sha256 !== sha256) {
     throw new Error(`SHA-256 mismatch: manifest=${manifest.sha256} file=${sha256}`);
   }
-  const doc = JSON.parse(text) as {
+  const doc = JSON.parse(normalizedText) as {
     openapi?: string;
     paths?: Record<string, unknown>;
     components?: { schemas?: Record<string, unknown> };

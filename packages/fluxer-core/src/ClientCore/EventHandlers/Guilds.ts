@@ -21,7 +21,7 @@ export const guildHandlers: HandlerMap = {
   GUILD_CREATE(client, d) {
     const raw = d as { id?: unknown; unavailable?: unknown };
     if (raw.unavailable === true) {
-      if (typeof raw.id === 'string') {
+      if (typeof raw.id === 'string' && raw.id.length > 0) {
         try {
           markGuildUnavailable(client, raw.id);
         } finally {

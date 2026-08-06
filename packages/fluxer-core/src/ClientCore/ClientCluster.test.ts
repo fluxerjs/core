@@ -474,4 +474,63 @@ describe('Client login abort / rollback', () => {
     await expect(p).rejects.toMatchObject({ code: ErrorCodes.GatewayConnectionAborted });
     expect(client.rest.token).toBeNull();
   });
+
+  it('does not let a stale login failure tear down a newer connection', async () => {
+    let rejectFirst!: (error: Error) => void;
+    const firstWs = { destroy: vi.fn() };
+    const secondWs = { destroy: vi.fn() };
+    vi.spyOn(GatewayReady, 'connectClientGateway')
+      .mockImplementationOnce(async (client) => {
+        client._ws = firstWs as never;
+        return new Promise<never>((_resolve, reject) => {
+          rejectFirst = reject;
+        });
+      })
+      .mockImplementationOnce(async (client) => {
+        client._ws = secondWs as never;
+        return secondWs as never;
+      });
+
+    const client = new Client();
+    const firstLogin = client.login('first-token');
+    await client.destroy();
+    await expect(client.login('second-token')).resolves.toBe('second-token');
+
+    rejectFirst(new Error('first connection failed'));
+    await expect(firstLogin).rejects.toThrow('first connection failed');
+    expect(client._ws).toBe(secondWs);
+    expect(client.rest.token).toBe('second-token');
+    expect(secondWs.destroy).not.toHaveBeenCalled();
+  });
+
+  it('does not let a stale login success replace a newer connection', async () => {
+    let resolveFirst!: (ws: never) => void;
+    const firstWs = { destroy: vi.fn() };
+    const secondWs = { destroy: vi.fn() };
+    vi.spyOn(GatewayReady, 'connectClientGateway')
+      .mockImplementationOnce(async (client) => {
+        client._ws = firstWs as never;
+        return new Promise<never>((resolve) => {
+          resolveFirst = resolve;
+        });
+      })
+      .mockImplementationOnce(async (client) => {
+        client._ws = secondWs as never;
+        return secondWs as never;
+      });
+
+    const client = new Client();
+    const firstLogin = client.login('first-token');
+    await client.destroy();
+    firstWs.destroy.mockClear();
+    await expect(client.login('second-token')).resolves.toBe('second-token');
+
+    resolveFirst(firstWs as never);
+    await expect(firstLogin).rejects.toMatchObject({
+      code: ErrorCodes.GatewayConnectionAborted,
+    });
+    expect(firstWs.destroy).toHaveBeenCalledOnce();
+    expect(client._ws).toBe(secondWs);
+    expect(client.rest.token).toBe('second-token');
+  });
 });

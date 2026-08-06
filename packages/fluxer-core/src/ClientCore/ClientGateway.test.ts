@@ -99,6 +99,21 @@ describe('Client gateway helpers and dispatch', () => {
     });
   });
 
+  it('waits only for unavailable READY guilds with valid ids', () => {
+    const pending = hydrateReadyGuilds(
+      client,
+      [
+        { id: 'g1', unavailable: true },
+        { id: '', unavailable: true },
+        { id: 42, unavailable: true },
+        { unavailable: true },
+      ] as never,
+      true,
+    );
+
+    expect(pending).toEqual(new Set(['g1']));
+  });
+
   it('updates cached guild counts from GUILD_COUNTS_UPDATE', async () => {
     const guild = new Guild(client, fixtureGuild());
     client.guilds.set(guild.id, guild);

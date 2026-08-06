@@ -57,7 +57,8 @@ async function dispatch(
   event: 'GUILD_CREATE' | 'GUILD_UPDATE' | 'GUILD_DELETE' | 'GUILD_COUNTS_UPDATE',
   data: unknown,
 ) {
-  await guildHandlers[event](client, data);
+  const handler = guildHandlers[event] as (client: Client, data: unknown) => void | Promise<void>;
+  await handler(client, data);
 }
 
 describe('guild availability lifecycle', () => {
@@ -345,5 +346,16 @@ describe('guild availability lifecycle', () => {
 
     expect(client.guilds.has('g1')).toBe(false);
     expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('ignores unavailable stubs without a valid guild id', async () => {
+    const client = new Client({ gatewayDeferHandlers: false });
+    const received = vi.spyOn(client, '_onGuildReceived');
+
+    await dispatch(client, 'GUILD_CREATE', { unavailable: true });
+    await dispatch(client, 'GUILD_CREATE', { id: 42, unavailable: true });
+    await dispatch(client, 'GUILD_CREATE', { id: '', unavailable: true });
+
+    expect(received).not.toHaveBeenCalled();
   });
 });

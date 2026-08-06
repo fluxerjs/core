@@ -26,29 +26,54 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./client": {
-      "types": "./dist/client.d.ts",
-      "import": "./dist/client.mjs",
-      "require": "./dist/client.js"
+      "import": {
+        "types": "./dist/client.d.mts",
+        "default": "./dist/client.mjs"
+      },
+      "require": {
+        "types": "./dist/client.d.ts",
+        "default": "./dist/client.js"
+      }
     },
     "./errors": {
-      "types": "./dist/errors.d.ts",
-      "import": "./dist/errors.mjs",
-      "require": "./dist/errors.js"
+      "import": {
+        "types": "./dist/errors.d.mts",
+        "default": "./dist/errors.mjs"
+      },
+      "require": {
+        "types": "./dist/errors.d.ts",
+        "default": "./dist/errors.js"
+      }
     },
     "./message": {
-      "types": "./dist/message.d.ts",
-      "import": "./dist/message.mjs",
-      "require": "./dist/message.js"
+      "import": {
+        "types": "./dist/message.d.mts",
+        "default": "./dist/message.mjs"
+      },
+      "require": {
+        "types": "./dist/message.d.ts",
+        "default": "./dist/message.js"
+      }
     },
     "./cluster": {
-      "types": "./dist/cluster.d.ts",
-      "import": "./dist/cluster.mjs",
-      "require": "./dist/cluster.js"
+      "import": {
+        "types": "./dist/cluster.d.mts",
+        "default": "./dist/cluster.mjs"
+      },
+      "require": {
+        "types": "./dist/cluster.d.ts",
+        "default": "./dist/cluster.js"
+      }
     }
   },
   "files": [

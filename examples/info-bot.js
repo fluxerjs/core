@@ -211,7 +211,7 @@ client.on(Events.MessageCreate, async (message) => {
           { name: 'Username', value: me.user.username ?? '—', inline: true },
           { name: 'Display name', value: me.displayName ?? '—', inline: true },
           { name: 'Nickname', value: me.nick ?? '*(none)*', inline: true },
-          { name: 'Joined', value: me.joinedAt.toISOString(), inline: true },
+          { name: 'Joined', value: me.joinedAt?.toISOString() ?? '—', inline: true },
           {
             name: 'Roles',
             value: roleNames.length ? roleNames.slice(0, 15).join(', ') : '*(none)*',

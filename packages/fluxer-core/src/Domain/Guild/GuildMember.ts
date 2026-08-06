@@ -15,6 +15,17 @@ import type { User } from '../User.js';
 import type { Guild } from './Guild.js';
 import { GuildMemberRoleManager } from './GuildMemberRoleManager.js';
 
+type GuildMemberData = Pick<APIGuildMember, 'user'> &
+  Partial<Omit<APIGuildMember, 'user' | 'joined_at'>> & {
+    joined_at?: string | null;
+  };
+
+function parseJoinedAt(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 /**
  * Guild member — roles via {@link GuildMember.roles}, permissions via {@link permissions} / {@link permissionsIn}.
  * Cached per guild in {@link Guild.members}.
@@ -32,8 +43,7 @@ export class GuildMember extends Base {
   nick: string | null;
   /** Role manager for this member. */
   readonly roles: GuildMemberRoleManager;
-  /** When this member joined the guild. */
-  readonly joinedAt: Date;
+  private _joinedAt: Date | null;
   /** Timeout end date (null = not timed out). */
   communicationDisabledUntil: Date | null;
   /** Whether this member is voice-muted. */
@@ -49,7 +59,7 @@ export class GuildMember extends Base {
   /** Guild-specific profile flags. */
   profileFlags: number | null;
 
-  constructor(client: Client, data: APIGuildMember & { guild_id?: string }, guild: Guild) {
+  constructor(client: Client, data: GuildMemberData & { guild_id?: string }, guild: Guild) {
     super();
     this.client = client;
     this.user = client.getOrCreateUser(data.user);
@@ -57,7 +67,7 @@ export class GuildMember extends Base {
     this.guild = guild;
     this.nick = data.nick ?? null;
     this.roles = new GuildMemberRoleManager(this, data.roles ?? []);
-    this.joinedAt = new Date(data.joined_at);
+    this._joinedAt = parseJoinedAt(data.joined_at);
     this.communicationDisabledUntil = data.communication_disabled_until
       ? new Date(data.communication_disabled_until)
       : null;
@@ -73,10 +83,11 @@ export class GuildMember extends Base {
    * Apply an API member payload in place (gateway GUILD_MEMBER_UPDATE / REST edit).
    * @internal
    */
-  _patch(data: APIGuildMember): void {
+  _patch(data: Partial<GuildMemberData>): void {
     if (data.user) this.client.getOrCreateUser(data.user);
     if (data.nick !== undefined) this.nick = data.nick ?? null;
     if (data.roles) this.roles._patch(data.roles);
+    if (data.joined_at !== undefined) this._joinedAt = parseJoinedAt(data.joined_at);
     if (data.communication_disabled_until !== undefined) {
       this.communicationDisabledUntil = data.communication_disabled_until
         ? new Date(data.communication_disabled_until)
@@ -110,7 +121,7 @@ export class GuildMember extends Base {
         },
         nick: this.nick,
         roles: [...this.roles.roleIds],
-        joined_at: this.joinedAt.toISOString(),
+        joined_at: this.joinedAt?.toISOString() ?? null,
         communication_disabled_until: this.communicationDisabledUntil?.toISOString() ?? null,
         mute: this.mute,
         deaf: this.deaf,
@@ -125,6 +136,11 @@ export class GuildMember extends Base {
 
   get displayName(): string {
     return this.nick ?? this.user.globalName ?? this.user.username;
+  }
+
+  /** When this member joined the guild, or `null` when an update did not include it. */
+  get joinedAt(): Date | null {
+    return this._joinedAt;
   }
 
   /** Renders a mention for this member: `<@id>`. */

@@ -1,4 +1,5 @@
 import type { APIChannel, APIEmoji, APIGuildMember, APIRole, APISticker } from '@fluxerjs/types';
+import { ChannelType } from '@fluxerjs/types';
 import type { Client } from '../../ClientCore/Client.js';
 import type { GuildChannel } from '../Channel/index.js';
 import { Channel } from '../Channel/index.js';
@@ -7,6 +8,12 @@ import { GuildEmoji } from './GuildEmoji.js';
 import { GuildMember } from './GuildMember.js';
 import { GuildSticker } from './GuildSticker.js';
 import { Role } from './Role.js';
+
+const DM_CHANNEL_TYPES = new Set<ChannelType>([
+  ChannelType.DM,
+  ChannelType.GroupDM,
+  ChannelType.DMPersonalNotes,
+]);
 
 /**
  * Place an existing Channel instance into the global + guild indexes.
@@ -130,8 +137,15 @@ export function syncRoles(guild: Guild, roles: APIRole[]): void {
  * (removes from both indexes + clears message caches).
  */
 export function syncChannels(guild: Guild, channels: APIChannel[]): void {
-  const keep = new Set(channels.map((c) => c.id));
-  for (const data of channels) cacheChannel(guild, data);
+  const accepted = channels
+    .filter(
+      (channel) =>
+        !DM_CHANNEL_TYPES.has(channel.type) &&
+        (channel.guild_id == null || channel.guild_id === guild.id),
+    )
+    .map((channel) => ({ ...channel, guild_id: guild.id }));
+  const keep = new Set(accepted.map((channel) => channel.id));
+  for (const data of accepted) cacheChannel(guild, data);
   for (const [id, channel] of [...guild.channels.entries()]) {
     if (keep.has(id)) continue;
     Map.prototype.delete.call(guild.channels, id);

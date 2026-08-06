@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   if (!res.ok) {
     throw new Error(`Failed to fetch OpenAPI: ${res.status} ${res.statusText}`);
   }
-  const text = await res.text();
+  const text = (await res.text()).replace(/\r\n?/g, '\n');
   let doc: {
     openapi?: string;
     info?: { title?: string; version?: string };
