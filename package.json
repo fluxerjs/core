@@ -51,7 +51,7 @@
     "check:casing": "pnpm exec tsx scripts/check-import-casing.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.3",
+    "@biomejs/biome": "2.5.7",
     "@changesets/changelog-github": "^0.5.2",
     "@changesets/cli": "^2.29.8",
     "@fluxerjs/builders": "workspace:*",
