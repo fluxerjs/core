@@ -37,7 +37,7 @@ const VOICE_VERSION = 4;
 const CHANNELS = 2;
 /** RTP timestamp increment per 20ms Opus frame (48kHz equivalent). */
 const OPUS_FRAME_TICKS = 960 * (CHANNELS === 2 ? 2 : 1);
-/** Interval at which Discord expects Opus frames (20ms). */
+/** Interval at which the UDP voice protocol expects Opus frames (20ms). */
 const AUDIO_FRAME_INTERVAL_MS = 20;
 
 /** Log full HTTP response for a URL (used when WebSocket gets unexpected status e.g. 200). */
@@ -68,7 +68,7 @@ export interface VoiceConnectionEvents {
   disconnect: [];
 }
 
-/** Voice connection using Discord's UDP-based protocol. Emits `ready`, `error`, `disconnect`. */
+/** Voice connection using Fluxer's UDP-based protocol. Emits `ready`, `error`, `disconnect`. */
 export class VoiceConnection extends EventEmitter {
   readonly client: Client;
   readonly channel: VoiceChannel;
@@ -100,7 +100,7 @@ export class VoiceConnection extends EventEmitter {
     this._userId = userId;
   }
 
-  /** Discord voice session ID. */
+  /** Voice session ID. */
   get sessionId(): string | null {
     return this._sessionId;
   }

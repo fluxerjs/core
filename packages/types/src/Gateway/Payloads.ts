@@ -37,7 +37,7 @@ export interface GatewayIdentifyData {
     device: string;
   };
   /**
-   * Legacy Discord-style intents bitfield. Fluxer ignores this; prefer {@link flags}.
+   * Legacy intents bitfield. Fluxer ignores this; prefer {@link flags}.
    * @deprecated Fluxer has no gateway intents — omit or send `0`.
    */
   intents?: number;
@@ -67,7 +67,7 @@ export interface GatewayResumeData {
   seq: number;
 }
 
-/** Custom status object (Fluxer uses this root object rather than Discord-style activities array). */
+/** Custom status object (Fluxer uses this root object rather than an activities array). */
 export interface GatewayCustomStatus {
   /** Status text. */
   text?: string | null;
@@ -403,6 +403,7 @@ export interface GatewayGuildMembersChunkDispatchData {
   chunk_index: number;
   chunk_count: number;
   presences?: Array<{ user: { id: Snowflake }; status?: string; activities?: unknown[] }>;
+  not_found?: Snowflake[];
   nonce?: string | null;
 }
 /** GUILD_MEMBER_LIST_UPDATE — lazy member list; guild_id, id (list_id), member_count, online_count, groups, ops */

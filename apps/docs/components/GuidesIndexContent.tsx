@@ -1,39 +1,13 @@
-import {
-  ArrowRight,
-  ArrowUpRight,
-  BookOpen,
-  Hash,
-  Headphones,
-  Image,
-  type LucideIcon,
-  MessageSquare,
-  Radio,
-  Smile,
-  Webhook,
-  Wrench,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getGuidesSidebarGroups } from '@/components/GuidesNav';
 import { PageShell } from '@/components/PageShell';
 import { loadVersions } from '@/lib/api-docs';
-import { CATEGORY_ORDER, getCategoryLabel } from '@/lib/guide-meta';
+import { CATEGORY_ORDER, GUIDE_TASKS, getCategoryBlurb, getCategoryLabel } from '@/lib/guide-meta';
 import { getGuidesByCategory, guidesBasePath } from '@/lib/guides';
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  'getting-started': BookOpen,
-  'sending-messages': MessageSquare,
-  media: Image,
-  channels: Hash,
-  emojis: Smile,
-  webhooks: Webhook,
-  voice: Headphones,
-  events: Radio,
-  other: Wrench,
-};
 
 export function GuidesIndexContent({ version }: { version?: string }): React.ReactElement {
   const byCategory = getGuidesByCategory(version);
-  const totalGuides = Object.values(byCategory).reduce((n, list) => n + (list?.length ?? 0), 0);
   const firstGuide = byCategory['getting-started']?.[0];
   const base = guidesBasePath(version);
   const label = version ?? loadVersions().latest;
@@ -43,64 +17,92 @@ export function GuidesIndexContent({ version }: { version?: string }): React.Rea
       sidebarTitle="Guides"
       sidebarGroups={getGuidesSidebarGroups(undefined, version)}
       wide>
-      <header className="mb-14">
-        <p className="mb-3 font-mono text-xs uppercase tracking-wider text-primary/80">
-          Fluxer.js v{label} · {totalGuides} guides
+      <header className="mb-10">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Guides</h1>
+        <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
+          Fluxer.js v{label}. Install and login first, then messages, channels, members, and
+          permissions. Use the task list below when you know what you want to do but not which page
+          to open.
         </p>
-        <h1 className="font-display text-[clamp(2rem,4.5vw,3rem)] font-semibold tracking-tight">
-          Guides
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-          Practical, copy-pasteable walkthroughs — from your first bot through production patterns
-          for messages, media, voice, and events.
-        </p>
-        {firstGuide ? (
+        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2">
+          {firstGuide ? (
+            <Link
+              href={`${base}/${firstGuide.slug}/`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+              Start with {firstGuide.title}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : null}
           <Link
-            href={`${base}/${firstGuide.slug}/`}
-            className="group mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-            Start with {firstGuide.title}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            href={`${base}/where-do-i/`}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+            Where do I...?
+            <ArrowRight className="h-4 w-4" />
           </Link>
-        ) : null}
+        </div>
       </header>
 
-      <div className="space-y-16">
+      <section className="mb-12 scroll-mt-24" id="where-do-i">
+        <h2 className="mb-1 text-sm font-semibold">Where do I…?</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Jump to a guide by task. The full map is on{' '}
+          <Link
+            href={`${base}/where-do-i/`}
+            className="text-foreground underline-offset-2 hover:underline">
+            Where do I...?
+          </Link>
+          .
+        </p>
+        <ul className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
+          {GUIDE_TASKS.map((item) => (
+            <li key={item.task}>
+              <Link
+                href={`${base}/${item.slug}/`}
+                className="flex items-baseline justify-between gap-4 py-1.5 text-sm">
+                <span className="text-foreground">{item.task}</span>
+                <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                  {item.slug}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="space-y-12">
         {CATEGORY_ORDER.map((cat) => {
           const list = byCategory[cat];
           if (!list?.length) return null;
-          const Icon = CATEGORY_ICONS[cat] ?? Wrench;
+          const blurb = getCategoryBlurb(cat);
           return (
             <section key={cat} className="scroll-mt-24" id={cat}>
-              <div className="mb-5 flex items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-4 w-4" aria-hidden />
+              <h2 className="mb-1 text-sm font-semibold">
+                {getCategoryLabel(cat)}
+                <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
+                  {list.length}
                 </span>
-                <div>
-                  <h2 className="text-base font-semibold tracking-tight">
-                    {getCategoryLabel(cat)}
-                  </h2>
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {list.length} {list.length === 1 ? 'guide' : 'guides'}
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              </h2>
+              {blurb ? (
+                <p className="mb-3 text-sm text-muted-foreground">{blurb}</p>
+              ) : (
+                <div className="mb-3" />
+              )}
+              <ul className="divide-y divide-border border-y border-border">
                 {list.map((g) => (
-                  <Link
-                    key={g.slug}
-                    href={`${base}/${g.slug}/`}
-                    className="group relative flex flex-col rounded-xl border border-border bg-card p-5 transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5">
-                    <h3 className="flex items-start justify-between gap-3 text-sm font-semibold leading-6 text-foreground">
-                      <span className="min-w-0">{g.title}</span>
-                      <ArrowUpRight
-                        className="mt-0.5 h-4 w-4 shrink-0 -translate-x-1 text-primary opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100"
-                        aria-hidden
-                      />
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{g.description}</p>
-                  </Link>
+                  <li key={g.slug}>
+                    <Link
+                      href={`${base}/${g.slug}/`}
+                      className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6">
+                      <span className="shrink-0 text-sm font-medium text-foreground sm:w-48">
+                        {g.title}
+                      </span>
+                      <span className="text-sm leading-6 text-muted-foreground">
+                        {g.description}
+                      </span>
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </section>
           );
         })}

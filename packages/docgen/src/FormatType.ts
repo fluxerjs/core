@@ -26,6 +26,7 @@ export function formatTypeNode(checker: ts.TypeChecker, typeNode: ts.TypeNode | 
     ts.isArrayTypeNode(typeNode) ||
     ts.isTupleTypeNode(typeNode) ||
     ts.isTypeOperatorNode(typeNode) ||
+    ts.isTypeQueryNode(typeNode) ||
     ts.isTypeReferenceNode(typeNode) ||
     ts.isConditionalTypeNode(typeNode) ||
     ts.isMappedTypeNode(typeNode) ||
@@ -35,13 +36,20 @@ export function formatTypeNode(checker: ts.TypeChecker, typeNode: ts.TypeNode | 
     if (fromSource && fromSource !== 'any') return fromSource;
   }
 
+  const fromSource = sanitizeTypeString(typeNode.getText());
   const type = checker.getTypeFromTypeNode(typeNode);
-  const raw = checker.typeToString(
-    type,
-    typeNode,
-    ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias,
+  const raw = sanitizeTypeString(
+    checker.typeToString(
+      type,
+      typeNode,
+      ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias,
+    ),
   );
-  return sanitizeTypeString(raw);
+  // Prefer the author's annotation when the checker expands a huge object type.
+  if (fromSource && fromSource !== 'any' && raw.length > 200 && fromSource.length < raw.length) {
+    return fromSource;
+  }
+  return raw || fromSource;
 }
 
 export function formatTypeFromType(checker: ts.TypeChecker, type: ts.Type): string {

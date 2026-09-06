@@ -1,6 +1,7 @@
 import type { REST } from '@fluxerjs/rest';
-import type { APIInstance, APIInstanceEndpoints, GatewayPresenceUpdateData } from '@fluxerjs/types';
+import type { APIInstance, APIInstanceEndpoints } from '@fluxerjs/types';
 import type { Logger, LogLevel } from '@fluxerjs/util';
+import type { PresenceUpdateOptions } from '../ClientCore/SdkOptions/Presence.js';
 
 /**
  * Optional cache size limits (FIFO eviction when exceeded).
@@ -168,11 +169,12 @@ export interface ClientOptions {
    */
   rest?: Partial<ConstructorParameters<typeof REST>[0]>;
   /**
-   * Gateway intents (Fluxer currently always sends `0`).
-   * Reserved for future use.
+   * @deprecated Fluxer has no intents. Prefer {@link ignoredEvents}. Kept only for migration; identify always sends `0`.
    */
   intents?: number;
-  /** Silence the intents-not-supported warning. */
+  /**
+   * @deprecated No-op. Fluxer has no intents warning to suppress.
+   */
   suppressIntentWarning?: boolean;
   /** {@link GatewayIdentifyFlags} bitfield sent as Identify `flags`. */
   identifyFlags?: number;
@@ -218,13 +220,51 @@ export interface ClientOptions {
   defaultReplyPing?: boolean;
   /**
    * Initial presence on identify (also updatable via `client.user.setPresence`).
+   * CamelCase only; mapped to gateway wire internally.
    */
-  presence?: GatewayPresenceUpdateData;
+  presence?: PresenceUpdateOptions;
   /**
    * Emit gateway debug strings.
    * @default true
    */
   gatewayDebug?: boolean;
+  /**
+   * Total gateway shard count, or `'auto'` to derive from guild count.
+   * Fluxer's `/gateway/bot` currently stubs `shards: 1`, so prefer `'auto'` or an explicit count
+   * for large bots (max 2500 guilds per shard).
+   * Alias: `totalShards`.
+   */
+  shardCount?: number | 'auto';
+  /**
+   * Alias of {@link shardCount} (matches {@link import('@fluxerjs/sharding').ShardingManager} vocabulary).
+   * @deprecated Prefer {@link shardCount}.
+   */
+  totalShards?: number | 'auto';
+  /** Explicit shard ids this client should connect (defaults to `0..shardCount-1`). Alias: `shardList`. */
+  shardIds?: number[];
+  /**
+   * Alias of {@link shardIds}.
+   * @deprecated Prefer {@link shardIds}.
+   */
+  shardList?: number[];
+  /**
+   * Guilds per shard when {@link shardCount} is `'auto'`.
+   * @default 1500
+   */
+  guildsPerShard?: number;
+  /**
+   * Custom WebSocket sharding strategy builder (e.g. WorkerShardingStrategy).
+   * @see {@link import('@fluxerjs/ws').WorkerShardingStrategy}
+   */
+  buildStrategy?: import('@fluxerjs/ws').BuildShardingStrategyFn;
+  /**
+   * Optional session store for RESUME across restarts (defaults to in-memory).
+   */
+  sessionStore?: import('@fluxerjs/ws').ISessionStore;
+  /**
+   * Optional identify throttler (e.g. parent-backed when under ShardingManager).
+   */
+  identifyThrottler?: import('@fluxerjs/ws').IIdentifyThrottler;
   /** Minimum log level for {@link Client.logger}. Default: `warn`. */
   logLevel?: LogLevel;
   /** Custom logger instance (overrides {@link logLevel} sink defaults). */

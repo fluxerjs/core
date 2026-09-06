@@ -83,6 +83,26 @@ function toField(field: EmbedFieldData): APIEmbedField {
   };
 }
 
+type EmbedFromIcon = { icon_url?: string | null; iconUrl?: string | null };
+
+function iconUrlOf(block: EmbedFromIcon | null | undefined): string | undefined {
+  return block?.iconUrl ?? block?.icon_url ?? undefined;
+}
+
+/** Wire embed or camelCase received-message embed (`iconUrl`, Date timestamp). */
+type EmbedFromInput = {
+  title?: string | null;
+  description?: string | null;
+  url?: string | null;
+  color?: number | null;
+  timestamp?: string | Date | null;
+  author?: (EmbedFromIcon & { name?: string | null; url?: string | null }) | null;
+  footer?: (EmbedFromIcon & { text?: string }) | null;
+  image?: { url?: string | null; description?: string | null } | null;
+  thumbnail?: { url?: string | null; description?: string | null } | null;
+  fields?: APIEmbedField[] | null;
+};
+
 /**
  * Request-only embed builder. Emits {@link RESTPostAPIEmbed} (no video/audio).
  * @example
@@ -297,26 +317,33 @@ export class EmbedBuilder {
   }
 
   /**
-   * Copy request fields only — response video/audio/type/provider are ignored.
+   * Copy request fields only. Response video/audio/type/provider are ignored.
+   * Accepts wire {@link APIEmbed} / {@link RESTPostAPIEmbed} or a camelCase received embed.
    * @param data - API embed from message or webhook
    * @returns New builder instance with copied data
    */
-  static from(data: APIEmbed | RESTPostAPIEmbed): EmbedBuilder {
+  static from(data: APIEmbed | RESTPostAPIEmbed | EmbedFromInput): EmbedBuilder {
     const b = new EmbedBuilder();
     if (data.title != null) b.data.title = data.title;
     if (data.description != null) b.data.description = data.description;
     if (data.url != null) b.data.url = data.url;
     if (data.color != null) b.data.color = data.color;
-    if (data.timestamp != null) b.data.timestamp = data.timestamp;
+    if (data.timestamp != null) {
+      b.data.timestamp =
+        data.timestamp instanceof Date ? data.timestamp.toISOString() : data.timestamp;
+    }
     if (data.author?.name) {
-      b.data.author = {
-        name: data.author.name,
-        url: data.author.url,
-        icon_url: data.author.icon_url,
-      };
+      const author: RESTPostAPIEmbedAuthor = { name: data.author.name };
+      if (data.author.url) author.url = data.author.url;
+      const icon = iconUrlOf(data.author);
+      if (icon) author.icon_url = icon;
+      b.data.author = author;
     }
     if (data.footer?.text) {
-      b.data.footer = { text: data.footer.text, icon_url: data.footer.icon_url };
+      const footer: RESTPostAPIEmbedFooter = { text: data.footer.text };
+      const icon = iconUrlOf(data.footer);
+      if (icon) footer.icon_url = icon;
+      b.data.footer = footer;
     }
     if (data.image?.url) {
       b.data.image = { url: data.image.url, description: data.image.description };

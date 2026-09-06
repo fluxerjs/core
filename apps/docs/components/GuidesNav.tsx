@@ -1,28 +1,14 @@
-import {
-  BookOpen,
-  Hash,
-  Headphones,
-  Image,
-  type LucideIcon,
-  MessageSquare,
-  Radio,
-  Smile,
-  Webhook,
-  Wrench,
-} from 'lucide-react';
+import { BookOpen, Hash, History, type LucideIcon, MessageSquare, Wrench } from 'lucide-react';
 import { DocsSidebar, type SidebarGroup, type SidebarItem } from '@/components/PageShell';
 import { CATEGORY_ORDER, getCategoryLabel } from '@/lib/guide-meta';
 import { getAllGuides, getGuidesByCategory, guidesBasePath } from '@/lib/guides';
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'getting-started': BookOpen,
-  'sending-messages': MessageSquare,
-  media: Image,
-  channels: Hash,
-  emojis: Smile,
-  webhooks: Webhook,
-  voice: Headphones,
-  events: Radio,
+  popular: MessageSquare,
+  guilds: Hash,
+  additional: Wrench,
+  upgrading: History,
   other: Wrench,
 };
 

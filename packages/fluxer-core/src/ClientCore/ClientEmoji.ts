@@ -6,6 +6,7 @@ import type {
   APIEmojiMetadata,
   APIGatewayBotResponse,
   APIInstance,
+  APIMessageSearchResponse,
   APIOAuthApplication,
   APIPreloadMessagesResponse,
   APIStickerMetadata,
@@ -23,7 +24,14 @@ import {
   type BulkFetchMessagesResult,
   validateBulkMessageFetchRequests,
 } from './MessageManager.js';
-import { type BulkFetchMessagesRequest, toBulkFetchWire } from './SdkOptions/index.js';
+import {
+  type BulkFetchMessagesRequest,
+  type MessageSearchOptions,
+  type MessageSearchResponse,
+  toBulkFetchWire,
+  toMessageSearchBody,
+  toMessageSearchResponse,
+} from './SdkOptions/index.js';
 
 /**
  * Resolve an emoji argument to the API format (unicode or "name:id").
@@ -96,9 +104,21 @@ export function fetchApplication(client: Client): Promise<APIApplicationMe> {
 
 export async function fetchOAuthApplications(client: Client): Promise<APIOAuthApplication[]> {
   const data = await client.rest.get<
-    APIOAuthApplication[] | { applications?: APIOAuthApplication[] }
+    APIOAuthApplication[] | APIOAuthApplication | { applications?: APIOAuthApplication[] }
   >(Routes.oauth2ApplicationsMe(), { auth: true });
-  return Array.isArray(data) ? data : (data.applications ?? []);
+  if (Array.isArray(data)) return data;
+  if (
+    data &&
+    typeof data === 'object' &&
+    'applications' in data &&
+    Array.isArray(data.applications)
+  ) {
+    return data.applications;
+  }
+  if (data && typeof data === 'object' && 'id' in data && typeof data.id === 'string') {
+    return [data];
+  }
+  return [];
 }
 
 export function checkUsernameTag(
@@ -162,4 +182,18 @@ export async function bulkFetchMessages(
       return { channelId: entry.channel_id, messages: collection };
     }),
   };
+}
+
+/**
+ * POST /search/messages with `scope: current` (the only bot-legal scope).
+ */
+export async function searchMessages(
+  client: Client,
+  options: MessageSearchOptions = {},
+): Promise<MessageSearchResponse> {
+  const data = await client.rest.post<APIMessageSearchResponse>(Routes.searchMessages(), {
+    body: toMessageSearchBody(options),
+    auth: true,
+  });
+  return toMessageSearchResponse(data);
 }

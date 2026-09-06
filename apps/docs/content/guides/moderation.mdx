@@ -1,13 +1,23 @@
 ---
 title: Moderation
-description: Ban, kick, and unban with permission checks.
-category: other
-order: 19
+description: Ban, kick, timeout, and unban with permission checks.
+category: guilds
+order: 32
 ---
 
-Always check the moderator's permissions before calling guild moderation helpers. See [Permissions](/guides/permissions/).
+Always check the moderator's permissions before calling guild moderation helpers. See [Permissions](/guides/permissions/). Cache helpers: `member.kickable`, `member.bannable`, `member.moderatable` (need `guild.members.me`).
 
-Ban options are camelCase: `reason`, `deleteMessageDays` (0 to 7), `banDurationSeconds`. Kick and unban take a user ID only.
+Ban options are camelCase: `reason`, `deleteMessageDays` (0 to 7), `banDurationSeconds`. Prefer `member.kick()` / `member.ban()` / `member.timeout(ms)` when you already have a `GuildMember`. Guild helpers still take a user ID.
+
+## Member helpers
+
+```javascript
+const member = message.member ?? await guild.fetchMember(userId);
+await member.kick();
+await member.ban({ reason: 'spam', deleteMessageDays: 1 });
+await member.timeout(60_000, 'cool down');
+await member.timeout(null);
+```
 
 ## Ban
 
@@ -51,7 +61,7 @@ const PREFIX = '!';
 const client = new Client();
 
 async function getModeratorPerms(message) {
-  const guild = message.guild ?? (await message.client.guilds.resolve(message.guildId));
+  const guild = await message.resolveGuild();
   if (!guild) return null;
   const member =
     guild.members.get(message.author.id) ??
@@ -65,13 +75,15 @@ client.on(Events.MessageCreate, async (message) => {
   const perms = await getModeratorPerms(message);
   if (!perms) return;
 
-  const guild = message.guild ?? (await message.client.guilds.resolve(message.guildId));
+  const guild = await message.resolveGuild();
   if (!guild) return;
 
   const canBan =
     perms.has(PermissionFlags.BanMembers) || perms.has(PermissionFlags.Administrator);
   const canKick =
     perms.has(PermissionFlags.KickMembers) || perms.has(PermissionFlags.Administrator);
+  const canTimeout =
+    perms.has(PermissionFlags.ModerateMembers) || perms.has(PermissionFlags.Administrator);
 
   if (cmd === 'ban' && canBan) {
     const userId = parseUserMention(target);
@@ -89,6 +101,15 @@ client.on(Events.MessageCreate, async (message) => {
     if (userId) {
       await guild.kick(userId);
       await message.reply(`Kicked <@${userId}>.`);
+    }
+  }
+
+  if (cmd === 'timeout' && canTimeout) {
+    const userId = parseUserMention(target);
+    const member = userId ? await guild.members.resolve(userId).catch(() => null) : null;
+    if (member?.moderatable) {
+      await member.timeout(60_000, rest.join(' ') || 'cool down');
+      await message.reply(`Timed out <@${userId}> for 60s.`);
     }
   }
 });

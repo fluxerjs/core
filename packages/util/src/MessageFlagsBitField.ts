@@ -9,7 +9,6 @@ export const MessageFlagsBits = {
   SuppressEmbeds: BigInt(MessageFlags.SuppressEmbeds),
   SuppressNotifications: BigInt(MessageFlags.SuppressNotifications),
   VoiceMessage: BigInt(MessageFlags.VoiceMessage),
-  CompactAttachments: BigInt(MessageFlags.CompactAttachments),
 } as const;
 
 export type MessageFlagsString = keyof typeof MessageFlagsBits;

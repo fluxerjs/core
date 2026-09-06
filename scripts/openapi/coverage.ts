@@ -18,10 +18,44 @@ type Classified = {
   operationId: string;
   auth: 'botToken' | 'sessionToken' | 'public' | 'mixed' | 'none';
   category: 'bot' | 'session' | 'public' | 'voice' | 'other';
-  status: 'needs_wrapper' | 'route_only' | 'wrapped' | 'session_only' | 'voice_excluded' | 'public';
+  status:
+    | 'needs_wrapper'
+    | 'route_only'
+    | 'wrapped'
+    | 'session_only'
+    | 'voice_excluded'
+    | 'public'
+    | 'bot_denied';
 };
 
 const VOICE_HINTS = [/voice/i, /rtc/i, /stream/i, /livekit/i];
+
+/**
+ * DefaultUserOnly: 403 for `user.isBot`. Classify as session-only even if an
+ * older spec listed botToken. After current Fluxer OpenAPI these are already
+ * sessionToken-only; the list is a safety net.
+ */
+const DEFAULT_USER_ONLY_OPS = new Set([
+  'POST /channels/messages/bulk',
+  'GET /channels/{channel_id}/rtc-regions',
+  'POST /streams/{stream_key}/preview',
+  'GET /streams/{stream_key}/preview',
+  'DELETE /streams/{stream_key}/preview',
+  'POST /streams/{stream_key}/preview/upload-url',
+]);
+
+/**
+ * OpenAPI lists botToken, but Fluxer throws BotsCannotCreateGuildsError.
+ * Never treat as a missing bot wrapper.
+ */
+const BOT_DENIED_OPS = new Set(['POST /guilds']);
+
+/**
+ * Captcha-gated (bots are not exempt). Never treat as a missing bot wrapper.
+ * POST /users/@me/channels stays mixed: 1:1 `recipient_id` is bot-legal;
+ * group-DM `recipients` is captcha (do not add createGroupDM).
+ */
+const CAPTCHA_GATED_OPS = new Set(['PUT /channels/{channel_id}/recipients/{user_id}']);
 
 function authOf(op: Op): Classified['auth'] {
   const secs = op.security ?? [];
@@ -50,7 +84,7 @@ function main(): void {
     routeSource = fs.readFileSync(routesPath, 'utf8');
   }
 
-  // Core package sources — if Routes.* path builders are referenced, treat as wrapped
+  // Core package sources: if Routes.* path builders are referenced, treat as wrapped
   let coreSource = '';
   const coreRoot = path.join(REPO_ROOT, 'packages', 'fluxer-core', 'src');
   if (fs.existsSync(coreRoot)) {
@@ -65,6 +99,12 @@ function main(): void {
     };
     walk(coreRoot);
   }
+
+  /** True when `source` contains `pathLit` as a complete string/template literal (not a longer path). */
+  const hasExactPathLiteral = (source: string, pathLit: string): boolean => {
+    const escaped = pathLit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(['"\`])${escaped}\\1`).test(source);
+  };
 
   const routeBuilderNames = [...routeSource.matchAll(/^\s{2}(\w+)\s*:/gm)].map((m) => m[1]!);
   const usedBuilders = new Set(
@@ -114,11 +154,10 @@ function main(): void {
           const t = m[1]!.replace(/\$\{[^}]+\}/g, '{}');
           return t === open;
         });
-        // Also treat as wrapped when core builds the OpenAPI path via string concat
-        // (e.g. reaction routes appending `/@me`).
+        // Exact path literals only (avoids `/guilds` matching `/guilds/{id}` comments / CDN paths).
         const pathUsedInCore =
-          coreSource.includes(open) ||
-          coreSource.includes(p) ||
+          hasExactPathLiteral(coreSource, open) ||
+          hasExactPathLiteral(coreSource, p) ||
           (open.includes('/@me') &&
             [...usedBuilders].some((name) => {
               const block = routeSource.match(
@@ -133,6 +172,16 @@ function main(): void {
         if (builderUsedForPath || pathUsedInCore) status = 'wrapped';
         else if (routeDefined) status = 'route_only';
         else status = 'needs_wrapper';
+      }
+      const opKey = `${method.toUpperCase()} ${p}`;
+      if (DEFAULT_USER_ONLY_OPS.has(opKey) && status !== 'voice_excluded') {
+        category = 'session';
+        status = 'session_only';
+      } else if (
+        (status === 'needs_wrapper' || status === 'route_only') &&
+        (BOT_DENIED_OPS.has(opKey) || CAPTCHA_GATED_OPS.has(opKey))
+      ) {
+        status = 'bot_denied';
       }
       ops.push({
         method: method.toUpperCase(),

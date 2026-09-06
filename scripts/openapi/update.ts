@@ -10,15 +10,47 @@ import {
   OPENAPI_DIR,
   OPENAPI_FILE,
   OPENAPI_URL,
+  REPO_ROOT,
 } from './paths.js';
 
-async function main(): Promise<void> {
-  fs.mkdirSync(OPENAPI_DIR, { recursive: true });
+function localCheckoutOpenApi(): string | null {
+  const env = process.env.OPENAPI_COMPARE_PATH ?? process.env.FLUXER_REPO;
+  const candidates: string[] = [];
+  if (env) {
+    candidates.push(
+      env.endsWith('.json') ? env : path.join(env, 'fluxer_api/src/api/openapi/openapi.json'),
+    );
+  }
+  candidates.push(path.resolve(REPO_ROOT, '../fluxer/fluxer_api/src/api/openapi/openapi.json'));
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+async function loadOpenApiText(): Promise<{
+  text: string;
+  sourceUrl: string;
+  sourcePath?: string;
+}> {
+  const local = localCheckoutOpenApi();
+  if (local) {
+    return {
+      text: fs.readFileSync(local, 'utf8'),
+      sourceUrl: OPENAPI_URL,
+      sourcePath: local,
+    };
+  }
   const res = await fetch(OPENAPI_URL);
   if (!res.ok) {
     throw new Error(`Failed to fetch OpenAPI: ${res.status} ${res.statusText}`);
   }
-  const text = await res.text();
+  return { text: await res.text(), sourceUrl: OPENAPI_URL };
+}
+
+async function main(): Promise<void> {
+  fs.mkdirSync(OPENAPI_DIR, { recursive: true });
+  const { text, sourceUrl, sourcePath } = await loadOpenApiText();
   let doc: {
     openapi?: string;
     info?: { title?: string; version?: string };
@@ -54,8 +86,8 @@ async function main(): Promise<void> {
 
   const sha256 = crypto.createHash('sha256').update(text).digest('hex');
   fs.writeFileSync(OPENAPI_FILE, text, 'utf8');
-  const manifest = {
-    sourceUrl: OPENAPI_URL,
+  const manifest: Record<string, unknown> = {
+    sourceUrl,
     openapi: doc.openapi,
     apiVersion: doc.info?.version ?? 'unknown',
     title: doc.info?.title ?? 'unknown',
@@ -66,6 +98,7 @@ async function main(): Promise<void> {
   };
   fs.writeFileSync(MANIFEST_FILE, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
   console.log(`Wrote ${path.relative(process.cwd(), OPENAPI_FILE)}`);
+  if (sourcePath) console.log(`source=${path.relative(REPO_ROOT, sourcePath)}`);
   console.log(`paths=${pathCount} schemas=${schemaCount} sha256=${sha256}`);
 }
 

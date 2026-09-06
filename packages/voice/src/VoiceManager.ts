@@ -5,11 +5,9 @@ import {
   GatewayOpcodes,
   type GatewayVoiceServerUpdateDispatchData,
   type GatewayVoiceStateUpdateDispatchData,
-  Routes,
 } from '@fluxerjs/types';
 import { type LiveKitReceiveSubscription, LiveKitRtcConnection } from './LiveKitRtcConnection.js';
 import { isLiveKitEndpoint } from './Livekit.js';
-import { thumbnail } from './StreamPreviewPlaceholder.js';
 import { VoiceConnection } from './VoiceConnection.js';
 
 /** Maps guild_id -> user_id -> channel_id (null if not in voice). */
@@ -263,29 +261,7 @@ export class VoiceManager extends EventEmitter {
     });
     events.on('requestVoiceStateSync', (p: { self_stream?: boolean; self_video?: boolean }) => {
       this.updateVoiceState(cid, p);
-      if (p.self_stream) {
-        this.uploadStreamPreview(cid, conn).catch((e) =>
-          this.client.emit?.('debug', `[VoiceManager] Stream preview upload failed: ${String(e)}`),
-        );
-      }
     });
-  }
-
-  /** Upload a placeholder stream preview so the preview URL returns 200 instead of 404. */
-  private async uploadStreamPreview(
-    channelId: string,
-    conn: VoiceConnection | LiveKitRtcConnection,
-  ): Promise<void> {
-    const cid = conn.channel?.id ?? channelId;
-    const connectionId = this.connectionIds.get(cid);
-    if (!connectionId) return;
-
-    const streamKey = `${conn.channel.guildId}:${conn.channel.id}:${connectionId}`;
-    const route = Routes.streamPreview(streamKey);
-    const body = { channel_id: conn.channel.id, thumbnail, content_type: 'image/png' };
-
-    await this.client.rest.post(route, { body, auth: true });
-    this.client.emit?.('debug', `[VoiceManager] Uploaded stream preview for ${streamKey}`);
   }
 
   private tryCompletePending(channelId: string, pending: PendingVoiceJoin): void {
@@ -365,6 +341,10 @@ export class VoiceManager extends EventEmitter {
    * @returns The voice connection (LiveKitRtcConnection when Fluxer uses LiveKit)
    */
   async join(channel: VoiceChannel): Promise<VoiceConnection | LiveKitRtcConnection> {
+    const guildId = channel.guildId;
+    if (!guildId) {
+      throw new Error('Voice channel is missing guildId');
+    }
     const channelId = channel.id;
     const existing = this.connections.get(channelId);
     if (existing) {
@@ -376,7 +356,7 @@ export class VoiceManager extends EventEmitter {
     return new Promise((resolve, reject) => {
       this.client.emit?.(
         'debug',
-        `[VoiceManager] Requesting voice join guild=${channel.guildId} channel=${channelId}`,
+        `[VoiceManager] Requesting voice join guild=${guildId} channel=${channelId}`,
       );
       let timeout: ReturnType<typeof setTimeout>;
       const pending: PendingVoiceJoin = {
@@ -410,7 +390,7 @@ export class VoiceManager extends EventEmitter {
       this.client.sendToGateway(this.shardId, {
         op: GatewayOpcodes.VoiceStateUpdate,
         d: {
-          guild_id: channel.guildId,
+          guild_id: guildId,
           channel_id: channel.id,
           self_mute: false,
           self_deaf: false,
@@ -453,23 +433,28 @@ export class VoiceManager extends EventEmitter {
    */
   leaveChannel(channelId: string): void {
     const conn = this.connections.get(channelId);
-    if (conn) {
-      const guildId = conn.channel?.guildId;
-      conn.destroy();
-      this.connections.delete(channelId);
-      this.connectionIds.delete(channelId);
-      if (guildId) {
-        this.client.sendToGateway(this.shardId, {
-          op: GatewayOpcodes.VoiceStateUpdate,
-          d: {
-            guild_id: guildId,
-            channel_id: null,
-            self_mute: false,
-            self_deaf: false,
-          },
-        });
-      }
+    if (!conn) return;
+    const guildId = conn.channel?.guildId;
+    conn.destroy();
+    this.connections.delete(channelId);
+    this.connectionIds.delete(channelId);
+    if (!guildId) return;
+
+    // Fluxer supports multiple voice channels per guild. Only clear guild voice
+    // state when this was the last connection in the guild.
+    for (const other of this.connections.values()) {
+      if (other?.channel?.guildId === guildId) return;
     }
+
+    this.client.sendToGateway(this.shardId, {
+      op: GatewayOpcodes.VoiceStateUpdate,
+      d: {
+        guild_id: guildId,
+        channel_id: null,
+        self_mute: false,
+        self_deaf: false,
+      },
+    });
   }
 
   /**

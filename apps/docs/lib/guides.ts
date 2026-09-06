@@ -1,13 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
-import { isTaggedVersion } from '@/lib/api-docs';
+import { isTaggedVersion } from './api-docs';
 
 export interface GuideFrontmatter {
   title: string;
   description: string;
   category: string;
   order: number;
+  /** Extra search phrases (tasks, aliases) indexed on the docs site. */
+  searchTerms?: string;
 }
 
 export interface GuideMeta extends GuideFrontmatter {
@@ -66,6 +68,9 @@ export function getAllGuides(version?: string): GuideMeta[] {
         description: String(data.description ?? ''),
         category: String(data.category ?? 'other'),
         order: Number(data.order ?? 999),
+        ...(typeof data.searchTerms === 'string' && data.searchTerms
+          ? { searchTerms: data.searchTerms }
+          : {}),
       };
     })
     .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
@@ -86,6 +91,9 @@ export function getGuideBySlug(
       description: String(data.description ?? ''),
       category: String(data.category ?? 'other'),
       order: Number(data.order ?? 999),
+      ...(typeof data.searchTerms === 'string' && data.searchTerms
+        ? { searchTerms: data.searchTerms }
+        : {}),
     },
     content: rewriteGuideLinks(content, version),
   };
@@ -97,4 +105,19 @@ export function getGuidesByCategory(version?: string): Record<string, GuideMeta[
     (grouped[g.category] ??= []).push(g);
   }
   return grouped;
+}
+
+/** Previous/next within the same category (already sorted by order then title). */
+export function adjacentGuides(
+  guides: GuideMeta[],
+  slug: string,
+): { prev: GuideMeta | null; next: GuideMeta | null } {
+  const current = guides.find((g) => g.slug === slug);
+  if (!current) return { prev: null, next: null };
+  const same = guides.filter((g) => g.category === current.category);
+  const idx = same.findIndex((g) => g.slug === slug);
+  return {
+    prev: idx > 0 ? (same[idx - 1] ?? null) : null,
+    next: idx >= 0 && idx < same.length - 1 ? (same[idx + 1] ?? null) : null,
+  };
 }

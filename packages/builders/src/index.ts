@@ -1,6 +1,9 @@
 export {
   type APIAttachmentPayload,
   AttachmentBuilder,
+  type AttachmentBuilderOptions,
+  type AttachmentFileInput,
+  AttachmentMeta,
   type AttachmentPayloadOptions,
 } from './Messages/AttachmentBuilder.js';
 export {

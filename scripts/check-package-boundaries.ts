@@ -16,7 +16,9 @@ const LAYER: Record<string, number> = {
   '@fluxerjs/ws': 2,
   '@fluxerjs/builders': 2,
   '@fluxerjs/core': 3,
+  '@fluxerjs/sharding': 3,
   '@fluxerjs/voice': 4,
+  '@fluxerjs/sharding-redis': 4,
 };
 
 const PKG_DIRS: Record<string, string> = {
@@ -27,7 +29,9 @@ const PKG_DIRS: Record<string, string> = {
   '@fluxerjs/ws': 'packages/ws',
   '@fluxerjs/builders': 'packages/builders',
   '@fluxerjs/core': 'packages/fluxer-core',
+  '@fluxerjs/sharding': 'packages/sharding',
   '@fluxerjs/voice': 'packages/voice',
+  '@fluxerjs/sharding-redis': 'packages/sharding-redis',
 };
 
 function main(): void {

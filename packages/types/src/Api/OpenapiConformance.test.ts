@@ -25,8 +25,10 @@ describe('wire discriminator enums', () => {
   it('InviteType matches OpenAPI', () => {
     expect(InviteType.Guild).toBe(0);
     expect(InviteType.GroupDM).toBe(1);
-    expect(InviteType.EmojiPack).toBe(2);
-    expect(InviteType.StickerPack).toBe(3);
+    expect(Object.keys(InviteType).filter((k) => Number.isNaN(Number(k)))).toEqual([
+      'Guild',
+      'GroupDM',
+    ]);
   });
 
   it('GuildNSFWLevel / ContentWarningLevel / SplashCardAlignment match OpenAPI', () => {
@@ -40,6 +42,9 @@ describe('wire discriminator enums', () => {
 
   it('MessageFlags is a bitfield map; MessageType / AuditLogActionType are enums', () => {
     expect(MessageFlags.SuppressEmbeds).toBe(4);
+    expect(MessageFlags.SuppressNotifications).toBe(4096);
+    expect(MessageFlags.VoiceMessage).toBe(8192);
+    expect('CompactAttachments' in MessageFlags).toBe(false);
     expect(MessageType.Reply).toBe(19);
     expect(AuditLogActionType.MessageDelete).toBe(72);
   });

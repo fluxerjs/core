@@ -2,6 +2,14 @@
  * Extended Map with utility methods for key-value collections.
  */
 export class Collection<K, V> extends Map<K, V> {
+  /**
+   * @deprecated Managers **are** the collection. Prefer `guild.channels.get(id)` over
+   * `guild.channels.cache.get(id)`. This alias returns `this` for one minor (discord.js migration).
+   */
+  get cache(): this {
+    return this;
+  }
+
   /** First value, or the first `amount` values. */
   first(): V | undefined;
   first(amount: number): V[];

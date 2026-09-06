@@ -26,6 +26,7 @@ export interface DocProperty {
   description?: string;
   examples?: string[];
   optional?: boolean;
+  static?: boolean;
 }
 
 export interface DocMethod {
@@ -38,6 +39,7 @@ export interface DocMethod {
   deprecated?: boolean | string;
   source?: DocSource;
   see?: string[];
+  static?: boolean;
 }
 
 export interface DocSource {
@@ -79,6 +81,7 @@ export interface DocInterface {
   extends?: string[];
   typeSignature?: string;
   unionMembers?: DocEnumMember[];
+  examples?: string[];
   source?: DocSource;
   package?: string;
   see?: string[];

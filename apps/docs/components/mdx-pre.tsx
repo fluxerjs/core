@@ -29,7 +29,7 @@ function extractCodeMeta(children: ReactNode): { code: string; lang: string } {
   return { lang: 'text', code: getText(children).replace(/\n$/, '') };
 }
 
-/** MDX `pre` override — Shiki dual-theme highlighting. */
+/** MDX `pre` override. Shiki dual-theme highlighting. */
 export async function MdxPre({
   children,
   ...rest

@@ -1,5 +1,5 @@
 import type { APIAllowedMentions, APIMessageReference } from '@fluxerjs/types';
-import { AttachmentBuilder } from './AttachmentBuilder.js';
+import { AttachmentBuilder, AttachmentMeta } from './AttachmentBuilder.js';
 import { EmbedBuilder, type RESTPostAPIEmbed } from './EmbedBuilder.js';
 
 export interface MessagePayloadData {
@@ -20,6 +20,7 @@ const CONTENT_MAX = 2000;
 const EMBEDS_MAX = 10;
 
 type AttachmentInput =
+  | AttachmentMeta
   | AttachmentBuilder
   | { id: number; filename: string; description?: string | null };
 
@@ -110,7 +111,8 @@ export class MessagePayload {
 
   /**
    * Set attachments metadata (file bytes sent separately via multipart). Pass null to clear.
-   * @param attachments - Array of {@link AttachmentBuilder} or attachment metadata, or null
+   * Prefer {@link AttachmentMeta} for index metadata; {@link AttachmentBuilder} serializes via `toJSON(id)`.
+   * @param attachments - Array of {@link AttachmentMeta}, {@link AttachmentBuilder}, or plain objects, or null
    * @returns This builder for chaining
    */
   setAttachments(attachments: AttachmentInput[] | null): this {
@@ -118,9 +120,11 @@ export class MessagePayload {
       this.data.attachments = undefined;
       return this;
     }
-    this.data.attachments = attachments.map((a) =>
-      a instanceof AttachmentBuilder ? a.toJSON() : a,
-    );
+    this.data.attachments = attachments.map((a, i) => {
+      if (a instanceof AttachmentMeta) return a.toJSON();
+      if (a instanceof AttachmentBuilder) return a.toJSON(i);
+      return a;
+    });
     return this;
   }
 

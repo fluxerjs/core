@@ -79,7 +79,7 @@ async function requireGuild(message, client) {
     await message.reply('Use this command in a server.');
     return null;
   }
-  const guild = client.guilds.get(guildId) ?? (await client.guilds.fetch(guildId));
+  const guild = (await message.resolveGuild()) ?? client.guilds.get(guildId);
   if (!guild) {
     await message.reply('Could not find this server.');
     return null;
@@ -348,6 +348,16 @@ client.on(Events.MessageCreate, async (message) => {
           {
             name: 'Default notifications',
             value: DEFAULT_NOTIFICATION_LEVELS[guild.defaultMessageNotifications] ?? '—',
+            inline: true,
+          },
+          {
+            name: 'Members',
+            value: String(guild.memberCount ?? 'n/a'),
+            inline: true,
+          },
+          {
+            name: 'Online',
+            value: String(guild.onlineCount ?? 'n/a'),
             inline: true,
           },
           {

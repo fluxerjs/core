@@ -32,6 +32,18 @@ function createVoiceChannel(client: Client): VoiceChannel {
 }
 
 describe('VoiceManager', () => {
+  it('join throws when the voice channel has no guildId', async () => {
+    const client = createClient('bot1');
+    const vm = new VoiceManager(client);
+    const channel = new VoiceChannel(client, {
+      id: 'c1',
+      name: 'Test voice',
+      type: ChannelType.GuildVoice,
+      parent_id: null,
+    });
+    await expect(vm.join(channel)).rejects.toThrow('missing guildId');
+  });
+
   it('getVoiceChannelId returns null for unknown guild', () => {
     const client = createClient();
     const vm = new VoiceManager(client);

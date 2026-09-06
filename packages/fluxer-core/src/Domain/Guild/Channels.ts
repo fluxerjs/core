@@ -1,6 +1,10 @@
-import type { APIChannel, APIInvite, APIWebhook, ChannelCreateRequest } from '@fluxerjs/types';
+import type { APIChannel, APIInvite, APIWebhook } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
-import { toChannelPositionBody } from '../../ClientCore/SdkOptions/Guild.js';
+import {
+  type GuildChannelCreateOptions,
+  toChannelCreateBody,
+  toChannelPositionBody,
+} from '../../ClientCore/SdkOptions/index.js';
 import type { GuildChannel } from '../Channel/index.js';
 import { Invite } from '../Invite.js';
 import { Webhook } from '../Webhook.js';
@@ -10,10 +14,10 @@ import type { ChannelPositionUpdate } from './Types.js';
 
 export async function createChannel(
   guild: Guild,
-  data: ChannelCreateRequest,
+  options: GuildChannelCreateOptions,
 ): Promise<GuildChannel> {
   const created = await guild.client.rest.post(Routes.guildChannels(guild.id), {
-    body: data,
+    body: toChannelCreateBody(options),
     auth: true,
   });
   return cacheChannel(guild, created as APIChannel) as GuildChannel;

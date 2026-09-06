@@ -5,12 +5,12 @@
  *
  * Outputs:
  *   apps/docs/public/api/main.json          — latest (working tree)
- *   apps/docs/public/api/v<version>/main.json — one per v2.* git tag
+ *   apps/docs/public/api/v<version>/main.json — one per 2.0+ git tag
  *   apps/docs/public/api/versions.json      — manifest
  *   apps/docs/public/guides/v<version>/     — MDX guide snapshots per tag
  *
  * Deploy clones are often shallow and may lack an `origin` remote (e.g. Vercel).
- * Before generating tagged docs we fetch v2.* tags from the GitHub HTTPS URL
+ * Before generating tagged docs we fetch 2.0+ tags from the GitHub HTTPS URL
  * (override with DOCS_GIT_REMOTE). Set DOCS_ALLOW_PARTIAL=1 to warn instead of
  * failing when a tag cannot be built.
  *
@@ -50,6 +50,8 @@ const PACKAGES: { id: string; name: string; pkgPath: string }[] = [
   { id: 'rest', name: '@fluxerjs/rest', pkgPath: 'packages/rest' },
   { id: 'ws', name: '@fluxerjs/ws', pkgPath: 'packages/ws' },
   { id: 'voice', name: '@fluxerjs/voice', pkgPath: 'packages/voice' },
+  { id: 'sharding', name: '@fluxerjs/sharding', pkgPath: 'packages/sharding' },
+  { id: 'sharding-redis', name: '@fluxerjs/sharding-redis', pkgPath: 'packages/sharding-redis' },
   { id: 'util', name: '@fluxerjs/util', pkgPath: 'packages/util' },
   { id: 'collection', name: '@fluxerjs/collection', pkgPath: 'packages/collection' },
   { id: 'types', name: '@fluxerjs/types', pkgPath: 'packages/types' },
@@ -157,7 +159,7 @@ function githubAuthHeaders(): Record<string, string> {
 }
 
 /**
- * List v2.* release tag names via the GitHub Tags API.
+ * List 2.0+ release tag names via the GitHub Tags API.
  * Returns versions without the leading `v`, newest first.
  */
 async function listV2TagsFromGithub(repo: string): Promise<string[]> {
@@ -226,7 +228,7 @@ async function ensureReleaseTags(): Promise<void> {
   try {
     remoteVersions = await listV2TagsFromGithub(repo);
     console.log(
-      `[generate-docs] GitHub ${repo}: ${remoteVersions.length} v2.* tag(s): ${remoteVersions.join(', ') || '(none)'}`,
+      `[generate-docs] GitHub ${repo}: ${remoteVersions.length} 2.0+ tag(s): ${remoteVersions.join(', ') || '(none)'}`,
     );
   } catch (err) {
     console.warn(
@@ -259,10 +261,10 @@ async function ensureReleaseTags(): Promise<void> {
   }
 }
 
-/** Discover v2.* tags (>= 2.0.0), newest first. */
+/** Discover 2.0+ tags (>= 2.0.0), newest first. */
 function listV2Tags(): string[] {
   try {
-    const out = execFileSync('git', ['tag', '--list', 'v2.*'], {
+    const out = execFileSync('git', ['tag', '--list', 'v[2-9].*'], {
       cwd: root,
       encoding: 'utf-8',
     });
@@ -456,9 +458,28 @@ async function main(): Promise<void> {
   const latestDocs = buildCombinedDocs(root, latestVersion);
   writeDocsFile(resolve(API_DIR, 'main.json'), latestDocs);
 
+  if (process.env.DOCS_LATEST_ONLY === '1') {
+    console.log('[generate-docs] DOCS_LATEST_ONLY=1; skipping tagged versions');
+    let tagged: string[] = [];
+    const manifestPath = resolve(API_DIR, 'versions.json');
+    try {
+      const existing = JSON.parse(readFileSync(manifestPath, 'utf8')) as VersionsManifest;
+      tagged = Array.isArray(existing.versions) ? existing.versions : [];
+    } catch {
+      tagged = [];
+    }
+    writeFileSync(
+      manifestPath,
+      JSON.stringify({ latest: latestVersion, versions: tagged }, null, 2),
+      'utf-8',
+    );
+    console.log(`[generate-docs] -> ${manifestPath} (latest ${latestVersion})`);
+    return;
+  }
+
   await ensureReleaseTags();
   const tags = listV2Tags();
-  console.log(`[generate-docs] found ${tags.length} v2.* tag(s): ${tags.join(', ') || '(none)'}`);
+  console.log(`[generate-docs] found ${tags.length} 2.0+ tag(s): ${tags.join(', ') || '(none)'}`);
 
   const generatedVersions: string[] = [];
   const failedVersions: string[] = [];

@@ -1,12 +1,7 @@
-import type { APIChannelPinsPage, APIMessage } from '@fluxerjs/types';
+import type { APIChannelPinsPage } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import type { Client } from '../../ClientCore/Client.js';
-import { MessageManager } from '../../ClientCore/MessageManager.js';
-import { MessageCollector, type MessageCollectorOptions } from '../../Helpers/MessageCollector.js';
-import {
-  type MessagePrepareInput,
-  prepareMessagePostPayload,
-} from '../../Helpers/MessageUtils/index.js';
+import type { MessagePrepareInput } from '../../Helpers/MessageUtils/index.js';
 import { Message } from '../Message/index.js';
 import type { Channel } from './Base.js';
 
@@ -42,35 +37,24 @@ export async function fetchPinnedMessagesPageFor(
 // biome-ignore lint/suspicious/noExplicitAny: TS2545 mixin constructor constraint
 type ChannelCtor = abstract new (...args: any[]) => Channel;
 
-/** Mixin: send / messages / pins / collectors for TextChannel and DMChannel. */
+/** Mixin: send + pinned-message helpers for text-capable channels (guild text, voice, DMs). */
 export function TextCapable<TBase extends ChannelCtor>(Base: TBase) {
   abstract class TextCapableChannel extends Base {
-    #messages: MessageManager | undefined;
-
+    /**
+     * Send a message in this channel.
+     * @example
+     * await channel.send('hi');
+     */
     async send(options: MessagePrepareInput): Promise<Message> {
-      const payload = await prepareMessagePostPayload(options, {
-        defaultAllowedMentions: this.client.options.defaultAllowedMentions,
-      });
-      const data = await this.client.rest.post(Routes.channelMessages(this.id), payload);
-      this.client._addMessageToCache(this.id, data as APIMessage);
-      return new Message(this.client, data as APIMessage);
+      return this.client.channels.send(this.id, options);
     }
 
-    get messages(): MessageManager {
-      if (!this.#messages) {
-        this.#messages = new MessageManager(this.client, this.id);
-      }
-      return this.#messages;
-    }
-
-    createMessageCollector(options?: MessageCollectorOptions): MessageCollector {
-      return new MessageCollector(this.client, this.id, options);
-    }
-
+    /** Fetch pinned messages in this channel. */
     async fetchPinnedMessages(options?: FetchPinnedMessagesOptions): Promise<Message[]> {
       return (await this.fetchPinnedMessagesPage(options)).messages;
     }
 
+    /** Fetch a page of pinned messages plus pagination metadata. */
     async fetchPinnedMessagesPage(
       options?: FetchPinnedMessagesOptions,
     ): Promise<PinnedMessagesPage> {

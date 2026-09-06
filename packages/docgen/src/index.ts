@@ -11,8 +11,32 @@ import * as ts from 'typescript';
 import type { DocOutput } from './Schema.js';
 
 export type { DocClass, DocEnum, DocInterface, DocOutput } from './Schema.js';
+export {
+  DISCORD_GHOST_NAMES,
+  isGhostSymbol,
+  isHiddenMember,
+  isHiddenSymbol,
+  isWireConverterName,
+} from './Filter.js';
+export { getExamplesFromJSDoc } from './Extract.js';
 
+import { isGhostSymbol, isHiddenSymbol, isWireConverterName } from './Filter.js';
 import { visitSourceFile } from './Visitor.js';
+
+function pruneDocOutput(output: DocOutput): DocOutput {
+  return {
+    ...output,
+    classes: output.classes
+      .filter((c) => !isHiddenSymbol(c.name, c.description ?? ''))
+      .map((c) => ({
+        ...c,
+        methods: (c.methods ?? []).filter((m) => !isWireConverterName(m.name)),
+        properties: (c.properties ?? []).filter((p) => !isWireConverterName(p.name)),
+      })),
+    interfaces: output.interfaces.filter((i) => !isGhostSymbol(i.name)),
+    enums: output.enums.filter((e) => !isGhostSymbol(e.name)),
+  };
+}
 
 export interface DocgenOptions {
   entryPoints: string[];
@@ -89,7 +113,7 @@ export function generateDocs(options: DocgenOptions): DocOutput {
   allInterfaces.sort((a, b) => a.name.localeCompare(b.name));
   allEnums.sort((a, b) => a.name.localeCompare(b.name));
 
-  const output: DocOutput = {
+  const output = pruneDocOutput({
     meta: {
       generator: 'fluxer-docgen',
       version: '2',
@@ -99,7 +123,7 @@ export function generateDocs(options: DocgenOptions): DocOutput {
     classes: allClasses,
     interfaces: allInterfaces,
     enums: allEnums,
-  };
+  });
 
   mkdirSync(dirname(outFile), { recursive: true });
   writeFileSync(outFile, JSON.stringify(output, null, 2), 'utf-8');

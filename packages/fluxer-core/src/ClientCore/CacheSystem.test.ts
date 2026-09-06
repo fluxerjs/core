@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Guild } from '../Domain/Guild/Guild.js';
 import { Role } from '../Domain/Guild/Role.js';
 import { upsertGuildFromSnapshot } from '../Domain/Guild/Snapshot.js';
+import { Message } from '../Domain/Message/index.js';
 import { fixtureGuild, fixtureMember, fixtureMessage, fixtureUser } from '../TestKit/Fixtures.js';
 import { Client } from './Client.js';
 import { guildHandlers } from './EventHandlers/Guilds.js';
@@ -232,7 +233,13 @@ describe('cache system', () => {
       roles: 1,
     });
 
-    expect(client.cache.sweepMessages(() => true)).toBe(2);
+    expect(
+      client.cache.sweepMessages((message) => {
+        expect(message).toBeInstanceOf(Message);
+        expect(message.createdAt).toEqual(new Date(0));
+        return Date.now() - message.createdAt.getTime() > 0;
+      }),
+    ).toBe(2);
     expect(client.cache.sweepMembers((m) => m.id === 'u2')).toBe(1);
     expect(client.cache.stats().members).toBe(1);
     expect(client.cache.stats().messages).toBe(0);

@@ -2,12 +2,11 @@ import {
   type APIChannelPartial,
   type APIGuildPartial,
   type APIInvite,
-  type APIPackInviteInfo,
   type APIUser,
+  type ChannelType,
   InviteType,
   isGroupDmInvite,
   isGuildInvite,
-  isPackInvite,
   Routes,
 } from '@fluxerjs/types';
 
@@ -16,6 +15,7 @@ import { inviteUrl } from '../Helpers/Instance.js';
 import { ErrorCodes } from '../LibErrors/ErrorCodes.js';
 import { FluxerError } from '../LibErrors/FluxerError.js';
 import { Base } from './Base.js';
+import type { Channel } from './Channel/index.js';
 import type { Guild } from './Guild/index.js';
 import type { User } from './User.js';
 
@@ -52,23 +52,70 @@ export function parseInviteCode(codeOrUrl: string): string {
   return code;
 }
 
+function parseOptionalDate(value: string | null | undefined): Date | null {
+  if (value == null || value === '') return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/** CamelCase guild metadata embedded on a guild invite (not a cached {@link Guild}). */
+export interface InviteGuildSnapshot {
+  id: string;
+  name: string;
+  icon: string | null;
+  banner: string | null;
+  splash: string | null;
+  features: string[];
+}
+
+/** CamelCase channel metadata embedded on a guild or group-DM invite. */
+export interface InviteChannelSnapshot {
+  id: string;
+  name: string | null;
+  type: ChannelType;
+  icon: string | null;
+  parentId: string | null;
+}
+
+function toInviteGuild(data: APIGuildPartial): InviteGuildSnapshot {
+  return {
+    id: data.id,
+    name: data.name,
+    icon: data.icon ?? null,
+    banner: data.banner ?? null,
+    splash: data.splash ?? null,
+    features: data.features ?? [],
+  };
+}
+
+function toInviteChannel(data: APIChannelPartial): InviteChannelSnapshot {
+  return {
+    id: data.id,
+    name: data.name ?? null,
+    type: data.type,
+    icon: data.icon ?? null,
+    parentId: data.parent_id ?? null,
+  };
+}
+
 /**
- * Invite to a guild channel, group DM, or emoji/sticker pack.
- * Discriminate with `type` / `isGuild()` / `isGroupDM()` / `isPack()`.
+ * Invite to a guild channel or group DM.
+ * Discriminate with `type` / `isGuild()` / `isGroupDM()`.
+ * `guildSnapshot` / `channelSnapshot` are camelCase metadata, not cached structures.
+ * Use {@link resolveGuild} / {@link resolveChannel} for live structures.
  */
 export class Invite extends Base {
   readonly client: Client;
   readonly code: string;
   readonly type: InviteType;
-  readonly guild: APIGuildPartial | null;
-  readonly channel: APIChannelPartial | null;
-  readonly pack: APIPackInviteInfo | null;
+  readonly guildSnapshot: InviteGuildSnapshot | null;
+  readonly channelSnapshot: InviteChannelSnapshot | null;
   readonly inviter: User | null;
   readonly memberCount: number | null;
   readonly presenceCount: number | null;
-  readonly expiresAt: string | null;
+  readonly expiresAt: Date | null;
   readonly temporary: boolean | null;
-  readonly createdAt: string | null;
+  readonly createdAt: Date | null;
   readonly uses: number | null;
   readonly maxUses: number | null;
   readonly maxAge: number | null;
@@ -78,15 +125,15 @@ export class Invite extends Base {
     this.client = client;
     this.code = data.code;
     this.type = data.type;
-    this.guild = isGuildInvite(data) ? data.guild : null;
-    this.channel = isGuildInvite(data) || isGroupDmInvite(data) ? data.channel : null;
-    this.pack = isPackInvite(data) ? data.pack : null;
+    this.guildSnapshot = isGuildInvite(data) ? toInviteGuild(data.guild) : null;
+    this.channelSnapshot =
+      isGuildInvite(data) || isGroupDmInvite(data) ? toInviteChannel(data.channel) : null;
     this.inviter = data.inviter ? client.getOrCreateUser(data.inviter as APIUser) : null;
-    this.memberCount = isPackInvite(data) ? null : (data.member_count ?? null);
+    this.memberCount = data.member_count ?? null;
     this.presenceCount = isGuildInvite(data) ? (data.presence_count ?? null) : null;
-    this.expiresAt = data.expires_at ?? null;
+    this.expiresAt = parseOptionalDate(data.expires_at);
     this.temporary = data.temporary ?? null;
-    this.createdAt = data.created_at ?? null;
+    this.createdAt = parseOptionalDate(data.created_at);
     this.uses = data.uses ?? null;
     this.maxUses = data.max_uses ?? null;
     this.maxAge = data.max_age ?? null;
@@ -100,18 +147,27 @@ export class Invite extends Base {
     return this.type === InviteType.GroupDM;
   }
 
-  isPack(): boolean {
-    return this.type === InviteType.EmojiPack || this.type === InviteType.StickerPack;
-  }
-
   /** Full invite URL (uses this client's instance invite base). */
   get url(): string {
     return inviteUrl(this.client.instance.endpoints.invite, this.code);
   }
 
-  /** Cached guild for guild invites, else null. */
-  getGuild(): Guild | null {
-    return this.guild?.id ? (this.client.guilds.get(this.guild.id) ?? null) : null;
+  /**
+   * Resolve the cached/fetched {@link Guild} for this invite, or null.
+   * `guildSnapshot` is metadata only.
+   */
+  async resolveGuild(): Promise<Guild | null> {
+    if (!this.guildSnapshot?.id) return null;
+    return this.client.guilds.resolve(this.guildSnapshot.id);
+  }
+
+  /**
+   * Resolve the cached/fetched {@link Channel} for this invite, or null.
+   * `channelSnapshot` is metadata only.
+   */
+  async resolveChannel(): Promise<Channel | null> {
+    if (!this.channelSnapshot?.id) return null;
+    return this.client.channels.resolve(this.channelSnapshot.id);
   }
 
   /** Fetch invite metadata by code or URL (does not join). */

@@ -1,8 +1,8 @@
 ---
 title: Direct Messages
 description: Send and receive DMs with user.send and MessageCreate.
-category: sending-messages
-order: 2
+category: popular
+order: 11
 ---
 
 Bots can DM users who allow it. Failures usually mean the user blocked DMs or you never shared a mutual server.
@@ -47,6 +47,10 @@ client.on(Events.MessageCreate, async (message) => {
   await message.reply('Got your DM.');
 });
 ```
+
+## Group DMs
+
+Bots do not create group DMs. `addRecipient` exists on an existing group DM and is **captcha-gated** when captcha is enabled (bots are not exempt; you get `CaptchaRequiredError`). Prefer 1:1 `user.send`.
 
 ## Practical notes
 

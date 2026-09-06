@@ -1,7 +1,7 @@
-import type { APIMessage } from '@fluxerjs/types';
 import type { Channel } from '../Domain/Channel/index.js';
 import type { Guild } from '../Domain/Guild/Guild.js';
 import type { GuildMember } from '../Domain/Guild/GuildMember.js';
+import type { Message } from '../Domain/Message/index.js';
 import type { User } from '../Domain/User.js';
 import type { ResolvedCacheLimits } from '../Helpers/Options.js';
 import type { Client } from './Client.js';
@@ -68,8 +68,11 @@ export class CacheController {
     };
   }
 
+  /**
+   * Sweep cached messages. Filter receives a hydrated {@link Message} (`createdAt`).
+   */
   sweepMessages(
-    filter?: (message: APIMessage, channelId: string) => boolean,
+    filter?: (message: Message, channelId: string) => boolean,
     channelId?: string,
   ): number {
     return this.client.sweepMessages(filter, channelId);
@@ -147,9 +150,7 @@ export class CacheController {
    */
   cascadeChannel(channel: Channel, from: 'global' | 'guild' | 'both' = 'both'): void {
     const guildId =
-      'guildId' in channel && typeof (channel as { guildId?: unknown }).guildId === 'string'
-        ? (channel as { guildId: string }).guildId
-        : undefined;
+      typeof channel.isGuild === 'function' && channel.isGuild() ? channel.guildId : undefined;
 
     const dropFromGuild = (): void => {
       if (!guildId) return;

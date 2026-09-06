@@ -147,8 +147,8 @@ describe('Client gateway helpers and dispatch', () => {
     const invite = inviteCall?.[1] as Invite;
     expect(invite).toBeInstanceOf(Invite);
     expect(invite.code).toBe('abc123');
-    expect(invite.guild?.id).toBe('g1');
-    expect(invite.channel?.id).toBe('c1');
+    expect(invite.guildSnapshot?.id).toBe('g1');
+    expect(invite.channelSnapshot?.id).toBe('c1');
   });
 
   it('ignores malformed INVITE_CREATE payloads without code and logs debug message', async () => {
@@ -339,5 +339,14 @@ describe('Client gateway helpers and dispatch', () => {
 
     expect(emit.mock.calls.some((c) => c[0] === Events.GuildCreate)).toBe(true);
     expect(emit.mock.calls.some((c) => c[0] === Events.Ready)).toBe(false);
+  });
+
+  it('uptime is null until readyAt is set', () => {
+    expect(client.uptime).toBeNull();
+    client.readyAt = new Date(Date.now() - 250);
+    expect(client.uptime).toBeGreaterThanOrEqual(250);
+    expect(client.uptime).toBeLessThan(2_000);
+    client.readyAt = null;
+    expect(client.uptime).toBeNull();
   });
 });

@@ -1,4 +1,3 @@
-import { Network } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { RestExplorer, type RestExplorerOperation } from '@/components/RestExplorer';
 import { getRestSidebarGroups } from '@/components/RestNav';
@@ -22,17 +21,8 @@ export default function RestIndexPage(): React.ReactElement {
   return (
     <PageShell sidebarTitle="REST API" sidebarGroups={getRestSidebarGroups()} wide>
       <header className="mb-8">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Network className="h-3.5 w-3.5" aria-hidden />
-          </span>
-          <p className="font-mono text-xs uppercase tracking-wider text-primary/80">
-            OpenAPI {api.version}
-          </p>
-        </div>
-        <h1 className="font-display text-[clamp(2rem,4.5vw,3rem)] font-semibold tracking-tight">
-          {api.title}
-        </h1>
+        <p className="mb-2 font-mono text-xs text-muted-foreground">OpenAPI {api.version}</p>
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{api.title}</h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
           {api.description ?? 'HTTP API reference generated from the OpenAPI specification.'}
         </p>

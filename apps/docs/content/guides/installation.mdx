@@ -22,8 +22,10 @@ Also fine: `npm install @fluxerjs/core` or `yarn add @fluxerjs/core`.
 Optional packages when you need them:
 
 ```bash
-pnpm add @fluxerjs/voice    # see the Voice guide
-pnpm add @fluxerjs/builders # if you import builders separately (also re-exported from core)
+pnpm add @fluxerjs/voice           # see the Voice guide
+pnpm add @fluxerjs/builders        # if you import builders separately (also re-exported from core)
+pnpm add @fluxerjs/sharding        # process sharding when one process is not enough
+pnpm add @fluxerjs/sharding-redis  # multi-machine shard leases
 ```
 
 <Warning>
@@ -59,7 +61,18 @@ client.on(Events.Ready, () => {
 await client.login(process.env.FLUXER_BOT_TOKEN);
 ```
 
-Fluxer has no Discord-style gateway intents. Omit intents; use `ignoredEvents` to suppress specific dispatches if needed.
+When you are ready to reply to messages, listen for `Events.MessageCreate` and match `!ping` yourself (see [Basic bot](/guides/basic-bot/)). For several commands, parse with `parsePrefixCommand` (see [Prefix commands](/guides/prefix-commands/)).
+
+## Getting Started path
+
+1. [Installation](/guides/installation/) (this page)
+2. [Basic bot](/guides/basic-bot/)
+3. [Prefix commands](/guides/prefix-commands/)
+4. [Errors](/guides/errors/) (`FluxerError` cheat sheet)
+5. [Caching](/guides/caching/) (limits, get vs fetch, sweeps)
+6. [Where do I...?](/guides/where-do-i/) (task index)
+
+Upgrading an existing bot: [Upgrading to 3.0](/guides/upgrading-to-3/) (from 2.x) or [Migrating to 2.0](/guides/migration/) (from 1.x). Coming from discord.js: [From discord.js](/guides/from-discordjs/).
 
 ## Verify it works
 
@@ -72,7 +85,7 @@ FLUXER_BOT_TOKEN=your_token node examples/minimal-bot.js
 Then send `!ping` in a channel the bot can see. Next stop: the [Basic bot](/guides/basic-bot/) guide, or browse [examples](/examples/).
 
 <Tip>
-Stuck on setup? [Join Fluxer](https://fluxer.gg/PobipZtv) — need help, join here.
+Stuck on setup? [Join Fluxer](https://fluxer.gg/PobipZtv): need help, join here.
 </Tip>
 
 ## Custom API host

@@ -7,13 +7,14 @@ import remarkGfm from 'remark-gfm';
 import { HelpCallout } from '@/components/FluxerInvite';
 import { getGuidesSidebarGroups } from '@/components/GuidesNav';
 import { CodeTabs, Tip, Warning } from '@/components/mdx';
+import { MdxInlineCode } from '@/components/MdxInlineCode';
 import { MdxPre } from '@/components/mdx-pre';
 import { extractToc, OnPageToc } from '@/components/OnPageToc';
 import { PageShell } from '@/components/PageShell';
 import { getCategoryLabel } from '@/lib/guide-meta';
-import { getAllGuides, getGuideBySlug, guidesBasePath } from '@/lib/guides';
+import { adjacentGuides, getAllGuides, getGuideBySlug, guidesBasePath } from '@/lib/guides';
 
-const components = { Tip, Warning, CodeTabs, pre: MdxPre };
+const components = { Tip, Warning, CodeTabs, pre: MdxPre, code: MdxInlineCode };
 
 export function GuideContent({
   slug,
@@ -25,10 +26,7 @@ export function GuideContent({
   const guide = getGuideBySlug(slug, version);
   if (!guide) notFound();
 
-  const all = getAllGuides(version);
-  const idx = all.findIndex((g) => g.slug === slug);
-  const prev = idx > 0 ? all[idx - 1] : null;
-  const next = idx >= 0 && idx < all.length - 1 ? all[idx + 1] : null;
+  const { prev, next } = adjacentGuides(getAllGuides(version), slug);
   const toc = extractToc(guide.content);
   const base = guidesBasePath(version);
 
@@ -44,13 +42,11 @@ export function GuideContent({
               Guides
             </Link>
             <span className="text-border">/</span>
-            <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+            <span className="text-xs text-muted-foreground">
               {getCategoryLabel(guide.meta.category)}
             </span>
           </nav>
-          <h1 className="font-display text-[clamp(1.9rem,4vw,2.75rem)] font-semibold tracking-tight">
-            {guide.meta.title}
-          </h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{guide.meta.title}</h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
             {guide.meta.description}
           </p>

@@ -1,13 +1,14 @@
 ---
 title: Message History
-description: Fetch messages, pin history, and bulk delete with channel.messages and bulkDelete.
-category: sending-messages
-order: 12
+description: Fetch messages, pin history, search, and bulk delete. Bots use preloadMessages, not bulkFetchMessages.
+category: popular
+order: 18
+searchTerms: preloadMessages searchMessages bulkDelete fetchPinnedMessages bulkFetchMessages user-only
 ---
 
 ## Fetch one message
 
-If you already have a text channel:
+If you already have a text-based channel:
 
 ```javascript
 const msg = await channel.messages.fetch(messageId);
@@ -23,21 +24,50 @@ const msg = await client.channels.fetchMessage(channelId, messageId);
 
 ```javascript
 const page = await channel.messages.fetch({ limit: 50 });
-// or with cursors:
 const older = await channel.messages.fetch({ limit: 50, before: lastId });
 ```
 
-Exact option names follow the manager (`limit`, `before`, `after`, `around`). Prefer structures from the manager over raw REST when you can.
+Exact option names follow the manager (`limit`, `before`, `after`, `around`).
+
+## Preload several channels (bots)
+
+`client.preloadMessages` is the bot-legal way to warm recent messages across channels. `client.bulkFetchMessages` is a **user-account** API (`DefaultUserOnly`). Bots receive `AccessDeniedError`.
+
+```javascript
+const latest = await client.preloadMessages(['111', '222']);
+for (const [channelId, message] of Object.entries(latest)) {
+  console.log(channelId, message?.id ?? 'empty');
+}
+```
+
+Then page with `channel.messages.fetch` as usual.
+
+## Search (bots)
+
+Search in the current bot scope. `scope: current` is sent for you. Other scopes return `BOT_SEARCH_SCOPE_UNAVAILABLE`.
+
+```javascript
+const results = await client.searchMessages({
+  content: 'hello',
+  contextGuildId: message.guildId,
+  hitsPerPage: 25,
+});
+if ('indexing' in results) {
+  // Wait and retry; this channel is still being indexed.
+} else {
+  console.log(results.total, results.hitsPerPage, results.page, results.cursor);
+  for (const hit of results.messages) {
+    console.log(hit.id, hit.content);
+  }
+}
+```
 
 ## Bulk delete
 
 `channel.bulkDelete` accepts a count or an ID list:
 
 ```javascript
-// Fetch last N (1–100) in this channel, then delete them
 await channel.bulkDelete(20);
-
-// Delete specific IDs (1 uses DELETE; 2–100 uses the bulk route)
 await channel.bulkDelete([id1, id2, id3]);
 ```
 
@@ -47,27 +77,11 @@ Out-of-range counts throw `FluxerError` with `INVALID_FETCH_LIMIT` (or the bulk-
 
 ```javascript
 const pinned = await channel.fetchPinnedMessages();
+const page = await channel.fetchPinnedMessagesPage({ limit: 50 });
 ```
-
-Check the SDK reference for the exact page shape if you paginate pins.
 
 ## Permissions
 
-History and bulk delete need the usual channel permissions (View Channel, Read Message History, Manage Messages). Always check before deleting other people's messages.
+History and bulk delete need View Channel, Read Message History, and Manage Messages (for deleting others). Always check before deleting other people's messages.
 
-## Bulk fetch across channels
-
-For several channels in one request:
-
-```javascript
-const result = await client.bulkFetchMessages([
-  { channelId: '111', limit: 50 },
-  { channelId: '222', limit: 25, before: '999' },
-]);
-
-for (const batch of result.channels) {
-  console.log(batch.channelId, batch.messages.size);
-}
-```
-
-Request fields are camelCase (`channelId`, `limit`, `before`, `after`, `around`).
+Runnable demo: [history-bot](/examples/history-bot/).

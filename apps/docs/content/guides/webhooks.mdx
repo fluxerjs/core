@@ -1,8 +1,8 @@
 ---
 title: Webhooks
 description: Create, list, send, and delete webhooks without sitting on the gateway.
-category: webhooks
-order: 12
+category: additional
+order: 48
 ---
 
 A webhook is an ID plus a token that can post into a channel. Handy for scripts, CI, and anything that should not keep a gateway socket open.
@@ -28,7 +28,7 @@ const client = new Client();
 await client.login(process.env.FLUXER_BOT_TOKEN);
 
 const channel = client.channels.get(channelId);
-if (!channel?.createWebhook) throw new Error('Channel does not support webhooks');
+if (!channel?.isGuild()) throw new Error('Channel does not support webhooks');
 
 const webhook = await channel.createWebhook({ name: 'My Webhook' });
 console.log(webhook.id, webhook.token);

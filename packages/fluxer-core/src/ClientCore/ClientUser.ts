@@ -17,8 +17,8 @@ export class ClientUser extends User {
 
   /** Broadcast presence (gateway opcode 3) on all shards. */
   setPresence(presence: PresenceUpdateOptions): void {
+    this.client.options.presence = presence;
     const wire = toPresenceWire(presence) as unknown as GatewayPresenceUpdateData;
-    this.client.options.presence = wire;
     this.client._sendToAllShards({ op: GatewayOpcodes.PresenceUpdate, d: wire });
   }
 
@@ -60,7 +60,15 @@ export class ClientUser extends User {
     }));
   }
 
-  /** DELETE /users/@me/guilds/{guild_id} */
+  /**
+   * Leave a guild (`client.user.leaveGuild`).
+   * DELETE /users/@me/guilds/{guild_id}.
+   *
+   * @param guildId - Guild to leave
+   * @param options - Optional sudo / MFA body for user accounts
+   * @example
+   * await client.user.leaveGuild(guildId);
+   */
   async leaveGuild(guildId: string, options?: SudoVerificationOptions): Promise<void> {
     const body = options ? toSudoBody(options) : undefined;
     await this.client.rest.delete(Routes.leaveGuild(guildId), {

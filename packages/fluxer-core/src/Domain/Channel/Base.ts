@@ -1,3 +1,4 @@
+import type { Collection } from '@fluxerjs/collection';
 import type {
   APIChannel,
   APIChannelPartial,
@@ -23,15 +24,33 @@ import {
   toAttachmentUploadPlanResponse,
   toSudoBody,
 } from '../../ClientCore/SdkOptions/index.js';
+import {
+  MessageCollector,
+  type MessageCollectorEndReason,
+  type MessageCollectorOptions,
+} from '../../Helpers/MessageCollector.js';
 import { ErrorCodes } from '../../LibErrors/ErrorCodes.js';
 import { FluxerError } from '../../LibErrors/FluxerError.js';
 import { Base } from '../Base.js';
+import type { Message } from '../Message/index.js';
 import { type UploadFileForSend, uploadAttachmentsForSend } from './Attachments.js';
 import type { DMChannel } from './Dm.js';
-import type { GuildChannel, LinkChannel, TextChannel, VoiceChannel } from './Guild.js';
+import type {
+  CategoryChannel,
+  GuildChannel,
+  LinkChannel,
+  TextChannel,
+  VoiceChannel,
+} from './Guild.js';
 
-/** Base class for all channel types. */
+/**
+ * Base class for all channel types.
+ * `client.channels.fetch` and `message.resolveChannel` return this type; call `delete` on it.
+ * Text-capable channels (`isTextBased`) also have `send`.
+ * Narrow with `isTextBased` / `isGuild`.
+ */
 export abstract class Channel extends Base {
+  #messages: MessageManager | undefined;
   /** The {@link Client} that instantiated this channel. */
   readonly client: Client;
   /** Snowflake ID of this channel. */
@@ -78,23 +97,51 @@ export abstract class Channel extends Base {
     }
   }
 
-  /** Wired in `structures/channel/index.ts` after subclasses load. */
+  /** @internal Factory wired after subclasses load. */
   static from(_c: Client, _d: APIChannel | APIChannelPartial): GuildChannel | TextChannel {
     throw new Error('Channel.from not initialized');
   }
+  /** @internal Factory wired after subclasses load. */
   static fromOrCreate(
     _c: Client,
     _d: APIChannel | APIChannelPartial,
   ): TextChannel | DMChannel | GuildChannel {
     throw new Error('Channel.fromOrCreate not initialized');
   }
+  /** @internal Factory wired after subclasses load. */
   static createDM(_c: Client, _d: APIChannelPartial): DMChannel {
     throw new Error('Channel.createDM not initialized');
   }
 
-  /** Check if this channel supports sending messages (text/DM). */
-  isTextBased(): this is TextChannel | DMChannel {
-    return 'send' in this;
+  /**
+   * Whether this channel type can carry messages (text, voice, DM, group DM, notes).
+   * Checks {@link ChannelType}, not whether `send` exists on the instance.
+   */
+  isTextBased(): this is TextChannel | VoiceChannel | DMChannel {
+    return (
+      this.type === ChannelType.GuildText ||
+      this.type === ChannelType.GuildVoice ||
+      this.type === ChannelType.DM ||
+      this.type === ChannelType.GroupDM ||
+      this.type === ChannelType.DMPersonalNotes
+    );
+  }
+  /** Check if this is a guild channel (text, voice, category, or link). */
+  isGuild(): this is GuildChannel {
+    return (
+      this.type === ChannelType.GuildText ||
+      this.type === ChannelType.GuildVoice ||
+      this.type === ChannelType.GuildCategory ||
+      this.type === ChannelType.GuildLink
+    );
+  }
+  /** Check if this is a guild text channel. */
+  isText(): this is TextChannel {
+    return this.type === ChannelType.GuildText;
+  }
+  /** Check if this is a category channel. */
+  isCategory(): this is CategoryChannel {
+    return this.type === ChannelType.GuildCategory;
   }
   /** Check if this is a DM, group DM, or personal notes channel. */
   isDM(): this is DMChannel {
@@ -110,11 +157,11 @@ export abstract class Channel extends Base {
   }
   /** Check if this is a voice channel. */
   isVoice(): this is VoiceChannel {
-    return 'bitrate' in this;
+    return this.type === ChannelType.GuildVoice;
   }
   /** Check if this is a link channel. */
   isLink(): this is LinkChannel {
-    return 'url' in this;
+    return this.type === ChannelType.GuildLink;
   }
 
   /**
@@ -155,7 +202,7 @@ export abstract class Channel extends Base {
     return ids;
   }
 
-  /** Delete all messages sent by the bot in this channel (user account feature). */
+  /** Delete all messages sent by the bot in this channel. Sudo auto-passes for bots. */
   async bulkDeleteMyMessages(options?: SudoVerificationOptions): Promise<void> {
     const body = options ? toSudoBody(options) : undefined;
     await this.client.rest.post(Routes.channelBulkDeleteMine(this.id), {
@@ -164,12 +211,18 @@ export abstract class Channel extends Base {
     });
   }
 
-  /** Mark all pinned messages as read in this channel. */
+  /**
+   * Mark all pinned messages as read in this channel.
+   * Session-token helper; bots usually skip this.
+   */
   async acknowledgePins(): Promise<void> {
     await this.client.rest.post(Routes.channelPinsAck(this.id), { auth: true });
   }
 
-  /** Clear the read state for this channel. */
+  /**
+   * Clear the read state for this channel.
+   * Session-token helper; bots usually skip this.
+   */
   async clearReadState(): Promise<void> {
     await this.client.rest.delete(Routes.channelMessagesAck(this.id), { auth: true });
   }
@@ -214,7 +267,11 @@ export abstract class Channel extends Base {
     await this.client.rest.post(Routes.channelTyping(this.id), { auth: true });
   }
 
-  /** Fetch available RTC regions for voice channels. */
+  /**
+   * Fetch available RTC regions for voice channels.
+   * User-account only (`DefaultUserOnly`); bots receive `AccessDeniedError`.
+   * Bots should skip this and join voice with `@fluxerjs/voice` instead.
+   */
   async fetchRtcRegions(): Promise<RtcRegionPayload[]> {
     const data = await this.client.rest.get<APIRtcRegion[]>(Routes.channelRtcRegions(this.id), {
       auth: true,
@@ -235,8 +292,65 @@ export abstract class Channel extends Base {
     };
   }
 
-  /** Check if the bot can send messages in this channel. */
+  /** Whether this channel type can carry messages (does not check permissions). */
   canSendMessage(): boolean {
-    return this.isDM();
+    return this.isTextBased();
+  }
+
+  /** Per-channel message cache + fetch. */
+  get messages(): MessageManager {
+    if (!this.#messages) {
+      this.#messages = new MessageManager(this.client, this.id);
+    }
+    return this.#messages;
+  }
+
+  /** Collect messages in this channel until time/max/stop. */
+  createMessageCollector(options?: MessageCollectorOptions): MessageCollector {
+    return new MessageCollector(this.client, this.id, options);
+  }
+
+  /**
+   * Wait for messages matching the filter, then resolve the collected set.
+   * Pass `errors: ['time']` to reject when the timer fires instead of resolving.
+   * @example
+   * const collected = await channel.awaitMessages({ max: 1, time: 15_000 });
+   */
+  awaitMessages(
+    options?: MessageCollectorOptions & { errors?: MessageCollectorEndReason[] },
+  ): Promise<Collection<string, Message>> {
+    return MessageCollector.awaitMessages(this.client, this.id, options);
+  }
+
+  /**
+   * Delete this channel (or close it if it is a DM).
+   * Guild channels require Manage Channels. `silent` / `deleteMessages` are Fluxer query params.
+   * @example
+   * const channel = await client.channels.fetch(channelId);
+   * await channel.delete();
+   */
+  async delete(
+    options?: SudoVerificationOptions & { silent?: boolean; deleteMessages?: boolean },
+  ): Promise<void> {
+    const params = new URLSearchParams();
+    if (options?.silent) params.set('silent', 'true');
+    if (options?.deleteMessages) params.set('delete_messages', 'true');
+    const qs = params.toString();
+    const { silent: _s, deleteMessages: _d, ...sudo } = options ?? {};
+    const body = Object.keys(sudo).length ? toSudoBody(sudo) : undefined;
+    await this.client.rest.delete(Routes.channel(this.id) + (qs ? `?${qs}` : ''), {
+      body,
+      auth: true,
+    });
+    this.client.channels.delete(this.id);
+    this.client._clearMessageCache(this.id);
+    if (this.isGuild() && this.guildId) {
+      this.client.guilds.get(this.guildId)?.channels.delete(this.id);
+    }
+  }
+
+  /** Channel mention (`<#id>`). */
+  toString(): string {
+    return `<#${this.id}>`;
   }
 }

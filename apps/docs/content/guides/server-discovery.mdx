@@ -1,0 +1,49 @@
+---
+title: Server Discovery
+description: Apply, edit, or withdraw a guild discovery listing. Bots cannot join via discovery.
+category: guilds
+order: 36
+searchTerms: applyForDiscovery fetchDiscoveryStatus withdrawDiscoveryApplication listing directory
+---
+
+Guilds can apply to appear in Fluxer server discovery. That is a **listing** API. There is no bot method to join a guild from discovery.
+
+Self-hosted **instance** discovery (`Client.fromDiscovery`) is a different topic: [Discovery](/guides/discovery/).
+
+## Check eligibility
+
+```javascript
+const status = await guild.fetchDiscoveryStatus();
+console.log(status.eligible, status.minMemberCount, status.application?.status);
+```
+
+## Apply
+
+```javascript
+const application = await guild.applyForDiscovery({
+  description: 'A community for Fluxer bots and library chat.',
+  primaryCategoryId: 1,
+  keywords: ['bots', 'javascript'],
+  primaryLanguage: 'en',
+});
+await message.reply(`Discovery status: ${application.status}`);
+```
+
+Options are camelCase (`primaryCategoryId`, `keywords`, `primaryLanguage`). Wire JSON uses `category_type` and `custom_tags`.
+
+## Edit or withdraw
+
+```javascript
+await guild.editDiscoveryApplication({
+  description: 'Updated blurb.',
+  keywords: ['bots'],
+});
+
+await guild.withdrawDiscoveryApplication();
+```
+
+Requires Manage Guild (or owner). Review and member-count rules are server-side; the SDK only submits the application.
+
+## Related
+
+[Invites](/guides/invites/) (how people actually join), [Discovery](/guides/discovery/) (point a Client at a self-hosted instance).

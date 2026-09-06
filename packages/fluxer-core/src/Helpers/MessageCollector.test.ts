@@ -20,7 +20,7 @@ describe('MessageCollector', () => {
 
   it('collects messages on its channel and emits collect', () => {
     const client = createTestClient();
-    const collector = new MessageCollector(client, 'c1');
+    const collector = new MessageCollector(client, 'c1', { time: 60_000 });
     const collected: string[] = [];
     collector.on('collect', (m) => collected.push(m.id));
 
@@ -33,7 +33,7 @@ describe('MessageCollector', () => {
 
   it('ignores messages from other channels', () => {
     const client = createTestClient();
-    const collector = new MessageCollector(client, 'c1');
+    const collector = new MessageCollector(client, 'c1', { time: 60_000 });
     client.emit(Events.MessageCreate, stubMessage('m1', 'other'));
     expect(collector.collected.size).toBe(0);
   });
@@ -41,11 +41,17 @@ describe('MessageCollector', () => {
   it('applies the filter', () => {
     const client = createTestClient();
     const collector = new MessageCollector(client, 'c1', {
+      time: 60_000,
       filter: (m) => m.author.id === 'keep',
     });
     client.emit(Events.MessageCreate, stubMessage('m1', 'c1', 'drop'));
     client.emit(Events.MessageCreate, stubMessage('m2', 'c1', 'keep'));
     expect([...collector.collected.keys()]).toEqual(['m2']);
+  });
+
+  it('throws when neither time nor max is set', () => {
+    const client = createTestClient();
+    expect(() => new MessageCollector(client, 'c1')).toThrow(/time.*max|max.*time/i);
   });
 
   it('stops with reason "limit" once max is reached', () => {
@@ -81,7 +87,7 @@ describe('MessageCollector', () => {
 
   it('stop() defaults to reason "user" and is idempotent', () => {
     const client = createTestClient();
-    const collector = new MessageCollector(client, 'c1');
+    const collector = new MessageCollector(client, 'c1', { time: 60_000 });
     const end = vi.fn();
     collector.on('end', end);
 
@@ -92,10 +98,28 @@ describe('MessageCollector', () => {
     expect(end.mock.calls[0]?.[1]).toBe('user');
   });
 
+  it('awaitMessages resolves collected messages when max is not an error', async () => {
+    const client = createTestClient();
+    const pending = MessageCollector.awaitMessages(client, 'c1', {
+      max: 1,
+      errors: [],
+    });
+    client.emit(Events.MessageCreate, stubMessage('m1', 'c1'));
+    const collected = await pending;
+    expect([...collected.keys()]).toEqual(['m1']);
+  });
+
+  it('awaitMessages rejects with CollectorMax by default when max is reached', async () => {
+    const client = createTestClient();
+    const pending = MessageCollector.awaitMessages(client, 'c1', { max: 1 });
+    client.emit(Events.MessageCreate, stubMessage('m1', 'c1'));
+    await expect(pending).rejects.toMatchObject({ code: 'COLLECTOR_MAX' });
+  });
+
   it('removes its client listener on stop', () => {
     const client = createTestClient();
     const before = client.listenerCount(Events.MessageCreate);
-    const collector = new MessageCollector(client, 'c1');
+    const collector = new MessageCollector(client, 'c1', { time: 60_000 });
     expect(client.listenerCount(Events.MessageCreate)).toBe(before + 1);
     collector.stop();
     expect(client.listenerCount(Events.MessageCreate)).toBe(before);

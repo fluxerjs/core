@@ -59,6 +59,14 @@ const TESTS = [
     exercise: async (m) => {
       if (typeof m.GatewayCloseCodes !== 'object') throw new Error('GatewayCloseCodes missing');
       if (m.GatewayCloseCodes.Normal !== 1000) throw new Error('GatewayCloseCodes.Normal wrong');
+      if (typeof m.shardIdForGuild !== 'function') throw new Error('shardIdForGuild missing');
+      if (m.shardIdForGuild('1', 1) !== 0) throw new Error('shardIdForGuild wrong');
+      if (typeof m.SimpleIdentifyThrottler !== 'function') {
+        throw new Error('SimpleIdentifyThrottler missing');
+      }
+      if (typeof m.WorkerShardingStrategy !== 'function') {
+        throw new Error('WorkerShardingStrategy missing');
+      }
     },
   },
   {
@@ -123,6 +131,33 @@ const TESTS = [
       if (!manager || typeof manager.join !== 'function') {
         throw new Error('getVoiceManager returned invalid VoiceManager');
       }
+    },
+  },
+  {
+    pkg: '@fluxerjs/sharding',
+    exercise: async (m) => {
+      if (typeof m.ShardingManager !== 'function') throw new Error('ShardingManager missing');
+      if (typeof m.attachShardClientUtil !== 'function') {
+        throw new Error('attachShardClientUtil missing');
+      }
+      if (typeof m.BETA_SHARDING_WARNING !== 'string') {
+        throw new Error('BETA_SHARDING_WARNING missing');
+      }
+      if (typeof m.ClusterManager === 'function') {
+        throw new Error(
+          'ClusterManager must stay off the public barrel until plan-change respawns',
+        );
+      }
+    },
+  },
+  {
+    pkg: '@fluxerjs/sharding-redis',
+    exercise: async (m) => {
+      if (typeof m.RedisClusterCoordinator !== 'function') {
+        throw new Error('RedisClusterCoordinator missing');
+      }
+      if (typeof m.RedisSessionStore !== 'function') throw new Error('RedisSessionStore missing');
+      if (typeof m.RedisBroker !== 'function') throw new Error('RedisBroker missing');
     },
   },
 ];

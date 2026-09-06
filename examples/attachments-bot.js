@@ -1,10 +1,10 @@
 /**
- * Attachments example — upload a buffer, spoiler flag, and attach by URL.
+ * Attachments example: upload a buffer, spoiler flag, and attach by URL.
  *
  * Commands:
- *   !file     — text file from a Buffer
- *   !spoiler  — tiny PNG marked as spoiler (1x1 placeholder)
- *   !urlfile  — attach an image by URL
+ *   !file     text file from a Buffer (AttachmentBuilder)
+ *   !spoiler  tiny PNG marked as spoiler (1x1 placeholder)
+ *   !urlfile  attach an image by URL via AttachmentBuilder
  *
  * Usage:
  *   FLUXER_BOT_TOKEN=your_token node examples/attachments-bot.js
@@ -12,7 +12,13 @@
  * Guides: attachments, attachments-by-url
  */
 
-import { Client, Events, MessageAttachmentFlags, parsePrefixCommand } from '@fluxerjs/core';
+import {
+  AttachmentBuilder,
+  Client,
+  Events,
+  MessageAttachmentFlags,
+  parsePrefixCommand,
+} from '@fluxerjs/core';
 
 const PREFIX = '!';
 const client = new Client();
@@ -36,7 +42,11 @@ client.on(Events.MessageCreate, async (message) => {
     if (parsed.command === 'file') {
       await message.reply({
         content: 'Text file attached:',
-        files: [{ name: 'hello.txt', data: Buffer.from('Hello from Fluxer!\n', 'utf8') }],
+        files: [
+          new AttachmentBuilder(Buffer.from('Hello from Fluxer!\n', 'utf8'), {
+            name: 'hello.txt',
+          }),
+        ],
       });
       return;
     }
@@ -44,11 +54,11 @@ client.on(Events.MessageCreate, async (message) => {
     if (parsed.command === 'spoiler') {
       await message.reply({
         content: 'Spoiler image (click to reveal):',
-        files: [{ name: 'secret.png', data: PNG_1X1 }],
+        files: [new AttachmentBuilder(PNG_1X1, { name: 'secret.png', spoiler: true })],
         attachments: [
           {
             id: 0,
-            filename: 'secret.png',
+            filename: 'SPOILER_secret.png',
             title: 'Hidden pixel',
             flags: MessageAttachmentFlags.IS_SPOILER,
           },
@@ -61,10 +71,9 @@ client.on(Events.MessageCreate, async (message) => {
       await message.reply({
         content: 'Image fetched from URL:',
         files: [
-          {
+          new AttachmentBuilder('https://www.w3schools.com/html/pic_trulli.jpg', {
             name: 'trulli.jpg',
-            url: 'https://www.w3schools.com/html/pic_trulli.jpg',
-          },
+          }),
         ],
       });
     }

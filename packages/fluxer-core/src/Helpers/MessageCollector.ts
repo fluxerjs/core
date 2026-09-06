@@ -2,15 +2,17 @@ import { EventEmitter } from 'node:events';
 import { Collection } from '@fluxerjs/collection';
 import type { Client } from '../ClientCore/Client.js';
 import type { Message } from '../Domain/Message/index.js';
+import { ErrorCodes } from '../LibErrors/ErrorCodes.js';
+import { FluxerError } from '../LibErrors/FluxerError.js';
 import { Events } from './Events.js';
 
 /** Options for {@link MessageCollector} / `channel.createMessageCollector()`. */
 export interface MessageCollectorOptions {
   /** Filter function. Return true to collect the message. */
   filter?: (message: Message) => boolean;
-  /** Max duration in ms. Collector stops when time expires. */
+  /** Max duration in ms. Collector stops when time expires. Required unless `max` is set. */
   time?: number;
-  /** Max messages to collect. Collector stops when limit reached. */
+  /** Max messages to collect. Collector stops when limit reached. Required unless `time` is set. */
   max?: number;
 }
 
@@ -22,8 +24,19 @@ export interface MessageCollectorEvents {
   end: [collected: Collection<string, Message>, reason: MessageCollectorEndReason];
 }
 
+function requireCollectorBounds(options: MessageCollectorOptions): void {
+  const time = options.time ?? 0;
+  const max = options.max ?? 0;
+  if (time <= 0 && max <= 0) {
+    throw new FluxerError('MessageCollector requires `time` and/or `max`', {
+      code: ErrorCodes.CollectorOptionsRequired,
+    });
+  }
+}
+
 /**
  * Collects messages in a channel. Use channel.createMessageCollector().
+ * Requires `time` and/or `max`.
  * @example
  * const collector = channel.createMessageCollector({ filter: m => m.author.id === userId, time: 10000 });
  * collector.on('collect', m => console.log(m.content));
@@ -40,6 +53,7 @@ export class MessageCollector extends EventEmitter {
 
   constructor(client: Client, channelId: string, options: MessageCollectorOptions = {}) {
     super();
+    requireCollectorBounds(options);
     this.client = client;
     this.channelId = channelId;
     this.options = {
@@ -71,6 +85,47 @@ export class MessageCollector extends EventEmitter {
       this._timeout = null;
     }
     this.emit('end', this.collected, reason);
+  }
+
+  /**
+   * One-shot helper used by {@link Channel.awaitMessages}.
+   * Resolves with the collected messages when the collector ends for `user` (or when
+   * the end reason is not listed in `errors`).
+   * By default, `time` and `limit` reject with {@link FluxerError}
+   * (`CollectorIdle` / `CollectorMax`).
+   */
+  static awaitMessages(
+    client: Client,
+    channelId: string,
+    options?: MessageCollectorOptions & { errors?: MessageCollectorEndReason[] },
+  ): Promise<Collection<string, Message>> {
+    const errors = options?.errors ?? (['time', 'limit'] as MessageCollectorEndReason[]);
+    return new Promise((resolve, reject) => {
+      const collector = new MessageCollector(client, channelId, options);
+      collector.on('end', (collected, reason) => {
+        if (!errors.includes(reason)) {
+          resolve(collected);
+          return;
+        }
+        if (reason === 'time') {
+          reject(
+            new FluxerError('Message collector timed out', {
+              code: ErrorCodes.CollectorIdle,
+            }),
+          );
+          return;
+        }
+        if (reason === 'limit') {
+          reject(
+            new FluxerError('Message collector reached max', {
+              code: ErrorCodes.CollectorMax,
+            }),
+          );
+          return;
+        }
+        reject(collected);
+      });
+    });
   }
 
   override on<K extends keyof MessageCollectorEvents>(

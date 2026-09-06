@@ -1,8 +1,8 @@
-﻿---
+---
 title: Embed Media
 description: Add images and thumbnails to embeds with EmbedBuilder and EmbedMediaOptions.
-category: media
-order: 6
+category: popular
+order: 14
 ---
 
 ## Images and thumbnails
@@ -40,8 +40,8 @@ const embed = new EmbedBuilder()
   .setColor(0x5865f2);
 ```
 
-`setVideo` / `setAudio` are removed. Those fields are response-only when reading embeds. See [Migrating to 2.0](/guides/migration/).
+`setVideo` / `setAudio` are removed. Those fields are response-only when reading embeds. See [Migrating to 2.0](/guides/migration/#migrating-to-20).
 
 ## GIFs in embeds
 
-Embeds need a GIF URL for animated images (not MP4). For Klipy, use `resolveKlipyToImageUrl()` — see [GIFs (Klipy)](/guides/gifs/).
+Embeds need a GIF URL for animated images (not MP4). For Klipy, use `resolveKlipyToImageUrl()`: see [GIFs (Klipy)](/guides/gifs/).

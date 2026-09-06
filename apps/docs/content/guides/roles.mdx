@@ -1,35 +1,33 @@
 ﻿---
 title: Roles
-description: "Create, fetch, edit, and delete guild roles. Use PermissionFlags and resolvePermissionsToBitfield for permission bitfields."
-category: channels
-order: 20
+description: Create, fetch, edit, and delete guild roles. Create accepts name, color, and permissions only.
+category: guilds
+order: 30
+searchTerms: createRole hoist mentionable member.roles.add PermissionFlags
 ---
 
-## Overview
-
-Guild roles can be created, fetched, edited, and deleted. Use guild.createRole(), guild.fetchRoles(), guild.fetchRole(roleId), role.edit(), and role.delete(). Requires Manage Roles permission. For permission bitfields, use resolvePermissionsToBitfield() or role.has() to check a role's permissions.
+Guild roles: `guild.createRole()`, `guild.fetchRoles()`, `guild.fetchRole(roleId)`, `role.edit()`, `role.delete()`. Requires Manage Roles.
 
 ## Create a role
 
-Use guild.createRole() to create a new role. Pass name, permissions, color, hoist, mentionable, unicode_emoji, position, or hoist_position. Permissions accept PermissionResolvable (string, number, array) for convenience.
+Create accepts **name, color, and permissions only**. Set hoist / mentionable with `role.edit` after create. Position changes use `guild.setRolePositions`.
 
 ```javascript
-import { Client, Events, PermissionFlags, resolvePermissionsToBitfield } from '@fluxerjs/core';
+import { Client, Events } from '@fluxerjs/core';
 
 const client = new Client();
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.content === '!createrole' && message.guildId) {
-    const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);
+    const guild = await message.resolveGuild();
     if (!guild) return;
 
     const role = await guild.createRole({
       name: 'Moderator',
       permissions: ['BanMembers', 'KickMembers', 'ManageMessages'],
       color: 0x5865f2,
-      hoist: true,
-      mentionable: false,
     });
+    await role.edit({ hoist: true, mentionable: false });
     await message.reply(`Created role ${role.name} (${role.id})`);
   }
 });
@@ -37,45 +35,43 @@ client.on(Events.MessageCreate, async (message) => {
 await client.login(process.env.FLUXER_BOT_TOKEN);
 ```
 
+Permissions accept `PermissionResolvable` (string, number, array, `PermissionFlags`).
+
 ## Fetch roles
 
-Use guild.fetchRoles() to fetch all roles from the API and cache them. Use guild.fetchRole(roleId) to fetch a single role by ID. Throws FluxerError with ROLE_NOT_FOUND on 404.
+`guild.fetchRoles()` loads all roles into `guild.roles`. `guild.fetchRole(roleId)` loads one. Throws `FluxerError` with `ROLE_NOT_FOUND` on 404.
 
 ```javascript
-// Fetch all roles (updates guild.roles cache)
 const roles = await guild.fetchRoles();
-
-// Fetch a single role by ID
-const role = await guild.fetchRole(roleId);
+const role = guild.roles.get(roleId) ?? (await guild.fetchRole(roleId));
 console.log(role.name, role.color);
 ```
 
 ## Edit a role
 
-Use role.edit() to update a role. Pass any of name, permissions, color, hoist, mentionable, unicode_emoji, position, hoist_position. Permissions accept PermissionResolvable.
+Edit accepts name, color, permissions, hoist, mentionable, and hoistPosition. `unicodeEmoji` is read-only on `Role`.
 
 ```javascript
-const role = guild.roles.get(roleId) ?? await guild.fetchRole(roleId);
+const role = guild.roles.get(roleId) ?? (await guild.fetchRole(roleId));
 await role.edit({
   name: 'Senior Mod',
   permissions: ['BanMembers', 'KickMembers', 'ManageMessages', 'ManageRoles'],
   color: 0x57f287,
+  hoist: true,
 });
 ```
 
 ## Delete a role
 
-Use role.delete() to remove a role. The role is removed from guild.roles cache.
-
 ```javascript
-const role = guild.roles.get(roleId) ?? await guild.fetchRole(roleId);
+const role = guild.roles.get(roleId) ?? (await guild.fetchRole(roleId));
 await role.delete();
 await message.reply('Role deleted.');
 ```
 
 ## Check role permissions
 
-Use role.has(permission) to check if a role has a specific permission. Administrator implies all permissions.
+`role.has(permission)`: Administrator implies all permissions.
 
 ```javascript
 import { PermissionFlags } from '@fluxerjs/core';
@@ -88,18 +84,17 @@ if (role.has('ManageChannels')) {
 }
 ```
 
-## Add/remove roles from members (member.roles)
+## Add/remove roles from members
 
-Use `member.roles.add()`, `member.roles.remove()`, and `member.roles.set()`. `member.roles.cache` is a Collection of Role objects. Resolve or fetch the member first when you only have a user ID  -  `guild.addRoleToMember` / `removeRoleFromMember` were removed.
+Use `member.roles.add()`, `member.roles.remove()`, and `member.roles.set()`. `member.roles.cache` is a Collection of Role objects. Resolve or fetch the member first when you only have a user ID.
 
 ```javascript
-const member = await guild.fetchMember(userId);
+const member = await guild.members.resolve(userId);
 
-await member.roles.add(roleId);        // Add a role
-await member.roles.remove(roleId);     // Remove a role
-await member.roles.set(['id1', 'id2']); // Replace all roles
+await member.roles.add(roleId);
+await member.roles.remove(roleId);
+await member.roles.set(['id1', 'id2']);
 
-// Check if member has a role
 if (member.roles.cache.has(roleId)) {
   await message.reply('Member already has this role.');
 }
@@ -107,18 +102,12 @@ if (member.roles.cache.has(roleId)) {
 
 ## Permission bitfields for create/edit
 
-When creating or editing roles, pass permissions as a string (API format), number, PermissionString, or array. Use resolvePermissionsToBitfield() to combine multiple permissions. Handles high bits (PinMessages, ModerateMembers, etc.) correctly with BigInt.
-
 ```javascript
 import { resolvePermissionsToBitfield, PermissionFlags } from '@fluxerjs/core';
 
-// Single permission by name
-resolvePermissionsToBitfield('SendMessages');  // "2048"
-
-// Array of permissions (OR'd together)
+resolvePermissionsToBitfield('SendMessages');
 resolvePermissionsToBitfield(['SendMessages', 'ViewChannel', 'ReadMessageHistory']);
-// Returns combined bitfield as string
-
-// From PermissionFlags enum
-resolvePermissionsToBitfield(PermissionFlags.BanMembers);  // "4"
+resolvePermissionsToBitfield(PermissionFlags.BanMembers);
 ```
+
+See [Permissions](/guides/permissions/) for `member.permissions` / `permissionsIn`. Channel overwrites: [Channels](/guides/channels/).

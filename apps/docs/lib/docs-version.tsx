@@ -81,6 +81,7 @@ export function hrefForVersion(
   kind?: string,
   name?: string,
   guideSlug?: string,
+  currentPath?: string,
 ): string {
   if (section === 'guides') {
     const base = target === 'latest' ? '/guides' : `/guides/v/${target}`;
@@ -94,7 +95,10 @@ export function hrefForVersion(
     return `${base}/`;
   }
 
-  return target === 'latest' ? '/docs/' : `/docs/v/${target}/`;
+  if (currentPath) {
+    return currentPath === '/' || currentPath.endsWith('/') ? currentPath : `${currentPath}/`;
+  }
+  return '/';
 }
 
 /** Top-bar index URL for Guides or SDK, honoring the preferred docs version. */

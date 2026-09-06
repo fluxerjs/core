@@ -1,18 +1,20 @@
 /**
- * First Steps Bot — five starter commands to learn the SDK.
+ * First Steps Bot: five starter commands to learn the SDK.
  *
- * Commands: !ping, !hello [name], !avatar [@user], !embed, !perms, !noreply
+ * Commands: !ping, !hello [name], !avatar [@user], !embed, !perms, !noreply, !here
  *
  * Usage (from repo root after pnpm install && pnpm run build):
  *   FLUXER_BOT_TOKEN=your_token node examples/first-steps-bot.js
  *
- * See: https://fluxerjs.blstmo.com/guides/basic-bot/
+ * See: https://fluxer.js.org/guides/basic-bot/
  */
 
 import {
   Client,
   EmbedBuilder,
+  ErrorCodes,
   Events,
+  FluxerError,
   PermissionFlags,
   parsePrefixCommand,
   parseUserMention,
@@ -55,21 +57,22 @@ client.on(Events.MessageCreate, async (message) => {
         await message.reply('Mention a user or leave empty for yourself: `!avatar @user`');
         return;
       }
-      const user =
-        userId === message.author.id
-          ? message.author
-          : await client.users.fetch(userId).catch(() => null);
-      if (!user) {
-        await message.reply('Could not find that user.');
-        return;
+      try {
+        const user =
+          userId === message.author.id ? message.author : await client.users.fetch(userId);
+        const embed = new EmbedBuilder()
+          .setTitle(`${user.username}'s avatar`)
+          .setImage(user.displayAvatarURL({ size: 256 }))
+          .setColor(user.avatarColor ?? 0x5865f2)
+          .setTimestamp();
+        await message.reply({ embeds: [embed] });
+      } catch (err) {
+        if (err instanceof FluxerError) {
+          await message.reply('Could not find that user.');
+          return;
+        }
+        throw err;
       }
-      const embed = new EmbedBuilder()
-        .setTitle(`${user.username}'s avatar`)
-        .setImage(user.displayAvatarURL({ size: 256 }))
-        .setColor(user.avatarColor ?? 0x5865f2)
-        .setTimestamp();
-      // Pass EmbedBuilder directly — no .toJSON()
-      await message.reply({ embeds: [embed] });
       return;
     }
 
@@ -88,17 +91,23 @@ client.on(Events.MessageCreate, async (message) => {
       return;
     }
 
+    if (command === 'here') {
+      const channel = await message.resolveChannel();
+      await channel.send(`This channel is ${channel}`);
+      return;
+    }
+
     if (command === 'perms') {
       if (!message.guildId) {
         await message.reply('Use this command in a server.');
         return;
       }
-      const guild = await client.guilds.resolve(message.guildId);
+      const guild = await message.resolveGuild();
       if (!guild) {
         await message.reply('Could not find this server.');
         return;
       }
-      const member = await guild.members.resolve(message.author.id);
+      const member = message.member ?? (await guild.members.resolve(message.author.id));
       const has = (flag) => member.permissions.has(flag);
       const permNames = [];
       if (has(PermissionFlags.BanMembers)) permNames.push('BanMembers');
@@ -113,7 +122,12 @@ client.on(Events.MessageCreate, async (message) => {
       await message.reply({ embeds: [embed] });
     }
   } catch (err) {
-    console.error('Command error:', err);
+    const code = err instanceof FluxerError ? err.code : null;
+    console.error('Command error:', code ?? err);
+    if (code === ErrorCodes.InvalidChannelType) {
+      await message.reply('That channel type cannot send messages.').catch(() => {});
+      return;
+    }
     await message.reply('Something went wrong.').catch(() => {});
   }
 });

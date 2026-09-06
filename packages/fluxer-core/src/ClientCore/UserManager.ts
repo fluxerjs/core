@@ -49,10 +49,17 @@ export class UserManager extends LimitedCollection<string, User> {
     return removed;
   }
 
-  /** Fetch a user by ID and update cache. */
-  async fetch(userId: string): Promise<User> {
+  /** Fetch a user by ID and update cache. Returns cache unless `force` is set. */
+  async fetch(userId: string, options?: { force?: boolean }): Promise<User> {
+    const cached = this.get(userId);
+    if (cached && !options?.force) return cached;
     const data = await this.client.rest.get<APIUserPartial>(Routes.user(userId));
     return this.client.getOrCreateUser(data);
+  }
+
+  /** Return a cached user, otherwise {@link fetch}. */
+  async resolve(userId: string): Promise<User> {
+    return this.get(userId) ?? this.fetch(userId);
   }
 
   /**

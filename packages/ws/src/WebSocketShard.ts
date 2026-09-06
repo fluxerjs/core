@@ -9,6 +9,7 @@ import type {
   GatewaySendPayload,
 } from '@fluxerjs/types';
 import { GatewayOpcodes } from '@fluxerjs/types';
+import type { ISessionStore } from './SessionStore.js';
 import { GatewayCloseCodes } from './Utils/Constants.js';
 import { getDefaultWebSocketSync } from './Utils/GetWebSocket.js';
 
@@ -40,6 +41,8 @@ export interface WebSocketShardOptions {
   /** When `false`, debug events are suppressed. Default: `true`. */
   debug?: boolean;
   WebSocket?: WebSocketConstructor;
+  /** Optional persistent session store for RESUME across restarts. */
+  sessionStore?: ISessionStore;
 }
 
 const RECONNECT_INITIAL_MS = 1000;
@@ -53,6 +56,8 @@ const FATAL_CLOSE = new Set<number>([
   GatewayCloseCodes.NotAuthenticated,
   GatewayCloseCodes.AuthenticationFailed,
   GatewayCloseCodes.AlreadyAuthenticated,
+  /** Bad shard tuple — reconnecting with the same identify will never succeed. */
+  GatewayCloseCodes.InvalidShard,
 ]);
 
 const RECOVERABLE_GATEWAY = new Set<number>([
@@ -60,10 +65,14 @@ const RECOVERABLE_GATEWAY = new Set<number>([
   GatewayCloseCodes.InvalidSeq,
   GatewayCloseCodes.RateLimited,
   GatewayCloseCodes.SessionTimeout,
-  GatewayCloseCodes.InvalidShard,
-  GatewayCloseCodes.ShardingRequired,
   GatewayCloseCodes.InvalidAPIVersion,
   GatewayCloseCodes.AckBackpressure,
+]);
+
+/** Close codes that must not auto-reconnect; callers handle (e.g. reshard). */
+const NO_AUTO_RECONNECT = new Set<number>([
+  GatewayCloseCodes.InvalidShard,
+  GatewayCloseCodes.ShardingRequired,
 ]);
 
 /** Narrow a single JSON-parsed value into a gateway receive payload. */
@@ -80,8 +89,23 @@ export function narrowGatewayPayload(value: unknown): GatewayReceivePayload | nu
 
 /** Exported for unit tests. */
 export function shouldReconnectOnClose(code: number): boolean {
-  if (FATAL_CLOSE.has(code)) return false;
+  if (FATAL_CLOSE.has(code) || NO_AUTO_RECONNECT.has(code)) return false;
   return code < 4000 || RECOVERABLE_GATEWAY.has(code);
+}
+
+/**
+ * Average of known heartbeat RTTs. Values below 0 (no ACK yet) are skipped.
+ * Returns `-1` when none have been measured.
+ */
+export function averageShardPings(pings: Iterable<number>): number {
+  let sum = 0;
+  let count = 0;
+  for (const ping of pings) {
+    if (ping < 0) continue;
+    sum += ping;
+    count++;
+  }
+  return count === 0 ? -1 : Math.round(sum / count);
 }
 
 function asError(err: unknown, fallback = 'WebSocket error'): Error {
@@ -148,10 +172,15 @@ export class WebSocketShard extends EventEmitter {
   private heartbeatTimeout: ReturnType<typeof setTimeout> | null = null;
   /** True until a heartbeat is sent; cleared by HeartbeatAck. */
   private lastHeartbeatAck = true;
+  /** `Date.now()` when the last heartbeat was sent; 0 if none. */
+  private lastHeartbeatSentAt = 0;
+  /** Last heartbeat ACK round-trip in ms; `-1` until the first ACK. */
+  private heartbeatPing = -1;
   private sessionId: string | null = null;
   private seq: number | null = null;
   private reconnectDelayMs = RECONNECT_INITIAL_MS;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private sessionHydrated = false;
 
   constructor(options: WebSocketShardOptions) {
     super();
@@ -172,6 +201,25 @@ export class WebSocketShard extends EventEmitter {
     return map[this.ws.readyState] ?? 0;
   }
 
+  /** Last known sequence number for this shard. */
+  get sequence(): number | null {
+    return this.seq;
+  }
+
+  /** Current session id, if identified/resumed. */
+  get session(): string | null {
+    return this.sessionId;
+  }
+
+  /**
+   * Last heartbeat ACK latency in milliseconds, or `-1` before the first ACK.
+   * @example
+   * const rtt = client.ws.getShard(0)?.ping ?? -1;
+   */
+  get ping(): number {
+    return this.heartbeatPing;
+  }
+
   connect(): void {
     if (this.phase === Phase.Destroyed || this.phase === Phase.Connecting) return;
     if (this.ws?.readyState === 0 || this.ws?.readyState === 1) return;
@@ -180,21 +228,24 @@ export class WebSocketShard extends EventEmitter {
     this.phase = Phase.Connecting;
     this.debug('Connecting');
 
-    try {
-      this.ws = new this.WS(this.url);
-    } catch (err) {
-      this.phase = Phase.Idle;
-      this.emit('error', asError(err));
-      this.scheduleReconnect();
-      return;
-    }
+    void this.hydrateSessionFromStore().then(() => {
+      if (this.phase !== Phase.Connecting) return;
+      try {
+        this.ws = new this.WS(this.url);
+      } catch (err) {
+        this.phase = Phase.Idle;
+        this.emit('error', asError(err));
+        this.scheduleReconnect();
+        return;
+      }
 
-    if (!this.bindSocket(this.ws)) {
-      this.phase = Phase.Idle;
-      this.ws = null;
-      this.emit('error', new Error('WebSocket implementation missing event API'));
-      this.scheduleReconnect();
-    }
+      if (!this.bindSocket(this.ws)) {
+        this.phase = Phase.Idle;
+        this.ws = null;
+        this.emit('error', new Error('WebSocket implementation missing event API'));
+        this.scheduleReconnect();
+      }
+    });
   }
 
   send(payload: GatewaySendPayload): void {
@@ -210,6 +261,7 @@ export class WebSocketShard extends EventEmitter {
     this.ws = null;
     this.sessionId = null;
     this.seq = null;
+    void this.persistSession(null);
   }
 
   /** @internal — exposed for tests */
@@ -220,6 +272,10 @@ export class WebSocketShard extends EventEmitter {
         break;
       case GatewayOpcodes.HeartbeatAck:
         this.lastHeartbeatAck = true;
+        if (this.lastHeartbeatSentAt > 0) {
+          this.heartbeatPing = Date.now() - this.lastHeartbeatSentAt;
+          this.emit('ping', this.heartbeatPing);
+        }
         break;
       case GatewayOpcodes.Dispatch:
         this.handleDispatch(payload);
@@ -230,6 +286,7 @@ export class WebSocketShard extends EventEmitter {
         if (!resumable) {
           this.sessionId = null;
           this.seq = null;
+          void this.persistSession(null);
         }
         this.ws?.close(1000);
         break;
@@ -298,6 +355,13 @@ export class WebSocketShard extends EventEmitter {
     this.stopHeartbeat();
     this.emit('close', code);
     this.debug(`Closed: ${code}`);
+    if (code === GatewayCloseCodes.ShardingRequired) {
+      this.emit('shardingRequired', {
+        shardId: this.id,
+        numShards: this.options.numShards,
+      });
+      return;
+    }
     if (shouldReconnectOnClose(code)) this.scheduleReconnect();
   }
 
@@ -317,14 +381,19 @@ export class WebSocketShard extends EventEmitter {
   }
 
   private handleDispatch(payload: GatewayReceivePayload): void {
-    if (typeof payload.s === 'number') this.seq = payload.s;
+    if (typeof payload.s === 'number') {
+      this.seq = payload.s;
+      void this.persistSession();
+    }
     if (payload.t === 'READY') {
       const sessionId = narrowSessionId(payload.d);
       if (sessionId) this.sessionId = sessionId;
       this.reconnectDelayMs = RECONNECT_INITIAL_MS;
+      void this.persistSession();
       this.emit('ready', payload.d);
     } else if (payload.t === 'RESUMED') {
       this.reconnectDelayMs = RECONNECT_INITIAL_MS;
+      void this.persistSession();
       this.emit('resumed');
     }
     this.emit('dispatch', payload);
@@ -385,6 +454,7 @@ export class WebSocketShard extends EventEmitter {
       return;
     }
     this.lastHeartbeatAck = false;
+    this.lastHeartbeatSentAt = Date.now();
     this.send({ op: GatewayOpcodes.Heartbeat, d: this.seq ?? null });
   }
 
@@ -414,6 +484,42 @@ export class WebSocketShard extends EventEmitter {
     if (this.reconnectTimeout === null) return;
     clearTimeout(this.reconnectTimeout);
     this.reconnectTimeout = null;
+  }
+
+  private async hydrateSessionFromStore(): Promise<void> {
+    if (this.sessionHydrated || !this.options.sessionStore) {
+      this.sessionHydrated = true;
+      return;
+    }
+    this.sessionHydrated = true;
+    try {
+      const info = await this.options.sessionStore.retrieveSessionInfo(this.id);
+      if (info?.sessionId && typeof info.sequence === 'number') {
+        this.sessionId = info.sessionId;
+        this.seq = info.sequence;
+        this.debug(`Hydrated session from store (seq=${info.sequence})`);
+      }
+    } catch (err) {
+      this.emit('error', asError(err, 'Failed to retrieve session info'));
+    }
+  }
+
+  private async persistSession(info?: null): Promise<void> {
+    const store = this.options.sessionStore;
+    if (!store) return;
+    try {
+      if (info === null || !this.sessionId || this.seq === null) {
+        await store.updateSessionInfo(this.id, null);
+        return;
+      }
+      await store.updateSessionInfo(this.id, {
+        sessionId: this.sessionId,
+        sequence: this.seq,
+        updatedAt: Date.now(),
+      });
+    } catch (err) {
+      this.emit('error', asError(err, 'Failed to update session info'));
+    }
   }
 
   private debug(message: string): void {

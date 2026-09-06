@@ -35,7 +35,7 @@ export function computePermissions(
 
 /**
  * Check if a permission bitfield has a specific permission.
- * Administrator (bit 3) implies all permissions per Fluxer/Discord convention.
+ * Administrator (bit 3) implies all permissions per Fluxer convention.
  */
 export function hasPermission(bitfield: bigint, permission: bigint): boolean {
   if ((bitfield & PermissionFlags.Administrator) !== 0n) return true;

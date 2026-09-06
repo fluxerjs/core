@@ -16,21 +16,24 @@ import type {
   ClientEvents,
   GuildCountsUpdatePayload,
   GuildEmojisUpdatePayload,
+  GuildMember,
   GuildMembersChunkPayload,
-  GuildRoleDeletePayload,
-  GuildRoleUpdatePayload,
   GuildStickersUpdatePayload,
   InviteDeletePayload,
+  Message,
   MessageDeleteBulkPayload,
   MessageReactionAddManyEntry,
   MessageReactionAddManyPayload,
   MessageReactionPayload,
   MessageReactionRemoveAllPayload,
   MessageReactionRemoveEmojiPayload,
+  PartialGuildMember,
+  PartialMessage,
   PresenceActivity,
   PresenceUpdateBulkPayload,
   PresenceUpdatePayload,
   ReactionEmojiPayload,
+  Role,
   TypingStartPayload,
   WebhooksUpdatePayload,
 } from '../index.js';
@@ -40,6 +43,15 @@ type IsExactly<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : fals
 
 describe('public ClientEvents payload exports (compile-time)', () => {
   it('exposes every camelCase DTO used by ClientEvents', () => {
+    type _messageDelete = Assert<
+      IsExactly<ClientEvents[typeof Events.MessageDelete][0], PartialMessage>
+    >;
+    type _messageUpdate = Assert<
+      IsExactly<ClientEvents[typeof Events.MessageUpdate][1], Message | PartialMessage>
+    >;
+    type _memberRemove = Assert<
+      IsExactly<ClientEvents[typeof Events.GuildMemberRemove][0], GuildMember | PartialGuildMember>
+    >;
     type _messageDeleteBulk = Assert<
       IsExactly<ClientEvents[typeof Events.MessageDeleteBulk][0], MessageDeleteBulkPayload>
     >;
@@ -86,10 +98,10 @@ describe('public ClientEvents payload exports (compile-time)', () => {
       IsExactly<ClientEvents[typeof Events.GuildStickersUpdate][0], GuildStickersUpdatePayload>
     >;
     type _roleUpdate = Assert<
-      IsExactly<ClientEvents[typeof Events.GuildRoleUpdate][0], GuildRoleUpdatePayload>
+      IsExactly<ClientEvents[typeof Events.GuildRoleUpdate], [Role | null, Role]>
     >;
     type _roleDelete = Assert<
-      IsExactly<ClientEvents[typeof Events.GuildRoleDelete][0], GuildRoleDeletePayload>
+      IsExactly<ClientEvents[typeof Events.GuildRoleDelete], [Role | null, string, string]>
     >;
     type _pins = Assert<
       IsExactly<ClientEvents[typeof Events.ChannelPinsUpdate][0], ChannelPinsUpdatePayload>

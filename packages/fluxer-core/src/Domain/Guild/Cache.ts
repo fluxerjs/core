@@ -14,14 +14,10 @@ import { Role } from './Role.js';
  */
 export function putChannel(client: Client, channel: Channel, guild?: Guild | null): void {
   client.channels.set(channel.id, channel);
-  const resolvedGuild =
-    guild ??
-    (() => {
-      const guildId = 'guildId' in channel ? (channel as GuildChannel).guildId : undefined;
-      return guildId ? client.guilds.get(guildId) : undefined;
-    })();
+  if (!channel.isGuild()) return;
+  const resolvedGuild = guild ?? (channel.guildId ? client.guilds.get(channel.guildId) : undefined);
   if (resolvedGuild) {
-    resolvedGuild.channels.set(channel.id, channel as GuildChannel);
+    resolvedGuild.channels.set(channel.id, channel);
   }
 }
 
@@ -32,10 +28,10 @@ export function putChannel(client: Client, channel: Channel, guild?: Guild | nul
 export function cacheChannel(guild: Guild, data: APIChannel): GuildChannel | null {
   const existing = guild.channels.get(data.id) ?? guild.client.channels.get(data.id);
 
-  if (existing && 'guildId' in existing && existing.type === data.type) {
+  if (existing?.isGuild() && existing.type === data.type) {
     existing._patch(data);
     putChannel(guild.client, existing, guild);
-    return existing as GuildChannel;
+    return existing;
   }
 
   const channel = Channel.from(guild.client, data);

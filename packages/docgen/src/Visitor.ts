@@ -2,6 +2,8 @@ import { relative } from 'node:path';
 import * as ts from 'typescript';
 import {
   extractConstructor,
+  extractConstFunctionMap,
+  extractConstStringEnum,
   extractEnumMember,
   extractGetterProperty,
   extractInterfaceProperty,
@@ -10,8 +12,11 @@ import {
   extractTypeAliasMembers,
   getDeprecatedFromJSDoc,
   getDescriptionFromJSDocComment,
+  getExamplesFromJSDoc,
   getSeeFromJSDoc,
+  isOverloadImplementation,
 } from './Extract.js';
+import { isHiddenSymbol } from './Filter.js';
 import type { DocClass, DocEnum, DocInterface, DocSource } from './Schema.js';
 
 function getJSDoc(node: ts.Node): string {
@@ -19,8 +24,12 @@ function getJSDoc(node: ts.Node): string {
   const text = sourceFile.getFullText();
   const commentRanges = ts.getLeadingCommentRanges(text, node.getFullStart());
   if (!commentRanges?.length) return '';
-  const range = commentRanges[commentRanges.length - 1];
-  return text.slice(range.pos, range.end);
+  for (let i = commentRanges.length - 1; i >= 0; i--) {
+    const range = commentRanges[i]!;
+    const comment = text.slice(range.pos, range.end);
+    if (comment.startsWith('/**')) return comment;
+  }
+  return '';
 }
 
 function getSource(node: ts.Node, repoRoot?: string): DocSource {
@@ -35,13 +44,15 @@ function getSource(node: ts.Node, repoRoot?: string): DocSource {
   return result;
 }
 
+function isPrivateMember(member: ts.ClassElement): boolean {
+  if (ts.getCombinedModifierFlags(member) & ts.ModifierFlags.Private) return true;
+  return Boolean(member.name && ts.isPrivateIdentifier(member.name));
+}
+
 function isExported(node: ts.Node): boolean {
-  return !!(
-    ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export ||
-    (node.parent &&
-      ts.isSourceFile(node.parent) &&
-      (node as ts.Declaration).modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword))
-  );
+  if (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) return true;
+  if (!node.parent || !ts.isSourceFile(node.parent) || !ts.canHaveModifiers(node)) return false;
+  return Boolean(ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword));
 }
 
 export function visitSourceFile(
@@ -56,8 +67,8 @@ export function visitSourceFile(
   function visit(node: ts.Node) {
     if (ts.isClassDeclaration(node)) {
       const name = node.name?.getText();
-      if (name && isExported(node)) {
-        const comment = getJSDoc(node);
+      const comment = name ? getJSDoc(node) : '';
+      if (name && isExported(node) && !isHiddenSymbol(name, comment)) {
         const docClass: DocClass = {
           id: `class:${name}`,
           name,
@@ -75,6 +86,7 @@ export function visitSourceFile(
         };
 
         for (const member of node.members) {
+          if (isPrivateMember(member)) continue;
           if (ts.isConstructorDeclaration(member)) {
             docClass.constructor = extractConstructor(checker, member);
           } else if (ts.isPropertyDeclaration(member)) {
@@ -86,6 +98,7 @@ export function visitSourceFile(
           } else if (ts.isSetAccessor(member)) {
             // Setters are not documented as separate properties
           } else if (ts.isMethodDeclaration(member)) {
+            if (isOverloadImplementation(member, node.members)) continue;
             const method = extractMethod(checker, member);
             if (method) docClass.methods.push(method);
           }
@@ -97,8 +110,8 @@ export function visitSourceFile(
       }
     } else if (ts.isInterfaceDeclaration(node)) {
       const name = node.name.getText();
-      if (isExported(node)) {
-        const comment = getJSDoc(node);
+      const comment = getJSDoc(node);
+      if (isExported(node) && !isHiddenSymbol(name, comment)) {
         const extendsTypes =
           node.heritageClauses
             ?.filter((c) => c.token === ts.SyntaxKind.ExtendsKeyword)
@@ -132,8 +145,8 @@ export function visitSourceFile(
       }
     } else if (ts.isEnumDeclaration(node)) {
       const name = node.name.getText();
-      if (isExported(node)) {
-        const comment = getJSDoc(node);
+      const comment = getJSDoc(node);
+      if (isExported(node) && !isHiddenSymbol(name, comment)) {
         const docEnum: DocEnum = {
           id: `enum:${name}`,
           name,
@@ -147,9 +160,10 @@ export function visitSourceFile(
       }
     } else if (ts.isTypeAliasDeclaration(node)) {
       const name = node.name.getText();
-      if (isExported(node)) {
-        const comment = getJSDoc(node);
+      const comment = getJSDoc(node);
+      if (isExported(node) && !isHiddenSymbol(name, comment)) {
         const extracted = extractTypeAliasMembers(checker, node);
+        const examples = getExamplesFromJSDoc(comment);
         const docInterface: DocInterface = {
           id: `interface:${name}`,
           name,
@@ -158,10 +172,36 @@ export function visitSourceFile(
           properties: extracted.properties,
           typeSignature: extracted.typeSignature,
           unionMembers: extracted.unionMembers,
+          examples: examples.length ? examples : undefined,
           source: getSource(node, options?.repoRoot),
           see: getSeeFromJSDoc(comment),
         };
         interfaces.push(docInterface);
+      }
+    } else if (
+      ts.isVariableStatement(node) &&
+      node.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
+    ) {
+      const comment = getJSDoc(node);
+      for (const decl of node.declarationList.declarations) {
+        const extracted = extractConstFunctionMap(checker, decl, comment);
+        if (extracted && !isHiddenSymbol(extracted.name, comment)) {
+          interfaces.push({
+            id: `interface:${extracted.name}`,
+            name: extracted.name,
+            kind: 'interface',
+            description: extracted.description,
+            properties: extracted.properties,
+            examples: extracted.examples,
+            source: getSource(decl, options?.repoRoot),
+            see: extracted.see,
+          });
+          continue;
+        }
+        const strEnum = extractConstStringEnum(decl, comment, getSource(decl, options?.repoRoot));
+        if (strEnum && !isHiddenSymbol(strEnum.name, comment)) {
+          enums.push(strEnum);
+        }
       }
     }
 

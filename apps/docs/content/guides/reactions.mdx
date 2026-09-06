@@ -1,9 +1,20 @@
 ---
 title: Reactions
 description: Add and remove reactions, and listen with MessageReactionPayload.
-category: sending-messages
-order: 11
+category: popular
+order: 16
 ---
+
+## Cached reactions on a message
+
+`message.reactions` is a `MessageReactionManager`. Use `message.reactions.cache` (keyed by emoji identifier) or iterate the manager.
+
+```javascript
+for (const reaction of message.reactions) {
+  console.log(reaction.emojiIdentifier, reaction.count);
+}
+const thumbs = message.reactions.cache.get('👍');
+```
 
 ## Add a reaction
 
@@ -27,10 +38,10 @@ await message.removeAllReactions();              // everything
 `MessageReactionAdd` and `MessageReactionRemove` emit **one** payload object (not six positional args):
 
 ```javascript
-client.on(Events.MessageReactionAdd, async ({ reaction, emoji, userId, messageId }) => {
+client.on(Events.MessageReactionAdd, async ({ reaction, message, emoji, userId, messageId }) => {
   if (emoji.name !== '👍') return;
   console.log(`User ${userId} voted yes on ${messageId}`);
-  const msg = await reaction.fetchMessage();
+  const msg = message ?? (await reaction.fetchMessage());
   await msg.react('✅');
 });
 
@@ -56,4 +67,4 @@ client.on(Events.MessageReactionAdd, async ({ reaction, user }) => {
 });
 ```
 
-Runnable bots: [reaction-bot](/examples/reaction-bot/) (logging) and [reaction-roles-bot](/examples/reaction-roles-bot/) (`!roles` posts the picker). Short-lived prompts: [Collectors](/guides/collectors/).
+Runnable bots: [reaction-bot](/examples/reaction-bot/) (logging) and [reaction-roles-bot](/examples/reaction-roles-bot/) (`!roles` posts the picker). Short-lived prompts: [Collectors](/guides/collectors/). Roles: [Roles](/guides/roles/).

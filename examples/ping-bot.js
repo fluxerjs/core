@@ -1,5 +1,5 @@
 /**
- * Prefix-command bot — latency, embeds, DMs, replies, and reactions.
+ * Prefix-command bot: latency, embeds, DMs, replies, and reactions.
  *
  * Commands: !ping, !info, !help, !dm, !dmuser, !replytest, !replynoping, !react, !editembed, !attachurl
  *
@@ -10,13 +10,14 @@
  */
 
 import {
+  AttachmentBuilder,
   Client,
   EmbedBuilder,
+  ErrorCodes,
   Events,
+  FluxerError,
   parsePrefixCommand,
   parseUserMention,
-  Routes,
-  User,
 } from '@fluxerjs/core';
 
 const PREFIX = '!';
@@ -38,7 +39,7 @@ function formatUptime(ms) {
 async function measureApiLatency(client) {
   const start = Date.now();
   try {
-    await client.rest.get(Routes.gatewayBot());
+    await client.fetchGatewayInfo();
   } catch {
     // Round-trip only
   }
@@ -65,7 +66,8 @@ commands.set('ping', {
 commands.set('info', {
   description: 'Display bot information',
   async execute(message, client) {
-    const uptime = client.readyAt ? Date.now() - client.readyAt.getTime() : 0;
+    const uptime = client.uptime ?? 0;
+    const gatewayPing = client.ws.ping;
     const apiLatency = await measureApiLatency(client);
     const embed = new EmbedBuilder()
       .setTitle('Bot Information')
@@ -76,6 +78,7 @@ commands.set('info', {
         { name: 'Guilds', value: `${client.guilds.size}`, inline: true },
         { name: 'Channels', value: `${client.channels.size}`, inline: true },
         { name: 'Uptime', value: formatUptime(uptime), inline: true },
+        { name: 'Gateway Ping', value: gatewayPing < 0 ? 'n/a' : `${gatewayPing}ms`, inline: true },
         { name: 'API Latency', value: `${apiLatency}ms`, inline: true },
         { name: 'Node.js', value: process.version, inline: true },
       )
@@ -107,14 +110,17 @@ commands.set('dmuser', {
     }
     const text = args.slice(1).join(' ') || 'Hello from the bot!';
     try {
-      const userData = await client.rest.get(Routes.user(userId));
-      const user = new User(client, userData);
+      const user = await client.users.fetch(userId);
       await user.send(text);
       await message.reply(`Sent DM to **${user.globalName ?? user.username}**.`);
-    } catch {
-      await message
-        .reply('Could not send DM. The user may not exist or may have DMs disabled.')
-        .catch(() => {});
+    } catch (err) {
+      if (err instanceof FluxerError) {
+        await message
+          .reply('Could not send DM. The user may not exist or may have DMs disabled.')
+          .catch(() => {});
+        return;
+      }
+      throw err;
     }
   },
 });
@@ -129,7 +135,7 @@ commands.set('replytest', {
 commands.set('replynoping', {
   description: 'Reply without pinging you',
   async execute(message) {
-    await message.reply('Replied silently — no @mention ping!', { ping: false });
+    await message.reply('Replied silently - no @mention ping!', { ping: false });
   },
 });
 
@@ -157,7 +163,7 @@ commands.set('editembed', {
 
     const updated = new EmbedBuilder()
       .setTitle('Edited Embed')
-      .setDescription('Use `message.edit({ embeds: [...] })` — pass EmbedBuilder directly.')
+      .setDescription('Use `message.edit({ embeds: [...] })`; pass EmbedBuilder directly.')
       .setColor(0x57f287)
       .addFields(
         { name: 'Original', value: 'First state', inline: true },
@@ -174,7 +180,11 @@ commands.set('attachurl', {
   async execute(message) {
     await message.reply({
       content: 'File attached from URL:',
-      files: [{ name: 'trulli.jpg', url: 'https://www.w3schools.com/html/pic_trulli.jpg' }],
+      files: [
+        new AttachmentBuilder('https://www.w3schools.com/html/pic_trulli.jpg', {
+          name: 'trulli.jpg',
+        }),
+      ],
     });
   },
 });
@@ -229,7 +239,12 @@ client.on(Events.MessageCreate, async (message) => {
   try {
     await command.execute(message, client, parsed.args);
   } catch (err) {
-    console.error(`Error executing ${parsed.command}:`, err);
+    const code = err instanceof FluxerError ? err.code : null;
+    console.error(`Error executing ${parsed.command}:`, code ?? err);
+    if (code === ErrorCodes.EmptyMessage || code === ErrorCodes.InvalidMessageOptions) {
+      await message.reply('That message payload was invalid.').catch(() => {});
+      return;
+    }
     await message.reply('An error occurred while running that command.').catch(() => {});
   }
 });
@@ -239,6 +254,10 @@ client.on(Events.Error, (err) => console.error('Client error:', err));
 try {
   await client.login(token);
 } catch (err) {
-  console.error('Login failed:', err);
+  if (err instanceof FluxerError && err.code === ErrorCodes.InvalidToken) {
+    console.error('Login failed: invalid token');
+  } else {
+    console.error('Login failed:', err);
+  }
   process.exit(1);
 }

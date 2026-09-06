@@ -1,45 +1,41 @@
-import type {
-  APIChannel,
-  APIChannelOverwrite,
-  APIInvite,
-  APIWebhook,
-  OverwriteType,
-} from '@fluxerjs/types';
+import type { APIChannel, APIInvite, APIWebhook } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import { PermissionFlags } from '@fluxerjs/util';
 import type { Client } from '../../ClientCore/Client.js';
 import {
   type ChannelEditOptions,
   type ChannelInviteCreateOptions,
-  type SudoVerificationOptions,
   toChannelEditBody,
   toChannelInviteBody,
-  toSudoBody,
 } from '../../ClientCore/SdkOptions/index.js';
 import { Invite } from '../Invite.js';
 import { Webhook } from '../Webhook.js';
 import { Channel } from './Base.js';
+import { PermissionOverwriteManager } from './PermissionOverwriteManager.js';
 import { TextCapable } from './TextCapable.js';
 
 /** A channel in a guild (text, voice, category, etc.). */
 export class GuildChannel extends Channel {
-  /** Guild ID this channel belongs to. */
-  readonly guildId: string;
+  /** Guild ID this channel belongs to, or null if missing from the payload. */
+  readonly guildId: string | null;
   declare name: string | null;
   /** Position in the channel list. */
   position?: number;
   /** Parent category ID, or null if none. */
   parentId: string | null;
   /** Permission overwrites for roles/members. */
-  permissionOverwrites: APIChannelOverwrite[];
+  readonly permissionOverwrites: PermissionOverwriteManager;
 
   constructor(client: Client, data: APIChannel) {
     super(client, data);
-    this.guildId = data.guild_id ?? '';
+    this.guildId = data.guild_id ?? null;
     this.name = data.name ?? null;
     this.position = data.position;
     this.parentId = data.parent_id ?? null;
-    this.permissionOverwrites = data.permission_overwrites ?? [];
+    this.permissionOverwrites = new PermissionOverwriteManager(
+      this,
+      data.permission_overwrites ?? [],
+    );
   }
 
   /**
@@ -52,7 +48,7 @@ export class GuildChannel extends Channel {
     if (data.position !== undefined) this.position = data.position;
     if (data.parent_id !== undefined) this.parentId = data.parent_id ?? null;
     if (data.permission_overwrites !== undefined) {
-      this.permissionOverwrites = data.permission_overwrites ?? [];
+      this.permissionOverwrites._patch(data.permission_overwrites ?? []);
     }
     this.applyEditPatch(data);
   }
@@ -88,39 +84,31 @@ export class GuildChannel extends Channel {
     return data.map((i) => new Invite(this.client, i));
   }
 
-  /** Edit or create a permission overwrite. Requires Manage Roles. */
-  async editPermission(
-    overwriteId: string,
-    options: { type: OverwriteType; allow?: string; deny?: string },
-  ): Promise<void> {
-    await this.client.rest.put(Routes.channelPermission(this.id, overwriteId), {
-      body: options,
-      auth: true,
-    });
-    const entry: APIChannelOverwrite = {
-      id: overwriteId,
-      type: options.type,
-      allow: options.allow ?? '0',
-      deny: options.deny ?? '0',
-    };
-    const idx = this.permissionOverwrites.findIndex((o) => o.id === overwriteId);
-    if (idx >= 0) this.permissionOverwrites[idx] = entry;
-    else this.permissionOverwrites.push(entry);
-  }
-
-  /** Delete a permission overwrite. Requires Manage Roles. */
-  async deletePermission(overwriteId: string): Promise<void> {
-    await this.client.rest.delete(Routes.channelPermission(this.id, overwriteId), { auth: true });
-    const idx = this.permissionOverwrites.findIndex((o) => o.id === overwriteId);
-    if (idx >= 0) this.permissionOverwrites.splice(idx, 1);
-  }
-
-  /** Check if the bot can send messages in this channel (with permissions). */
+  /** Check if the bot can send messages in this channel (cache-only; needs `members.me`). */
   override canSendMessage(): boolean {
+    if (!this.guildId) return false;
     const me = this.client.guilds.get(this.guildId)?.members.me;
     if (!me) return false;
     const perms = me.permissionsIn(this);
     return perms.has(PermissionFlags.ViewChannel) && perms.has(PermissionFlags.SendMessages);
+  }
+
+  /**
+   * Like {@link canSendMessage}, but hydrates `members.me` via REST when missing.
+   * Returns false when the channel has no guildId.
+   */
+  async canSend(): Promise<boolean> {
+    if (!this.guildId) return false;
+    const guild = this.client.guilds.get(this.guildId);
+    if (!guild) return false;
+    if (!guild.members.me) {
+      try {
+        await guild.members.fetchMe();
+      } catch {
+        return false;
+      }
+    }
+    return this.canSendMessage();
   }
 
   /** Edit this channel's settings. Requires Manage Channels. */
@@ -131,31 +119,14 @@ export class GuildChannel extends Channel {
     });
     this.name = data.name ?? this.name;
     this.parentId = data.parent_id ?? this.parentId;
-    this.permissionOverwrites = data.permission_overwrites ?? this.permissionOverwrites;
+    if (data.permission_overwrites !== undefined) {
+      this.permissionOverwrites._patch(data.permission_overwrites);
+    }
     this.applyEditPatch(data);
     return this;
   }
 
   protected applyEditPatch(_data: APIChannel): void {}
-
-  /** Delete this channel. Requires Manage Channels or channel ownership. */
-  async delete(
-    options?: SudoVerificationOptions & { silent?: boolean; deleteMessages?: boolean },
-  ): Promise<void> {
-    const params = new URLSearchParams();
-    if (options?.silent) params.set('silent', 'true');
-    if (options?.deleteMessages) params.set('delete_messages', 'true');
-    const qs = params.toString();
-    const { silent: _s, deleteMessages: _d, ...sudo } = options ?? {};
-    const body = Object.keys(sudo).length ? toSudoBody(sudo) : undefined;
-    await this.client.rest.delete(Routes.channel(this.id) + (qs ? `?${qs}` : ''), {
-      body,
-      auth: true,
-    });
-    this.client.channels.delete(this.id);
-    this.client._clearMessageCache(this.id);
-    this.client.guilds.get(this.guildId)?.channels.delete(this.id);
-  }
 }
 
 /** A text channel in a guild (supports sending messages). */
@@ -164,48 +135,121 @@ export class TextChannel extends TextCapable(GuildChannel) {
   topic?: string | null;
   /** Whether this channel is marked as NSFW. */
   nsfw?: boolean;
+  /** Per-channel NSFW override (`null` inherits). */
+  nsfwOverride?: boolean | null;
   /** Slowmode rate limit in seconds. */
   rateLimitPerUser?: number;
   /** ID of the last message sent in this channel. */
   lastMessageId?: string | null;
+  /** Content warning level. */
+  contentWarningLevel?: number | null;
+  /** Custom content warning text. */
+  contentWarningText?: string | null;
 
   constructor(client: Client, data: APIChannel) {
     super(client, data);
     this.topic = data.topic ?? null;
     this.nsfw = data.nsfw ?? false;
+    this.nsfwOverride = data.nsfw_override ?? null;
     this.rateLimitPerUser = data.rate_limit_per_user ?? 0;
     this.lastMessageId = data.last_message_id ?? null;
+    this.contentWarningLevel = data.content_warning_level ?? null;
+    this.contentWarningText = data.content_warning_text ?? null;
+  }
+
+  /**
+   * Set slowmode (seconds between messages). Pass `0` to disable.
+   * Requires Manage Channels. Calls {@link GuildChannel.edit} with `rateLimitPerUser`.
+   */
+  async setSlowmode(seconds: number): Promise<this> {
+    return this.edit({ rateLimitPerUser: seconds });
   }
 
   protected override applyEditPatch(data: APIChannel): void {
     if ('topic' in data) this.topic = data.topic ?? null;
     if ('nsfw' in data) this.nsfw = data.nsfw ?? false;
+    if ('nsfw_override' in data) this.nsfwOverride = data.nsfw_override ?? null;
     if ('rate_limit_per_user' in data) this.rateLimitPerUser = data.rate_limit_per_user ?? 0;
+    if ('last_message_id' in data) this.lastMessageId = data.last_message_id ?? null;
+    if ('content_warning_level' in data) {
+      this.contentWarningLevel = data.content_warning_level ?? null;
+    }
+    if ('content_warning_text' in data) {
+      this.contentWarningText = data.content_warning_text ?? null;
+    }
   }
 }
 
 /** A category channel (container for organizing channels). */
 export class CategoryChannel extends GuildChannel {}
 
-/** A voice channel in a guild. */
-export class VoiceChannel extends GuildChannel {
+/** A voice channel in a guild. Voice is text-capable on Fluxer. */
+export class VoiceChannel extends TextCapable(GuildChannel) {
+  /** Guild ID. Voice channels always belong to a guild. */
+  declare readonly guildId: string;
+  /** Channel topic. */
+  topic?: string | null;
+  /** Whether this channel is marked as NSFW. */
+  nsfw?: boolean;
+  /** Per-channel NSFW override (`null` inherits). */
+  nsfwOverride?: boolean | null;
+  /** Slowmode rate limit in seconds. */
+  rateLimitPerUser?: number;
+  /** ID of the last message sent in this channel. */
+  lastMessageId?: string | null;
+  /** Content warning level. */
+  contentWarningLevel?: number | null;
+  /** Custom content warning text. */
+  contentWarningText?: string | null;
   /** Voice bitrate. */
   bitrate?: number | null;
   /** Maximum number of users allowed. */
   userLimit?: number | null;
+  /** Max active voice connections per user. */
+  voiceConnectionLimit?: number | null;
   /** RTC region override for this channel. */
   rtcRegion?: string | null;
 
   constructor(client: Client, data: APIChannel) {
     super(client, data);
+    this.topic = data.topic ?? null;
+    this.nsfw = data.nsfw ?? false;
+    this.nsfwOverride = data.nsfw_override ?? null;
+    this.rateLimitPerUser = data.rate_limit_per_user ?? 0;
+    this.lastMessageId = data.last_message_id ?? null;
+    this.contentWarningLevel = data.content_warning_level ?? null;
+    this.contentWarningText = data.content_warning_text ?? null;
     this.bitrate = data.bitrate ?? null;
     this.userLimit = data.user_limit ?? null;
+    this.voiceConnectionLimit = data.voice_connection_limit ?? null;
     this.rtcRegion = data.rtc_region ?? null;
   }
 
+  /**
+   * Set slowmode (seconds between messages). Pass `0` to disable.
+   * Requires Manage Channels. Calls {@link GuildChannel.edit} with `rateLimitPerUser`.
+   */
+  async setSlowmode(seconds: number): Promise<this> {
+    return this.edit({ rateLimitPerUser: seconds });
+  }
+
   protected override applyEditPatch(data: APIChannel): void {
+    if ('topic' in data) this.topic = data.topic ?? null;
+    if ('nsfw' in data) this.nsfw = data.nsfw ?? false;
+    if ('nsfw_override' in data) this.nsfwOverride = data.nsfw_override ?? null;
+    if ('rate_limit_per_user' in data) this.rateLimitPerUser = data.rate_limit_per_user ?? 0;
+    if ('last_message_id' in data) this.lastMessageId = data.last_message_id ?? null;
+    if ('content_warning_level' in data) {
+      this.contentWarningLevel = data.content_warning_level ?? null;
+    }
+    if ('content_warning_text' in data) {
+      this.contentWarningText = data.content_warning_text ?? null;
+    }
     if ('bitrate' in data) this.bitrate = data.bitrate ?? null;
     if ('user_limit' in data) this.userLimit = data.user_limit ?? null;
+    if ('voice_connection_limit' in data) {
+      this.voiceConnectionLimit = data.voice_connection_limit ?? null;
+    }
     if ('rtc_region' in data) this.rtcRegion = data.rtc_region ?? null;
   }
 }
@@ -218,5 +262,9 @@ export class LinkChannel extends GuildChannel {
   constructor(client: Client, data: APIChannel) {
     super(client, data);
     this.url = data.url ?? null;
+  }
+
+  protected override applyEditPatch(data: APIChannel): void {
+    if ('url' in data) this.url = data.url ?? null;
   }
 }

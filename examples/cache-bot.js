@@ -4,7 +4,7 @@
  * Usage:
  *   FLUXER_BOT_TOKEN=your_token node examples/cache-bot.js
  *
- * See: https://fluxerjs.blstmo.com/guides/caching/
+ * See: https://fluxer.js.org/guides/caching/
  */
 
 import { Client, Events } from '@fluxerjs/core';
@@ -68,9 +68,7 @@ client.on(Events.MessageCreate, async (message) => {
 // Periodic maintenance for long-running bots
 const HOUR = 60 * 60 * 1000;
 setInterval(() => {
-  const removed = client.cache.sweepMessages(
-    (msg) => Date.now() - Date.parse(msg.timestamp) > HOUR,
-  );
+  const removed = client.cache.sweepMessages((msg) => Date.now() - msg.createdAt.getTime() > HOUR);
   if (removed > 0) console.log(`Swept ${removed} old messages`);
 }, HOUR).unref?.();
 

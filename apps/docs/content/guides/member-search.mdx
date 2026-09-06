@@ -1,8 +1,8 @@
 ---
 title: Member Search
 description: Search guild members with guild.members.search and camelCase filters.
-category: other
-order: 21
+category: guilds
+order: 34
 ---
 
 When you need members by name or role without iterating the whole cache, use the search helper on the guild member manager.
@@ -41,7 +41,7 @@ const member =
   guild.members.get(userId) ?? (await guild.fetchMember(userId));
 ```
 
-Or `guild.members.resolve(userId)` when that helper is available on your build.
+Or `guild.members.resolve(userId)` to get-or-fetch in one call.
 
 ## Related
 

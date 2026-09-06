@@ -1,19 +1,20 @@
 {
   "summary": {
-    "total": 337,
+    "total": 315,
     "byCategory": {
-      "public": 53,
-      "bot": 115,
-      "session": 156,
-      "voice": 13
+      "public": 56,
+      "bot": 105,
+      "session": 146,
+      "voice": 8
     },
     "byStatus": {
-      "public": 53,
-      "wrapped": 115,
-      "session_only": 156,
-      "voice_excluded": 13
+      "public": 56,
+      "wrapped": 104,
+      "session_only": 146,
+      "voice_excluded": 8,
+      "bot_denied": 1
     },
-    "generatedAt": "2026-08-01T16:02:26.117Z"
+    "generatedAt": "2026-09-06T01:43:46.945Z"
   },
   "operations": [
     {
@@ -92,6 +93,14 @@
       "method": "GET",
       "path": "/auth/handoff/{code}/status",
       "operationId": "get_handoff_status",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/handoff/{code}/status",
+      "operationId": "get_handoff_status_with_secret",
       "auth": "none",
       "category": "public",
       "status": "public"
@@ -417,14 +426,6 @@
       "status": "wrapped"
     },
     {
-      "method": "POST",
-      "path": "/channels/{channel_id}/messages/schedule",
-      "operationId": "schedule_message",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
       "method": "GET",
       "path": "/channels/{channel_id}/messages/{message_id}",
       "operationId": "get_message",
@@ -609,46 +610,6 @@
       "status": "wrapped"
     },
     {
-      "method": "POST",
-      "path": "/channels/{channel_id}/voice-debug-logging/events",
-      "operationId": "upload_voice_debug_logging_events",
-      "auth": "sessionToken",
-      "category": "voice",
-      "status": "voice_excluded"
-    },
-    {
-      "method": "GET",
-      "path": "/channels/{channel_id}/voice-debug-logging/session",
-      "operationId": "get_voice_debug_logging_status",
-      "auth": "sessionToken",
-      "category": "voice",
-      "status": "voice_excluded"
-    },
-    {
-      "method": "PUT",
-      "path": "/channels/{channel_id}/voice-debug-logging/session",
-      "operationId": "set_voice_debug_logging_status",
-      "auth": "sessionToken",
-      "category": "voice",
-      "status": "voice_excluded"
-    },
-    {
-      "method": "POST",
-      "path": "/channels/{channel_id}/voice-presence/heartbeat",
-      "operationId": "heartbeat_voice_presence",
-      "auth": "sessionToken",
-      "category": "voice",
-      "status": "voice_excluded"
-    },
-    {
-      "method": "DELETE",
-      "path": "/channels/{channel_id}/voice-presence/heartbeat",
-      "operationId": "end_voice_presence_heartbeat",
-      "auth": "sessionToken",
-      "category": "voice",
-      "status": "voice_excluded"
-    },
-    {
       "method": "GET",
       "path": "/channels/{channel_id}/webhooks",
       "operationId": "list_channel_webhooks",
@@ -750,7 +711,7 @@
       "operationId": "create_guild",
       "auth": "mixed",
       "category": "bot",
-      "status": "wrapped"
+      "status": "bot_denied"
     },
     {
       "method": "GET",
@@ -1130,6 +1091,14 @@
     },
     {
       "method": "GET",
+      "path": "/harvest-downloads/{harvestId}",
+      "operationId": "download_data_harvest_archive",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "GET",
       "path": "/invites/{invite_code}",
       "operationId": "get_invite",
       "auth": "none",
@@ -1151,6 +1120,14 @@
       "auth": "mixed",
       "category": "bot",
       "status": "wrapped"
+    },
+    {
+      "method": "GET",
+      "path": "/ip",
+      "operationId": "get_client_geolocation",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
     },
     {
       "method": "GET",
@@ -1295,150 +1272,6 @@
       "auth": "public",
       "category": "public",
       "status": "public"
-    },
-    {
-      "method": "GET",
-      "path": "/packs",
-      "operationId": "list_user_packs",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/packs/emojis/{pack_id}",
-      "operationId": "create_pack_emoji",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "GET",
-      "path": "/packs/emojis/{pack_id}",
-      "operationId": "list_pack_emojis",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "POST",
-      "path": "/packs/emojis/{pack_id}/bulk",
-      "operationId": "bulk_create_pack_emojis",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "PATCH",
-      "path": "/packs/emojis/{pack_id}/{emoji_id}",
-      "operationId": "update_pack_emoji",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "DELETE",
-      "path": "/packs/emojis/{pack_id}/{emoji_id}",
-      "operationId": "delete_pack_emoji",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "POST",
-      "path": "/packs/stickers/{pack_id}",
-      "operationId": "create_pack_sticker",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "GET",
-      "path": "/packs/stickers/{pack_id}",
-      "operationId": "list_pack_stickers",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "POST",
-      "path": "/packs/stickers/{pack_id}/bulk",
-      "operationId": "bulk_create_pack_stickers",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "PATCH",
-      "path": "/packs/stickers/{pack_id}/{sticker_id}",
-      "operationId": "update_pack_sticker",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "DELETE",
-      "path": "/packs/stickers/{pack_id}/{sticker_id}",
-      "operationId": "delete_pack_sticker",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "wrapped"
-    },
-    {
-      "method": "PATCH",
-      "path": "/packs/{pack_id}",
-      "operationId": "update_pack",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "DELETE",
-      "path": "/packs/{pack_id}",
-      "operationId": "delete_pack",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/packs/{pack_id}/install",
-      "operationId": "install_pack",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "DELETE",
-      "path": "/packs/{pack_id}/install",
-      "operationId": "uninstall_pack",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "GET",
-      "path": "/packs/{pack_id}/invites",
-      "operationId": "list_pack_invites",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/packs/{pack_id}/invites",
-      "operationId": "create_pack_invite",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/packs/{pack_type}",
-      "operationId": "create_pack",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
     },
     {
       "method": "POST",
@@ -1748,14 +1581,6 @@
       "method": "DELETE",
       "path": "/users/@me/authorized-ips",
       "operationId": "forget_authorized_ips",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/users/@me/canary-tester/join",
-      "operationId": "join_canary_testers",
       "auth": "sessionToken",
       "category": "session",
       "status": "session_only"
@@ -2194,6 +2019,38 @@
     },
     {
       "method": "POST",
+      "path": "/users/@me/mfa/backup-codes/challenge",
+      "operationId": "start_backup_codes_challenge",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/users/@me/mfa/backup-codes/challenge/regenerate",
+      "operationId": "regenerate_backup_codes_challenge",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/users/@me/mfa/backup-codes/challenge/resend",
+      "operationId": "resend_backup_codes_challenge",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/users/@me/mfa/backup-codes/challenge/verify",
+      "operationId": "verify_backup_codes_challenge",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
       "path": "/users/@me/mfa/totp/disable",
       "operationId": "disable_totp_mfa",
       "auth": "sessionToken",
@@ -2484,38 +2341,6 @@
       "method": "DELETE",
       "path": "/users/@me/saved-messages/{message_id}",
       "operationId": "unsave_message",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "GET",
-      "path": "/users/@me/scheduled-messages",
-      "operationId": "list_scheduled_messages",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "GET",
-      "path": "/users/@me/scheduled-messages/{scheduled_message_id}",
-      "operationId": "get_scheduled_message",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "DELETE",
-      "path": "/users/@me/scheduled-messages/{scheduled_message_id}",
-      "operationId": "cancel_scheduled_message",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "PATCH",
-      "path": "/users/@me/scheduled-messages/{scheduled_message_id}",
-      "operationId": "update_scheduled_message",
       "auth": "sessionToken",
       "category": "session",
       "status": "session_only"

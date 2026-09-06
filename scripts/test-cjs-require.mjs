@@ -26,6 +26,8 @@ const PACKAGES = [
   '@fluxerjs/core/message',
   '@fluxerjs/core/cluster',
   '@fluxerjs/voice',
+  '@fluxerjs/sharding',
+  '@fluxerjs/sharding-redis',
 ];
 
 function main() {

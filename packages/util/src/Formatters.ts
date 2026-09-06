@@ -18,7 +18,7 @@ export function escapeMarkdown(text: string): string {
 export type TimestampStyle = 't' | 'T' | 'd' | 'D' | 'f' | 'F' | 'R';
 
 /**
- * Format a Unix timestamp (milliseconds) as a Fluxer/Discord timestamp mention.
+ * Format a Unix timestamp (milliseconds) as a Fluxer timestamp mention.
  * @param timestampMs - Unix timestamp in milliseconds
  * @param style - Optional display style (`t`, `T`, `d`, `D`, `f`, `F`, `R`)
  */

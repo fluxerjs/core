@@ -1,16 +1,16 @@
 ---
 title: File Attachments
-description: Upload files with messages and set spoiler or animated flags.
-category: media
-order: 8
+description: Upload files with AttachmentBuilder or plain { name, data } / { name, url }.
+category: additional
+order: 52
 ---
 
-Attach files on `reply`, `send`, or `channel.send`. Each file needs a `name` and `data` (`Buffer`, `Blob`, or `Uint8Array`). You can also attach by URL (see [Attachments by URL](/guides/attachments-by-url/)).
+Attach files on `reply`, `send`, or `channel.send`. Prefer `AttachmentBuilder` when you have a buffer or URL and a filename.
 
-## Upload a buffer
+## AttachmentBuilder (recommended)
 
 ```javascript
-import { Client, Events } from '@fluxerjs/core';
+import { AttachmentBuilder, Client, Events } from '@fluxerjs/core';
 
 const client = new Client();
 
@@ -19,25 +19,36 @@ client.on(Events.MessageCreate, async (message) => {
 
   await message.reply({
     content: 'Here is a file:',
-    files: [{ name: 'hello.txt', data: Buffer.from('Hello from Fluxer!', 'utf-8') }],
+    files: [new AttachmentBuilder(Buffer.from('Hello from Fluxer!', 'utf-8'), { name: 'hello.txt' })],
   });
 });
 ```
 
-## Metadata and flags
-
-When you need titles, descriptions, or flags, pass an `attachments` array. The `id` matches the file index (`0`, `1`, …).
+URL form:
 
 ```javascript
-import { MessageAttachmentFlags } from '@fluxerjs/core';
+await message.reply({
+  content: 'Image from URL:',
+  files: [new AttachmentBuilder('https://example.com/a.png', { name: 'a.png' })],
+});
+```
+
+Optional `description` and `spoiler: true` live on the builder options. Plain `{ name, data }` / `{ name, url }` objects still work. See [Builders](/guides/builders/) and [Attachments by URL](/guides/attachments-by-url/).
+
+## Metadata and flags
+
+When you need titles, descriptions, or flags beyond the builder, pass an `attachments` array. The `id` matches the file index (`0`, `1`, …).
+
+```javascript
+import { AttachmentBuilder, MessageAttachmentFlags } from '@fluxerjs/core';
 
 await message.reply({
   content: 'Spoiler image:',
-  files: [{ name: 'secret.png', data: imageBuffer }],
+  files: [new AttachmentBuilder(imageBuffer, { name: 'secret.png', spoiler: true })],
   attachments: [
     {
       id: 0,
-      filename: 'secret.png',
+      filename: 'SPOILER_secret.png',
       title: 'Hidden image',
       flags: MessageAttachmentFlags.IS_SPOILER,
     },
@@ -60,11 +71,12 @@ flags: MessageAttachmentFlags.IS_SPOILER | MessageAttachmentFlags.IS_ANIMATED
 
 ```javascript
 import { readFileSync } from 'node:fs';
+import { AttachmentBuilder } from '@fluxerjs/core';
 
 const data = readFileSync('./chart.png');
 await message.reply({
-  files: [{ name: 'chart.png', data }],
+  files: [new AttachmentBuilder(data, { name: 'chart.png' })],
 });
 ```
 
-Try `!attachurl` in [ping-bot](/examples/ping-bot/) for the URL form without reading a local file.
+Try `!attachurl` in [ping-bot](/examples/ping-bot/) or [attachments-bot](/examples/attachments-bot/) for runnable demos.

@@ -1,0 +1,62 @@
+---
+title: Where do I...?
+description: Task index for common bot jobs, with the guide and SDK method to use.
+category: getting-started
+order: 5
+searchTerms: where do I send reply forward timeout kick ban roles overwrites vanity discovery preload searchMessages voice text webhook emoji sticker DM content warning shard fetchWithProfile requestGuildCounts
+---
+
+Know the job, not the page name? Start here. Each row is a task, then the guide, then the usual SDK call.
+
+## Messages
+
+| Task | Guide | SDK |
+| --- | --- | --- |
+| Send in a text or **voice** channel | [Sending Messages](/guides/sending-without-reply/) | `channel.send()`, `channel.isTextBased()` |
+| Reply without a ping | [Sending Messages](/guides/sending-without-reply/) | `message.reply(text, { ping: false })` |
+| Forward a message | [Sending Messages](/guides/sending-without-reply/) | `channel.send({ forward: { channelId, messageId } })` |
+| Embeds | [Embeds](/guides/embeds/) | `EmbedBuilder` into `reply` / `send` |
+| Attach a file | [File Attachments](/guides/attachments/) | `AttachmentBuilder` or `{ name, url }` |
+| Fetch recent messages | [Message History](/guides/message-history/) | `channel.messages.fetch({ limit })` |
+| Preload several channels (bots) | [Message History](/guides/message-history/) | `client.preloadMessages(ids)` |
+| Search messages (bots) | [Message History](/guides/message-history/) | `client.searchMessages({ content, contextGuildId })` |
+| React / collect | [Reactions](/guides/reactions/), [Collectors](/guides/collectors/) | `message.react()`, `awaitMessages` |
+| Webhook send | [Webhooks](/guides/webhooks/) | `channel.createWebhook()`, `webhook.send()` |
+
+Do not use `client.bulkFetchMessages` on a bot token. That route is user-account only.
+
+## Guilds
+
+| Task | Guide | SDK |
+| --- | --- | --- |
+| Create or edit a channel | [Channels](/guides/channels/) | `guild.createChannel()`, `channel.edit()` |
+| Link channel (URL, no send) | [Channels](/guides/channels/) | `ChannelType.GuildLink`, `channel.isLink()` |
+| Permission overwrites | [Channels](/guides/channels/), [Permissions](/guides/permissions/) | `channel.permissionOverwrites.edit()` |
+| Roles | [Roles](/guides/roles/) | `guild.createRole({ name, color, permissions })` |
+| Kick / ban / timeout | [Moderation](/guides/moderation/) | `member.kick()`, `member.ban()`, `member.timeout(ms)` |
+| Search members | [Member Search](/guides/member-search/) | `guild.members.search({ query })` |
+| Emojis / stickers | [Emojis & Stickers](/guides/emojis/) | `guild.cloneEmoji()`, `guild.createEmojisBulk()` |
+| Invites / vanity | [Invites](/guides/invites/) | `channel.createInvite()`, `guild.fetchVanityURL()` |
+| Content warnings | [Content Warnings](/guides/content-warnings/) | `channel.edit({ contentWarningLevel })` |
+| List the guild in discovery | [Server Discovery](/guides/server-discovery/) | `guild.applyForDiscovery()` |
+
+## Client
+
+| Task | Guide | SDK |
+| --- | --- | --- |
+| First bot | [Basic Bot](/guides/basic-bot/) | `client.login()`, `Events.MessageCreate` |
+| Prefix `!commands` | [Prefix Commands](/guides/prefix-commands/) | `parsePrefixCommand` |
+| Errors | [Errors](/guides/errors/) | `FluxerError`, `ErrorCodes` |
+| Cache limits / sweeps | [Caching](/guides/caching/) | `client.cache` |
+| Presence | [Presence](/guides/presence/) | `client.user.setPresence()` |
+| DMs | [Direct Messages](/guides/direct-messages/) | `user.send()` |
+| Friendly bot flags | [Users & Bots](/guides/users/) | `UserFlagsBits.FriendlyBot` |
+| User with profile | [Users & Bots](/guides/users/) | `client.users.fetchWithProfile(id)` |
+| Application object | [Users & Bots](/guides/users/) | `client.fetchOAuthApplications()` |
+| Live member/online counts | [Events](/guides/events/) | `client.requestGuildCounts({ guildIds })` |
+| Per-channel member counts (event only) | [Events](/guides/events/) | `client.requestChannelMemberCounts({ guildId })` |
+| Self-hosted instance | [Discovery](/guides/discovery/) | `Client.fromDiscovery(origin)` |
+| Scale across shards | [Sharding](/guides/sharding/) | `@fluxerjs/sharding` |
+| Play audio in VC | [Voice](/guides/voice/) | `@fluxerjs/voice` (being reworked) |
+
+Voice **text** (chat in a voice channel) is [Sending Messages](/guides/sending-without-reply/), not the voice package.

@@ -1,6 +1,6 @@
 /** Guild REST wire body serializers. */
-import { resolvePermissionsToBitfield } from '@fluxerjs/util';
-import type { RoleCreateOptions } from '../../Domain/Guild/RoleOptions.js';
+import { type PermissionResolvable, resolvePermissionsToBitfield } from '@fluxerjs/util';
+import type { RoleCreateOptions, RoleEditOptions } from '../../Domain/Guild/RoleOptions.js';
 import type {
   ChannelPositionUpdate,
   GuildBanOptions,
@@ -35,6 +35,16 @@ export function toGuildEditBody(options: GuildEditOptions): Record<string, unkno
     body.splash_card_alignment = options.splashCardAlignment;
   }
   if (options.nsfwLevel !== undefined) body.nsfw_level = options.nsfwLevel;
+  if (options.nsfw !== undefined) body.nsfw = options.nsfw;
+  if (options.contentWarningLevel !== undefined) {
+    body.content_warning_level = options.contentWarningLevel;
+  }
+  if (options.contentWarningText !== undefined) {
+    body.content_warning_text = options.contentWarningText;
+  }
+  if (options.messageHistoryCutoff !== undefined) {
+    body.message_history_cutoff = options.messageHistoryCutoff;
+  }
   if (options.features !== undefined) body.features = options.features;
   return body;
 }
@@ -44,6 +54,9 @@ export function toGuildBanBody(options: GuildBanOptions): Record<string, unknown
   if (options.reason !== undefined) body.reason = options.reason;
   if (options.deleteMessageDays !== undefined) {
     body.delete_message_days = options.deleteMessageDays;
+  }
+  if (options.deleteMessageSeconds !== undefined) {
+    body.delete_message_seconds = options.deleteMessageSeconds;
   }
   if (options.banDurationSeconds !== undefined) {
     body.ban_duration_seconds = options.banDurationSeconds;
@@ -63,21 +76,34 @@ export function toChannelPositionBody(
   });
 }
 
-/** Convert SDK role options to an OpenAPI role body. */
-export function toRoleRequestBody(options: RoleCreateOptions): Record<string, unknown> {
+function toRolePermissionsBody(options: {
+  permissions?: string | PermissionResolvable;
+}): Record<string, unknown> {
   const body: Record<string, unknown> = {};
-  if (options.name !== undefined) body.name = options.name;
-  if (options.color !== undefined) body.color = options.color;
-  if (options.hoist !== undefined) body.hoist = options.hoist;
-  if (options.mentionable !== undefined) body.mentionable = options.mentionable;
-  if (options.unicodeEmoji !== undefined) body.unicode_emoji = options.unicodeEmoji;
-  if (options.position !== undefined) body.position = options.position;
-  if (options.hoistPosition !== undefined) body.hoist_position = options.hoistPosition;
   if (options.permissions !== undefined) {
     body.permissions =
       typeof options.permissions === 'string'
         ? options.permissions
         : resolvePermissionsToBitfield(options.permissions);
   }
+  return body;
+}
+
+/** Convert SDK role create options to GuildRoleCreateRequest. */
+export function toRoleCreateBody(options: RoleCreateOptions): Record<string, unknown> {
+  const body: Record<string, unknown> = { ...toRolePermissionsBody(options) };
+  if (options.name !== undefined) body.name = options.name;
+  if (options.color !== undefined) body.color = options.color;
+  return body;
+}
+
+/** Convert SDK role edit options to GuildRoleUpdateRequest. */
+export function toRoleEditBody(options: RoleEditOptions): Record<string, unknown> {
+  const body: Record<string, unknown> = { ...toRolePermissionsBody(options) };
+  if (options.name !== undefined) body.name = options.name;
+  if (options.color !== undefined) body.color = options.color;
+  if (options.hoist !== undefined) body.hoist = options.hoist;
+  if (options.mentionable !== undefined) body.mentionable = options.mentionable;
+  if (options.hoistPosition !== undefined) body.hoist_position = options.hoistPosition;
   return body;
 }

@@ -4,6 +4,7 @@
   "globalPassThroughEnv": [
     "BOT_LOGIN_TIMEOUT_MS",
     "DOCS_ALLOW_PARTIAL",
+    "DOCS_LATEST_ONLY",
     "DOCS_GITHUB_REPO",
     "DOCS_GIT_REMOTE",
     "FLUXER_BOT_TOKEN",

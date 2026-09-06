@@ -3,12 +3,13 @@ import type {
   GatewayGuildMemberRemoveDispatchData,
   GatewayGuildMembersChunkDispatchData,
 } from '@fluxerjs/types';
-import { GuildMember } from '../../Domain/Guild/GuildMember.js';
+import type { GuildMember } from '../../Domain/Guild/GuildMember.js';
+import { PartialGuildMember } from '../../Domain/Guild/PartialGuildMember.js';
 import { Events } from '../../Helpers/Events.js';
 
 import type { GuildMembersChunkPayload } from '../EventPayloads.js';
 
-import { indexMember, unknownUser } from './Helpers.js';
+import { indexMember } from './Helpers.js';
 
 import type { HandlerMap } from './Types.js';
 
@@ -52,39 +53,18 @@ export const memberHandlers: HandlerMap = {
 
     if (!guild || !data.user?.id) return;
 
-    let member = guild.members.get(data.user.id);
+    const cached = guild.members.get(data.user.id);
+    if (cached) guild.members.delete(data.user.id);
 
-    if (member) {
-      guild.members.delete(data.user.id);
-    } else {
-      member = new GuildMember(
+    const user = client.getOrCreateUser(data.user);
+    const member: GuildMember | PartialGuildMember =
+      cached ??
+      new PartialGuildMember({
         client,
-
-        {
-          user: {
-            ...unknownUser(data.user.id),
-
-            ...data.user,
-
-            username: data.user.username ?? 'Unknown',
-
-            discriminator: data.user.discriminator ?? '0',
-          },
-
-          roles: [],
-
-          joined_at: new Date(0).toISOString(),
-
-          nick: null,
-
-          mute: false,
-
-          deaf: false,
-        },
-
+        id: data.user.id,
+        user,
         guild,
-      );
-    }
+      });
 
     // Leave events are authoritative even when the member was not cached.
     guild.adjustMemberCount(-1);
@@ -115,7 +95,7 @@ export const memberHandlers: HandlerMap = {
 
       chunkCount: data.chunk_count,
 
-      notFound: [],
+      notFound: data.not_found ?? [],
 
       nonce: data.nonce ?? null,
     };

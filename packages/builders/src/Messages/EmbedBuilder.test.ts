@@ -259,5 +259,26 @@ describe('EmbedBuilder', () => {
       expect(json.title).toBe('Media');
       assertWire(json);
     });
+
+    it('reads camelCase iconUrl and Date timestamp from received embeds', () => {
+      const json = EmbedBuilder.from({
+        title: 'Read',
+        description: 'path',
+        timestamp: new Date('2026-01-01T00:00:00.000Z'),
+        author: { name: 'Ada', iconUrl: 'https://example.com/icon.png' },
+        footer: { text: 'foot', iconUrl: 'https://example.com/foot.png' },
+      }).toJSON();
+
+      expect(json.timestamp).toBe('2026-01-01T00:00:00.000Z');
+      expect(json.author).toEqual({
+        name: 'Ada',
+        icon_url: 'https://example.com/icon.png',
+      });
+      expect(json.footer).toEqual({
+        text: 'foot',
+        icon_url: 'https://example.com/foot.png',
+      });
+      assertWire(json);
+    });
   });
 });

@@ -1,15 +1,73 @@
 ---
 title: Collectors
-description: Collect messages or reactions for a limited time with filters and max counts.
-category: events
+description: Wait for a reply or reaction with awaitMessages / awaitReactions.
+category: popular
 order: 22
+searchTerms: awaitMessages awaitReactions createMessageCollector CollectorOptionsRequired
 ---
 
-Collectors listen for a while, keep matching items, then stop. Use them for confirmations, polls, or “reply with a choice” flows without wiring a permanent event handler.
+Short path: wait once, then continue. Use this for confirmations and polls.
 
-## Message collector
+Collectors require `time` and/or `max`. Omitting both throws `FluxerError` with `ErrorCodes.CollectorOptionsRequired`.
 
-Create one on a text-capable channel:
+By default, `awaitMessages` / `awaitReactions` **reject** when the collector ends for `time` (`CollectorIdle`) or `max` / `limit` (`CollectorMax`). Pass `errors: ['time']` if you want a successful resolve when `max` is hit (only idle rejects). Pass `errors: []` to always resolve with the collection.
+
+## awaitMessages
+
+```javascript
+import { FluxerError, ErrorCodes } from '@fluxerjs/core';
+
+const channel = message.channel ?? (await message.resolveChannel());
+await message.reply('What is your favorite color? (15s)');
+
+try {
+  const collected = await channel.awaitMessages({
+    filter: (m) => m.author.id === message.author.id,
+    max: 1,
+    time: 15_000,
+    errors: ['time'], // resolve when max is hit; reject only on idle
+  });
+  const answer = collected.first();
+  if (answer) await answer.reply(`Nice. You said: ${answer.content}`);
+} catch (err) {
+  if (err instanceof FluxerError && err.code === ErrorCodes.CollectorIdle) {
+    await message.reply('Timed out.');
+    return;
+  }
+  throw err;
+}
+```
+
+## awaitReactions
+
+```javascript
+import { FluxerError, ErrorCodes } from '@fluxerjs/core';
+
+const prompt = await message.reply('React 👍 or 👎 (30s)');
+await prompt.react('👍');
+await prompt.react('👎');
+
+try {
+  const collected = await prompt.awaitReactions({
+    // Collector filter is (reaction, user). Gateway MessageReactionAdd is one payload object.
+    filter: (reaction, user) =>
+      !user.bot && (reaction.emoji.name === '👍' || reaction.emoji.name === '👎'),
+    max: 1,
+    time: 30_000,
+    errors: ['time'],
+  });
+  const hit = collected.first();
+  if (hit) await prompt.reply(`Picked ${hit.emoji.name}`);
+} catch (err) {
+  if (err instanceof FluxerError && err.code === ErrorCodes.CollectorIdle) {
+    await prompt.reply('No vote.');
+  }
+}
+```
+
+## Advanced: EventEmitter collectors
+
+`createMessageCollector` / `createReactionCollector` if you need `collect` / `end` events, `stop()`, or to keep the collector around.
 
 ```javascript
 const collector = channel.createMessageCollector({
@@ -27,37 +85,4 @@ collector.on('end', (collected, reason) => {
 });
 ```
 
-`reason` is typically `time`, `limit`, or `user` (you called `stop()`).
-
-## Reaction collector
-
-Create one on a message you already sent:
-
-```javascript
-const reply = await message.reply('React with 👍 or 👎');
-await reply.react('👍');
-await reply.react('👎');
-
-const collector = reply.createReactionCollector({
-  filter: (reaction, user) =>
-    !user.bot && (reaction.emoji.name === '👍' || reaction.emoji.name === '👎'),
-  time: 30_000,
-  max: 1,
-});
-
-collector.on('collect', (reaction, user) => {
-  console.log(`${user.username} picked ${reaction.emoji.name}`);
-});
-
-collector.on('end', (collected, reason) => {
-  console.log(`Ended: ${reason}, size=${collected.size}`);
-});
-```
-
-Reaction add events on the client still use a single payload object. The collector unwraps that for you and emits `(reaction, user)` on `collect`.
-
-## Tips
-
-- Always ignore bots in the filter unless you mean to collect them.
-- Call `collector.stop()` when you have what you need so you do not wait out the timer.
-- For long-lived reaction roles, prefer permanent `Events.MessageReactionAdd` listeners (see [reaction-roles-bot](/examples/reaction-roles-bot/)) instead of a short collector.
+For long-lived reaction roles, use a permanent `Events.MessageReactionAdd` listener instead of a short collector. See [reaction-roles-bot](/examples/reaction-roles-bot/).

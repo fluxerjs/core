@@ -1,5 +1,10 @@
 // Re-export builders for convenience
-export { AttachmentBuilder, EmbedBuilder, MessagePayload } from '@fluxerjs/builders';
+export {
+  AttachmentBuilder,
+  AttachmentMeta,
+  EmbedBuilder,
+  MessagePayload,
+} from '@fluxerjs/builders';
 export type {
   APIInstance,
   APIInstanceEndpoints,
@@ -109,7 +114,6 @@ export type {
   MessageReactionPayload,
   MessageReactionRemoveAllPayload,
   MessageReactionRemoveEmojiPayload,
-  PackSummaryPayload,
   PartialUserGuildPayload,
   PresenceActivity,
   PresenceUpdateBulkPayload,
@@ -120,6 +124,7 @@ export type {
   WebhooksUpdatePayload,
 } from './ClientCore/EventPayloads.js';
 export { GuildMemberManager } from './ClientCore/GuildMemberManager.js';
+export { GuildManager } from './ClientCore/GuildManager.js';
 export {
   type BulkFetchMessagesChannelResult,
   type BulkFetchMessagesOptions,
@@ -127,62 +132,36 @@ export {
   type FetchMessagesOptions,
   MessageManager,
 } from './ClientCore/MessageManager.js';
-export {
-  type PackDashboardPayload,
-  type PackDashboardSectionPayload,
-  PackManager,
-  toPackSummaryPayload,
-} from './ClientCore/PackManager.js';
-export {
-  type AttachmentUploadCompleteItem,
-  type AttachmentUploadCompleteResponse,
-  type AttachmentUploadPlanItem,
-  type AttachmentUploadPlanResponse,
-  type BulkFetchMessagesRequest,
-  type ChannelEditOptions,
-  type ChannelInviteCreateOptions,
-  type ChannelSlowmodePayload,
-  type DiscoveryApplicationOptions,
-  type DiscoveryApplicationPayload,
-  type DiscoveryStatusPayload,
-  type ExpressionCreateOptions,
-  type ExpressionEditOptions,
-  type GuildMemberEditOptions,
-  type GuildMemberSearchOptions,
-  type MessageAttachmentEdit,
-  type PackBulkCreatePayload,
-  type PackCreateOptions,
-  type PackEditOptions,
-  type PackEmojiPayload,
-  type PackInviteCreateOptions,
-  type PackInvitePayload,
-  type PackStickerPayload,
-  type PresenceUpdateOptions,
-  type ProfilePayload,
-  type RtcRegionPayload,
-  type StickerCreateOptions,
-  type StickerEditOptions,
-  type SudoVerificationOptions,
-  toAttachmentUploadCompleteBody,
-  toAttachmentUploadPlanBody,
-  toBulkFetchWire,
-  toChannelEditBody,
-  toChannelInviteBody,
-  toDiscoveryApplicationPayload,
-  toDiscoveryBody,
-  toDiscoveryStatusPayload,
-  toEmojiCreateBody,
-  toEmojiEditBody,
-  toMemberEditBody,
-  toMemberSearchBody,
-  toMessageAttachmentEditWire,
-  toPackInviteBody,
-  toPresenceWire,
-  toProfilePayload,
-  toStickerCreateBody,
-  toStickerEditBody,
-  toSudoBody,
-  type WebhookEditOptions,
+export type {
+  AttachmentUploadCompleteItem,
+  AttachmentUploadCompleteResponse,
+  AttachmentUploadPlanItem,
+  AttachmentUploadPlanResponse,
+  BulkFetchMessagesRequest,
+  ChannelEditOptions,
+  ChannelInviteCreateOptions,
+  ChannelSlowmodePayload,
+  DiscoveryApplicationOptions,
+  DiscoveryApplicationPayload,
+  DiscoveryStatusPayload,
+  ExpressionCreateOptions,
+  ExpressionEditOptions,
+  GuildChannelCreateOptions,
+  GuildMemberEditOptions,
+  GuildMemberSearchOptions,
+  GroupDmEditOptions,
+  MessageAttachmentEdit,
+  MessageSearchIndexing,
+  MessageSearchOptions,
+  MessageSearchResponse,
+  MessageSearchResults,
+  PresenceUpdateOptions,
+  ProfilePayload,
+  RtcRegionPayload,
+  StickerCreateOptions,
+  StickerEditOptions,
+  SudoVerificationOptions,
+  WebhookEditOptions,
 } from './ClientCore/SdkOptions/index.js';
 export {
   type FetchedUserWithProfile,
@@ -196,7 +175,11 @@ export {
   type FetchPinnedMessagesOptions,
   GuildChannel,
   LinkChannel,
+  PermissionOverwrite,
+  type PermissionOverwriteEditOptions,
+  PermissionOverwriteManager,
   type PinnedMessagesPage,
+  type TextBasedChannel,
   TextChannel,
   type UploadFileForSend,
   VoiceChannel,
@@ -210,19 +193,39 @@ export {
   type RoleResolvable,
 } from './Domain/Guild/GuildMemberRoleManager.js';
 export { GuildSticker } from './Domain/Guild/GuildSticker.js';
+export { PartialGuildMember } from './Domain/Guild/PartialGuildMember.js';
+export { GuildRoleManager } from './Domain/Guild/GuildRoleManager.js';
 export { Role } from './Domain/Guild/Role.js';
 export type { RoleCreateOptions, RoleEditOptions } from './Domain/Guild/RoleOptions.js';
-export { Invite } from './Domain/Invite.js';
+export {
+  Invite,
+  type InviteChannelSnapshot,
+  type InviteGuildSnapshot,
+} from './Domain/Invite.js';
+export type { MessageAttachment } from './Domain/Message/Attachment.js';
+export type {
+  MessageEmbed,
+  MessageEmbedAuthor,
+  MessageEmbedField,
+  MessageEmbedFooter,
+  MessageEmbedMedia,
+} from './Domain/Message/Embed.js';
 export {
   type AllowedMentionsOptions,
   Message,
+  type MessageCall,
   type MessageEditOptions,
+  type MessagePrepareInput,
+  type MessageReference,
   type MessageReplyTarget,
   type MessageSendOptions,
+  type MessageSnapshot,
   type ReplyOptions,
 } from './Domain/Message/index.js';
 export { MessageReaction } from './Domain/Message/MessageReaction.js';
-export type { PartialMessage } from './Domain/Message/PartialMessage.js';
+export { MessageReactionManager } from './Domain/Message/MessageReactionManager.js';
+export { MessageSticker } from './Domain/Message/MessageSticker.js';
+export { PartialMessage } from './Domain/Message/PartialMessage.js';
 export { User } from './Domain/User.js';
 export {
   Webhook,

@@ -1,8 +1,8 @@
 ---
 title: Permissions
 description: "Check member permissions (guild-level and channel-specific), bot permissions via guild.members.me, owner override, and PermissionFlags."
-category: other
-order: 18
+category: guilds
+order: 31
 ---
 
 ## Overview
@@ -19,7 +19,7 @@ import { Client, Events, PermissionFlags } from '@fluxerjs/core';
 const client = new Client();
 
 async function getMemberPerms(message) {
-  const guild = message.guild ?? await message.client.guilds.resolve(message.guildId);
+  const guild = await message.resolveGuild();
   if (!guild) return null;
   const member = guild.members.get(message.author.id) ?? await guild.fetchMember(message.author.id);
   return member?.permissions ?? null;
@@ -46,7 +46,7 @@ Use guild.members.me to get the bot's GuildMember. Returns null if not cached. U
 
 ```javascript
 // Check if the bot can ban members in this guild
-const guild = message.guild ?? await message.client.guilds.resolve(message.guildId);
+const guild = await message.resolveGuild();
 const me = guild?.members.me ?? (guild ? await guild.members.fetchMe() : null);
 if (me?.permissions.has(PermissionFlags.BanMembers)) {
   await message.reply('I have Ban Members permission.');
@@ -55,10 +55,10 @@ if (me?.permissions.has(PermissionFlags.BanMembers)) {
 
 ## Editing the bot's guild profile (nickname)
 
-Use `guild.members.me.edit({ nick })` to change the bot's nickname in that guild. Pass `nick: null` to clear and show the username. Requires Change Nickname permission (or bot has Manage Nicknames). See [ping-bot](/examples/ping-bot/) for a `!setnick` command.
+Use `guild.members.me.edit({ nick })` to change the bot's nickname in that guild. Pass `nick: null` to clear and show the username. Requires Change Nickname permission (or bot has Manage Nicknames). See [info-bot](/examples/info-bot/) for a `!setnick` command.
 
 ```javascript
-const guild = message.guild ?? await client.guilds.resolve(message.guildId);
+const guild = await message.resolveGuild();
 const me = guild?.members.me ?? (guild ? await guild.members.fetchMe() : null);
 if (me) {
   await me.edit({ nick: 'My Custom Nick' });
@@ -87,9 +87,9 @@ member.permissionsIn(channel) applies channel overwrites. Use it when checking i
 
 ```javascript
 const channel = message.channel;
-if (channel?.canSendMessage?.()) {
+if (channel?.isGuild()) {
   const perms = member.permissionsIn(channel);
-  if (perms.has(PermissionFlags.SendMessages)) {
+  if (perms.has(PermissionFlags.SendMessages) && channel.isTextBased()) {
     await channel.send('You can send here!');
   }
 }
@@ -97,10 +97,9 @@ if (channel?.canSendMessage?.()) {
 
 ## Managing roles
 
-Create, fetch, edit, and delete roles with guild.createRole(), guild.fetchRoles(), guild.fetchRole(roleId), role.edit(), and role.delete(). Use resolvePermissionsToBitfield() for permission bitfields. See the Roles guide for full examples.
+Create, fetch, edit, and delete roles with guild.createRole(), guild.fetchRoles(), guild.fetchRole(roleId), role.edit(), and role.delete(). Create accepts name, color, and permissions only. Use resolvePermissionsToBitfield() for permission bitfields. See the [Roles](/guides/roles/) guide for full examples. Channel overwrites: [Channels](/guides/channels/).
 
 ```javascript
-// Create a role with specific permissions
 const role = await guild.createRole({
   name: 'Mod',
   permissions: ['KickMembers', 'BanMembers', 'ManageMessages'],

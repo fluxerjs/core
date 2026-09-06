@@ -1,6 +1,7 @@
 import type {
   APIGuild,
   APIRole,
+  ContentWarningLevel,
   DefaultMessageNotifications,
   GuildExplicitContentFilter,
   GuildFeature,
@@ -34,13 +35,20 @@ export type GuildEditOptions = {
   embedSplash?: string | null;
   splashCardAlignment?: SplashCardAlignment;
   nsfwLevel?: GuildNSFWLevel;
+  /** Distinct from {@link nsfwLevel}: adult (18+) flag. */
+  nsfw?: boolean;
+  contentWarningLevel?: ContentWarningLevel;
+  contentWarningText?: string | null;
+  messageHistoryCutoff?: string | null;
   features?: GuildFeature[];
 };
 
 export type GuildBanOptions = {
   reason?: string;
-  /** Delete message history for this many days (0–7). */
+  /** Delete message history for this many days (0–7). Deprecated in favor of deleteMessageSeconds. */
   deleteMessageDays?: number;
+  /** Delete message history for this many seconds (0–604800). */
+  deleteMessageSeconds?: number;
   /** Temporary ban duration in seconds. */
   banDurationSeconds?: number;
 };

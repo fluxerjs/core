@@ -1,0 +1,27 @@
+{
+  "package": "@fluxerjs/sharding",
+  "generatedAt": "2026-09-04T23:57:20.681Z",
+  "entries": [
+    {
+      "subpath": ".",
+      "exports": [
+        "BETA_SHARDING_WARNING",
+        "IPC_MARKER",
+        "IpcEnvelope",
+        "IpcOp",
+        "ParentIdentifyThrottler",
+        "ShardClientUtil",
+        "ShardClientUtilOptions",
+        "ShardProcess",
+        "ShardProcessOptions",
+        "ShardingManager",
+        "ShardingManagerOptions",
+        "ShardingMode",
+        "attachShardClientUtil",
+        "createEnvelope",
+        "isIpcEnvelope",
+        "nextNonce"
+      ]
+    }
+  ]
+}

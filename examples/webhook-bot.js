@@ -10,7 +10,7 @@
  * Usage:
  *   FLUXER_BOT_TOKEN=your_token node examples/webhook-bot.js
  *
- * @see https://fluxerjs.blstmo.com/guides/webhooks/
+ * @see https://fluxer.js.org/guides/webhooks/
  */
 
 import { Client, EmbedBuilder, Events, parsePrefixCommand, Webhook } from '@fluxerjs/core';
@@ -27,7 +27,7 @@ async function handleWebhookCreate(message, client, args) {
   }
 
   const channel = client.channels.get(message.channelId);
-  if (!channel?.createWebhook) {
+  if (!channel?.isGuild()) {
     await message.reply('This channel does not support webhooks.');
     return;
   }
@@ -64,10 +64,13 @@ async function handleWebhookList(message, client, args) {
   }
 
   try {
+    const channel = client.channels.get(message.channelId);
     const webhooks =
       scope === 'guild'
         ? await client.guilds.get(message.guildId)?.fetchWebhooks()
-        : await client.channels.get(message.channelId)?.fetchWebhooks();
+        : channel?.isGuild()
+          ? await channel.fetchWebhooks()
+          : undefined;
 
     if (!webhooks?.length) {
       await message.reply(

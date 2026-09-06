@@ -58,7 +58,18 @@ export const PACKAGES: Array<{
       { subpath: './client', file: 'src/SubpathClient.ts' },
       { subpath: './errors', file: 'src/SubpathErrors.ts' },
       { subpath: './message', file: 'src/SubpathMessage.ts' },
+      { subpath: './internal', file: 'src/SubpathInternal.ts' },
     ],
+  },
+  {
+    name: '@fluxerjs/sharding',
+    dir: 'packages/sharding',
+    entries: [{ subpath: '.', file: 'src/index.ts' }],
+  },
+  {
+    name: '@fluxerjs/sharding-redis',
+    dir: 'packages/sharding-redis',
+    entries: [{ subpath: '.', file: 'src/index.ts' }],
   },
 ];
 

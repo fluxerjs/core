@@ -1,29 +1,48 @@
-﻿---
+---
 title: Migrating to 2.0
-description: Full upgrade guide and breaking-change reference for the Fluxer.js major rewrite.
-category: getting-started
-order: 6
+description: Breaking changes for the Fluxer.js 1.x → 2.0 rewrite. For 2.x → 3.0, see Upgrading to 3.0.
+category: upgrading
+order: 1
 ---
 
-2.0 is a **full rewrite** of the non-voice packages (`types`, `util`, `collection`, `rest`, `ws`, `builders`, `core`). Expect breaking changes. This page is the single source of truth for upgrading.
+<Warning>
+This is the 1.x to 2.0 rewrite. If you are already on 2.x, use [Upgrading to 3.0](/guides/upgrading-to-3/) instead.
+</Warning>
+
+Already on 2.x and moving to 3.0? Use [Upgrading to 3.0](/guides/upgrading-to-3/) instead.
+
+New to Fluxer? Follow [Installation](/guides/installation/) → [Basic bot](/guides/basic-bot/) → [Prefix commands](/guides/prefix-commands/) → [Errors](/guides/errors/) → [Caching](/guides/caching/). Coming from discord.js? See [From discord.js](/guides/from-discordjs/).
+
+## Migrating to 2.0
+
+2.0 is a **full rewrite** of the non-voice packages (`types`, `util`, `collection`, `rest`, `ws`, `builders`, `core`). Expect breaking changes. This guide covers 1.x → 2.0.
 
 Related reading: [Events](/guides/events/), [Errors](/guides/errors/), [Caching](/guides/caching/), [Multi-instance](/guides/multi-instance/), [Voice](/guides/voice/).
 
 ## Upgrade checklist
 
-1. Bump to `@fluxerjs/core@2` (and matching `@fluxerjs/*` packages) with pnpm.
+1. Set `@fluxerjs/core` (and any other direct `@fluxerjs/*` deps) to `^2.0.0` in `package.json`, then `pnpm install`.
 2. Fix TypeScript errors first. Most breaks show up as missing methods or camelCase options.
 3. Search for removed aliases: `sendToChannel`, `fetchMessage`, `bulkDeleteMessages`, `addRole` / `removeRole` on members, `UsersManager`, snake_case mutation options.
 4. Update event handlers: reactions are one DTO; role delete/update are objects; many payloads are structures or camelCase DTOs.
 5. Wrap `guilds.fetch` / `channels.fetch` in try/catch (`FluxerError`, not `null`).
 6. Drop Discord interaction / slash-command code. It was never in Fluxer's OpenAPI.
 7. Re-test voice separately. [`@fluxerjs/voice`](/guides/voice/) was not rewritten and is being reworked.
+8. When you are ready for current APIs, continue with [Upgrading to 3.0](/guides/upgrading-to-3/).
+
+```json
+{
+  "dependencies": {
+    "@fluxerjs/core": "^2.0.0"
+  }
+}
+```
 
 ```bash
-pnpm add @fluxerjs/core@2
-# optional:
-pnpm add @fluxerjs/builders@2 @fluxerjs/voice
+pnpm install
 ```
+
+Bump builders, rest, ws, and types the same way if they are direct dependencies. Voice is optional: add `@fluxerjs/voice` only if you need it.
 
 ## Mental model
 
@@ -60,14 +79,14 @@ await member.edit({ accentColor: 0xff0000 });
 await webhook.send({ content: 'hi', avatarUrl: 'https://example.com/a.png' });
 ```
 
-Same rule for roles, bulk fetch, member search, packs, discovery, sudo, and attachments:
+Same rule for roles, member search, discovery, sudo, and attachments:
 
 ```javascript
-await guild.createRole({ name: 'Mod', unicodeEmoji: '🛡️', hoistPosition: 1 });
-await role.edit({ hoist: true, unicodeEmoji: null });
+await guild.createRole({ name: 'Mod', color: 0x99aab5 });
+await role.edit({ hoist: true, mentionable: true });
 const roles = await guild.setRolePositions([{ id: role.id, position: 2 }]);
 
-await client.bulkFetchMessages([{ channelId: '123', limit: 50, before: '999' }]);
+await client.preloadMessages(['123']);
 await guild.members.search({ roleIds: [roleId], limit: 25 });
 ```
 
@@ -129,12 +148,12 @@ await channel.bulkDelete([id1, id2]);   // explicit IDs
 
 Message edit / delete / bulkDelete update the message cache when caching is enabled.
 
-### Bulk fetch
+### Preload (bots)
+
+Multi-channel history for bots uses preload, not bulk fetch (user-account only):
 
 ```javascript
-const batches = await client.bulkFetchMessages([
-  { channelId: '123', limit: 50, before: '999' },
-]);
+const latest = await client.preloadMessages(['123', '456']);
 ```
 
 ### Presigned attachments
@@ -184,10 +203,6 @@ member.roles.cache.has(roleId);
 
 See the table above and the [Upgrade checklist](#upgrade-checklist).
 
-<Warning>
-Fluxer is not Discord. OpenAPI documents **zero** interaction or application-command operations. `INTERACTION_CREATE`, `ChatInputCommandInteraction`, `BaseInteraction`, and related error codes are gone permanently.
-</Warning>
-
 Also removed as Discord-compat stubs: `GUILD_INTEGRATIONS_UPDATE`, `GUILD_SCHEDULED_EVENT_*`, and phantom routes (`text-channel-flexible-names`, `detached-banner`, `disallow-unclaimed-accounts`).
 
 ## Channel types
@@ -227,7 +242,7 @@ try {
 - `guild.members.fetchMe()` uses the same `@me` route as `guild.fetchMe()`.
 - `client.users` is a `UserManager`.
 - Position helpers like `setRolePositions` return `Role[]`, not raw `APIRole[]`.
-- Many audit / vanity / pack / search / discovery / profile returns are camelCase DTOs, not raw `API*` on public methods.
+- Many audit / vanity / discovery / profile returns are camelCase DTOs, not raw `API*` on public methods.
 
 See [Errors](/guides/errors/).
 
@@ -253,8 +268,8 @@ client.on(Events.MessageReactionAdd, ({ reaction, user, emoji, userId, messageId
 
 ```javascript
 client.on(Events.GuildRoleCreate, (role) => { /* Role */ });
-client.on(Events.GuildRoleUpdate, ({ role, oldRole }) => { /* … */ });
-client.on(Events.GuildRoleDelete, ({ roleId, guildId, role }) => {
+client.on(Events.GuildRoleUpdate, (oldRole, role) => { /* … */ });
+client.on(Events.GuildRoleDelete, (role, guildId, roleId) => {
   // role is cached Role or null
 });
 ```
@@ -269,9 +284,9 @@ client.on(Events.GuildRoleDelete, ({ roleId, guildId, role }) => {
 | `GuildEmojisUpdate` / `GuildStickersUpdate` | `{ guildId, emojis \| stickers }` |
 | `MessageReactionRemoveAll` / `RemoveEmoji` / `AddMany` | camelCase DTOs |
 | `PresenceUpdate` / `WebhooksUpdate` / pins / chunks / counts / audit | camelCase DTOs |
-| `GuildRoleUpdate` | `{ role, oldRole }` |
+| `GuildRoleUpdate` | `(oldRole, role)` |
 | `MessageReactionAdd` / `Remove` | `{ reaction, user, messageId, channelId, emoji, userId }` |
-| `GuildRoleDelete` | `{ roleId, guildId, role }` |
+| `GuildRoleDelete` | `(role, guildId, roleId)` |
 
 `Events.VoiceStatesSync` is fully typed with voice state fields (`guild_id`, `channel_id`, `user_id`, `session_id`, mute/deaf flags, etc.). Voice **dispatch** events stay wire `Gateway*` shapes.
 
@@ -279,7 +294,7 @@ Deep dive: [Events](/guides/events/).
 
 ## Cache defaults
 
-Clients default to bounded caches (`DEFAULT_CACHE_LIMITS`). Opt out per numeric field with `0` or `Infinity` (unbounded). Disable message caching with `messages: false` — **`messages: 0` is unbounded**, not off (a warning is emitted if you pass `0`).
+Clients default to bounded caches (`DEFAULT_CACHE_LIMITS`). Opt out per numeric field with `0` or `Infinity` (unbounded). Disable message caching with `messages: false`. Note: **`messages: 0` is unbounded**, not off (a warning is emitted if you pass `0`).
 
 ```javascript
 new Client({
@@ -313,14 +328,15 @@ Gateway opcode 3 on all shards. See [Presence](/guides/presence/).
 
 ## Invites
 
-`APIInvite` is a **discriminated union** (guild / group DM / pack). Do not assume `guild` and `channel` always exist:
+`APIInvite` is a **discriminated union** (guild / group DM). Do not assume `guild` and `channel` always exist. Pack invite types (`InviteType.EmojiPack` / `StickerPack`) last through 2.2 and are removed in [3.0](/guides/upgrading-to-3/#packs-flags-and-overwrites).
 
 ```javascript
 const invite = await Invite.fetch(client, code);
-if (invite.isPack()) {
-  console.log(invite.pack?.name);
-} else if (invite.isGuild()) {
-  console.log(invite.guild?.name, invite.channel?.name);
+if (invite.isGuild()) {
+  console.log(invite.guildSnapshot?.name, invite.channelSnapshot?.name);
+  const guild = await invite.resolveGuild();
+} else if (invite.isGroupDM()) {
+  console.log(invite.channelSnapshot?.name);
 }
 ```
 
@@ -334,7 +350,7 @@ Bulk create returns `{ success, failed }`, not a bare array:
 const { success, failed } = await guild.createEmojisBulk([{ name: 'ok', image: buf }]);
 ```
 
-Also available: `createEmoji` / `cloneEmoji` / `createSticker` / `cloneSticker`, plus `client.packs.*` for pack routes. See [Emojis & Stickers](/guides/emojis/).
+Also available: `createEmoji` / `cloneEmoji` / `createSticker` / `cloneSticker`. See [Emojis & Stickers](/guides/emojis/).
 
 ## Bitfields and snowflakes (`@fluxerjs/util`)
 
@@ -422,9 +438,8 @@ Useful 2.0 surface area that did not exist (or was incomplete) before:
 - Bulk delete own messages: `channel.bulkDeleteMyMessages(sudo?)`, `client.user.bulkDeleteMyMessagesInGuild(guildId, sudo?)`
 - Expression metadata: `client.fetchEmojiMetadata` / `client.fetchStickerMetadata`
 - Discovery: `guild.fetchDiscoveryStatus` / `applyForDiscovery` / `editDiscoveryApplication` / `withdrawDiscoveryApplication`
-- Read state / preload / apps: `channel.clearReadState()`, `client.preloadMessages(ids)`, `client.fetchApplication()`, `fetchOAuthApplications()`, `client.checkUsernameTag()`
+- Read state / preload / apps: `channel.clearReadState()`, `client.preloadMessages(ids)`, `client.fetchApplication()`, `fetchOAuthApplications()` (bot token returns the bot application object)
 - Vanity: `guild.editVanityURL(code)`
-- Packs: `client.packs.*`
 - Optional sudo bodies on `guild.delete`, `channel.delete`, `client.user.leaveGuild` (user/MFA flows; bots usually omit)
 - `REST.delete` accepts an optional JSON body (sudo/MFA deletes)
 
@@ -446,7 +461,7 @@ Quick index of every known break. Details and code live in the sections above.
 | `channel.bulkDelete(n \| ids)` | `@fluxerjs/core` | Number fetches last N; `bulkDeleteMessages` removed |
 | `ping: false` / `defaultReplyPing: false` only set `replied_user: false` | `@fluxerjs/core` | Not `SuppressNotifications` |
 | `client.user.setPresence({ status, activities?, customStatus? })` | `@fluxerjs/core` | Opcode 3 on all shards |
-| `bulkFetchMessages` / search / pack / webhook / discovery options camelCase | `@fluxerjs/core` | Wire at REST edge |
+| `preloadMessages` / search / webhook / discovery options camelCase | `@fluxerjs/core` | Wire at REST edge |
 | `createEmojisBulk` / `createStickersBulk` return `{ success, failed }` | `@fluxerjs/core` | Was bare array |
 | `VoiceStatesSync` fully typed | `@fluxerjs/core`, `@fluxerjs/types` | Full `APIVoiceState[]` |
 | Reaction events emit `MessageReactionPayload` | `@fluxerjs/core` | Was 6 positional args |
@@ -457,7 +472,7 @@ Quick index of every known break. Details and code live in the sections above.
 | Instance `defaultBit` removed | `@fluxerjs/util` | Use `BitField.DefaultBit` |
 | Stricter snowflake string validation | `@fluxerjs/util` | No leading zeros |
 | `PermissionFlags.ViewChannelMembers` added | `@fluxerjs/util` | Bit 54 |
-| `APIInvite` is guild / group-DM / pack union | `@fluxerjs/types`, `@fluxerjs/core` | `isGuild()` / `isPack()` |
+| `APIInvite` is guild / group-DM union | `@fluxerjs/types`, `@fluxerjs/core` | `isGuild()` / `isGroupDM()` |
 | `ChannelType.DMPersonalNotes` = `999` | `@fluxerjs/types` | Personal notes channel |
 | `MessageType.ClientSystem` = `99` | `@fluxerjs/types` | Fluxer message type |
 | `APIUserPartial.public_flags` removed | `@fluxerjs/types` | Use `flags` only |
@@ -475,7 +490,7 @@ Quick index of every known break. Details and code live in the sections above.
 | `guild.members.fetchMe()` uses `@me` | `@fluxerjs/core` | Same as `guild.fetchMe()` |
 | Guild/channel/member/webhook/invite options camelCase | `@fluxerjs/core` | Wire still snake_case |
 | `UploadFileForSend.contentType` (was `content_type`) | `@fluxerjs/core` | Presigned `uploadAttachmentsForSend` |
-| Role create/edit options camelCase | `@fluxerjs/core` | `unicodeEmoji`, `hoistPosition` |
+| Role create is name, color, permissions | `@fluxerjs/core` | hoist / mentionable on edit; unicodeEmoji read-only |
 | `setRolePositions` / hoist helpers return `Role[]` | `@fluxerjs/core` | Was `APIRole[]` |
 | `UserManager` (was `UsersManager`) | `@fluxerjs/core` | Alias removed |
 | Fetch/bulk limit errors are `FluxerError` | `@fluxerjs/core` | `INVALID_FETCH_LIMIT` |
@@ -485,10 +500,10 @@ Quick index of every known break. Details and code live in the sections above.
 | Message edit/delete/bulkDelete update cache | `@fluxerjs/core` | When caching enabled |
 | Member/channel/role updates patch in place | `@fluxerjs/core` | `*Update` emits old snapshot |
 | Most non-voice events emit structures / camelCase DTOs | `@fluxerjs/core` | See Events guide |
-| `GuildRoleUpdate` emits `{ role, oldRole }` | `@fluxerjs/core` | Was bare `Role` |
-| `guildRoleDelete` emits `{ roleId, guildId, role }` | `@fluxerjs/core` | Was positional |
+| `GuildRoleUpdate` emits `(oldRole, role)` | `@fluxerjs/core` | Was payload object / bare `Role` |
+| `GuildRoleDelete` emits `(role, guildId, roleId)` | `@fluxerjs/core` | `role` is cached `Role` or `null` |
 | `GuildMemberUpdate` old is `null` when uncached | `@fluxerjs/core` | Never equals new |
-| Audit/vanity/pack/search/discovery returns camelCase | `@fluxerjs/core` | Not raw `API*` where wrapped |
+| Audit/vanity/discovery returns camelCase | `@fluxerjs/core` | Not raw `API*` where wrapped |
 | Wire request types not re-exported for search/bulk | `@fluxerjs/core` | Use SDK options |
 | Voice events stay wire-shaped | `@fluxerjs/core` | For `@fluxerjs/voice` |
 | `emitDeprecationWarning` removed | `@fluxerjs/util` | Majors delete shims |
@@ -501,3 +516,4 @@ Quick index of every known break. Details and code live in the sections above.
 - Browse runnable [examples](/examples/).
 - Check the [SDK reference](/docs/) for exact signatures.
 - OpenAPI shapes live under [REST](/rest/).
+- Moving on from 2.x? [Upgrading to 3.0](/guides/upgrading-to-3/).

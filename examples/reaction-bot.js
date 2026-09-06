@@ -4,7 +4,7 @@
  * Usage:
  *   FLUXER_BOT_TOKEN=your_token node examples/reaction-bot.js
  *
- * @see https://fluxerjs.blstmo.com/guides/reactions/
+ * @see https://fluxer.js.org/guides/reactions/
  */
 
 import { Client, Events } from '@fluxerjs/core';
@@ -16,12 +16,15 @@ client.on(Events.Ready, () => {
 });
 
 // MessageReactionAdd / Remove emit a single MessageReactionPayload object.
-client.on(Events.MessageReactionAdd, ({ reaction, emoji, userId, messageId, channelId }) => {
-  const emojiStr = emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name;
-  console.log(
-    `Reaction added: user ${userId} reacted with ${emojiStr} on message ${messageId} in channel ${channelId} (guild ${reaction.guildId ?? 'DM'})`,
-  );
-});
+client.on(
+  Events.MessageReactionAdd,
+  ({ reaction, emoji, userId, messageId, channelId, message }) => {
+    const emojiStr = emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name;
+    console.log(
+      `Reaction added: user ${userId} reacted with ${emojiStr} on message ${messageId} in channel ${channelId} (guild ${reaction.guildId ?? 'DM'}, cached=${Boolean(message)})`,
+    );
+  },
+);
 
 client.on(Events.MessageReactionRemove, ({ emoji, userId, messageId }) => {
   const emojiStr = emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name;

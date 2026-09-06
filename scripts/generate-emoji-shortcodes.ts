@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate shortcode→unicode map from Discord's emoji data (anyascii/discord-emojis).
- * Fluxer is Discord-compatible, so we use Discord's official shortcodes.
+ * Generate shortcode→unicode map from the anyascii/discord-emojis dataset.
  * Run: pnpm exec tsx scripts/generate-emoji-shortcodes.ts
  *
  * Source: https://github.com/anyascii/discord-emojis

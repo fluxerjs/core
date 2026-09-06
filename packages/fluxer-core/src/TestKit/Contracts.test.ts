@@ -1,8 +1,14 @@
 import type { APIMessage } from '@fluxerjs/types';
-import { ChannelType } from '@fluxerjs/types';
+import { ChannelType, Routes } from '@fluxerjs/types';
 import { describe, expect, it, vi } from 'vitest';
 import type { Client } from '../ClientCore/Client.js';
-import { Channel, TextChannel } from '../Domain/Channel/index.js';
+import {
+  CategoryChannel,
+  Channel,
+  LinkChannel,
+  TextChannel,
+  VoiceChannel,
+} from '../Domain/Channel/index.js';
 import { Guild } from '../Domain/Guild/Guild.js';
 import { Message } from '../Domain/Message/index.js';
 import { Events } from '../Helpers/Events.js';
@@ -11,6 +17,7 @@ import {
   dispatchForTest,
   fixtureGuild,
   fixtureMessage,
+  fixtureTextChannel,
   fixtureUser,
 } from './Fixtures.js';
 
@@ -208,5 +215,139 @@ describe('Channel type guard smoke', () => {
     expect(ch?.isDM()).toBe(true);
     expect(ch?.isPersonalNotes()).toBe(true);
     expect(ch?.isTextBased()).toBe(true);
+  });
+
+  it('isGuild / isText / isCategory discriminate channel kinds', () => {
+    const client = createTestClient();
+    const text = new TextChannel(client, {
+      id: 'c1',
+      type: ChannelType.GuildText,
+      guild_id: 'g1',
+      name: 'general',
+      parent_id: null,
+    });
+    expect(text.isGuild()).toBe(true);
+    expect(text.isText()).toBe(true);
+    expect(text.isCategory()).toBe(false);
+    expect(text.isTextBased()).toBe(true);
+    expect(text.isVoice()).toBe(false);
+    expect(text.isLink()).toBe(false);
+
+    const voice = new VoiceChannel(client, {
+      id: 'v1',
+      type: ChannelType.GuildVoice,
+      guild_id: 'g1',
+      name: 'Voice',
+      parent_id: null,
+    });
+    expect(voice.isGuild()).toBe(true);
+    expect(voice.isVoice()).toBe(true);
+    expect(voice.isTextBased()).toBe(true);
+    expect(typeof voice.send).toBe('function');
+
+    const link = new LinkChannel(client, {
+      id: 'l1',
+      type: ChannelType.GuildLink,
+      guild_id: 'g1',
+      name: 'Link',
+      parent_id: null,
+      url: 'https://example.com',
+    });
+    expect(link.isGuild()).toBe(true);
+    expect(link.isLink()).toBe(true);
+    expect(link.isVoice()).toBe(false);
+  });
+});
+
+describe('Channel.delete', () => {
+  it('is available on the base Channel type and drops cache', async () => {
+    const client = createTestClient();
+    const del = vi.spyOn(client.rest, 'delete').mockResolvedValue(undefined);
+    const ch: Channel = new TextChannel(client, {
+      id: 'c1',
+      type: ChannelType.GuildText,
+      guild_id: 'g1',
+      name: 'tickets',
+      parent_id: null,
+    });
+    client.channels.set(ch.id, ch);
+
+    await ch.delete();
+
+    expect(del).toHaveBeenCalledWith(Routes.channel('c1'), { body: undefined, auth: true });
+    expect(client.channels.get('c1')).toBeUndefined();
+  });
+
+  it('forwards silent and deleteMessages as query params', async () => {
+    const client = createTestClient();
+    const del = vi.spyOn(client.rest, 'delete').mockResolvedValue(undefined);
+    const ch: Channel = new TextChannel(client, {
+      id: 'c1',
+      type: ChannelType.GuildText,
+      guild_id: 'g1',
+      name: 'tickets',
+      parent_id: null,
+    });
+
+    await ch.delete({ silent: true, deleteMessages: true });
+
+    expect(del).toHaveBeenCalledWith(`${Routes.channel('c1')}?silent=true&delete_messages=true`, {
+      body: undefined,
+      auth: true,
+    });
+  });
+});
+
+describe('Channel.send', () => {
+  it('is available on text-capable channels', async () => {
+    const client = createTestClient();
+    const post = vi
+      .spyOn(client.rest, 'post')
+      .mockResolvedValue(fixtureMessage({ id: 'm1', channel_id: 'c1', content: 'hi' }));
+    const ch = new TextChannel(client, {
+      id: 'c1',
+      type: ChannelType.GuildText,
+      guild_id: 'g1',
+      name: 'general',
+      parent_id: null,
+    });
+    client.channels.set(ch.id, ch);
+
+    const sent = await ch.send('hi');
+    expect(sent).toBeInstanceOf(Message);
+    expect(post).toHaveBeenCalled();
+  });
+
+  it('is not present on category channels', () => {
+    const client = createTestClient();
+    const ch: Channel = new CategoryChannel(client, {
+      id: 'cat1',
+      type: ChannelType.GuildCategory,
+      guild_id: 'g1',
+      name: 'stuff',
+      parent_id: null,
+    });
+    expect('send' in ch && typeof (ch as { send?: unknown }).send === 'function').toBe(false);
+  });
+});
+
+describe('ChannelManager.fetch', () => {
+  it('returns a Channel with delete; text channels also have send', async () => {
+    const client = createTestClient();
+    vi.spyOn(client.rest, 'get').mockResolvedValue(
+      fixtureTextChannel({ id: 'c1', guild_id: 'g1' }),
+    );
+    const ch = await client.channels.fetch('c1');
+    expect(ch).toBeInstanceOf(Channel);
+    expect(typeof ch.delete).toBe('function');
+    expect(ch.isTextBased()).toBe(true);
+    if (ch.isTextBased()) {
+      expect(typeof ch.send).toBe('function');
+    }
+    expect(ch.toString()).toBe('<#c1>');
+
+    const del = vi.spyOn(client.rest, 'delete').mockResolvedValue(undefined);
+    await ch.delete();
+    expect(del).toHaveBeenCalledWith(Routes.channel('c1'), { body: undefined, auth: true });
   });
 });

@@ -31,6 +31,9 @@ function addPayload(
   return {
     reaction: reactionInstance,
     user,
+    message: null,
+    channel: null,
+    member: null,
     messageId: 'm1',
     channelId: 'c1',
     emoji: reactionInstance.emoji,
@@ -50,7 +53,7 @@ describe('ReactionCollector', () => {
   it('collects MessageReactionAdd events for its message/channel', () => {
     const client = createTestClient();
     const user = client.getOrCreateUser(fixtureUser({ id: 'u1' }));
-    const collector = new ReactionCollector(client, 'm1', 'c1');
+    const collector = new ReactionCollector(client, 'm1', 'c1', { time: 60_000 });
     const seen: string[] = [];
     collector.on('collect', (r) => seen.push(r.emoji.name));
 
@@ -63,7 +66,7 @@ describe('ReactionCollector', () => {
   it('ignores events for a different message or channel', () => {
     const client = createTestClient();
     const user = client.getOrCreateUser(fixtureUser({ id: 'u1' }));
-    const collector = new ReactionCollector(client, 'm1', 'c1');
+    const collector = new ReactionCollector(client, 'm1', 'c1', { time: 60_000 });
 
     // Reaction on a different message: collector routes on reaction.messageId.
     const otherMessage = new MessageReaction(client, {
@@ -83,7 +86,7 @@ describe('ReactionCollector', () => {
   it('deduplicates the same user + emoji', () => {
     const client = createTestClient();
     const user = client.getOrCreateUser(fixtureUser({ id: 'u1' }));
-    const collector = new ReactionCollector(client, 'm1', 'c1');
+    const collector = new ReactionCollector(client, 'm1', 'c1', { time: 60_000 });
     const collect = vi.fn();
     collector.on('collect', collect);
 
@@ -97,7 +100,7 @@ describe('ReactionCollector', () => {
   it('keys custom emoji by id so same-name unicode does not collide', () => {
     const client = createTestClient();
     const user = client.getOrCreateUser(fixtureUser({ id: 'u1' }));
-    const collector = new ReactionCollector(client, 'm1', 'c1');
+    const collector = new ReactionCollector(client, 'm1', 'c1', { time: 60_000 });
 
     client.emit(
       Events.MessageReactionAdd,
@@ -116,6 +119,7 @@ describe('ReactionCollector', () => {
     const keep = client.getOrCreateUser(fixtureUser({ id: 'keep' }));
     const drop = client.getOrCreateUser(fixtureUser({ id: 'drop' }));
     const collector = new ReactionCollector(client, 'm1', 'c1', {
+      time: 60_000,
       filter: (_r, u) => u.id === 'keep',
     });
 
@@ -152,12 +156,14 @@ describe('ReactionCollector', () => {
 
   it('handles MessageReactionAddMany batches', () => {
     const client = createTestClient();
-    const collector = new ReactionCollector(client, 'm1', 'c1');
+    const collector = new ReactionCollector(client, 'm1', 'c1', { time: 60_000 });
 
     const payload: MessageReactionAddManyPayload = {
       messageId: 'm1',
       channelId: 'c1',
       guildId: null,
+      message: null,
+      channel: null,
       reactions: [
         { userId: 'u1', emoji: { name: '👍' }, member: null },
         { userId: 'u2', emoji: { name: '🎉' }, member: null },
@@ -185,7 +191,7 @@ describe('ReactionCollector', () => {
 
   it('stop() is idempotent and defaults to "user"', () => {
     const client = createTestClient();
-    const collector = new ReactionCollector(client, 'm1', 'c1');
+    const collector = new ReactionCollector(client, 'm1', 'c1', { time: 60_000 });
     const end = vi.fn();
     collector.on('end', end);
 

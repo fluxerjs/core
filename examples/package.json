@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@fluxerjs/core": "workspace:*",
+    "@fluxerjs/sharding": "workspace:*",
     "@fluxerjs/voice": "workspace:*",
     "youtube-dl-exec": "^3.1.1"
   }

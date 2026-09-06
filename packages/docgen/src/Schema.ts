@@ -29,6 +29,7 @@ export interface DocProperty {
   description?: string;
   examples?: string[];
   optional?: boolean;
+  static?: boolean;
 }
 
 export interface DocMethod {
@@ -41,6 +42,7 @@ export interface DocMethod {
   deprecated?: boolean | string;
   source?: DocSource;
   see?: string[];
+  static?: boolean;
 }
 
 export interface DocSource {
@@ -91,6 +93,8 @@ export interface DocInterface {
   typeSignature?: string;
   /** String/number literal union members (e.g. EmbedType = 'rich' | 'image' | …). */
   unionMembers?: DocEnumMember[];
+  /** `@example` blocks from the type or const JSDoc. */
+  examples?: string[];
   source?: DocSource;
   package?: string;
   see?: string[];

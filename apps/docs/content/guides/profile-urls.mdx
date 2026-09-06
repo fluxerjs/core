@@ -1,8 +1,8 @@
 ---
 title: Profile URLs
 description: "Get avatar, banner, and other CDN URLs easily with User/Webhook/GuildMember methods or standalone CDN helpers for raw API data."
-category: media
-order: 10
+category: additional
+order: 54
 ---
 
 ## User avatar and banner
@@ -31,22 +31,17 @@ client.on(Events.MessageCreate, async (message) => {
 });
 ```
 
-## Raw API data: CDN helpers
+## Fetch a user, then use methods
 
-When you have raw API data (e.g. from client.rest.get(Routes.user(id))), use the standalone CDN helpers. They work with id + hash and support size and extension options.
+Prefer `client.users.fetch` when you have an ID. That returns a `User` with `displayAvatarURL()` / `bannerURL()`.
 
 ```javascript
-import { cdnAvatarURL, cdnBannerURL } from '@fluxerjs/core';
-
-// From REST response
-const userData = await client.rest.get(Routes.user(userId));
-const avatarUrl = cdnAvatarURL(userData.id, userData.avatar, { size: 256 });
-const bannerUrl = cdnBannerURL(userData.id, profile?.banner ?? null, { size: 512 });
-
-// Or use User: client.getOrCreateUser(userData) then user.displayAvatarURL()
-const user = client.getOrCreateUser(userData);
-const avatarUrl2 = user.displayAvatarURL({ size: 256 });
+const user = await client.users.fetch(userId);
+const avatarUrl = user.displayAvatarURL({ size: 256 });
+const bannerUrl = user.bannerURL({ size: 512 });
 ```
+
+Standalone CDN helpers (`cdnAvatarURL`, `cdnBannerURL`) are for when you already have an id + hash and no User object. They are not the usual fetch path.
 
 ## Guild member and webhook avatars
 

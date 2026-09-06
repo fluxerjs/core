@@ -31,11 +31,11 @@ describe('MessageFlagsBitField', () => {
 
   it('toArray returns enabled flag names', () => {
     const bf = new MessageFlagsBitField([
-      MessageFlagsBits.CompactAttachments,
+      MessageFlagsBits.VoiceMessage,
       MessageFlagsBits.SuppressEmbeds,
     ]);
     const arr = bf.toArray();
-    expect(arr).toContain('CompactAttachments');
+    expect(arr).toContain('VoiceMessage');
     expect(arr).toContain('SuppressEmbeds');
     expect(arr).toHaveLength(2);
   });

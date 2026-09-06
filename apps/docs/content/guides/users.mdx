@@ -1,0 +1,62 @@
+---
+title: Users & Bots
+description: Fetch users, check FriendlyBot flags, and load the bot application object.
+category: additional
+order: 55
+searchTerms: FriendlyBot FriendlyBotManualApproval fetchOAuthApplications fetchApplication fetchWithProfile user flags UserFlagsBits
+---
+
+Fetch people with `client.users`, DM them with `user.send`, and inspect bot flags on `user.flags`.
+
+## Fetch a user
+
+```javascript
+const user = await client.users.fetch(userId);
+console.log(user.username, user.bot, user.displayAvatarURL());
+```
+
+Cache-only: `client.users.get(userId)`. Prefer fetch when you need a live profile.
+
+To load the global/server profile in one call (used by [info-bot](/examples/info-bot/)):
+
+```javascript
+const { user, globalProfile, member } = await client.users.fetchWithProfile(userId, {
+  guildId: message.guildId ?? undefined,
+});
+console.log(user.username, globalProfile?.userProfile?.bio, member?.nick);
+```
+
+DM helpers: [Direct Messages](/guides/direct-messages/).
+
+## Friendly bot flags
+
+Fluxer marks approved bots with `UserFlagsBits.FriendlyBot`. Some bots also have `FriendlyBotManualApproval`.
+
+```javascript
+import { UserFlagsBitField, UserFlagsBits } from '@fluxerjs/core';
+
+const flags = new UserFlagsBitField(user.flags ?? 0);
+if (flags.has(UserFlagsBits.FriendlyBot)) {
+  await message.reply(`${user.username} is a Friendly Bot.`);
+}
+```
+
+These are **read** flags on the user object. The SDK does not apply for Friendly Bot status; that happens in the Fluxer developer portal.
+
+## Application object
+
+On a **bot token**, `fetchOAuthApplications()` returns a one-element array with the bot application (the user-token list endpoint is normalized the same way).
+
+```javascript
+const [app] = await client.fetchOAuthApplications();
+console.log(app?.id, app?.name);
+
+const me = await client.fetchApplication();
+console.log(me.id, me.name);
+```
+
+Use this when you need the application id (invite URLs, ownership checks). You still log in with `FLUXER_BOT_TOKEN`.
+
+## Related
+
+[Basic Bot](/guides/basic-bot/), [Profile URLs](/guides/profile-urls/), [Direct Messages](/guides/direct-messages/).

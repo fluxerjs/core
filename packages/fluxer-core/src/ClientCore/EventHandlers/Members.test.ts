@@ -89,6 +89,16 @@ describe('member handlers and guild counts', () => {
 
     expect(guild.memberCount).toBe(9);
     expect(emit).toHaveBeenCalled();
+    const member = emit.mock.calls.find((c) => c[0] === 'guildMemberRemove')?.[1] as {
+      partial: boolean;
+      id: string;
+      user: { id: string };
+      guild: { id: string };
+    };
+    expect(member.partial).toBe(true);
+    expect(member.id).toBe('u-uncached');
+    expect(member.user.id).toBe('u-uncached');
+    expect(member.guild.id).toBe(guild.id);
   });
 
   it('leaves memberCount null when no baseline exists', async () => {

@@ -1,4 +1,4 @@
-import type { EmbedBuilder } from '@fluxerjs/builders';
+import type { AttachmentBuilder, EmbedBuilder } from '@fluxerjs/builders';
 import type {
   APIAllowedMentions,
   APIMessageReference,
@@ -83,9 +83,9 @@ export type MessageSendOptions = {
   content?: string;
   /** Embed payloads or {@link EmbedBuilder} instances. */
   embeds?: (RESTPostAPIEmbed | EmbedBuilder)[];
-  /** Local files or remote URLs to upload with the message. */
-  files?: MessageFileData[];
-  /** Attachment metadata aligned with uploaded `files` indices. */
+  /** Local files, remote URLs, or {@link AttachmentBuilder} instances. */
+  files?: Array<MessageFileData | AttachmentBuilder>;
+  /** Attachment metadata aligned with uploaded `files` indices (or {@link AttachmentMeta}). */
   attachments?: MessageAttachmentMeta[];
   /** Already-uploaded CDN attachments (skip multipart). */
   uploadedAttachments?: RESTPostAPIMessageUploadedAttachment[];

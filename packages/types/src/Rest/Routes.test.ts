@@ -37,11 +37,9 @@ const E = 'e1';
 const S = 's1';
 const W = 'w1';
 const T = 'tok';
-const P = 'p1';
 const A = 'a1';
 const O = 'o1';
 const EMOJI = '❤';
-const PACK_TYPE = 'emoji';
 
 /**
  * Every `Routes.*` builder → OpenAPI path template.
@@ -285,30 +283,7 @@ const ROUTE_OPENAPI: {
     openapi: '/streams/{stream_key}/preview',
     call: () => Routes.streamPreview('key'),
   },
-
-  packs: { openapi: '/packs', call: () => Routes.packs() },
-  packsByType: { openapi: '/packs/{pack_type}', call: () => Routes.packsByType(PACK_TYPE) },
-  pack: { openapi: '/packs/{pack_id}', call: () => Routes.pack(P) },
-  packInstall: { openapi: '/packs/{pack_id}/install', call: () => Routes.packInstall(P) },
-  packInvites: { openapi: '/packs/{pack_id}/invites', call: () => Routes.packInvites(P) },
-  packEmojis: { openapi: '/packs/emojis/{pack_id}', call: () => Routes.packEmojis(P) },
-  packEmojisBulk: {
-    openapi: '/packs/emojis/{pack_id}/bulk',
-    call: () => Routes.packEmojisBulk(P),
-  },
-  packEmoji: {
-    openapi: '/packs/emojis/{pack_id}/{emoji_id}',
-    call: () => Routes.packEmoji(P, E),
-  },
-  packStickers: { openapi: '/packs/stickers/{pack_id}', call: () => Routes.packStickers(P) },
-  packStickersBulk: {
-    openapi: '/packs/stickers/{pack_id}/bulk',
-    call: () => Routes.packStickersBulk(P),
-  },
-  packSticker: {
-    openapi: '/packs/stickers/{pack_id}/{sticker_id}',
-    call: () => Routes.packSticker(P, S),
-  },
+  searchMessages: { openapi: '/search/messages', call: () => Routes.searchMessages() },
 
   oauth2ApplicationBot: {
     openapi: '/oauth2/applications/{id}/bot',

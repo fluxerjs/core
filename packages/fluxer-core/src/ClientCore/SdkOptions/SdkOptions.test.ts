@@ -7,7 +7,12 @@ import {
   toAttachmentUploadPlanResponse,
   toMessageAttachmentEditWire,
 } from './Attachments.js';
-import { toChannelEditBody, toChannelInviteBody } from './Channels.js';
+import {
+  toChannelCreateBody,
+  toChannelEditBody,
+  toChannelInviteBody,
+  toGroupDmEditBody,
+} from './Channels.js';
 import {
   toDiscoveryApplicationPayload,
   toDiscoveryBody,
@@ -23,11 +28,11 @@ import {
   toChannelPositionBody,
   toGuildBanBody,
   toGuildEditBody,
-  toRoleRequestBody,
+  toRoleCreateBody,
+  toRoleEditBody,
 } from './Guild.js';
 import { toMemberEditBody, toMemberSearchBody } from './Members.js';
-import { toBulkFetchWire } from './Messages.js';
-import { toPackInviteBody } from './Packs.js';
+import { toBulkFetchWire, toMessageSearchBody, toMessageSearchResponse } from './Messages.js';
 import { toPresenceWire } from './Presence.js';
 import { toProfilePayload } from './Profile.js';
 import { toSudoBody } from './Sudo.js';
@@ -117,6 +122,7 @@ describe('SdkOptions serializers', () => {
         toChannelEditBody({
           name: 'general',
           parentId: 'p1',
+          url: 'https://example.com',
           rateLimitPerUser: 5,
           rtcRegion: null,
           permissionOverwrites: [{ id: 'r1', type: 0, allow: '8', deny: '0' }],
@@ -124,9 +130,22 @@ describe('SdkOptions serializers', () => {
       ).toEqual({
         name: 'general',
         parent_id: 'p1',
+        url: 'https://example.com',
         rate_limit_per_user: 5,
         rtc_region: null,
         permission_overwrites: [{ id: 'r1', type: 0, allow: '8', deny: '0' }],
+      });
+    });
+
+    it('toChannelEditBody resolves PermissionResolvable overwrites', () => {
+      expect(
+        toChannelEditBody({
+          permissionOverwrites: [
+            { id: 'r1', type: 0, allow: 'Administrator', deny: ['SendMessages'] },
+          ],
+        }),
+      ).toEqual({
+        permission_overwrites: [{ id: 'r1', type: 0, allow: '8', deny: '2048' }],
       });
     });
 
@@ -136,6 +155,28 @@ describe('SdkOptions serializers', () => {
         max_age: 3600,
         unique: true,
       });
+    });
+
+    it('toChannelCreateBody maps parentId / rateLimitPerUser', () => {
+      expect(
+        toChannelCreateBody({
+          name: 'general',
+          type: 0,
+          parentId: 'p1',
+          rateLimitPerUser: 5,
+          nsfw: false,
+        }),
+      ).toEqual({
+        name: 'general',
+        type: 0,
+        parent_id: 'p1',
+        rate_limit_per_user: 5,
+        nsfw: false,
+      });
+    });
+
+    it('toGroupDmEditBody always sends type 3', () => {
+      expect(toGroupDmEditBody({ name: 'room' })).toEqual({ type: 3, name: 'room' });
     });
   });
 
@@ -224,10 +265,16 @@ describe('SdkOptions serializers', () => {
 
     it('toGuildBanBody and toChannelPositionBody map snake_case', () => {
       expect(
-        toGuildBanBody({ reason: 'spam', deleteMessageDays: 1, banDurationSeconds: 60 }),
+        toGuildBanBody({
+          reason: 'spam',
+          deleteMessageDays: 1,
+          deleteMessageSeconds: 3600,
+          banDurationSeconds: 60,
+        }),
       ).toEqual({
         reason: 'spam',
         delete_message_days: 1,
+        delete_message_seconds: 3600,
         ban_duration_seconds: 60,
       });
       expect(
@@ -235,15 +282,22 @@ describe('SdkOptions serializers', () => {
       ).toEqual([{ id: 'c1', position: 2, parent_id: 'p', lock_permissions: true }]);
     });
 
-    it('toRoleRequestBody maps unicodeEmoji and permissions bitfield', () => {
-      expect(toRoleRequestBody({ name: 'mod', unicodeEmoji: '🛡️', hoistPosition: null })).toEqual({
+    it('toRoleCreateBody maps name/color/permissions only', () => {
+      expect(toRoleCreateBody({ name: 'mod', color: 1 })).toEqual({
         name: 'mod',
-        unicode_emoji: '🛡️',
-        hoist_position: null,
+        color: 1,
       });
-      expect(toRoleRequestBody({ permissions: '8' })).toEqual({ permissions: '8' });
-      expect(toRoleRequestBody({ permissions: PermissionFlags.Administrator })).toEqual({
+      expect(toRoleCreateBody({ permissions: '8' })).toEqual({ permissions: '8' });
+      expect(toRoleCreateBody({ permissions: PermissionFlags.Administrator })).toEqual({
         permissions: '8',
+      });
+    });
+
+    it('toRoleEditBody maps hoist and mentionable, not unicodeEmoji', () => {
+      expect(toRoleEditBody({ name: 'mod', hoist: true, hoistPosition: null })).toEqual({
+        name: 'mod',
+        hoist: true,
+        hoist_position: null,
       });
     });
   });
@@ -257,6 +311,8 @@ describe('SdkOptions serializers', () => {
           joinedAtGte: 1,
           sortBy: 'joinedAt',
           sortOrder: 'desc',
+          joinSourceType: [1],
+          sourceInviteCode: ['abc'],
         }),
       ).toEqual({
         query: 'al',
@@ -264,6 +320,8 @@ describe('SdkOptions serializers', () => {
         joined_at_gte: 1,
         sort_by: 'joinedAt',
         sort_order: 'desc',
+        join_source_type: [1],
+        source_invite_code: ['abc'],
       });
       expect(
         toMemberEditBody({
@@ -293,18 +351,64 @@ describe('SdkOptions serializers', () => {
         { channel_id: 'c2', limit: 10 },
       ]);
     });
-  });
 
-  describe('Packs / Presence / Profile / Sudo', () => {
-    it('toPackInviteBody maps invite fields', () => {
-      expect(toPackInviteBody({ maxUses: 5, maxAge: 0, unique: false })).toEqual({
-        max_uses: 5,
-        max_age: 0,
-        unique: false,
+    it('toMessageSearchBody always sends scope current', () => {
+      expect(toMessageSearchBody({})).toEqual({ scope: 'current' });
+      expect(toMessageSearchBody({ content: 'hi', channelIds: ['c1'] })).toEqual({
+        scope: 'current',
+        content: 'hi',
+        channel_id: ['c1'],
+        channel_ids: ['c1'],
       });
     });
 
-    it('toPresenceWire maps customStatus null and emoji fields', () => {
+    it('toMessageSearchBody maps remaining camelCase filters', () => {
+      expect(
+        toMessageSearchBody({
+          has: ['image'],
+          excludeHas: ['link'],
+          sortBy: 'timestamp',
+          sortOrder: 'desc',
+          excludeMentions: ['u1'],
+          mentionEveryone: true,
+          excludeAuthorType: ['bot'],
+        }),
+      ).toEqual({
+        scope: 'current',
+        has: ['image'],
+        exclude_has: ['link'],
+        sort_by: 'timestamp',
+        sort_order: 'desc',
+        exclude_mentions: ['u1'],
+        mention_everyone: true,
+        exclude_author_type: ['bot'],
+      });
+    });
+
+    it('toMessageSearchResponse maps hits_per_page and indexing', () => {
+      expect(toMessageSearchResponse({ indexing: true })).toEqual({ indexing: true });
+      expect(
+        toMessageSearchResponse({
+          messages: [],
+          channels: [],
+          total: 2,
+          hits_per_page: 25,
+          page: 1,
+          cursor: ['c'],
+        }),
+      ).toEqual({
+        messages: [],
+        channels: [],
+        total: 2,
+        hitsPerPage: 25,
+        page: 1,
+        cursor: ['c'],
+      });
+    });
+  });
+
+  describe('Presence / Profile / Sudo', () => {
+    it('toPresenceWire maps status and customStatus', () => {
       expect(toPresenceWire({ status: 'online' })).toEqual({ status: 'online' });
       expect(toPresenceWire({ status: 'dnd', customStatus: null })).toEqual({
         status: 'dnd',

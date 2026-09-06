@@ -1,6 +1,6 @@
-import type { APIGuildMember } from '@fluxerjs/types';
+import type { APIChannelOverwrite, APIGuildMember } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
-import { PermissionsBitField } from '@fluxerjs/util';
+import { PermissionFlags, PermissionsBitField } from '@fluxerjs/util';
 
 import type { Client } from '../../ClientCore/Client.js';
 import {
@@ -14,12 +14,22 @@ import type { GuildChannel } from '../Channel/index.js';
 import type { User } from '../User.js';
 import type { Guild } from './Guild.js';
 import { GuildMemberRoleManager } from './GuildMemberRoleManager.js';
+import type { GuildBanOptions } from './Types.js';
+
+/** Member payload plus fields that exist on update/edit but not always on GET. */
+type GuildMemberData = APIGuildMember & {
+  guild_id?: string;
+  bio?: string | null;
+  pronouns?: string | null;
+};
 
 /**
  * Guild member — roles via {@link GuildMember.roles}, permissions via {@link permissions} / {@link permissionsIn}.
  * Cached per guild in {@link Guild.members}.
  */
 export class GuildMember extends Base {
+  /** Discriminant vs {@link PartialGuildMember}: always `false` on a hydrated member. */
+  readonly partial = false as const;
   /** Parent client instance. */
   readonly client: Client;
   /** User ID (same as `user.id`). */
@@ -48,8 +58,14 @@ export class GuildMember extends Base {
   accentColor: number | null;
   /** Guild-specific profile flags. */
   profileFlags: number | null;
+  /** Per-guild reply mention preference override. */
+  mentionFlags: number | null;
+  /** Guild-specific bio (set from member edit; not always on GET member). */
+  bio: string | null;
+  /** Guild-specific pronouns (set from member edit; not always on GET member). */
+  pronouns: string | null;
 
-  constructor(client: Client, data: APIGuildMember & { guild_id?: string }, guild: Guild) {
+  constructor(client: Client, data: GuildMemberData, guild: Guild) {
     super();
     this.client = client;
     this.user = client.getOrCreateUser(data.user);
@@ -67,13 +83,16 @@ export class GuildMember extends Base {
     this.banner = data.banner ?? null;
     this.accentColor = data.accent_color ?? null;
     this.profileFlags = data.profile_flags ?? null;
+    this.mentionFlags = data.mention_flags ?? null;
+    this.bio = data.bio ?? null;
+    this.pronouns = data.pronouns ?? null;
   }
 
   /**
    * Apply an API member payload in place (gateway GUILD_MEMBER_UPDATE / REST edit).
    * @internal
    */
-  _patch(data: APIGuildMember): void {
+  _patch(data: GuildMemberData): void {
     if (data.user) this.client.getOrCreateUser(data.user);
     if (data.nick !== undefined) this.nick = data.nick ?? null;
     if (data.roles) this.roles._patch(data.roles);
@@ -88,6 +107,9 @@ export class GuildMember extends Base {
     if (data.banner !== undefined) this.banner = data.banner ?? null;
     if (data.accent_color !== undefined) this.accentColor = data.accent_color ?? null;
     if (data.profile_flags !== undefined) this.profileFlags = data.profile_flags ?? null;
+    if (data.mention_flags !== undefined) this.mentionFlags = data.mention_flags ?? null;
+    if (data.bio !== undefined) this.bio = data.bio ?? null;
+    if (data.pronouns !== undefined) this.pronouns = data.pronouns ?? null;
   }
 
   /**
@@ -118,6 +140,9 @@ export class GuildMember extends Base {
         banner: this.banner,
         accent_color: this.accentColor,
         profile_flags: this.profileFlags ?? undefined,
+        mention_flags: this.mentionFlags,
+        bio: this.bio,
+        pronouns: this.pronouns,
       },
       this.guild,
     );
@@ -150,7 +175,11 @@ export class GuildMember extends Base {
     });
   }
 
-  /** PATCH member (`/members/@me` when editing the bot). */
+  /**
+   * PATCH member (`/members/@me` when editing the bot).
+   * @example
+   * await member.edit({ nick: 'Ada' });
+   */
   async edit(options: GuildMemberEditOptions): Promise<this> {
     const isMe = this.client.user?.id === this.id;
     const route = isMe
@@ -161,6 +190,9 @@ export class GuildMember extends Base {
       auth: true,
     });
     this._patch(data);
+    if (options.bio !== undefined) this.bio = options.bio;
+    if (options.pronouns !== undefined) this.pronouns = options.pronouns;
+    if (options.mentionFlags !== undefined) this.mentionFlags = options.mentionFlags;
     return this;
   }
 
@@ -179,7 +211,7 @@ export class GuildMember extends Base {
    */
   permissionsIn(channel: GuildChannel): PermissionsBitField {
     return new PermissionsBitField(
-      this._effectivePermissions(channel.permissionOverwrites, [...this.roles.roleIds]),
+      this._effectivePermissions(channel.permissionOverwrites.toJSON(), [...this.roles.roleIds]),
     );
   }
 
@@ -192,10 +224,75 @@ export class GuildMember extends Base {
     await this.edit({ channelId, connectionId });
   }
 
-  private _effectivePermissions(
-    overwrites: GuildChannel['permissionOverwrites'] | [],
-    roleIds: string[],
-  ): bigint {
+  /** Kick this member. Requires Kick Members. */
+  async kick(): Promise<void> {
+    await this.guild.kick(this.id);
+  }
+
+  /** Ban this member. Requires Ban Members. */
+  async ban(options?: GuildBanOptions): Promise<void> {
+    await this.guild.ban(this.id, options);
+  }
+
+  /**
+   * Whether the bot can kick this member (cache-only; needs `members.me`).
+   * False for the guild owner, self, or when the bot lacks Kick Members / role hierarchy.
+   */
+  get kickable(): boolean {
+    return this._moderatableWith(PermissionFlags.KickMembers);
+  }
+
+  /**
+   * Whether the bot can ban this member (cache-only; needs `members.me`).
+   */
+  get bannable(): boolean {
+    return this._moderatableWith(PermissionFlags.BanMembers);
+  }
+
+  /**
+   * Whether the bot can timeout this member (cache-only; needs `members.me`).
+   */
+  get moderatable(): boolean {
+    return this._moderatableWith(PermissionFlags.ModerateMembers);
+  }
+
+  private _moderatableWith(flag: bigint): boolean {
+    const me = this.guild.members.me;
+    if (!me) return false;
+    if (this.id === me.id) return false;
+    if (this.guild.ownerId != null && String(this.guild.ownerId) === String(this.id)) return false;
+    if (!me.permissions.has(flag)) return false;
+    return this._compareRolePosition(me) < 0;
+  }
+
+  /** Negative when this member's highest role is below `other`'s. */
+  private _compareRolePosition(other: GuildMember): number {
+    const highest = (m: GuildMember): number => {
+      let pos = -1;
+      for (const role of m.roles.cache.values()) {
+        if (role.position > pos) pos = role.position;
+      }
+      return pos;
+    };
+    return highest(this) - highest(other);
+  }
+
+  /**
+   * Timeout this member for `durationMs` milliseconds, or pass `null` to clear.
+   * Requires Moderate Members.
+   */
+  async timeout(durationMs: number | null, reason?: string): Promise<this> {
+    const communicationDisabledUntil =
+      durationMs == null || durationMs <= 0
+        ? null
+        : new Date(Date.now() + durationMs).toISOString();
+    return this.edit({
+      communicationDisabledUntil,
+      ...(reason !== undefined ? { timeoutReason: reason } : {}),
+    });
+  }
+
+  private _effectivePermissions(overwrites: APIChannelOverwrite[], roleIds: string[]): bigint {
     const ownerId = this.guild.ownerId;
     const isOwner = ownerId != null && ownerId !== '' && String(ownerId) === String(this.id);
     return computePermissions(this._basePermissions(), overwrites, roleIds, this.id, isOwner);

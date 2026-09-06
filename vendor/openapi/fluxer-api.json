@@ -486,7 +486,11 @@
 				"description": "Cancel an ongoing handoff session. The handoff code will no longer be valid for authentication.",
 				"parameters": [
 					{"name": "code", "in": "path", "required": true, "schema": {"type": "string"}, "description": "The code"}
-				]
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffCancelRequest"}}}
+				}
 			}
 		},
 		"/auth/handoff/{code}/info": {
@@ -609,6 +613,69 @@
 				"parameters": [
 					{"name": "code", "in": "path", "required": true, "schema": {"type": "string"}, "description": "The code"}
 				]
+			},
+			"post": {
+				"operationId": "get_handoff_status_with_secret",
+				"summary": "Get handoff status with secret",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffStatusResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Get handoff status with secret"}},
+				"description": "Check the status of a handoff session using the poll secret from initiation. Returns the authentication token once the handoff is complete and the presented secret matches.",
+				"parameters": [
+					{"name": "code", "in": "path", "required": true, "schema": {"type": "string"}, "description": "The code"}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffStatusRequest"}}}
+				}
 			}
 		},
 		"/auth/ip-authorization/poll": {
@@ -3457,89 +3524,6 @@
 				]
 			}
 		},
-		"/channels/{channel_id}/messages/schedule": {
-			"post": {
-				"operationId": "schedule_message",
-				"summary": "Schedule a message to send later",
-				"tags": ["Channels"],
-				"responses": {
-					"201": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ScheduledMessageResponseSchema"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Schedule a message to send later"}},
-				"description": "Schedules a message to be sent at a specified time. Only available for regular user accounts. Requires permission to send messages in the target channel. Message is sent automatically at the scheduled time. Returns the scheduled message object with delivery time.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "channel_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the channel"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/ScheduledMessageRequestSchema"}},
-						"multipart/form-data": {"schema": {"$ref": "#/components/schemas/ScheduledMessageRequestSchema"}}
-					}
-				}
-			}
-		},
 		"/channels/{channel_id}/messages/{message_id}": {
 			"get": {
 				"operationId": "get_message",
@@ -5466,410 +5450,6 @@
 						"description": "The ID of the channel"
 					}
 				]
-			}
-		},
-		"/channels/{channel_id}/voice-debug-logging/events": {
-			"post": {
-				"operationId": "upload_voice_debug_logging_events",
-				"summary": "Upload voice debug logging events",
-				"tags": ["Channels"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/VoiceDebugLoggingEventsResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Upload voice debug logging events"}},
-				"description": "Uploads a small batch of client voice diagnostics events for an active staff-enabled debug logging session.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "channel_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the channel"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/VoiceDebugLoggingEventsBodySchema"}}
-					}
-				}
-			}
-		},
-		"/channels/{channel_id}/voice-debug-logging/session": {
-			"get": {
-				"operationId": "get_voice_debug_logging_status",
-				"summary": "Get voice debug logging status",
-				"tags": ["Channels"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/VoiceDebugLoggingStatusResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Get voice debug logging status"}},
-				"description": "Returns whether staff-enabled voice debug logging is active for this channel. Clients poll this while connected to decide whether to upload diagnostics.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "channel_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the channel"
-					}
-				]
-			},
-			"put": {
-				"operationId": "set_voice_debug_logging_status",
-				"summary": "Toggle voice debug logging",
-				"tags": ["Channels"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/VoiceDebugLoggingStatusResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Toggle voice debug logging"}},
-				"description": "Allows staff to start or stop a channel-scoped voice debug logging session. Non-staff users cannot activate or stop sessions.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "channel_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the channel"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/VoiceDebugLoggingToggleBodySchema"}}
-					}
-				}
-			}
-		},
-		"/channels/{channel_id}/voice-presence/heartbeat": {
-			"post": {
-				"operationId": "heartbeat_voice_presence",
-				"summary": "Heartbeat voice presence",
-				"tags": ["Channels"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoicePresenceHeartbeatResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Heartbeat voice presence"}},
-				"description": "Refreshes the current user voice presence marker for v2 voice reconciliation. Clients call this while connected to voice.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "channel_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the channel"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoicePresenceHeartbeatBodySchema"}}}
-				}
-			},
-			"delete": {
-				"operationId": "end_voice_presence_heartbeat",
-				"summary": "End voice presence heartbeat",
-				"tags": ["Channels"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/VoicePresenceHeartbeatEndResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "End voice presence heartbeat"}},
-				"description": "Clears the current user active v2 voice presence marker for a voice connection while preserving v2 enrollment for fast reconciliation.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "channel_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the channel"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/VoicePresenceHeartbeatBodySchema"}}}
-				}
 			}
 		},
 		"/channels/{channel_id}/webhooks": {
@@ -10588,6 +10168,70 @@
 				]
 			}
 		},
+		"/harvest-downloads/{harvestId}": {
+			"get": {
+				"operationId": "download_data_harvest_archive",
+				"summary": "Download data harvest archive",
+				"tags": ["Users"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Download data harvest archive"}},
+				"description": "Streams a completed data harvest archive. Authorised by a signed, expiring token rather than a session, so the link works from the harvest completion email. Only active when presigned harvest downloads are disabled.",
+				"parameters": [
+					{
+						"name": "harvestId",
+						"in": "path",
+						"required": true,
+						"schema": {"type": "string"},
+						"description": "The harvestId"
+					}
+				]
+			}
+		},
 		"/invites/{invite_code}": {
 			"get": {
 				"operationId": "get_invite",
@@ -10643,7 +10287,7 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Get invite information"}},
-				"description": "Fetches detailed information about an invite using its code, including the guild, channel, or pack it belongs to and metadata such as expiration and usage limits. This endpoint does not require authentication and does not consume the invite.",
+				"description": "Fetches detailed information about an invite using its code, including the guild or channel it belongs to and metadata such as expiration and usage limits. This endpoint does not require authentication and does not consume the invite.",
 				"parameters": [
 					{
 						"name": "invite_code",
@@ -10716,7 +10360,7 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Accept invite"}},
-				"description": "Accepts an invite using its code, adding the authenticated user to the corresponding guild, pack, or other entity. The invite usage count is incremented, and if it reaches its maximum usage limit or expiration, the invite is automatically revoked. Returns the accepted invite details.",
+				"description": "Accepts an invite using its code, adding the authenticated user to the corresponding guild or other entity. The invite usage count is incremented, and if it reaches its maximum usage limit or expiration, the invite is automatically revoked. Returns the accepted invite details.",
 				"security": [{"sessionToken": []}],
 				"parameters": [
 					{
@@ -10787,7 +10431,7 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Delete invite"}},
-				"description": "Permanently deletes an invite by its code, preventing any further usage. The authenticated user must have permission to manage invites for the guild, channel, or pack associated with the invite. This action can be logged in the audit log if an X-Audit-Log-Reason header is provided.",
+				"description": "Permanently deletes an invite by its code, preventing any further usage. The authenticated user must have permission to manage invites for the guild or channel associated with the invite. This action can be logged in the audit log if an X-Audit-Log-Reason header is provided.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -10798,6 +10442,64 @@
 						"description": "The invite code"
 					}
 				]
+			}
+		},
+		"/ip": {
+			"get": {
+				"operationId": "get_client_geolocation",
+				"summary": "Get client geolocation",
+				"tags": ["Geolocation"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GeolocationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Get client geolocation"}},
+				"description": "Resolves the approximate location of the requesting client from its IP address, together with the locations where age restricted content is gated or unavailable."
 			}
 		},
 		"/oauth2/@me": {
@@ -12022,1418 +11724,6 @@
 				"x-mint": {"metadata": {"title": "Get OAuth2 user information"}},
 				"description": "Retrieves authenticated user information using a valid access token. Requires identify scope and supports email scope for email fields.",
 				"security": [{"oauth2Token": ["identify"]}]
-			}
-		},
-		"/packs": {
-			"get": {
-				"operationId": "list_user_packs",
-				"summary": "List user packs",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PackDashboardResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "List user packs"}},
-				"description": "Returns a dashboard view containing all emoji and sticker packs created by or owned by the authenticated user. This includes pack metadata such as name, description, type, and cover image.",
-				"security": [{"sessionToken": []}]
-			}
-		},
-		"/packs/emojis/{pack_id}": {
-			"post": {
-				"operationId": "create_pack_emoji",
-				"summary": "Create pack emoji",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildEmojiResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Create pack emoji"}},
-				"description": "Creates a new emoji within the specified pack. Requires the pack ID in the path and emoji metadata (name and image data) in the request body. Returns the newly created emoji with its generated ID.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildEmojiCreateRequest"}}}
-				}
-			},
-			"get": {
-				"operationId": "list_pack_emojis",
-				"summary": "List pack emojis",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildEmojiWithUserListResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "List pack emojis"}},
-				"description": "Returns a list of all emojis contained within the specified pack, including emoji metadata and creator information. Results include emoji ID, name, image URL, and the user who created each emoji.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				]
-			}
-		},
-		"/packs/emojis/{pack_id}/bulk": {
-			"post": {
-				"operationId": "bulk_create_pack_emojis",
-				"summary": "Bulk create pack emojis",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildEmojiBulkCreateResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Bulk create pack emojis"}},
-				"description": "Creates multiple emojis within the specified pack in a single bulk operation. Accepts an array of emoji definitions, each containing name and image data. Returns a response containing all successfully created emojis.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildEmojiBulkCreateRequest"}}}
-				}
-			}
-		},
-		"/packs/emojis/{pack_id}/{emoji_id}": {
-			"patch": {
-				"operationId": "update_pack_emoji",
-				"summary": "Update pack emoji",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildEmojiResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Update pack emoji"}},
-				"description": "Updates the name of an existing emoji within the specified pack. Requires both pack ID and emoji ID in the path parameters. Returns the updated emoji with its new name and all existing metadata.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					},
-					{
-						"name": "emoji_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the emoji"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildEmojiUpdateRequest"}}}
-				}
-			},
-			"delete": {
-				"operationId": "delete_pack_emoji",
-				"summary": "Delete pack emoji",
-				"tags": ["Packs"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Delete pack emoji"}},
-				"description": "Permanently deletes an emoji from the specified pack. Requires both pack ID and emoji ID in the path parameters. Accepts an optional \"purge\" query parameter to control whether associated assets are immediately deleted.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					},
-					{
-						"name": "emoji_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the emoji"
-					},
-					{
-						"name": "purge",
-						"in": "query",
-						"required": false,
-						"schema": {"type": "string", "description": "Whether to also purge the asset from storage"}
-					}
-				]
-			}
-		},
-		"/packs/stickers/{pack_id}": {
-			"post": {
-				"operationId": "create_pack_sticker",
-				"summary": "Create pack sticker",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildStickerResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Create pack sticker"}},
-				"description": "Creates a new sticker within the specified pack. Requires the pack ID in the path and sticker metadata (name, description, tags, and image data) in the request body. Returns the newly created sticker with its generated ID.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildStickerCreateRequest"}}}
-				}
-			},
-			"get": {
-				"operationId": "list_pack_stickers",
-				"summary": "List pack stickers",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/GuildStickerWithUserListResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "List pack stickers"}},
-				"description": "Returns a list of all stickers contained within the specified pack, including sticker metadata and creator information. Results include sticker ID, name, description, tags, image URL, and the user who created each sticker.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				]
-			}
-		},
-		"/packs/stickers/{pack_id}/bulk": {
-			"post": {
-				"operationId": "bulk_create_pack_stickers",
-				"summary": "Bulk create pack stickers",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildStickerBulkCreateResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Bulk create pack stickers"}},
-				"description": "Creates multiple stickers within the specified pack in a single bulk operation. Accepts an array of sticker definitions, each containing name, description, tags, and image data. Returns a response containing all successfully created stickers.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildStickerBulkCreateRequest"}}}
-				}
-			}
-		},
-		"/packs/stickers/{pack_id}/{sticker_id}": {
-			"patch": {
-				"operationId": "update_pack_sticker",
-				"summary": "Update pack sticker",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildStickerResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Update pack sticker"}},
-				"description": "Updates the name, description, or tags of an existing sticker within the specified pack. Requires both pack ID and sticker ID in the path parameters. Returns the updated sticker with its new metadata and all existing fields.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					},
-					{
-						"name": "sticker_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the sticker"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildStickerUpdateRequest"}}}
-				}
-			},
-			"delete": {
-				"operationId": "delete_pack_sticker",
-				"summary": "Delete pack sticker",
-				"tags": ["Packs"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Delete pack sticker"}},
-				"description": "Permanently deletes a sticker from the specified pack. Requires both pack ID and sticker ID in the path parameters. Accepts an optional \"purge\" query parameter to control whether associated assets are immediately deleted.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					},
-					{
-						"name": "sticker_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the sticker"
-					},
-					{
-						"name": "purge",
-						"in": "query",
-						"required": false,
-						"schema": {"type": "string", "description": "Whether to also purge the asset from storage"}
-					}
-				]
-			}
-		},
-		"/packs/{pack_id}": {
-			"patch": {
-				"operationId": "update_pack",
-				"summary": "Update pack",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PackSummaryResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Update pack"}},
-				"description": "Updates the metadata for an existing pack owned by the authenticated user. Allowed modifications include name, description, and cover image. Returns the updated pack with all current metadata.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PackUpdateRequest"}}}
-				}
-			},
-			"delete": {
-				"operationId": "delete_pack",
-				"summary": "Delete pack",
-				"tags": ["Packs"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Delete pack"}},
-				"description": "Permanently deletes a pack owned by the authenticated user along with all emojis or stickers contained within it. This action cannot be undone and will remove all associated assets.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				]
-			}
-		},
-		"/packs/{pack_id}/install": {
-			"post": {
-				"operationId": "install_pack",
-				"summary": "Install pack",
-				"tags": ["Packs"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Install pack"}},
-				"description": "Installs a pack to the authenticated user's collection, making its emojis or stickers available for use. The pack must be publicly accessible or owned by the user.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				]
-			},
-			"delete": {
-				"operationId": "uninstall_pack",
-				"summary": "Uninstall pack",
-				"tags": ["Packs"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Uninstall pack"}},
-				"description": "Uninstalls a pack from the authenticated user's collection, removing access to its emojis or stickers. This does not delete the pack itself, only removes it from the user's installed list.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				]
-			}
-		},
-		"/packs/{pack_id}/invites": {
-			"get": {
-				"operationId": "list_pack_invites",
-				"summary": "List pack invites",
-				"tags": ["Invites"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {
-								"schema": {"type": "array", "items": {"$ref": "#/components/schemas/InviteMetadataResponseSchema"}}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "List pack invites"}},
-				"description": "Retrieves all currently active invites for the specified pack, including invite codes, creators, expiration times, and usage statistics. The authenticated user must have permission to manage invites for the pack and must be a default (non-bot) user. Returns an array of invite metadata objects.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				]
-			},
-			"post": {
-				"operationId": "create_pack_invite",
-				"summary": "Create pack invite",
-				"tags": ["Invites"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/InviteMetadataResponseSchema"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Create pack invite"}},
-				"description": "Creates a new invite for the specified pack with optional parameters such as maximum age and maximum uses. The authenticated user must have permission to create invites for the pack and must be a default (non-bot) user. Returns the created invite with full metadata including usage statistics.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_id",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "The ID of the pack"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PackInviteCreateRequest"}}}
-				}
-			}
-		},
-		"/packs/{pack_type}": {
-			"post": {
-				"operationId": "create_pack",
-				"summary": "Create pack",
-				"tags": ["Packs"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PackSummaryResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Create pack"}},
-				"description": "Creates a new emoji or sticker pack owned by the authenticated user. The pack type is specified in the path parameter and can be either \"emoji\" or \"sticker\". Returns the newly created pack with its metadata.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "pack_type",
-						"in": "path",
-						"required": true,
-						"schema": {"type": "string"},
-						"description": "The pack type"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PackCreateRequest"}}}
-				}
 			}
 		},
 		"/premium/cancel-pending-subscription-change": {
@@ -14920,7 +13210,7 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Search messages"}},
-				"description": "Searches for messages across guilds and channels accessible to the authenticated user.",
+				"description": "Searches for messages across guilds and channels accessible to the authenticated user. Bots must supply a context guild or channel and may only use the current scope.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -16128,73 +14418,6 @@
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
 				}
-			}
-		},
-		"/users/@me/canary-tester/join": {
-			"post": {
-				"operationId": "join_canary_testers",
-				"summary": "Join the canary testers guild",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Join the canary testers guild"}},
-				"description": "Adds the authenticated user to the hardcoded Fluxer Testers guild used for canary feedback. Restricted to non-bot users with verified email, an account at least 30 minutes old, no effective suspicious-activity flags, and not banned from the target guild. Rate-limited; surfaced via the canary nagbar.",
-				"security": [{"sessionToken": []}]
 			}
 		},
 		"/users/@me/channels": {
@@ -20104,6 +18327,297 @@
 				}
 			}
 		},
+		"/users/@me/mfa/backup-codes/challenge": {
+			"post": {
+				"operationId": "start_backup_codes_challenge",
+				"summary": "Start backup codes challenge",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeStartResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Start backup codes challenge"}},
+				"description": "Initiates the challenge required to view existing backup codes. Sends a verification code to the user's email address. Returns a ticket for use in the remaining challenge steps.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EmptyBodyRequest"}}}
+				}
+			}
+		},
+		"/users/@me/mfa/backup-codes/challenge/regenerate": {
+			"post": {
+				"operationId": "regenerate_backup_codes_challenge",
+				"summary": "Regenerate backup codes with a verified challenge",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Regenerate backup codes with a verified challenge"}},
+				"description": "Replaces the account backup codes using the proof token from a verified backup codes challenge. Old codes are invalidated.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeRegenerateRequest"}}
+					}
+				}
+			}
+		},
+		"/users/@me/mfa/backup-codes/challenge/resend": {
+			"post": {
+				"operationId": "resend_backup_codes_challenge",
+				"summary": "Resend backup codes challenge code",
+				"tags": ["Users"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Resend backup codes challenge code"}},
+				"description": "Resends the verification code for a backup codes challenge. Use if the original code was not received. Requires a valid backup codes challenge ticket.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeResendRequest"}}
+					}
+				}
+			}
+		},
+		"/users/@me/mfa/backup-codes/challenge/verify": {
+			"post": {
+				"operationId": "verify_backup_codes_challenge",
+				"summary": "Verify backup codes challenge code",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeVerifyResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Verify backup codes challenge code"}},
+				"description": "Verifies the email code sent during a backup codes challenge and returns the existing backup codes along with a proof token. The code is consumed on success and the proof token authorizes regeneration on the same ticket.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/MfaBackupCodesChallengeVerifyRequest"}}
+					}
+				}
+			}
+		},
 		"/users/@me/mfa/totp/disable": {
 			"post": {
 				"operationId": "disable_totp_mfa",
@@ -22751,305 +21265,6 @@
 				]
 			}
 		},
-		"/users/@me/scheduled-messages": {
-			"get": {
-				"operationId": "list_scheduled_messages",
-				"summary": "List scheduled messages",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {
-								"schema": {"type": "array", "items": {"$ref": "#/components/schemas/ScheduledMessageResponseSchema"}}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "List scheduled messages"}},
-				"description": "Retrieves all scheduled messages for the current user. Returns list of messages that are scheduled to be sent at a future date and time.",
-				"security": [{"sessionToken": []}]
-			}
-		},
-		"/users/@me/scheduled-messages/{scheduled_message_id}": {
-			"get": {
-				"operationId": "get_scheduled_message",
-				"summary": "Get scheduled message",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ScheduledMessageResponseSchema"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Get scheduled message"}},
-				"description": "Retrieves details of a specific scheduled message by ID. Returns the message content, scheduled send time, and status.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "scheduled_message_id",
-						"in": "path",
-						"required": true,
-						"schema": {"type": "string"},
-						"description": "The scheduled message id"
-					}
-				]
-			},
-			"delete": {
-				"operationId": "cancel_scheduled_message",
-				"summary": "Cancel scheduled message",
-				"tags": ["Users"],
-				"responses": {
-					"204": {"description": "No Content"},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Cancel scheduled message"}},
-				"description": "Cancels and deletes a scheduled message before it is sent. The message will not be delivered if cancelled.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "scheduled_message_id",
-						"in": "path",
-						"required": true,
-						"schema": {"type": "string"},
-						"description": "The scheduled message id"
-					}
-				]
-			},
-			"patch": {
-				"operationId": "update_scheduled_message",
-				"summary": "Update scheduled message",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ScheduledMessageResponseSchema"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Update scheduled message"}},
-				"description": "Updates an existing scheduled message before it is sent. Can modify message content, scheduled time, and timezone. Returns updated scheduled message details.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "scheduled_message_id",
-						"in": "path",
-						"required": true,
-						"schema": {"type": "string"},
-						"description": "The scheduled message id"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/ScheduledMessageRequestSchema"}},
-						"multipart/form-data": {"schema": {"$ref": "#/components/schemas/ScheduledMessageRequestSchema"}}
-					}
-				}
-			}
-		},
 		"/users/@me/settings": {
 			"get": {
 				"operationId": "get_current_user_settings",
@@ -24363,7 +22578,7 @@
 					"required": true,
 					"content": {
 						"application/json": {"schema": {"$ref": "#/components/schemas/WebhookMessageRequest"}},
-						"multipart/form-data": {"schema": {"$ref": "#/components/schemas/WebhookMessageRequest"}}
+						"multipart/form-data": {"schema": {"$ref": "#/components/schemas/WebhookMultipartMessageRequest"}}
 					}
 				}
 			}
@@ -25206,7 +23421,6 @@
 					"DISCRIMINATOR_REQUIRED",
 					"EMAIL_SERVICE_NOT_TESTABLE",
 					"EMAIL_VERIFICATION_REQUIRED",
-					"CANARY_TESTER_EMAIL_VERIFICATION_REQUIRED",
 					"DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED",
 					"FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED",
 					"GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED",
@@ -25263,7 +23477,6 @@
 					"INVALID_FORM_BODY",
 					"INVALID_GRANT",
 					"INVALID_HANDOFF_CODE",
-					"INVALID_PACK_TYPE",
 					"INVALID_PERMISSIONS_INTEGER",
 					"INVALID_PERMISSIONS_NEGATIVE",
 					"INVALID_PHONE_NUMBER",
@@ -25290,8 +23503,6 @@
 					"GLOBAL_IP_BANNED",
 					"GLOBAL_IP_TEMPORARILY_BANNED",
 					"IP_BANNED",
-					"RESIDENTIAL_PROXY_BLOCKED",
-					"TOR_BLOCKED",
 					"MAX_ANIMATED_EMOJIS",
 					"MAX_APPLICATIONS",
 					"MAX_BOOKMARKS",
@@ -25308,8 +23519,6 @@
 					"MAX_GUILDS",
 					"NEW_ACCOUNT_GUILD_JOIN_RATE_LIMITED",
 					"MAX_INVITES",
-					"MAX_PACK_EXPRESSIONS",
-					"MAX_PACKS",
 					"MAX_PINS_PER_CHANNEL",
 					"MESSAGE_TOTAL_ATTACHMENT_SIZE_TOO_LARGE",
 					"MAX_REACTIONS",
@@ -25343,8 +23552,6 @@
 					"NOT_FRIENDS_WITH_USER",
 					"NOT_OWNER_OF_ADMIN_API_KEY",
 					"NSFW_CONTENT_AGE_RESTRICTED",
-					"NSFW_EMOJI_STICKER_BLOCKED",
-					"PACK_ACCESS_DENIED",
 					"PASSKEY_AUTHENTICATION_FAILED",
 					"PASSKEYS_DISABLED",
 					"PHONE_ADD_NOT_ELIGIBLE",
@@ -25423,7 +23630,6 @@
 					"UNKNOWN_INVITE",
 					"UNKNOWN_MEMBER",
 					"UNKNOWN_MESSAGE",
-					"UNKNOWN_PACK",
 					"UNKNOWN_REPORT",
 					"UNKNOWN_ROLE",
 					"UNKNOWN_STICKER",
@@ -25532,7 +23738,6 @@
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
-					"Email verification is required for this action.",
 					"Registration is closed on this instance.",
 					"This registration is waiting for admin approval.",
 					"This registration request was rejected.",
@@ -25580,7 +23785,6 @@
 					"Invalid form body.",
 					"The authorization grant is invalid, expired, or has been revoked.",
 					"Invalid handoff code.",
-					"Invalid pack type.",
 					"Permissions must be a valid integer.",
 					"Permissions must be non-negative.",
 					"Invalid phone number.",
@@ -25607,8 +23811,6 @@
 					"Your IP address {ipAddress} has been permanently blocked from the Fluxer API by platform administrators. If you believe this is a mistake, contact support@fluxer.app to appeal. Include this IP address in your appeal.",
 					"Your IP address {ipAddress} has been temporarily blocked from the Fluxer API for 24 hours because of abusive or unusual access patterns. We usually do not provide appeals for temporary API bans. Change IP addresses or wait for the ban to expire, and review the Fluxer API access patterns coming from your client.",
 					"Your IP address {ipAddress} has been permanently blocked from the Fluxer API by platform administrators. If you believe this is a mistake, contact support@fluxer.app to appeal. Include this IP address in your appeal.",
-					"This user's IP is banned from this community.",
-					"This user's IP is banned from this community.",
 					"You've reached the maximum of {count, plural, one {# animated emoji} other {# animated emojis}}.",
 					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
 					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
@@ -25625,8 +23827,6 @@
 					"You've reached the maximum of {count, plural, one {# community} other {# communities}}.",
 					"New accounts are limited to joining 10 communities in the first 24 hours. Please try again later.",
 					"You've reached the maximum of {count, plural, one {# invite} other {# invites}}.",
-					"You've reached the maximum of {count, plural, one {# pack expression} other {# pack expressions}}.",
-					"You've reached the maximum of {count, plural, one {# pack} other {# packs}}.",
 					"You've reached the maximum of {count, plural, one {# pin} other {# pins}} per channel.",
 					"File size is too large. Maximum file size is {maxSize}.",
 					"You've reached the maximum of {count, plural, one {# reaction} other {# reactions}}.",
@@ -25660,8 +23860,6 @@
 					"You're not friends with this user.",
 					"You don't have permission to modify this admin API key.",
 					"NSFW content is age restricted.",
-					"This emoji or sticker is classified as NSFW and cannot be used in this context.",
-					"You don't have permission to access this pack.",
 					"Passkey authentication failed.",
 					"Passkeys are disabled.",
 					"You are not eligible to add a phone number to your account.",
@@ -25740,7 +23938,6 @@
 					"Invite wasn't found or is no longer valid.",
 					"Member wasn't found in this community.",
 					"Message wasn't found.",
-					"Pack wasn't found.",
 					"Unknown report.",
 					"Role wasn't found.",
 					"Unknown sticker.",
@@ -26030,9 +24227,20 @@
 						"type": "string",
 						"format": "date-time",
 						"description": "ISO 8601 timestamp when the handoff code expires"
+					},
+					"poll_secret": {
+						"type": "string",
+						"description": "Secret the initiating device must present to retrieve the token"
 					}
 				},
 				"required": ["code", "expires_at"]
+			},
+			"HandoffCancelRequest": {
+				"type": "object",
+				"properties": {
+					"poll_secret": {"type": "string", "description": "The poll secret issued when the handoff was initiated"}
+				},
+				"required": ["poll_secret"]
 			},
 			"HandoffInfoResponse": {
 				"type": "object",
@@ -26051,11 +24259,18 @@
 										"anyOf": [{"type": "string"}, {"type": "null"}],
 										"description": "The operating system of the requesting device"
 									},
+									"device": {
+										"enum": ["mobile", "desktop"],
+										"type": "string",
+										"x-enumNames": ["mobile", "desktop"],
+										"description": "Device class of the requesting device, decided by the server"
+									},
 									"location": {
 										"anyOf": [{"$ref": "#/components/schemas/AuthSessionLocation"}, {"type": "null"}],
 										"description": "The approximate location of the requesting device"
 									}
-								}
+								},
+								"required": ["device"]
 							},
 							{"type": "null"}
 						],
@@ -26132,6 +24347,13 @@
 					}
 				},
 				"required": ["id", "username", "discriminator", "global_name", "avatar", "avatar_color", "flags"]
+			},
+			"HandoffStatusRequest": {
+				"type": "object",
+				"properties": {
+					"poll_secret": {"type": "string", "description": "The poll secret issued when the handoff was initiated"}
+				},
+				"required": ["poll_secret"]
 			},
 			"IpAuthorizationPollResponse": {
 				"type": "object",
@@ -26299,11 +24521,18 @@
 										"anyOf": [{"type": "string"}, {"type": "null"}],
 										"description": "The browser reported by the client"
 									},
+									"device": {
+										"enum": ["mobile", "desktop"],
+										"type": "string",
+										"x-enumNames": ["mobile", "desktop"],
+										"description": "Device class of the session, decided by the server"
+									},
 									"location": {
 										"anyOf": [{"$ref": "#/components/schemas/AuthSessionLocation"}, {"type": "null"}],
 										"description": "The geolocation data sent by the client"
 									}
-								}
+								},
+								"required": ["device"]
 							},
 							{"type": "null"}
 						],
@@ -26581,11 +24810,6 @@
 						],
 						"description": "The stickers sent with the message"
 					},
-					"nsfw_emojis": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "IDs of custom emojis in this message that are classified as NSFW"
-					},
 					"reactions": {
 						"anyOf": [
 							{"type": "array", "items": {"$ref": "#/components/schemas/MessageReactionResponse"}},
@@ -26759,11 +24983,6 @@
 										],
 										"description": "The stickers sent with the message"
 									},
-									"nsfw_emojis": {
-										"type": "array",
-										"items": {"$ref": "#/components/schemas/SnowflakeType"},
-										"description": "IDs of custom emojis in this message that are classified as NSFW"
-									},
 									"reactions": {
 										"anyOf": [
 											{"type": "array", "items": {"$ref": "#/components/schemas/MessageReactionResponse"}},
@@ -26848,7 +25067,7 @@
 							},
 							{"type": "null"}
 						],
-						"description": "The message that this message is replying to or forwarding"
+						"description": "The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message carries no default reference. Clients must tell null apart from absent by key presence."
 					}
 				},
 				"required": [
@@ -26882,8 +25101,7 @@
 						"value": "4096",
 						"description": "This message will not trigger push or desktop notifications"
 					},
-					{"name": "VOICE_MESSAGE", "value": "8192", "description": "This message is a voice message"},
-					{"name": "COMPACT_ATTACHMENTS", "value": "131072", "description": "Display attachments in a compact format"}
+					{"name": "VOICE_MESSAGE", "value": "8192", "description": "This message is a voice message"}
 				],
 				"description": "Message flags bitfield"
 			},
@@ -27254,8 +25472,7 @@
 						"description": "The unique identifier of the sticker"
 					},
 					"name": {"type": "string", "description": "The name of the sticker"},
-					"animated": {"type": "boolean", "description": "Whether the sticker is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this sticker is classified as NSFW"}
+					"animated": {"type": "boolean", "description": "Whether the sticker is animated"}
 				},
 				"required": ["id", "name", "animated"]
 			},
@@ -27399,9 +25616,9 @@
 								"limit": {
 									"type": "integer",
 									"minimum": 1,
-									"maximum": 25,
+									"maximum": 50,
 									"format": "int32",
-									"description": "Number of messages to return for this channel (1-25)"
+									"description": "Number of messages to return for this channel (1-50)"
 								},
 								"before": {"$ref": "#/components/schemas/SnowflakeType"},
 								"after": {"$ref": "#/components/schemas/SnowflakeType"},
@@ -28121,8 +26338,7 @@
 			"InviteMetadataResponseSchema": {
 				"oneOf": [
 					{"$ref": "#/components/schemas/GuildInviteMetadataResponse"},
-					{"$ref": "#/components/schemas/GroupDmInviteMetadataResponse"},
-					{"$ref": "#/components/schemas/PackInviteMetadataResponse"}
+					{"$ref": "#/components/schemas/GroupDmInviteMetadataResponse"}
 				]
 			},
 			"GuildInviteMetadataResponse": {
@@ -28392,80 +26608,6 @@
 				},
 				"required": ["code", "type", "channel", "member_count", "temporary", "created_at", "uses", "max_uses"]
 			},
-			"PackInviteMetadataResponse": {
-				"type": "object",
-				"properties": {
-					"code": {"type": "string", "description": "The unique invite code"},
-					"type": {"type": "integer", "enum": [2, 3], "description": "The type of pack invite (emoji or sticker pack)"},
-					"pack": {
-						"type": "object",
-						"properties": {
-							"id": {
-								"type": "string",
-								"pattern": "^(0|[1-9][0-9]*)$",
-								"description": "The unique identifier for the pack"
-							},
-							"name": {"type": "string", "description": "The display name of the pack"},
-							"description": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The description of the pack"
-							},
-							"type": {
-								"type": "string",
-								"enum": ["emoji", "sticker"],
-								"description": "The type of pack (emoji or sticker)"
-							},
-							"creator_id": {
-								"type": "string",
-								"pattern": "^(0|[1-9][0-9]*)$",
-								"description": "The ID of the user who created the pack"
-							},
-							"created_at": {
-								"type": "string",
-								"format": "date-time",
-								"description": "ISO8601 timestamp of when the pack was created"
-							},
-							"updated_at": {
-								"type": "string",
-								"format": "date-time",
-								"description": "ISO8601 timestamp of when the pack was last updated"
-							},
-							"creator": {"$ref": "#/components/schemas/UserPartialResponse"}
-						},
-						"required": ["id", "name", "type", "creator_id", "created_at", "updated_at", "creator"],
-						"description": "The pack this invite is for"
-					},
-					"inviter": {
-						"anyOf": [{"$ref": "#/components/schemas/UserPartialResponse"}, {"type": "null"}],
-						"description": "The user who created the invite"
-					},
-					"expires_at": {
-						"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of when the invite expires"
-					},
-					"temporary": {"type": "boolean", "description": "Whether the invite grants temporary access"},
-					"created_at": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO8601 timestamp of when the invite was created"
-					},
-					"uses": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
-						"description": "The number of times this invite has been used"
-					},
-					"max_uses": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
-						"description": "The maximum number of times this invite can be used"
-					}
-				},
-				"required": ["code", "type", "pack", "temporary", "created_at", "uses", "max_uses"]
-			},
 			"ChannelInviteCreateRequest": {
 				"type": "object",
 				"properties": {
@@ -28596,8 +26738,7 @@
 						],
 						"description": "Array of field objects (max 25)"
 					}
-				},
-				"required": ["description"]
+				}
 			},
 			"RichEmbedAuthorRequest": {
 				"anyOf": [
@@ -28896,11 +27037,6 @@
 								],
 								"description": "The stickers sent with the message"
 							},
-							"nsfw_emojis": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/SnowflakeType"},
-								"description": "IDs of custom emojis in this message that are classified as NSFW"
-							},
 							"message_reference": {
 								"anyOf": [
 									{
@@ -28984,195 +27120,6 @@
 					}
 				},
 				"required": ["message", "pinned_at"]
-			},
-			"ScheduledMessageResponseSchema": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string",
-						"pattern": "^(0|[1-9][0-9]*)$",
-						"description": "The unique identifier for this scheduled message"
-					},
-					"channel_id": {
-						"type": "string",
-						"pattern": "^(0|[1-9][0-9]*)$",
-						"description": "The ID of the channel this message will be sent to"
-					},
-					"scheduled_at": {
-						"type": "string",
-						"description": "The ISO 8601 UTC timestamp when the message is scheduled to be sent"
-					},
-					"scheduled_local_at": {"type": "string", "description": "The ISO 8601 timestamp in the user local timezone"},
-					"timezone": {"type": "string", "description": "The IANA timezone identifier used for scheduling"},
-					"status": {
-						"type": "string",
-						"enum": ["pending", "invalid", "scheduled", "sent", "failed", "cancelled"],
-						"description": "The current status of the scheduled message"
-					},
-					"status_reason": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "A human-readable reason for the current status, if applicable"
-					},
-					"payload": {
-						"type": "object",
-						"properties": {
-							"content": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The text content of the scheduled message"
-							},
-							"tts": {"type": "boolean", "description": "Whether this is a text-to-speech message"},
-							"embeds": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/MessageEmbedResponse"},
-								"description": "Array of embed objects attached to the message"
-							},
-							"attachments": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/MessageAttachmentResponse"},
-								"description": "Array of attachment objects for the message"
-							},
-							"stickers": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/MessageStickerResponse"},
-								"description": "Array of sticker objects attached to the message"
-							},
-							"sticker_ids": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/SnowflakeType"},
-								"description": "Array of sticker IDs to include in the message"
-							},
-							"allowed_mentions": {
-								"type": "object",
-								"properties": {
-									"parse": {
-										"type": "array",
-										"items": {
-											"type": "string",
-											"enum": ["users", "roles", "everyone"],
-											"x-enumNames": ["USERS", "ROLES", "EVERYONE"],
-											"x-enumDescriptions": [
-												"Parse user mentions from the message content",
-												"Parse role mentions from the message content",
-												"Parse @everyone and @here mentions from the message content"
-											],
-											"description": "Types of mentions to parse from content"
-										},
-										"description": "Types of mentions to parse from content"
-									},
-									"users": {
-										"type": "array",
-										"items": {"$ref": "#/components/schemas/SnowflakeType"},
-										"description": "Array of user IDs to mention"
-									},
-									"roles": {
-										"type": "array",
-										"items": {"$ref": "#/components/schemas/SnowflakeType"},
-										"description": "Array of role IDs to mention"
-									},
-									"replied_user": {
-										"type": "boolean",
-										"description": "Whether to mention the author of the replied message"
-									}
-								},
-								"description": "Controls which mentions trigger notifications"
-							},
-							"message_reference": {
-								"type": "object",
-								"properties": {
-									"message_id": {
-										"type": "string",
-										"pattern": "^(0|[1-9][0-9]*)$",
-										"description": "ID of the message being referenced"
-									},
-									"channel_id": {"$ref": "#/components/schemas/SnowflakeType"},
-									"guild_id": {"$ref": "#/components/schemas/SnowflakeType"},
-									"type": {
-										"$ref": "#/components/schemas/MessageReferenceType",
-										"description": "The type of message reference"
-									}
-								},
-								"required": ["message_id"],
-								"description": "Reference to another message (for replies or forwards)"
-							},
-							"flags": {"$ref": "#/components/schemas/MessageFlags"},
-							"nonce": {"$ref": "#/components/schemas/MessageNonceRequest"},
-							"favorite_meme_id": {"$ref": "#/components/schemas/SnowflakeType"}
-						},
-						"description": "The message content and metadata to be sent"
-					},
-					"created_at": {
-						"type": "string",
-						"description": "The ISO 8601 timestamp when this scheduled message was created"
-					},
-					"invalidated_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The ISO 8601 timestamp when the message was marked invalid"
-					}
-				},
-				"required": [
-					"id",
-					"channel_id",
-					"scheduled_at",
-					"scheduled_local_at",
-					"timezone",
-					"status",
-					"status_reason",
-					"payload",
-					"created_at",
-					"invalidated_at"
-				]
-			},
-			"ScheduledMessageRequestSchema": {
-				"type": "object",
-				"properties": {
-					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
-					"embeds": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
-						"description": "Array of embed objects to include in the message"
-					},
-					"attachments": {
-						"type": "array",
-						"items": {
-							"oneOf": [
-								{"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"},
-								{"$ref": "#/components/schemas/ClientAttachmentRequest"}
-							]
-						},
-						"description": "Array of attachment objects"
-					},
-					"message_reference": {
-						"anyOf": [{"$ref": "#/components/schemas/MessageReferenceRequest"}, {"type": "null"}],
-						"description": "Reference to another message (for replies or forwards)"
-					},
-					"allowed_mentions": {
-						"anyOf": [{"$ref": "#/components/schemas/AllowedMentionsRequest"}, {"type": "null"}],
-						"description": "Controls which mentions trigger notifications"
-					},
-					"flags": {"$ref": "#/components/schemas/MessageFlags"},
-					"nonce": {"$ref": "#/components/schemas/MessageNonceRequest"},
-					"favorite_meme_id": {
-						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}],
-						"description": "ID of a favorite meme to attach"
-					},
-					"sticker_ids": {
-						"anyOf": [
-							{"type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}, "maxItems": 3},
-							{"type": "null"}
-						],
-						"description": "Array of sticker IDs to include (max 3)"
-					},
-					"tts": {"type": "boolean", "description": "Whether this is a text-to-speech message"},
-					"scheduled_local_at": {
-						"type": "string",
-						"description": "ISO 8601 timestamp expressed in the user local timezone for when the message should be delivered"
-					},
-					"timezone": {
-						"type": "string",
-						"description": "IANA timezone identifier the schedule_local_at value is anchored to"
-					}
-				},
-				"required": ["scheduled_local_at", "timezone"]
 			},
 			"MessageUpdateRequestSchema": {
 				"type": "object",
@@ -29455,248 +27402,6 @@
 				},
 				"required": ["rate_limit_per_user", "retry_after_ms", "next_send_allowed_at", "can_bypass"]
 			},
-			"VoiceDebugLoggingEventsResponse": {
-				"type": "object",
-				"properties": {
-					"accepted": {"type": "boolean", "description": "Whether the telemetry batch was accepted for storage"},
-					"active": {
-						"type": "boolean",
-						"description": "Whether the server still considers this logging session active"
-					},
-					"stored_event_count": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
-						"description": "Number of events written to diagnostics storage"
-					}
-				},
-				"required": ["accepted", "active", "stored_event_count"]
-			},
-			"VoiceDebugLoggingEventsBodySchema": {
-				"type": "object",
-				"properties": {
-					"session_id": {"type": "string", "description": "Active voice debug logging session id"},
-					"connection_id": {"type": "string", "description": "Client voice connection id"},
-					"participant_identity": {"type": "string", "description": "LiveKit participant identity"},
-					"events": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/VoiceDebugLoggingEventSchema"},
-						"minItems": 1,
-						"maxItems": 200,
-						"description": "NDJSON batch events to store"
-					}
-				},
-				"required": ["session_id", "events"]
-			},
-			"VoiceDebugLoggingEventSchema": {
-				"type": "object",
-				"properties": {
-					"type": {"type": "string", "description": "Client-side diagnostic event type"},
-					"timestamp_ns": {
-						"type": "string",
-						"pattern": "^[0-9]{1,32}$",
-						"description": "Client wall-clock Unix timestamp in nanoseconds"
-					},
-					"monotonic_ns": {
-						"type": "string",
-						"pattern": "^[0-9]{1,32}$",
-						"description": "Client monotonic timestamp in nanoseconds"
-					},
-					"data": {
-						"type": "object",
-						"additionalProperties": {
-							"anyOf": [
-								{"type": "string"},
-								{"type": "number"},
-								{"type": "boolean"},
-								{
-									"type": "object",
-									"additionalProperties": {
-										"anyOf": [
-											{"type": "string"},
-											{"type": "number"},
-											{"type": "boolean"},
-											{
-												"type": "object",
-												"additionalProperties": {
-													"anyOf": [
-														{"type": "string"},
-														{"type": "number"},
-														{"type": "boolean"},
-														{"type": "object", "additionalProperties": true},
-														{"type": "null"}
-													]
-												}
-											},
-											{
-												"type": "array",
-												"items": {
-													"anyOf": [
-														{"type": "string"},
-														{"type": "number"},
-														{"type": "boolean"},
-														{"type": "object", "additionalProperties": true},
-														{"type": "null"}
-													]
-												}
-											},
-											{"type": "null"}
-										]
-									}
-								},
-								{
-									"type": "array",
-									"items": {
-										"anyOf": [
-											{"type": "string"},
-											{"type": "number"},
-											{"type": "boolean"},
-											{
-												"type": "object",
-												"additionalProperties": {
-													"anyOf": [
-														{"type": "string"},
-														{"type": "number"},
-														{"type": "boolean"},
-														{"type": "object", "additionalProperties": true},
-														{"type": "null"}
-													]
-												}
-											},
-											{
-												"type": "array",
-												"items": {
-													"anyOf": [
-														{"type": "string"},
-														{"type": "number"},
-														{"type": "boolean"},
-														{"type": "object", "additionalProperties": true},
-														{"type": "null"}
-													]
-												}
-											},
-											{"type": "null"}
-										]
-									}
-								},
-								{"type": "null"}
-							]
-						},
-						"description": "Event-specific diagnostic payload"
-					}
-				},
-				"required": ["type", "timestamp_ns"]
-			},
-			"VoiceDebugLoggingStatusResponse": {
-				"type": "object",
-				"properties": {
-					"active": {
-						"type": "boolean",
-						"description": "Whether clients in this channel should currently send voice diagnostics"
-					},
-					"session_id": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Current debug logging session id, if active"
-					},
-					"activated_by_user_id": {
-						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}],
-						"description": "Staff user that activated the session, if active"
-					},
-					"started_at_ms": {
-						"anyOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
-							{"type": "null"}
-						],
-						"description": "Session start Unix timestamp in milliseconds"
-					},
-					"expires_at_ms": {
-						"anyOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
-							{"type": "null"}
-						],
-						"description": "Session expiration Unix timestamp in milliseconds"
-					},
-					"poll_interval_ms": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
-						"description": "Recommended client polling interval in milliseconds"
-					},
-					"upload_interval_ms": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
-						"description": "Recommended client telemetry batch upload interval in milliseconds"
-					}
-				},
-				"required": [
-					"active",
-					"session_id",
-					"activated_by_user_id",
-					"started_at_ms",
-					"expires_at_ms",
-					"poll_interval_ms",
-					"upload_interval_ms"
-				]
-			},
-			"VoiceDebugLoggingToggleBodySchema": {
-				"type": "object",
-				"properties": {
-					"enabled": {
-						"type": "boolean",
-						"description": "Whether voice debug logging should be active for this channel"
-					},
-					"duration_ms": {
-						"type": "integer",
-						"minimum": 60000,
-						"maximum": 14400000,
-						"format": "int32",
-						"description": "Optional activation duration in milliseconds. Defaults to one hour and is capped at four hours."
-					}
-				},
-				"required": ["enabled"]
-			},
-			"VoicePresenceHeartbeatResponse": {
-				"type": "object",
-				"properties": {
-					"ok": {"type": "boolean", "description": "Whether the heartbeat was accepted"},
-					"heartbeat_interval_ms": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
-						"description": "Recommended client heartbeat interval in milliseconds"
-					},
-					"heartbeat_ttl_ms": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
-						"description": "Server-side heartbeat expiration window in milliseconds"
-					},
-					"expires_at_ms": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 9007199254740991,
-						"format": "int53",
-						"description": "Unix timestamp in milliseconds when this heartbeat expires"
-					}
-				},
-				"required": ["ok", "heartbeat_interval_ms", "heartbeat_ttl_ms", "expires_at_ms"]
-			},
-			"VoicePresenceHeartbeatBodySchema": {
-				"type": "object",
-				"properties": {"connection_id": {"type": "string", "description": "Client voice connection id"}},
-				"required": ["connection_id"]
-			},
-			"VoicePresenceHeartbeatEndResponse": {
-				"type": "object",
-				"properties": {"ok": {"type": "boolean", "description": "Whether the heartbeat was ended"}},
-				"required": ["ok"]
-			},
 			"WebhookResponse": {
 				"type": "object",
 				"properties": {
@@ -29759,6 +27464,7 @@
 								"id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "Guild ID"},
 								"name": {"type": "string", "description": "Guild name"},
 								"icon": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Guild icon hash"},
+								"banner": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Guild banner hash"},
 								"description": {
 									"anyOf": [{"type": "string"}, {"type": "null"}],
 									"description": "Discovery description"
@@ -29787,9 +27493,21 @@
 						},
 						"description": "Discovery guild results"
 					},
-					"total": {"type": "number", "description": "Total number of matching guilds"}
+					"total": {"type": "number", "description": "Total number of matching guilds"},
+					"category_counts": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"category_type": {"type": "number", "description": "Discovery category type"},
+								"count": {"type": "number", "description": "Number of matching guilds in this category"}
+							},
+							"required": ["category_type", "count"]
+						},
+						"description": "Match counts per category for the current filters, ignoring the category filter"
+					}
 				},
-				"required": ["guilds", "total"]
+				"required": ["guilds", "total", "category_counts"]
 			},
 			"DonationCheckoutResponse": {
 				"type": "object",
@@ -30208,7 +27926,10 @@
 					},
 					"name": {"type": "string", "description": "The name of the emoji"},
 					"animated": {"type": "boolean", "description": "Whether this emoji is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this emoji is classified as NSFW"}
+					"nsfw": {
+						"type": "boolean",
+						"description": "Deprecated; always false. Retained for compatibility with older clients"
+					}
 				},
 				"required": ["id", "name", "animated", "nsfw"]
 			},
@@ -30229,7 +27950,10 @@
 						"description": "Autocomplete/suggestion tags for the sticker"
 					},
 					"animated": {"type": "boolean", "description": "Whether this sticker is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this sticker is classified as NSFW"}
+					"nsfw": {
+						"type": "boolean",
+						"description": "Deprecated; always false. Retained for compatibility with older clients"
+					}
 				},
 				"required": ["id", "name", "description", "tags", "animated", "nsfw"]
 			},
@@ -30749,7 +28473,14 @@
 						"minimum": 0,
 						"maximum": 7,
 						"format": "int32",
-						"description": "Number of days of messages to delete from the banned user (0-7)"
+						"description": "Number of days of messages to delete from the banned user (0-7). Deprecated in favor of delete_message_seconds."
+					},
+					"delete_message_seconds": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 604800,
+						"format": "int32",
+						"description": "Number of seconds of messages to delete for the banned user (0-604800, default 0)"
 					},
 					"reason": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
@@ -31208,7 +28939,10 @@
 					},
 					"name": {"type": "string", "description": "The name of the emoji"},
 					"animated": {"type": "boolean", "description": "Whether this emoji is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this emoji is classified as NSFW"},
+					"nsfw": {
+						"type": "boolean",
+						"description": "Deprecated; always false. Retained for compatibility with older clients"
+					},
 					"user": {"$ref": "#/components/schemas/UserPartialResponse"}
 				},
 				"required": ["id", "name", "animated", "nsfw", "user"]
@@ -31602,8 +29336,7 @@
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "The voice connection ID for the member"
 					}
-				},
-				"required": ["nick", "communication_disabled_until"]
+				}
 			},
 			"GuildRoleCreateRequest": {
 				"type": "object",
@@ -31709,7 +29442,10 @@
 						"description": "Autocomplete/suggestion tags for the sticker"
 					},
 					"animated": {"type": "boolean", "description": "Whether this sticker is animated"},
-					"nsfw": {"type": "boolean", "description": "Whether this sticker is classified as NSFW"},
+					"nsfw": {
+						"type": "boolean",
+						"description": "Deprecated; always false. Retained for compatibility with older clients"
+					},
 					"user": {"$ref": "#/components/schemas/UserPartialResponse"}
 				},
 				"required": ["id", "name", "description", "tags", "animated", "nsfw", "user"]
@@ -31820,8 +29556,7 @@
 			"InviteResponseSchema": {
 				"oneOf": [
 					{"$ref": "#/components/schemas/GuildInviteResponse"},
-					{"$ref": "#/components/schemas/GroupDmInviteResponse"},
-					{"$ref": "#/components/schemas/PackInviteResponse"}
+					{"$ref": "#/components/schemas/GroupDmInviteResponse"}
 				]
 			},
 			"GuildInviteResponse": {
@@ -31941,60 +29676,48 @@
 				},
 				"required": ["code", "type", "channel", "member_count", "temporary"]
 			},
-			"PackInviteResponse": {
+			"GeolocationResponse": {
 				"type": "object",
 				"properties": {
-					"code": {"type": "string", "description": "The unique invite code"},
-					"type": {"type": "integer", "enum": [2, 3], "description": "The type of pack invite (emoji or sticker pack)"},
-					"pack": {
-						"type": "object",
-						"properties": {
-							"id": {
-								"type": "string",
-								"pattern": "^(0|[1-9][0-9]*)$",
-								"description": "The unique identifier for the pack"
-							},
-							"name": {"type": "string", "description": "The display name of the pack"},
-							"description": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The description of the pack"
-							},
-							"type": {
-								"type": "string",
-								"enum": ["emoji", "sticker"],
-								"description": "The type of pack (emoji or sticker)"
-							},
-							"creator_id": {
-								"type": "string",
-								"pattern": "^(0|[1-9][0-9]*)$",
-								"description": "The ID of the user who created the pack"
-							},
-							"created_at": {
-								"type": "string",
-								"format": "date-time",
-								"description": "ISO8601 timestamp of when the pack was created"
-							},
-							"updated_at": {
-								"type": "string",
-								"format": "date-time",
-								"description": "ISO8601 timestamp of when the pack was last updated"
-							},
-							"creator": {"$ref": "#/components/schemas/UserPartialResponse"}
-						},
-						"required": ["id", "name", "type", "creator_id", "created_at", "updated_at", "creator"],
-						"description": "The pack this invite is for"
+					"countryCode": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "ISO 3166-1 alpha-2 country code resolved for the client, or null when it cannot be resolved"
 					},
-					"inviter": {
-						"anyOf": [{"$ref": "#/components/schemas/UserPartialResponse"}, {"type": "null"}],
-						"description": "The user who created the invite"
+					"regionCode": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "ISO 3166-2 subdivision code resolved for the client, or null when it cannot be resolved"
 					},
-					"expires_at": {
-						"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of when the invite expires"
+					"latitude": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Approximate latitude of the client, or null when it cannot be resolved"
 					},
-					"temporary": {"type": "boolean", "description": "Whether the invite grants temporary access"}
+					"longitude": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Approximate longitude of the client, or null when it cannot be resolved"
+					},
+					"ageRestrictedGeos": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/GeoEntry"},
+						"description": "Locations where age restricted content requires an age check"
+					},
+					"ageBlockedGeos": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/GeoEntry"},
+						"description": "Locations where age restricted content is unavailable"
+					}
 				},
-				"required": ["code", "type", "pack", "temporary"]
+				"required": ["countryCode", "regionCode", "latitude", "longitude", "ageRestrictedGeos", "ageBlockedGeos"]
+			},
+			"GeoEntry": {
+				"type": "object",
+				"properties": {
+					"countryCode": {"type": "string", "description": "ISO 3166-1 alpha-2 country code"},
+					"regionCode": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "ISO 3166-2 subdivision code, or null when the entry covers the whole country"
+					}
+				},
+				"required": ["countryCode", "regionCode"]
 			},
 			"OAuth2MeResponse": {
 				"type": "object",
@@ -32502,150 +30225,6 @@
 					"flags": {"$ref": "#/components/schemas/PublicUserFlags"}
 				},
 				"required": ["sub", "id", "username", "discriminator", "global_name", "avatar"]
-			},
-			"PackDashboardResponse": {
-				"type": "object",
-				"properties": {
-					"emoji": {
-						"type": "object",
-						"properties": {
-							"installed_limit": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 2147483647,
-								"format": "int32",
-								"description": "Maximum number of packs the user can install"
-							},
-							"created_limit": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 2147483647,
-								"format": "int32",
-								"description": "Maximum number of packs the user can create"
-							},
-							"installed": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/PackSummaryResponse"},
-								"description": "List of packs the user has installed"
-							},
-							"created": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/PackSummaryResponse"},
-								"description": "List of packs the user has created"
-							}
-						},
-						"required": ["installed_limit", "created_limit", "installed", "created"],
-						"description": "Dashboard section for emoji packs"
-					},
-					"sticker": {
-						"type": "object",
-						"properties": {
-							"installed_limit": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 2147483647,
-								"format": "int32",
-								"description": "Maximum number of packs the user can install"
-							},
-							"created_limit": {
-								"type": "integer",
-								"minimum": 0,
-								"maximum": 2147483647,
-								"format": "int32",
-								"description": "Maximum number of packs the user can create"
-							},
-							"installed": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/PackSummaryResponse"},
-								"description": "List of packs the user has installed"
-							},
-							"created": {
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/PackSummaryResponse"},
-								"description": "List of packs the user has created"
-							}
-						},
-						"required": ["installed_limit", "created_limit", "installed", "created"],
-						"description": "Dashboard section for sticker packs"
-					}
-				},
-				"required": ["emoji", "sticker"]
-			},
-			"PackSummaryResponse": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string",
-						"pattern": "^(0|[1-9][0-9]*)$",
-						"description": "The unique identifier (snowflake) for the pack"
-					},
-					"name": {"type": "string", "description": "The display name of the pack"},
-					"description": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The description of the pack"
-					},
-					"type": {
-						"type": "string",
-						"enum": ["emoji", "sticker"],
-						"description": "The type of expression pack (emoji or sticker)"
-					},
-					"creator_id": {
-						"type": "string",
-						"pattern": "^(0|[1-9][0-9]*)$",
-						"description": "The ID of the user who created the pack"
-					},
-					"created_at": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO8601 timestamp of when the pack was created"
-					},
-					"updated_at": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO8601 timestamp of when the pack was last updated"
-					},
-					"installed_at": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO8601 timestamp of when the pack was installed by the user"
-					}
-				},
-				"required": ["id", "name", "description", "type", "creator_id", "created_at", "updated_at"]
-			},
-			"PackUpdateRequest": {
-				"type": "object",
-				"properties": {
-					"name": {"type": "string", "description": "The new name of the pack"},
-					"description": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The new description of the pack"
-					}
-				}
-			},
-			"PackInviteCreateRequest": {
-				"type": "object",
-				"properties": {
-					"max_uses": {
-						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 100, "format": "int32"}, {"type": "null"}],
-						"description": "Maximum number of times this invite can be used (0 for unlimited)"
-					},
-					"max_age": {
-						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 604800, "format": "int32"}, {"type": "null"}],
-						"description": "Duration in seconds before the invite expires (0 for never)"
-					},
-					"unique": {
-						"anyOf": [{"type": "boolean"}, {"type": "null"}],
-						"description": "Whether to create a new unique invite or reuse an existing one"
-					}
-				}
-			},
-			"PackCreateRequest": {
-				"type": "object",
-				"properties": {
-					"name": {"type": "string", "description": "The name of the pack"},
-					"description": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The description of the pack"}
-				},
-				"required": ["name"]
 			},
 			"ChangeSubscriptionRequest": {
 				"type": "object",
@@ -33196,12 +30775,20 @@
 					"payment_intent_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
 					"charge_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
 					"refund_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"refunded_amount_cents": {"type": "integer", "format": "int53"},
+					"refunded_amount_cents": {
+						"type": "integer",
+						"format": "int53",
+						"description": "Amount actually refunded so far, in the currency minor unit; 0 until the provider confirms success"
+					},
 					"invoice_amount_paid_cents": {"type": "integer", "format": "int53"},
 					"currency": {"type": "string"},
 					"subscription_id": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "Subscription that was cancelled along with the refund, when applicable"
+					},
+					"status": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Provider status of the refund (e.g. pending, succeeded, failed); money only moved once succeeded"
 					}
 				},
 				"required": [
@@ -33212,7 +30799,8 @@
 					"refunded_amount_cents",
 					"invoice_amount_paid_cents",
 					"currency",
-					"subscription_id"
+					"subscription_id",
+					"status"
 				]
 			},
 			"ReadStateAckResponse": {
@@ -33222,13 +30810,9 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ReadStateResponse"},
 						"description": "Authoritative read states after applying the acknowledgement"
-					},
-					"read_state_proto": {
-						"type": "string",
-						"description": "Authoritative read states after applying the acknowledgement, encoded as a base64 protobuf bundle"
 					}
 				},
-				"required": ["read_states", "read_state_proto"]
+				"required": ["read_states"]
 			},
 			"ReadStateResponse": {
 				"type": "object",
@@ -33914,11 +31498,6 @@
 									],
 									"description": "The stickers sent with the message"
 								},
-								"nsfw_emojis": {
-									"type": "array",
-									"items": {"$ref": "#/components/schemas/SnowflakeType"},
-									"description": "IDs of custom emojis in this message that are classified as NSFW"
-								},
 								"reactions": {
 									"anyOf": [
 										{"type": "array", "items": {"$ref": "#/components/schemas/MessageReactionResponse"}},
@@ -34050,9 +31629,9 @@
 					"page": {
 						"type": "integer",
 						"minimum": 1,
-						"maximum": 9007199254740991,
-						"format": "int53",
-						"description": "Page number for pagination (ignored when cursor is provided)"
+						"maximum": 400,
+						"format": "int32",
+						"description": "Page number for pagination (ignored when cursor is provided). Use cursor to page beyond this."
 					},
 					"cursor": {
 						"type": "array",
@@ -34964,12 +32543,7 @@
 				"type": "object",
 				"properties": {
 					"type": {"type": "string", "enum": ["bsky", "domain"], "description": "The type of connection to create"},
-					"identifier": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 253,
-						"description": "The connection identifier (handle or domain)"
-					},
+					"identifier": {"type": "string", "description": "The connection identifier (handle or domain)"},
 					"visibility_flags": {"$ref": "#/components/schemas/Int32Type"}
 				},
 				"required": ["type", "identifier"]
@@ -35084,7 +32658,8 @@
 				"properties": {
 					"ticket": {"type": "string", "description": "Email change ticket identifier"},
 					"new_email": {"$ref": "#/components/schemas/EmailType"},
-					"original_proof": {"type": "string", "description": "Proof token obtained from verifying the original email"}
+					"original_proof": {"type": "string", "description": "Proof token obtained from verifying the original email"},
+					"new_password": {"$ref": "#/components/schemas/PasswordType"}
 				},
 				"required": ["ticket", "new_email", "original_proof"]
 			},
@@ -35829,7 +33404,7 @@
 			"HarvestDownloadUrlResponse": {
 				"type": "object",
 				"properties": {
-					"download_url": {"type": "string", "description": "The presigned URL to download the harvest archive"},
+					"download_url": {"type": "string", "description": "The temporary URL to download the harvest archive"},
 					"expires_at": {"type": "string", "description": "ISO 8601 timestamp when the harvest download expires"}
 				},
 				"required": ["download_url", "expires_at"]
@@ -36005,6 +33580,58 @@
 					"webauthn_challenge": {"type": "string", "description": "WebAuthn challenge string"}
 				},
 				"required": ["regenerate"]
+			},
+			"MfaBackupCodesChallengeStartResponse": {
+				"type": "object",
+				"properties": {
+					"ticket": {"type": "string", "description": "Ticket for backup codes challenge actions"},
+					"code_expires_at": {"type": "string", "description": "ISO8601 timestamp when the verification code expires"},
+					"resend_available_at": {"type": "string", "description": "ISO8601 timestamp when the code can be resent"}
+				},
+				"required": ["ticket", "code_expires_at", "resend_available_at"]
+			},
+			"MfaBackupCodesChallengeRegenerateRequest": {
+				"type": "object",
+				"properties": {
+					"ticket": {"type": "string", "description": "Backup codes challenge ticket identifier"},
+					"verification_proof": {"type": "string", "description": "Proof token obtained from verifying the email code"}
+				},
+				"required": ["ticket", "verification_proof"]
+			},
+			"MfaBackupCodesChallengeResendRequest": {
+				"type": "object",
+				"properties": {"ticket": {"type": "string", "description": "Backup codes challenge ticket identifier"}},
+				"required": ["ticket"]
+			},
+			"MfaBackupCodesChallengeVerifyResponse": {
+				"type": "object",
+				"properties": {
+					"backup_codes": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"code": {"type": "string", "description": "The backup code"},
+								"consumed": {"type": "boolean", "description": "Whether the code has been used"}
+							},
+							"required": ["code", "consumed"]
+						},
+						"description": "List of backup codes"
+					},
+					"verification_proof": {
+						"type": "string",
+						"description": "Proof token authorizing backup code regeneration on this ticket"
+					}
+				},
+				"required": ["backup_codes", "verification_proof"]
+			},
+			"MfaBackupCodesChallengeVerifyRequest": {
+				"type": "object",
+				"properties": {
+					"ticket": {"type": "string", "description": "Backup codes challenge ticket identifier"},
+					"code": {"type": "string", "description": "Verification code sent to the email address"}
+				},
+				"required": ["ticket", "code"]
 			},
 			"DisableTotpRequest": {
 				"type": "object",
@@ -37500,33 +35127,51 @@
 						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
 						"description": "Array of embed objects to include in the message"
 					},
+					"message_reference": {
+						"anyOf": [{"$ref": "#/components/schemas/MessageReferenceRequest"}, {"type": "null"}],
+						"description": "Reference to another message (for replies or forwards)"
+					},
+					"allowed_mentions": {
+						"anyOf": [{"$ref": "#/components/schemas/AllowedMentionsRequest"}, {"type": "null"}],
+						"description": "Controls which mentions trigger notifications"
+					},
+					"flags": {"$ref": "#/components/schemas/MessageFlags"},
+					"nonce": {"$ref": "#/components/schemas/MessageNonceRequest"},
+					"favorite_meme_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}],
+						"description": "ID of a favorite meme to attach"
+					},
+					"sticker_ids": {
+						"anyOf": [
+							{"type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}, "maxItems": 3},
+							{"type": "null"}
+						],
+						"description": "Array of sticker IDs to include (max 3)"
+					},
+					"tts": {"type": "boolean", "description": "Whether this is a text-to-speech message"},
+					"username": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Override the default username of the webhook for this message"
+					},
+					"avatar_url": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Override the default avatar URL of the webhook for this message"
+					},
 					"attachments": {
 						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"id": {
-									"oneOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"$ref": "#/components/schemas/Int32Type"}],
-									"description": "Attachment ID for referencing uploaded files"
-								},
-								"filename": {"type": "string", "description": "Name of the file (1-1024 characters)"},
-								"description": {
-									"type": "string",
-									"description": "Description for the attachment (max 4096 characters)"
-								},
-								"content_type": {"type": "string", "description": "MIME type of the file"},
-								"size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
-								"url": {"type": "string", "description": "URL of the attachment"},
-								"proxy_url": {"type": "string", "description": "Proxied URL of the attachment"},
-								"height": {"type": "integer", "format": "int53", "description": "Height of the image/video in pixels"},
-								"width": {"type": "integer", "format": "int53", "description": "Width of the image/video in pixels"},
-								"ephemeral": {"type": "boolean", "description": "Whether this attachment is ephemeral"},
-								"duration": {"type": "number", "description": "Duration of audio file in seconds"},
-								"waveform": {"type": "string", "description": "Base64-encoded bytearray of audio waveform"},
-								"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags"}
-							}
-						},
-						"description": "Array of attachment objects"
+						"items": {"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"},
+						"description": "Array of attachments uploaded through the presigned upload endpoint"
+					}
+				}
+			},
+			"WebhookMultipartMessageRequest": {
+				"type": "object",
+				"properties": {
+					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
+					"embeds": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
+						"description": "Array of embed objects to include in the message"
 					},
 					"message_reference": {
 						"anyOf": [{"$ref": "#/components/schemas/MessageReferenceRequest"}, {"type": "null"}],
@@ -37557,6 +35202,34 @@
 					"avatar_url": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "Override the default avatar URL of the webhook for this message"
+					},
+					"attachments": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"oneOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"$ref": "#/components/schemas/Int32Type"}],
+									"description": "Attachment ID for referencing uploaded files"
+								},
+								"filename": {"type": "string", "description": "Name of the file (1-1024 characters)"},
+								"description": {
+									"type": "string",
+									"description": "Description for the attachment (max 4096 characters)"
+								},
+								"content_type": {"type": "string", "description": "MIME type of the file"},
+								"size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
+								"url": {"type": "string", "description": "URL of the attachment"},
+								"proxy_url": {"type": "string", "description": "Proxied URL of the attachment"},
+								"height": {"type": "integer", "format": "int53", "description": "Height of the image/video in pixels"},
+								"width": {"type": "integer", "format": "int53", "description": "Width of the image/video in pixels"},
+								"ephemeral": {"type": "boolean", "description": "Whether this attachment is ephemeral"},
+								"duration": {"type": "number", "description": "Duration of audio file in seconds"},
+								"waveform": {"type": "string", "description": "Base64-encoded bytearray of audio waveform"},
+								"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags"}
+							}
+						},
+						"description": "Array of multipart attachment metadata objects"
 					}
 				}
 			},
@@ -38217,7 +35890,6 @@
 		{"name": "Guilds", "description": "Guild management"},
 		{"name": "Channels", "description": "Channel management and messaging"},
 		{"name": "Invites", "description": "Guild invitations"},
-		{"name": "Packs", "description": "Sticker and emoji packs"},
 		{"name": "Webhooks", "description": "Webhook management"},
 		{"name": "OAuth2", "description": "OAuth2 applications and authorization"},
 		{"name": "Gateway", "description": "WebSocket gateway information"},
@@ -38233,6 +35905,7 @@
 		{"name": "Connections"},
 		{"name": "Messages"},
 		{"name": "Donations"},
+		{"name": "Geolocation"},
 		{"name": "Discovery"},
 		{"name": "Emojis"},
 		{"name": "Stickers"},

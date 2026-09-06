@@ -70,6 +70,14 @@ export class REST extends EventEmitter {
     return this.requestManager.request<T>('DELETE', route, options);
   }
 
+  /**
+   * Same path helpers as {@link Routes}. Use with `get` / `post` / `patch` / `put` / `delete`.
+   *
+   * @example
+   * await rest.get(REST.Routes.gatewayBot());
+   *
+   * @see {@link Routes}
+   */
   static get Routes(): typeof Routes {
     return Routes;
   }

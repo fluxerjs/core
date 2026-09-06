@@ -23,9 +23,9 @@
     --border: 220 13% 88%;
     --input: 220 13% 88%;
     --ring: 235 86% 65%;
-    --radius: 0.65rem;
+    --radius: 0.5rem;
     --sidebar-w: clamp(14.5rem, 18vw, 18rem);
-    --header-h: 3.75rem;
+    --header-h: 6.25rem;
     --content-pad: clamp(1rem, 2.8vw, 2.5rem);
     --prose-w: min(100%, 48rem);
     --code-bg: 220 18% 96%;
@@ -78,6 +78,7 @@
 
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-h) + 0.75rem);
   }
 
   html.hide-scrollbar {
@@ -161,7 +162,7 @@
     @apply text-primary underline decoration-primary/40 underline-offset-4;
   }
 
-  /* Shiki dual-theme: color only — never paint per-token backgrounds */
+  /* Shiki dual-theme: color only, never paint per-token backgrounds */
   .shiki,
   .shiki span {
     color: var(--shiki-light);
@@ -195,17 +196,6 @@
     max-width: min(100%, 64rem);
   }
 
-  .docs-grid-bg {
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.14), transparent),
-      linear-gradient(to right, hsl(var(--border) / 0.45) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.45) 1px, transparent 1px);
-    background-size:
-      auto,
-      48px 48px,
-      48px 48px;
-  }
-
   .method-get {
     @apply text-emerald-600 dark:text-emerald-400;
   }
@@ -230,6 +220,60 @@
   .method-enum {
     @apply text-amber-600 dark:text-amber-400;
   }
+
+  /* Hash jump: quiet left accent + brief wash. JS sets data-hash-target when :target is unreliable. */
+  @keyframes hash-target-flash {
+    from {
+      background-color: hsl(var(--primary) / 0.16);
+    }
+    to {
+      background-color: hsl(var(--primary) / 0.04);
+    }
+  }
+
+  :target,
+  [data-hash-target] {
+    box-shadow: inset 3px 0 0 hsl(var(--primary) / 0.65);
+  }
+
+  :target:not([data-hash-target='settled']),
+  [data-hash-target]:not([data-hash-target='settled']) {
+    animation: hash-target-flash 2.5s ease-out both;
+  }
+
+  [data-hash-target='settled'] {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 hsl(var(--primary) / 0.4);
+  }
+
+  tr:target,
+  tr[data-hash-target] {
+    box-shadow: none;
+  }
+
+  tr:target > td:first-child,
+  tr[data-hash-target] > td:first-child {
+    box-shadow: inset 3px 0 0 hsl(var(--primary) / 0.65);
+  }
+
+  tr[data-hash-target='settled'] > td:first-child {
+    box-shadow: inset 3px 0 0 hsl(var(--primary) / 0.4);
+  }
+
+  tr:target:not([data-hash-target='settled']) > td,
+  tr[data-hash-target]:not([data-hash-target='settled']) > td {
+    animation: hash-target-flash 2.5s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :target,
+    [data-hash-target],
+    tr:target > td,
+    tr[data-hash-target] > td {
+      animation: none;
+      background-color: hsl(var(--primary) / 0.07);
+    }
+  }
 }
 
 @layer utilities {
@@ -240,5 +284,26 @@
 
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+}
+
+.docs-sidebar {
+  transition:
+    top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .site-chrome,
+  .site-chrome-pill {
+    transition: none !important;
+  }
+
+  .docs-sidebar {
+    transition: none;
   }
 }

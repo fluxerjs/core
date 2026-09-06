@@ -37,6 +37,8 @@ describe('eventNormalize', () => {
       messageId: 'm1',
       channelId: 'c1',
       guildId: 'g1',
+      message: null,
+      channel: null,
     });
   });
 

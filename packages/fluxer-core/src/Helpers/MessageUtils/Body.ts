@@ -1,11 +1,13 @@
-import { EmbedBuilder, MessagePayload } from '@fluxerjs/builders';
+import { AttachmentBuilder, EmbedBuilder, MessagePayload } from '@fluxerjs/builders';
 import type { APIAllowedMentions, APIMessageReference } from '@fluxerjs/types';
-import { MessageReferenceType } from '@fluxerjs/types';
+import { MessageAttachmentFlags, MessageReferenceType } from '@fluxerjs/types';
 import { ErrorCodes } from '../../LibErrors/ErrorCodes.js';
 import { FluxerError } from '../../LibErrors/FluxerError.js';
 import { resolveMessageFiles } from './Files.js';
 import type {
   AllowedMentionsOptions,
+  MessageAttachmentMeta,
+  MessageFileData,
   MessagePostPayload,
   MessageReplyTarget,
   MessageSendOptions,
@@ -43,6 +45,40 @@ function assignIfDefined<T extends object, K extends keyof T>(
   if (value !== undefined) target[key] = value;
 }
 
+function normalizeSendFiles(
+  files: Array<MessageFileData | AttachmentBuilder> | undefined,
+): { files: MessageFileData[]; metaFromBuilders: MessageAttachmentMeta[] } | undefined {
+  if (!files?.length) return undefined;
+  const normalized: MessageFileData[] = [];
+  const metaFromBuilders: MessageAttachmentMeta[] = [];
+  let anyBuilderMeta = false;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (!file) continue;
+    if (file instanceof AttachmentBuilder) {
+      normalized.push(file.toFileData());
+      const meta: MessageAttachmentMeta = {
+        id: i,
+        filename: file.filename,
+        ...(file.description != null ? { description: file.description } : {}),
+        ...(file.spoiler ? { flags: MessageAttachmentFlags.IS_SPOILER } : {}),
+      };
+      if (file.description != null || file.spoiler) anyBuilderMeta = true;
+      metaFromBuilders.push(meta);
+    } else {
+      normalized.push(file);
+      metaFromBuilders.push({
+        id: i,
+        filename: file.filename ?? file.name,
+      });
+    }
+  }
+  return {
+    files: normalized,
+    metaFromBuilders: anyBuilderMeta ? metaFromBuilders : [],
+  };
+}
+
 /** Build API-ready body from send options (excludes reply routing fields). */
 export function buildSendBody(options: string | MessageSendOptions): SendBodyResult {
   const body = typeof options === 'string' ? { content: options } : options;
@@ -51,9 +87,10 @@ export function buildSendBody(options: string | MessageSendOptions): SendBodyRes
   if (body.embeds?.length) {
     result.embeds = body.embeds.map((e) => (e instanceof EmbedBuilder ? e.toJSON() : e));
   }
+  const normalizedFiles = normalizeSendFiles(body.files);
   if (body.uploadedAttachments?.length) {
     result.attachments = body.uploadedAttachments;
-  } else if (body.files?.length) {
+  } else if (normalizedFiles?.files.length) {
     result.attachments = body.attachments?.length
       ? body.attachments.map((a) => ({
           id: a.id,
@@ -62,7 +99,9 @@ export function buildSendBody(options: string | MessageSendOptions): SendBodyRes
           ...(a.description != null && { description: a.description }),
           ...(a.flags != null && { flags: a.flags }),
         }))
-      : body.files.map((f, i) => ({ id: i, filename: f.filename ?? f.name }));
+      : normalizedFiles.metaFromBuilders.length
+        ? normalizedFiles.metaFromBuilders
+        : normalizedFiles.files.map((f, i) => ({ id: i, filename: f.filename ?? f.name }));
   }
   if (body.allowedMentions) result.allowed_mentions = toAPIAllowedMentions(body.allowedMentions);
   if (body.stickerIds?.length) result.sticker_ids = body.stickerIds;
@@ -192,9 +231,13 @@ export async function prepareMessagePostPayload(
     applyReplyPingSuppression(body);
   }
 
+  const resolvedFiles = normalizeSendFiles(files);
+
   return {
     body,
     files:
-      !uploadedAttachments?.length && files?.length ? await resolveMessageFiles(files) : undefined,
+      !uploadedAttachments?.length && resolvedFiles?.files.length
+        ? await resolveMessageFiles(resolvedFiles.files)
+        : undefined,
   };
 }

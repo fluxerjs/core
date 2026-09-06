@@ -1,8 +1,11 @@
+import type { TextBasedChannel } from '../Domain/Channel/index.js';
 import type { GuildEmoji } from '../Domain/Guild/GuildEmoji.js';
 import type { GuildMember } from '../Domain/Guild/GuildMember.js';
 import type { GuildSticker } from '../Domain/Guild/GuildSticker.js';
 import type { Role } from '../Domain/Guild/Role.js';
+import type { Message } from '../Domain/Message/index.js';
 import type { MessageReaction } from '../Domain/Message/MessageReaction.js';
+import type { PartialMessage } from '../Domain/Message/PartialMessage.js';
 import type { User } from '../Domain/User.js';
 
 /** CamelCase emoji on reaction events. */
@@ -18,6 +21,12 @@ export interface ReactionEmojiPayload {
 export interface MessageReactionPayload {
   reaction: MessageReaction;
   user: User;
+  /** Cached message, or null if it was not in the message cache. Use `reaction.fetchMessage()` otherwise. */
+  message: Message | null;
+  /** Cached text-capable channel, or null if uncached / not text-based. */
+  channel: TextBasedChannel | null;
+  /** Cached reacting member when the gateway included one, otherwise null. */
+  member: GuildMember | null;
   messageId: string;
   channelId: string;
   emoji: ReactionEmojiPayload;
@@ -44,6 +53,13 @@ export interface MessageDeleteBulkPayload {
   channelId: string;
   /** Guild the channel belongs to, or `null` for DMs. */
   guildId: string | null;
+  /** Cached text-capable channel, or null if uncached / not text-based. */
+  channel: TextBasedChannel | null;
+  /**
+   * One {@link PartialMessage} per id. Cached fields (content, author, createdAt) are
+   * filled when the message was in cache; otherwise those fields are null.
+   */
+  messages: PartialMessage[];
 }
 
 /**
@@ -101,6 +117,8 @@ export interface MessageReactionRemoveAllPayload {
   messageId: string;
   channelId: string;
   guildId: string | null;
+  message: Message | null;
+  channel: TextBasedChannel | null;
 }
 
 /** Payload for {@link Events.MessageReactionRemoveEmoji}. */
@@ -109,6 +127,8 @@ export interface MessageReactionRemoveEmojiPayload {
   channelId: string;
   guildId: string | null;
   emoji: ReactionEmojiPayload;
+  message: Message | null;
+  channel: TextBasedChannel | null;
 }
 
 /** Single entry in {@link MessageReactionAddManyPayload}. */
@@ -123,6 +143,8 @@ export interface MessageReactionAddManyPayload {
   channelId: string;
   messageId: string;
   guildId: string | null;
+  message: Message | null;
+  channel: TextBasedChannel | null;
   reactions: MessageReactionAddManyEntry[];
 }
 
@@ -250,20 +272,6 @@ export interface GuildMemberSearchPayload {
   hasMore?: boolean;
   /** Search index still building. */
   indexing?: boolean;
-}
-
-/** Pack summary (camelCase view of {@link APIPackSummary}). */
-export interface PackSummaryPayload {
-  id: string;
-  name: string;
-  description: string | null;
-  type: string;
-  creatorId: string;
-  createdAt: string;
-  updatedAt: string;
-  installedAt?: string;
-  /** Original wire object when useful for debugging. */
-  raw?: unknown;
 }
 
 /** Partial guild from GET /users/@me/guilds. */

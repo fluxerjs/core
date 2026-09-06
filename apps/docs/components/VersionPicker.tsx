@@ -54,7 +54,9 @@ export function VersionPicker({ className }: VersionPickerProps): React.ReactEle
               <DropdownMenuItem
                 onSelect={() => {
                   setPreferred(o.value);
-                  router.push(hrefForVersion(o.value, section, kind, name, guideSlug));
+                  router.push(
+                    hrefForVersion(o.value, section, kind, name, guideSlug, pathname ?? undefined),
+                  );
                 }}
                 className={cn(
                   'cursor-pointer justify-between gap-4 font-mono text-xs',

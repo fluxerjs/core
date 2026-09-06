@@ -2,10 +2,24 @@
 title: Errors
 description: Catch FluxerError, read ErrorCodes, and turn API failures into useful replies.
 category: getting-started
-order: 2
+order: 3
 ---
 
 User-facing validation and not-found cases in `@fluxerjs/core` throw `FluxerError` with an `ErrorCodes` value. Prefer checking the code over scraping the message string.
+
+## Cheat sheet
+
+| Situation | `ErrorCodes` |
+| --------- | ------------ |
+| Guild / channel / message / member / role missing | `GuildNotFound`, `ChannelNotFound`, `MessageNotFound`, `MemberNotFound`, `RoleNotFound` |
+| Bad fetch / bulk limit | `InvalidFetchLimit` |
+| Empty or invalid message options | `EmptyMessage`, `InvalidMessageOptions` |
+| Wrong channel type for send/delete | `InvalidChannelType` |
+| Collector missing `time` / `max` | `CollectorOptionsRequired` |
+| Collector ended on timer / max | `CollectorIdle`, `CollectorMax` |
+| Bad token / not ready | `InvalidToken`, `ClientNotReady`, `NotLoggedIn` |
+
+Exact members live on `ErrorCodes`. Builders (`EmbedBuilder`, etc.) may still throw plain `RangeError` for length limits. That is intentional.
 
 ## Catch and inspect
 
@@ -50,6 +64,8 @@ The policy runs once per request. Return a non-negative integer to set the retry
 
 `routeKey` replaces Snowflake IDs and webhook tokens, drops queries and fragments, and reduces absolute URLs to their origin plus `/:external`. It never includes request headers or bodies. Custom relative routes may still contain application-specific path segments, so use `routeKey` for matching rather than logging.
 
+On 429, the wait comes from JSON `retry_after` when present. If that field is missing (or the body is not JSON), the client uses the `Retry-After` header. Retryable 5xx responses also honor `Retry-After` when the header is set.
+
 Automatic retries cannot resolve an uncertain mutation. A timeout may happen after Fluxer accepted the request. Store the unknown result and reconcile it before retrying.
 
 ## Authentication on absolute URLs
@@ -57,18 +73,6 @@ Automatic retries cannot resolve an uncertain mutation. A timeout may happen aft
 Relative routes and absolute URLs on the configured API origin include the bot token by default. Other absolute URLs do not.
 
 Pass `auth: true` only when the other origin is trusted and should receive the same token.
-
-## Common codes
-
-Exact members live on `ErrorCodes`. Ones you will hit early:
-
-| Situation | Typical code |
-| --------- | ------------ |
-| Channel / message / member missing | `*NotFound` family |
-| Bad fetch limit | `INVALID_FETCH_LIMIT` |
-| Validation on a public method | named code for that check |
-
-Builders (`EmbedBuilder`, etc.) may still throw plain `RangeError` for length limits. That is intentional.
 
 ## Pattern for commands
 
@@ -87,7 +91,7 @@ try {
 }
 ```
 
-See [moderation-bot](/examples/moderation-bot/) for this pattern in a full bot.
+See [moderation-bot](/examples/moderation-bot/), [first-steps-bot](/examples/first-steps-bot/), and [ping-bot](/examples/ping-bot/) for this pattern.
 
 <Tip>
 Need help debugging an error? [Join the Fluxer community](https://fluxer.gg/PobipZtv) and ask there.

@@ -1,8 +1,8 @@
 ---
 title: Wait for All Guilds
 description: Delay Ready until every guild from the handshake is in cache.
-category: events
-order: 15
+category: additional
+order: 46
 ---
 
 By default Ready fires when the gateway READY payload arrives. Some guilds may still be unavailable stubs that show up later as GUILD_CREATE. If your Ready handler needs a complete `client.guilds` map, turn on `waitForGuilds`.

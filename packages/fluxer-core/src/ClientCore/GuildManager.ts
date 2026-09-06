@@ -19,8 +19,8 @@ export class GuildManager extends LimitedCollection<string, Guild> {
   }
 
   /**
-   * Remove a guild and cascade its channels / message caches.
-   * FIFO eviction uses `onEvict` instead (via `super.delete` in LimitedCollection).
+   * Remove a guild from cache and cascade its channels / message caches.
+   * Does not leave the guild. Use {@link ClientUser.leaveGuild} for that.
    */
   override delete(key: string): boolean {
     const guild = this.get(key);

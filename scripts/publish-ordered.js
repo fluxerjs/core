@@ -31,6 +31,8 @@ const PACKAGES = [
   { name: '@fluxerjs/builders', dir: 'packages/builders' },
   { name: '@fluxerjs/core', dir: 'packages/fluxer-core' },
   { name: '@fluxerjs/voice', dir: 'packages/voice' },
+  { name: '@fluxerjs/sharding', dir: 'packages/sharding' },
+  { name: '@fluxerjs/sharding-redis', dir: 'packages/sharding-redis' },
 ];
 
 const args = process.argv.slice(2);

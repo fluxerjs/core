@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AttachmentBuilder } from './AttachmentBuilder.js';
+import { AttachmentBuilder, AttachmentMeta } from './AttachmentBuilder.js';
 import { EmbedBuilder } from './EmbedBuilder.js';
 import { MessagePayload } from './MessagePayload.js';
 
@@ -52,8 +52,14 @@ describe('MessagePayload', () => {
     expect(p.data.embeds![1].title).toBe('2');
   });
 
-  it('setAttachments accepts AttachmentBuilder', () => {
-    const att = new AttachmentBuilder(0, 'file.png');
+  it('setAttachments accepts AttachmentMeta', () => {
+    const att = new AttachmentMeta(0, 'file.png');
+    const p = new MessagePayload().setAttachments([att]);
+    expect(p.data.attachments).toEqual([{ id: 0, filename: 'file.png' }]);
+  });
+
+  it('setAttachments accepts AttachmentBuilder via toJSON(id)', () => {
+    const att = new AttachmentBuilder(Buffer.from('x'), { name: 'file.png' });
     const p = new MessagePayload().setAttachments([att]);
     expect(p.data.attachments).toEqual([{ id: 0, filename: 'file.png' }]);
   });

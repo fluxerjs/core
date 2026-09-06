@@ -8,7 +8,7 @@ import {
 } from '@fluxerjs/util';
 
 import type { Client } from '../../ClientCore/Client.js';
-import { toRoleRequestBody } from '../../ClientCore/SdkOptions/Guild.js';
+import { toRoleEditBody } from '../../ClientCore/SdkOptions/Guild.js';
 import { Base } from '../Base.js';
 import type { RoleEditOptions } from './RoleOptions.js';
 
@@ -63,6 +63,15 @@ export class Role extends Base {
     return new PermissionsBitField(
       (bits & PermissionFlags.Administrator) !== 0n ? ALL_PERMISSIONS_BIGINT : bits,
     );
+  }
+
+  /**
+   * Alias of {@link permissions}.has for discord.js-style checks.
+   * @example
+   * if (role.has(PermissionFlags.BanMembers)) { ... }
+   */
+  has(permission: Parameters<PermissionsBitField['has']>[0]): boolean {
+    return this.permissions.has(permission);
   }
 
   /**
@@ -123,7 +132,7 @@ export class Role extends Base {
    * @returns This role instance (updated in-place)
    */
   async edit(options: RoleEditOptions): Promise<Role> {
-    const body = toRoleRequestBody(options);
+    const body = toRoleEditBody(options);
     const data = await this.client.rest.patch<APIRole>(Routes.guildRole(this.guildId, this.id), {
       body: Object.keys(body).length ? body : undefined,
       auth: true,

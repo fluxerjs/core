@@ -16,7 +16,7 @@ export interface FetchMessagesOptions {
   around?: string;
 }
 
-/** Options for {@link Client.bulkFetchMessages}. */
+/** Options for {@link Client.bulkFetchMessages} (user-account only). */
 export interface BulkFetchMessagesOptions {
   /** When true (default), hydrate {@link Message}s and update the cache. */
   hydrate?: boolean;
@@ -69,10 +69,13 @@ export function validateBulkMessageFetchRequests(
 /**
  * Per-channel message cache + fetch. Access via `channel.messages`.
  *
- * `fetch` always writes through the client message cache (when enabled) and
- * constructs {@link Message} from the cached payload so `get` stays coherent.
+ * `get` returns the same {@link Message} instance for a cached id (identity).
+ * `fetch` always writes through the client message cache (when enabled).
  */
 export class MessageManager {
+  /** Structure cache keyed by message id (identity for {@link get}). */
+  private readonly _structures = new Collection<string, Message>();
+
   constructor(
     private readonly client: Client,
     private readonly channelId: string,
@@ -81,7 +84,20 @@ export class MessageManager {
   /** Retrieve a cached message by ID, or `undefined` if missing / caching disabled. */
   get(messageId: string): Message | undefined {
     const data = this.client._getMessageCache(this.channelId)?.get(messageId);
-    return data ? new Message(this.client, data) : undefined;
+    if (!data) {
+      this._structures.delete(messageId);
+      return undefined;
+    }
+    const existing = this._structures.get(messageId);
+    if (existing) return existing;
+    const message = new Message(this.client, data);
+    this._structures.set(messageId, message);
+    return message;
+  }
+
+  /** Retrieve from cache, otherwise {@link fetch}. */
+  async resolve(messageId: string): Promise<Message> {
+    return this.get(messageId) ?? this.fetch(messageId);
   }
 
   /** Fetch a single message by ID. */
@@ -96,11 +112,18 @@ export class MessageManager {
       : this.fetchMany(idOrOptions);
   }
 
-  /** Cache API data and return a {@link Message} built from the cached entry when present. */
+  /** Cache API data and return a {@link Message} (reusing identity when present). */
   private wrap(data: APIMessage): Message {
     this.client._addMessageToCache(this.channelId, data);
     const cached = this.client._getMessageCache(this.channelId)?.get(data.id) ?? data;
-    return new Message(this.client, cached);
+    const existing = this._structures.get(data.id);
+    if (existing) {
+      existing._patch(cached);
+      return existing;
+    }
+    const message = new Message(this.client, cached);
+    this._structures.set(data.id, message);
+    return message;
   }
 
   /** Fetch a single message from the API. */

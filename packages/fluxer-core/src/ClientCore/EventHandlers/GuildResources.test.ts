@@ -4,11 +4,7 @@ import { Role } from '../../Domain/Guild/Role.js';
 import { Events } from '../../Helpers/Events.js';
 import { dispatchForTest, fixtureGuild, fixtureRole } from '../../TestKit/Fixtures.js';
 import { Client } from '../Client.js';
-import type {
-  GuildRoleDeletePayload,
-  GuildRoleUpdatePayload,
-  GuildStickersUpdatePayload,
-} from '../EventPayloads.js';
+import type { GuildStickersUpdatePayload } from '../EventPayloads.js';
 
 describe('guildResourceHandlers', () => {
   let client: Client;
@@ -20,7 +16,7 @@ describe('guildResourceHandlers', () => {
     client.guilds.set(guild.id, guild);
   });
 
-  it('GUILD_ROLE_UPDATE emits role + oldRole snapshot', async () => {
+  it('GUILD_ROLE_UPDATE emits (oldRole, role)', async () => {
     const existing = new Role(client, fixtureRole({ id: 'r1', name: 'Old' }), 'g1');
     guild.roles.set(existing.id, existing);
     const emit = vi.spyOn(client, 'emit');
@@ -30,14 +26,12 @@ describe('guildResourceHandlers', () => {
       role: fixtureRole({ id: 'r1', name: 'New' }),
     });
 
-    const payload = emit.mock.calls.find((c) => c[0] === Events.GuildRoleUpdate)?.[1] as
-      | GuildRoleUpdatePayload
-      | undefined;
-    expect(payload?.role.name).toBe('New');
-    expect(payload?.oldRole?.name).toBe('Old');
+    const call = emit.mock.calls.find((c) => c[0] === Events.GuildRoleUpdate);
+    expect(call?.[1]).toMatchObject({ name: 'Old' });
+    expect(call?.[2]).toMatchObject({ name: 'New' });
   });
 
-  it('GUILD_ROLE_DELETE emits delete payload with cached role', async () => {
+  it('GUILD_ROLE_DELETE emits (role, guildId, roleId)', async () => {
     const existing = new Role(client, fixtureRole({ id: 'r1', name: 'Gone' }), 'g1');
     guild.roles.set(existing.id, existing);
     const emit = vi.spyOn(client, 'emit');
@@ -45,10 +39,10 @@ describe('guildResourceHandlers', () => {
     await dispatchForTest(client, 'GUILD_ROLE_DELETE', { guild_id: 'g1', role_id: 'r1' });
 
     expect(guild.roles.get('r1')).toBeUndefined();
-    const payload = emit.mock.calls.find((c) => c[0] === Events.GuildRoleDelete)?.[1] as
-      | GuildRoleDeletePayload
-      | undefined;
-    expect(payload).toEqual({ roleId: 'r1', guildId: 'g1', role: existing });
+    const call = emit.mock.calls.find((c) => c[0] === Events.GuildRoleDelete);
+    expect(call?.[1]).toBe(existing);
+    expect(call?.[2]).toBe('g1');
+    expect(call?.[3]).toBe('r1');
   });
 
   it('GUILD_EMOJIS_UPDATE syncs cache and emits', async () => {

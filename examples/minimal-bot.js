@@ -4,7 +4,7 @@
  * Usage:
  *   FLUXER_BOT_TOKEN=your_token node examples/minimal-bot.js
  *
- * See: https://fluxerjs.blstmo.com/guides/basic-bot/
+ * See: https://fluxer.js.org/guides/basic-bot/
  */
 
 import { Client, Events } from '@fluxerjs/core';

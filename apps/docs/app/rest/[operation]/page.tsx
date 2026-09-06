@@ -84,9 +84,7 @@ export default async function RestOperationPage({
         </div>
       </div>
 
-      <h1 className="mt-6 font-display text-[clamp(1.75rem,4vw,2.5rem)] font-semibold tracking-tight">
-        {op.summary ?? op.operationId}
-      </h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{op.summary ?? op.operationId}</h1>
       {op.description ? (
         <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
           {op.description}
@@ -123,7 +121,7 @@ export default async function RestOperationPage({
                     </td>
                     <td className="px-3 py-2 font-mono text-xs text-sky-600 dark:text-sky-400">
                       {p.schema?.type ??
-                        (p.schema?.$ref ? String(p.schema.$ref).split('/').pop() : '—')}
+                        (p.schema?.$ref ? String(p.schema.$ref).split('/').pop() : '-')}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">{p.description ?? ''}</td>
                   </tr>

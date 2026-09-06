@@ -8,7 +8,7 @@
  *
  * Configure ROLE_* env vars (or edit ROLE_EMOJI_MAP) with your guild's role IDs.
  *
- * @see https://fluxerjs.blstmo.com/guides/reactions/
+ * @see https://fluxer.js.org/guides/reactions/
  */
 
 import { Client, EmbedBuilder, Events, parsePrefixCommand } from '@fluxerjs/core';

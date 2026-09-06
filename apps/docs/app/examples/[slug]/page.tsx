@@ -37,13 +37,11 @@ export default async function ExamplePage({
   return (
     <PageShell sidebarTitle="Examples" sidebarItems={getExamplesSidebarItems(slug)} wide>
       <div className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
           <FileCode2 className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0">
-          <h1 className="font-display text-[clamp(1.6rem,3.5vw,2.25rem)] font-semibold tracking-tight">
-            {ex.title}
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{ex.title}</h1>
           <p className="mt-1 font-mono text-xs text-muted-foreground">
             {ex.file} · {ex.lines} lines
           </p>

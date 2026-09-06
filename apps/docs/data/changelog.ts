@@ -14,11 +14,247 @@ export interface ChangelogEntry {
   date: string;
   /** Short plain-language overview shown under the version header. */
   summary?: string;
+  /** GitHub pull request number, shown with the GitHub mark. */
+  pr?: number;
+  /** Explicit GitHub URL (compare, release, or PR). Overrides the default compare link. */
+  github?: string;
   sections: ChangelogSection[];
 }
 
 /** Hand-authored release notes for the docs site. */
 export const changelogEntries: ChangelogEntry[] = [
+  {
+    version: '3.0.0',
+    date: '2026-08-23',
+    github: 'https://github.com/fluxerjs/core/compare/v2.2.0...main',
+    summary:
+      'DX overhaul: domain wrappers with native methods (fetch then channel.send / channel.delete), PartialMessage / PartialGuildMember for uncached deletes and removes, camelCase nested message fields, collector bounds, AttachmentBuilder, process sharding packages, and @fluxerjs/core/internal for wire serializers. Also removes expression packs, CompactAttachments, pack invite types, and the old overwrite helpers. Upgrade steps: /guides/upgrading-to-3/.',
+    sections: [
+      {
+        title: 'Breaking Changes',
+        items: [
+          {
+            summary: 'MessageDelete is PartialMessage, not Message',
+            detail:
+              'The payload has id, channelId, guildId, channel, content, authorId, and author / createdAt when the message was cached. It has fetch() and resolveChannel(). It does not have edit, reply, or react. Use message.partial or Message.resolve(msg) when a handler accepts both Message and PartialMessage.',
+          },
+          {
+            summary: 'Uncached MessageUpdate is PartialMessage',
+            detail:
+              'Cached edits still emit Message. Uncached edits emit PartialMessage. Check message.partial before reading content, author, or calling reply.',
+          },
+          {
+            summary: 'GuildMemberRemove is GuildMember | PartialGuildMember',
+            detail:
+              'If the member was not in cache, you get a PartialGuildMember class (partial: true) with id, guildId, user, and guild. Check member.partial or fetch before using nick, roles, or kick.',
+          },
+          {
+            summary: 'MessageDeleteBulk includes messages: PartialMessage[]',
+            detail:
+              'The bulk payload still has the channel and ids. messages is the per-id list so you can fetch or inspect cached content without a second lookup.',
+          },
+          {
+            summary: 'Channel.send and Channel.delete are on Channel',
+            detail:
+              'client.channels.fetch(id) and message.resolveChannel() return Channel with those methods. send is on text-capable channels (guild text, guild voice, DMs). Category and link channels do not have send. You do not need a GuildChannel cast or a raw REST Routes.channel call for the usual case.',
+          },
+          {
+            summary: 'message.channel is a text-capable channel or null',
+            detail:
+              'When the channel is in cache it is already a text-based structure (including voice), so reply and send type-check. When it is missing, it is null; call message.resolveChannel() then send or delete.',
+          },
+          {
+            summary: 'Nested attachment, embed, and invite fields are camelCase',
+            detail:
+              'Attachments are MessageAttachment (proxyUrl, contentType). Embeds are MessageEmbed (iconUrl, proxyUrl, htmlWidth). messageReference, invite snapshots, and call.endedAt follow the same rule. Sending still uses EmbedBuilder. If you compared snake_case fields on received messages, update those reads.',
+          },
+          {
+            summary: 'isTextBased() and isGuild() use ChannelType',
+            detail:
+              "They do not duck-type `'send' in this` or `'guildId' in this`. Custom subclasses that faked methods without setting type will fail the guard.",
+          },
+          {
+            summary: 'Sweep filters receive Message, not raw APIMessage',
+            detail:
+              'client.cache.sweepMessages((msg) => …) sees createdAt as a Date and the usual Message getters. Internal storage is still the wire object.',
+          },
+          {
+            summary: 'Guild.createChannel options are camelCase',
+            detail:
+              'Use parentId and rateLimitPerUser (not parent_id / rate_limit_per_user). Same camelCase rule as guild.edit and channel.edit in 2.x.',
+          },
+          {
+            summary: 'login() returns this',
+            detail:
+              'Was Promise<string> (the token) in older lines. Chain login or ignore the resolved value.',
+          },
+          {
+            summary: 'ClientOptions.intents is deprecated and ignored',
+            detail:
+              'Fluxer does not use Discord-style gateway intents. Omit intents; use ignoredEvents to suppress specific dispatches.',
+          },
+          {
+            summary: 'Collectors require time and/or max',
+            detail:
+              'CollectorOptionsRequired. By default awaitMessages / awaitReactions reject on idle (CollectorIdle) and max (CollectorMax). Pass errors: ["time"] when max should resolve successfully.',
+          },
+          {
+            summary: 'message.reactions is MessageReactionManager',
+            detail:
+              'Use .cache for the reaction collection. Not a bare array or map of wire reaction objects.',
+          },
+          {
+            summary: 'message.flags is MessageFlagsBitField',
+            detail: 'Not a raw number. Same bitfield pattern as permissions.',
+          },
+          {
+            summary: 'AttachmentBuilder(file, { name }) requires a name',
+            detail:
+              'Pass a Buffer or URL plus options.name, then files: [builder] on send / reply / edit.',
+          },
+          {
+            summary: 'Invite snapshots replace live guild/channel fields',
+            detail:
+              'Metadata is guildSnapshot / channelSnapshot. Call resolveGuild() or resolveChannel() for live structures.',
+          },
+          {
+            summary: 'embeds: [] on edit clears embeds',
+            detail: 'Omit the embeds field to leave existing embeds unchanged.',
+          },
+          {
+            summary: 'Wire serializers moved to @fluxerjs/core/internal',
+            detail:
+              'Prefer structure methods on domain objects. Import @fluxerjs/core/internal only when calling REST with raw camelCase→wire helpers. Pack* serializers are gone with the pack API.',
+          },
+          {
+            summary: 'client.packs and Pack* types are removed',
+            detail:
+              'PackManager, PackCreateOptions, PackInvitePayload, and the rest of the pack exports are gone. Use guild emoji/sticker CRUD (createEmoji, cloneEmoji, createSticker). InviteType.EmojiPack and InviteType.StickerPack are also gone; invites are guild or group-DM only.',
+          },
+          {
+            summary: 'MessageFlags.CompactAttachments and MT_* guild features are removed',
+            detail:
+              'CompactAttachments is no longer a MessageFlags member. GuildFeature no longer includes MT_MESSAGE_SCHEDULING or MT_EXPRESSION_PACKS. Align flag checks with the current OpenAPI snapshot.',
+          },
+          {
+            summary: 'channel.permissionOverwrites is a PermissionOverwriteManager',
+            detail:
+              'It is no longer APIChannelOverwrite[]. channel.editPermission and channel.deletePermission are gone. Use channel.permissionOverwrites.edit(id, { type, allow, deny }) and .delete(id). Iterate .cache or the manager itself.',
+          },
+          {
+            summary: 'message.stickers are MessageSticker, not APIMessageSticker',
+            detail:
+              'Each sticker is a domain object with name, tags, animated, and url. messageSnapshots use the same camelCase wrappers as the parent message.',
+          },
+          {
+            summary: 'GuildRoleUpdate and GuildRoleDelete are positional, not one payload object',
+            detail:
+              '2.2 emitted ({ oldRole, role }) and ({ role, guildId, roleId }). 3.0 emits (oldRole, role) and (role, guildId, roleId). oldRole / role are null when the role was uncached. GuildRoleCreate is still a single Role.',
+          },
+        ],
+      },
+      {
+        title: 'Added',
+        items: [
+          {
+            summary: '@fluxerjs/sharding: ShardingManager, one process per shard',
+            detail:
+              'IPC between parent and children, ShardClientUtil inside the bot file, and a parent identify throttler. See examples/sharded-bot.js and /guides/sharding/.',
+          },
+          {
+            summary: '@fluxerjs/sharding-redis: Redis coordinator and session store',
+            detail:
+              'Optional Redis-backed shard leases and gateway session persistence for multi-host deployments. Pair with @fluxerjs/ws session store APIs.',
+          },
+          {
+            summary: 'client.ws.ping and in-process sharding helpers on @fluxerjs/ws',
+            detail:
+              'Heartbeat ACK RTT (-1 before the first ACK). Sharded clients expose an average and client.ws.getShard(id)?.ping. Also SimpleShardingStrategy, WorkerShardingStrategy, IdentifyThrottler, and SessionStore.',
+          },
+          {
+            summary: 'client.uptime',
+            detail: 'Milliseconds since Ready, or null before login completes.',
+          },
+          {
+            summary: 'PartialMessage and PartialGuildMember',
+            detail:
+              'Public types with partial: true, fetch() (messages), and the ids the gateway actually sent. Message.resolve() turns Message | PartialMessage into a full Message when you need one.',
+          },
+          {
+            summary: 'channel.awaitMessages and message.awaitReactions',
+            detail:
+              'Promise wrappers over the existing collectors. Require time and/or max. By default, idle and max reject with CollectorIdle / CollectorMax; pass errors: ["time"] when max should resolve successfully.',
+          },
+          {
+            summary: 'GuildMember.kick, ban, and timeout',
+            detail:
+              'Methods on the member you already have from message.member or guild.members.fetch. message.member is a getter onto the guild member cache.',
+          },
+          {
+            summary: 'users.resolve and Invite.resolveGuild / resolveChannel',
+            detail:
+              'Resolve a user from cache by id or a User-like value. Invite metadata is guildSnapshot / channelSnapshot; call resolveGuild() or resolveChannel() for live structures.',
+          },
+          {
+            summary: 'role.has(permission)',
+            detail: 'Alias of role.permissions.has for shorter permission checks.',
+          },
+          'Reaction.fetchMessage() is cache-first, then REST',
+          'isGuild / isText / isCategory / isVoice / isLink on Channel',
+          'PermissionOverwrite / PermissionOverwriteManager and GuildRoleManager (guild.roles.everyone)',
+        ],
+      },
+      {
+        title: 'Changed',
+        items: [
+          {
+            summary: 'Prefer channel.send and channel.delete',
+            detail:
+              'Guides and examples use const channel = await client.channels.fetch(id) then channel.send / channel.delete. client.channels.send, message.sendTo, and REST Routes.channel are still there if you only have an id. Manager .delete() is still cache-only (it does not hit HTTP).',
+          },
+          {
+            summary: 'Collectors still unwrap reaction events',
+            detail:
+              'Gateway messageReactionAdd is one payload object. Collectors still call your filter and collect handlers as (reaction, user). Leave collector callbacks alone unless you dropped collectors.',
+          },
+          {
+            summary: 'Role event shapes stay structure-first',
+            detail:
+              'GuildRoleCreate still emits Role. GuildRoleUpdate and GuildRoleDelete switched from a single payload object in 2.2 to positional arguments in 3.0 (see Breaking Changes).',
+          },
+          'examples/sharded-bot.js added. Other examples use fetch, member.kick, AttachmentBuilder, and resolveChannel.',
+        ],
+      },
+      {
+        title: 'Fixed',
+        items: [
+          'Uncached deletes no longer type-check as if author and createdAt always exist.',
+          'Channel methods exist on the same type client.channels.fetch returns.',
+          'Guild voice channels are text-capable: isTextBased(), send, and message.channel.',
+          'Guild channel cache indexing uses isGuild() instead of a guildId own-property check.',
+          'OpenAPI nick / communication_disabled_until optionality already matched Fluxer; no extra type churn from [fluxerapp/fluxer#1522](https://github.com/fluxerapp/fluxer/pull/1522)',
+          {
+            summary: 'REST retries honor Retry-After as a fallback',
+            detail:
+              'On 429, the client waits JSON retry_after when present, otherwise the Retry-After header (including non-JSON bodies). Retryable 5xx uses Retry-After when set, otherwise the usual backoff.',
+          },
+        ],
+      },
+      {
+        title: 'Docs',
+        items: [
+          'Dedicated Upgrading to 3.0 guide with the DX breaking-change index (/guides/upgrading-to-3/). Migrating to 2.0 stays at /guides/migration/.',
+          'Voice channels are documented as text-capable. Bots should use preloadMessages instead of bulkFetchMessages.',
+          'Expression packs are no longer advertised; guild emoji/sticker CRUD remains.',
+          'Sharding guide covering ShardingManager, worker strategy, and Redis coordination (marked advanced).',
+          'Getting Started path: install → basic bot → prefix → errors → caching. Upgrading guides sit in their own sidebar category.',
+          'Channels, sending, events, collectors, attachments (AttachmentBuilder), and moderation guides updated for 3.0 types.',
+          'Where do I...? task index, content warnings, server discovery (apply, not join), users/FriendlyBot, forwards, vanity URLs, emoji clone/bulk, and history-bot.',
+          'Guides index groups now have blurbs and a task jump list. Search indexes optional guide searchTerms.',
+        ],
+      },
+    ],
+  },
   {
     version: '2.2.0',
     date: '2026-08-01',
@@ -31,7 +267,7 @@ export const changelogEntries: ChangelogEntry[] = [
           {
             summary: 'Tenor GIF helpers replaced with Klipy',
             detail:
-              'resolveTenorToImageUrl and related Tenor exports are removed. Use resolveKlipyToImageUrl (and KlipyMediaResult) from @fluxerjs/core or @fluxerjs/util. Fluxer’s unfurler expects Klipy page URLs in message content; see the GIFs guide.',
+              'resolveTenorToImageUrl and related Tenor exports are removed. Use resolveKlipyToImageUrl (and KlipyMediaResult) from @fluxerjs/core or @fluxerjs/util. Fluxer’s unfurler expects Klipy page URLs in message content; see /guides/gifs/.',
           },
           {
             summary: 'Disabling the message cache now uses messages: false, not messages: 0',
@@ -151,7 +387,6 @@ export const changelogEntries: ChangelogEntry[] = [
           'Replace deep structure imports with named imports from the root, e.g. import { Guild, MessageReaction } from "@fluxerjs/core"',
           'If you matched reactions on emoji.name === "name:id", switch to emoji.id or emojiIdentifier',
           'If you passed ws intents: N, change it to intents: 0 or drop it (Fluxer ignores intents)',
-          'Re-run your typecheck against @fluxerjs/types@2.2.0 after upgrading',
         ],
       },
     ],
@@ -252,7 +487,7 @@ export const changelogEntries: ChangelogEntry[] = [
           'Default bounded caches (DEFAULT_CACHE_LIMITS); reply defaults; GUILD_UPDATE preserves caches',
           'Reaction events emit full ClientEvents arity; Collection first/last/random allocation fixes',
           'Interactions / slash commands removed (not in OpenAPI)',
-          'See the [Migrating to 2.0](/guides/migration/) guide',
+          'See the [Migrating to 2.0](/guides/migration/#migrating-to-20) guide',
         ],
       },
     ],

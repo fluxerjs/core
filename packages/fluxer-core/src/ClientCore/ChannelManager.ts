@@ -1,6 +1,6 @@
 import { LimitedCollection } from '@fluxerjs/collection';
 import { type APIChannel, type APIMessage, Routes } from '@fluxerjs/types';
-import { Channel, type GuildChannel } from '../Domain/Channel/index.js';
+import { Channel } from '../Domain/Channel/index.js';
 import { cacheChannel, putChannel } from '../Domain/Guild/Cache.js';
 import { Message } from '../Domain/Message/index.js';
 import { rethrowMapped } from '../Helpers/HttpErrors.js';
@@ -18,7 +18,7 @@ import { MessageManager } from './MessageManager.js';
  * Extends {@link LimitedCollection} (`.get()`, `.set()`, `.filter()`, …).
  * FIFO-evicts (and keeps guild indexes / message caches aligned) at `cache.channels`.
  */
-export class ChannelManager extends LimitedCollection<string, Channel | GuildChannel> {
+export class ChannelManager extends LimitedCollection<string, Channel> {
   constructor(private readonly client: Client) {
     super({
       maxSize: client.cache.limits.channels,
@@ -26,6 +26,10 @@ export class ChannelManager extends LimitedCollection<string, Channel | GuildCha
     });
   }
 
+  /**
+   * Remove a channel from cache. Does not delete it on the API.
+   * Use {@link Channel.delete} after {@link fetch} to delete the channel.
+   */
   override delete(key: string): boolean {
     const channel = this.get(key);
     const deleted = super.delete(key);
@@ -41,8 +45,13 @@ export class ChannelManager extends LimitedCollection<string, Channel | GuildCha
   }
 
   /**
-   * Fetch a channel by ID.
-   * Returns the cached channel unless `force` is set, in which case REST metadata is applied.
+   * Fetch a channel by ID. The returned {@link Channel} has {@link Channel.delete}
+   * and {@link Channel.send} (send throws if the type is not text-based).
+   * Returns the cached channel unless `force` is set.
+   * @example
+   * const channel = await client.channels.fetch(channelId);
+   * await channel.delete();
+   * await channel.send('hi');
    * @throws {@link FluxerError} with CHANNEL_NOT_FOUND if missing
    */
   async fetch(channelId: string, options?: { force?: boolean }): Promise<Channel> {
@@ -89,6 +98,7 @@ export class ChannelManager extends LimitedCollection<string, Channel | GuildCha
 
   /**
    * Send to a channel by ID without resolving it first.
+   * Prefer {@link Channel.send} after {@link fetch} when you want the channel object.
    * @example
    * await client.channels.send(logChannelId, 'User joined!');
    */

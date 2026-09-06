@@ -1,0 +1,66 @@
+{
+  "name": "@fluxerjs/sharding",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "3.0.0",
+  "description": "Process-level sharding manager for Fluxer bots",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fluxerjs/core.git",
+    "directory": "packages/sharding"
+  },
+  "bugs": "https://github.com/fluxerjs/core/issues",
+  "homepage": "https://fluxer.js.org",
+  "keywords": [
+    "fluxer",
+    "sharding",
+    "gateway",
+    "sdk"
+  ],
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
+  },
+  "dependencies": {
+    "@fluxerjs/util": "workspace:*",
+    "@fluxerjs/ws": "workspace:*"
+  },
+  "peerDependencies": {
+    "@fluxerjs/core": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@fluxerjs/core": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@fluxerjs/core": "workspace:*",
+    "@types/node": "^20.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

@@ -2,7 +2,7 @@
 title: Caching
 description: Limits, identity-preserving snapshots, sweeps, and how guild/channel caches stay aligned.
 category: getting-started
-order: 3
+order: 4
 ---
 
 The client keeps structures in memory so you do not REST-fetch everything on every event. Managers are the day-to-day API; `client.cache` exposes limits, stats, and sweeps.
@@ -61,10 +61,10 @@ client.cache.limits; // resolved numbers (`Infinity` when unbounded)
 
 ## Get / fetch / resolve / force
 
-- **get** — cache only; `undefined` if missing
-- **fetch** — REST, then update cache
-- **resolve** — get, else fetch (when the manager supports it)
-- **force** — `guilds.fetch(id, { force: true })` re-fetches and `_patch`es metadata in place (nested caches kept)
+- **get**: cache only; `undefined` if missing
+- **fetch**: REST, then update cache
+- **resolve**: get, else fetch (when the manager supports it)
+- **force**: `guilds.fetch(id, { force: true })` re-fetches and `_patch`es metadata in place (nested caches kept)
 
 ```javascript
 const cached = client.guilds.get(guildId);
@@ -93,10 +93,10 @@ References stay valid across reconnects and outage recovery **unless**:
 client.cache.stats();
 // { guilds, channels, users, members, messages, messageChannels, roles, emojis, stickers }
 
-client.cache.sweepMessages((msg) => Date.now() - Date.parse(msg.timestamp) > 3_600_000);
+client.cache.sweepMessages((msg) => Date.now() - msg.createdAt.getTime() > 3_600_000);
 client.cache.sweepMembers((member, guildId) => member.id !== client.user.id);
 client.cache.sweepUsers();
-client.cache.sweepChannels((ch) => !('guildId' in ch));
+client.cache.sweepChannels((ch) => !ch.isGuild());
 client.cache.sweepGuilds((g) => !g.available);
 ```
 
@@ -106,10 +106,10 @@ See [`examples/cache-bot.js`](https://github.com/fluxerjs/core/blob/main/example
 
 ## Reconnect / unavailable
 
-- **RESUMED** — cache is kept as-is
-- **Identify READY** — guilds upsert in place (same object identity when still cached)
-- **Unavailable** (`GUILD_DELETE` with `unavailable: true`) — guild stays cached with `available === false`; the next available GUILD_CREATE recovers the **same** guild instance and syncs nested caches
-- Permanent **GUILD_DELETE** — guild removed; channels + message caches cascade away
+- **RESUMED**: cache is kept as-is
+- **Identify READY**: guilds upsert in place (same object identity when still cached)
+- **Unavailable** (`GUILD_DELETE` with `unavailable: true`): guild stays cached with `available === false`; the next available GUILD_CREATE recovers the **same** guild instance and syncs nested caches
+- Permanent **GUILD_DELETE**: guild removed; channels + message caches cascade away
 
 ## When to fetch anyway
 
@@ -121,5 +121,5 @@ Fetch when correctness beats a round trip: bans, messages older than the per-cha
 | ------- | ----- |
 | Memory keeps growing | Lower limits; periodic `sweepMessages` / `sweepMembers`; confirm `messages` is not `0` if you meant “off” (`false`) |
 | “Orphan” channels after leaving a guild | Permanent delete and FIFO eviction cascade; if you only marked unavailable, channels stay on purpose |
-| Channel missing from `guild.channels` but present on `client.channels` | Should not happen after sync — report if you see it; both indexes are written together |
+| Channel missing from `guild.channels` but present on `client.channels` | Should not happen after sync; report if you see it; both indexes are written together |
 | Held `Guild` reference looks stale after reconnect | Confirm you did not hit FIFO eviction; identity is preserved only while the guild remains cached |

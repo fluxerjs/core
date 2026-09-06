@@ -31,6 +31,29 @@ function isExampleFile(f: string): boolean {
   return f.endsWith('-bot.js') || f === 'minimal-bot.js';
 }
 
+const EXAMPLE_LEARNING_ORDER = [
+  'minimal-bot',
+  'ping-bot',
+  'first-steps-bot',
+  'info-bot',
+  'attachments-bot',
+  'collectors-bot',
+  'reaction-bot',
+  'reaction-roles-bot',
+  'history-bot',
+  'moderation-bot',
+  'webhook-bot',
+  'cache-bot',
+  'voice-bot',
+  'multi-instance-bot',
+  'sharded-bot',
+];
+
+function exampleSortKey(slug: string): number {
+  const i = EXAMPLE_LEARNING_ORDER.indexOf(slug);
+  return i === -1 ? EXAMPLE_LEARNING_ORDER.length : i;
+}
+
 function humanTitle(file: string): string {
   return file
     .replace(/\.js$/, '')
@@ -38,12 +61,15 @@ function humanTitle(file: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-/** Pull the title (first JSDoc line) and description (second line) from a source file. */
+/** Title from filename; description from the first JSDoc summary line. */
 function parseMeta(file: string, raw: string): { title: string; description: string } {
-  const titleMatch = raw.match(/^\/\*\*[\s\S]*?\*\s*(.+)$/m);
-  const descMatch = raw.match(/^\/\*\*[\s\S]*?\n\s*\*\s*(.+)\n/m);
-  const title = titleMatch?.[1]?.replace(/\*\/.*/, '').trim() || humanTitle(file);
-  const description = descMatch?.[1]?.trim() || 'Example bot script.';
+  const title = humanTitle(file);
+  const block = raw.match(/^\/\*\*([\s\S]*?)\*\//);
+  const lines = (block?.[1] ?? '')
+    .split('\n')
+    .map((line) => line.replace(/^\s*\*\s?/, '').trim())
+    .filter((line) => line.length > 0 && !/^(Usage:|See:|FLUXER_)/.test(line));
+  const description = lines[0] ?? 'Example bot script.';
   return { title, description };
 }
 
@@ -52,7 +78,6 @@ export function getExamples(): ExampleMeta[] {
   return fs
     .readdirSync(DIR)
     .filter(isExampleFile)
-    .sort()
     .map((file) => {
       const raw = fs.readFileSync(path.join(DIR, file), 'utf8');
       const { title, description } = parseMeta(file, raw);
@@ -63,7 +88,10 @@ export function getExamples(): ExampleMeta[] {
         description,
         lines: raw.split('\n').length,
       };
-    });
+    })
+    .sort(
+      (a, b) => exampleSortKey(a.slug) - exampleSortKey(b.slug) || a.slug.localeCompare(b.slug),
+    );
 }
 
 export function getExample(slug: string): Example | null {

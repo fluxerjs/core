@@ -37,4 +37,13 @@ describe('WebSocketManager.connect', () => {
     expect(errors).toHaveLength(1);
     expect(errors[0]).toBe(fatal);
   });
+
+  it('ping is -1 before a strategy connects', () => {
+    const manager = new WebSocketManager({
+      token: 'test-token',
+      rest: { get: vi.fn() },
+      WebSocket: FakeWebSocket,
+    });
+    expect(manager.ping).toBe(-1);
+  });
 });

@@ -1,0 +1,74 @@
+---
+title: From discord.js
+description: Map common discord.js habits to Fluxer.js (login, events, fetch vs get).
+category: other
+order: 0
+---
+
+Fluxer bots log in, listen for gateway events, and handle prefix commands. If you have not run a client yet, start with [Installation](/guides/installation/).
+
+## Login
+
+```javascript
+import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client();
+await client.login(process.env.FLUXER_BOT_TOKEN);
+```
+
+`ClientOptions.intents` is ignored. To suppress specific dispatches, use `ignoredEvents`:
+
+```javascript
+const client = new Client({
+  ignoredEvents: ['PRESENCE_UPDATE', 'TYPING_START'],
+});
+```
+
+## Events
+
+Gateway reaction events emit one DTO instead of positional `(reaction, user)`:
+
+```javascript
+client.on(Events.MessageReactionAdd, ({ reaction, user, emoji, userId, messageId, channelId }) => {
+  // …
+});
+```
+
+Collectors still call your filter as `(reaction, user)` so short `awaitReactions` code can look familiar.
+
+## Commands
+
+Use [prefix commands](/guides/prefix-commands/) or [webhooks](/guides/webhooks/).
+
+## fetch vs get
+
+| Method | Meaning |
+| ------ | ------- |
+| `.get(id)` | Cache only; `undefined` if missing |
+| `.fetch(id)` | REST, then update cache (throws `FluxerError` on not-found) |
+| `.resolve(id)` | get, else fetch (when the manager supports it) |
+
+```javascript
+const cached = client.guilds.get(guildId);
+const guild = cached ?? (await client.guilds.fetch(guildId));
+```
+
+Managers are collections (or collection-backed). Prefer `guild.members.get` / `fetch` / `resolve` over inventing a second cache.
+
+## Other habit shifts
+
+| Instead of | In Fluxer |
+| ---------------- | ------ |
+| Intents bitmask | Omit; use `ignoredEvents` if needed |
+| Application command / interaction handlers | [Prefix commands](/guides/prefix-commands/) or [webhooks](/guides/webhooks/) |
+| Voice channel with no `.send` | Voice is text-based: `channel.isTextBased()`, `channel.send()` |
+| `bulkFetch` style history for bots | `client.preloadMessages` + `channel.messages.fetch` |
+| `message.flags` number | `MessageFlagsBitField` on `message.flags` |
+| Reaction map on the message | `message.reactions` (`MessageReactionManager`) with `.cache` |
+| Invite `.guild` as a live guild | `invite.guildSnapshot` metadata; `invite.resolveGuild()` for cache/REST |
+| `role.permissions.has(...)` only | Also `role.has(...)` alias |
+| Uncached member remove as full member | `PartialGuildMember` class (`member.partial`) |
+| Await collectors without bounds | Require `time` and/or `max` (`CollectorOptionsRequired`) |
+| `channel.editPermission` / overwrite array | `channel.permissionOverwrites.edit` / `.cache` |
+
+Deep upgrade tables: [Upgrading to 3.0](/guides/upgrading-to-3/). Coming from Fluxer 1.x: [Migrating to 2.0](/guides/migration/). Starter path: [Installation](/guides/installation/).

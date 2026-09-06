@@ -1,0 +1,139 @@
+---
+title: "Sharding"
+description: "Advanced: scale Fluxer bots across gateway shards, worker threads, processes, and multiple machines."
+category: additional
+order: 41
+---
+
+<Warning>
+**Advanced.** Most bots never need process sharding. Finish [Getting Started](/guides/installation/) and run a single `Client` first. Come back when you hit the 2500-guilds-per-shard limit or need memory isolation.
+</Warning>
+
+## Why shard?
+
+Fluxer routes guild events with `(guild_id >> 22) % num_shards`. Bots with more than **2500 guilds on a single shard** are closed with **4011** (`ShardingRequired`). At large scale you also hit Node memory/CPU limits if every guild lives in one process.
+
+`@fluxerjs/ws` already opens multiple gateway connections in one process. For millions of users/servers you stack layers:
+
+1. **In-process shards**: multiple WebSockets, one Node process (default)
+2. **Worker strategy**: gateway parse/heartbeat on `worker_threads`
+3. **`@fluxerjs/sharding`**: one `Client` per child process (real memory isolation)
+4. **`@fluxerjs/sharding-redis`**: lease shards across hosts
+
+## Fluxer gateway notes
+
+- Prefer an explicit `shardCount` / `totalShards` (hard-coded number). `GET /gateway/bot` currently stubs `shards: 1`, so do not rely on it alone.
+- Use `shardCount: 'auto'` / `totalShards: 'auto'` only when you also supply a guild-count fetch (`fetchGuildCount` for the manager, or the client's guild list for in-process).
+- Identify rate limits are ~300 IDENTIFYs per IP per 60s, plus a global concurrent session-start cap. The manager owns that budget across children.
+- **DMs and guild-less events only reach shard 0.** Non-zero shards drop them.
+- RESUME window is **60 seconds**.
+
+## Layer 0-1: in-process sharding
+
+Hard-code the shard count when you know your scale:
+
+```javascript
+import { Client, Events } from '@fluxerjs/core';
+import { WorkerShardingStrategy } from '@fluxerjs/ws';
+
+const client = new Client({
+  shardCount: 4, // hard-coded; or 'auto' (counts /users/@me/guilds)
+  // Optional: move gateway sockets onto workers
+  buildStrategy: (manager) => new WorkerShardingStrategy(manager, { shardsPerWorker: 2 }),
+});
+
+client.on(Events.ShardReady, (id) => console.log('shard ready', id));
+client.on(Events.ShardingRequired, ({ shardId, numShards }) => {
+  console.error(`4011 on shard ${shardId}: increase beyond ${numShards}`);
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);
+```
+
+Helpers: `shardIdForGuild(guildId, numShards)`, `recommendedShardCount(guildCount)`.
+
+Worker sharding does **not** split the cache; use process sharding for that.
+
+## Layer 2: process sharding (beta)
+
+```javascript
+// index.js (manager)
+import { ShardingManager } from '@fluxerjs/sharding';
+
+const manager = new ShardingManager('./bot.js', {
+  token: process.env.FLUXER_BOT_TOKEN,
+  totalShards: 8, // hard-coded; or 'auto' with fetchGuildCount
+  shardsPerProcess: 2,
+});
+
+manager.on('shardCreate', (shard) => console.log('spawned', shard.id));
+await manager.spawn();
+```
+
+```javascript
+// bot.js (child)
+import { Client, Events } from '@fluxerjs/core';
+import { attachShardClientUtil } from '@fluxerjs/sharding';
+
+const client = new Client();
+const shard = attachShardClientUtil(client);
+
+client.on(Events.Ready, () => {
+  console.log(`ready on shards [${shard.ids.join(', ')}] / ${shard.count}`);
+  shard.notifyReady();
+});
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!guilds') {
+    const counts = await shard.fetchClientValues('guilds.size');
+    const total = counts.reduce((a, b) => a + Number(b || 0), 0);
+    await message.reply(`Guilds across shards: ${total}`);
+  }
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);
+```
+
+`broadcastEval` / `fetchClientValues` serialize the function and evaluate it in each child. Captured closure variables are **not** available; pass them via `context`.
+
+The manager owns the per-IP IDENTIFY budget; children use `ParentIdentifyThrottler` via `attachShardClientUtil`.
+
+## Layer 3: multi-machine (beta)
+
+```javascript
+import { ClusterManager } from '@fluxerjs/sharding';
+import { createClient } from 'redis';
+import {
+  RedisBroker,
+  RedisClusterCoordinator,
+  RedisSessionStore,
+} from '@fluxerjs/sharding-redis';
+
+const redis = createClient({ url: process.env.REDIS_URL });
+const subscriber = redis.duplicate();
+await redis.connect();
+await subscriber.connect();
+
+const coordinator = new RedisClusterCoordinator({
+  redis,
+  subscriber,
+  initialTotalShards: 64,
+  shardsPerHost: 16,
+});
+
+const cluster = new ClusterManager({
+  coordinator,
+  broker: new RedisBroker({ redis, subscriber }),
+});
+
+await cluster.start(async (lease, plan) => {
+  // Spawn a local ShardingManager with lease.shardIds / plan.totalShards
+  console.log(lease.hostId, lease.shardIds, plan.generation);
+});
+```
+
+Pass `RedisSessionStore` into `Client` / `WebSocketManager` so a replacement host can RESUME within 60s.
+
+## Scaling math
+
+At ~1500 guilds/shard (headroom under the 2500 cap), 1M guilds ≈ 667 shards. With 8 shards per process that is ~84 processes, spread across hosts by the coordinator. The gateway hard cap is **16384** shards.

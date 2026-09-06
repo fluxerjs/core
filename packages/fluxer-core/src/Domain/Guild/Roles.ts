@@ -1,7 +1,7 @@
 import type { APIRole } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import { parseRoleMention } from '@fluxerjs/util';
-import { toRoleRequestBody } from '../../ClientCore/SdkOptions/Guild.js';
+import { toRoleCreateBody } from '../../ClientCore/SdkOptions/Guild.js';
 import { rethrowMapped } from '../../Helpers/HttpErrors.js';
 import { ErrorCodes } from '../../LibErrors/ErrorCodes.js';
 import { cacheRole, replaceRoles } from './Cache.js';
@@ -15,7 +15,7 @@ import type { RoleCreateOptions } from './RoleOptions.js';
  * @param options - CamelCase create options
  */
 export async function createRole(guild: Guild, options: RoleCreateOptions = {}): Promise<Role> {
-  const body = toRoleRequestBody(options);
+  const body = toRoleCreateBody(options);
   const data = await guild.client.rest.post<APIRole>(Routes.guildRoles(guild.id), {
     body: Object.keys(body).length ? body : undefined,
     auth: true,

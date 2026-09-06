@@ -1,13 +1,15 @@
 ---
 title: Voice
-description: Join a voice channel and play WebM/Opus audio with @fluxerjs/voice.
-category: voice
-order: 14
+description: "Advanced: join a voice channel and play WebM/Opus audio with @fluxerjs/voice."
+category: additional
+order: 47
 ---
 
 <Warning>
-**Voice is being reworked.** Fluxer is updating how voice works, so `@fluxerjs/voice` and the demos below will change soon. Treat this guide as temporary. Do not build production bots on the current voice APIs.
+**Advanced / being reworked.** Skip this until you need **audio**. Fluxer is updating how voice works, so `@fluxerjs/voice` and the demos below will change soon. Treat this guide as temporary. Do not build production bots on the current voice APIs.
 </Warning>
+
+Guild voice channels are **text-based**. Chat in a VC with `channel.send` / `message.reply` the same as a text channel. See [Sending Messages](/guides/sending-without-reply/). `channel.fetchRtcRegions()` is user-account only.
 
 ## Install
 
@@ -87,4 +89,4 @@ connection.on?.('serverLeave', async () => {
 
 The [voice-bot](/examples/voice-bot/) example implements `!play`, `!playvideo`, and `!stop`. Same rework warning applies there. Set `VOICE_DEBUG=1` for voice event logs.
 
-Also useful: [Installation](/guides/installation/), [Basic bot](/guides/basic-bot/), [Events](/guides/events/).
+Also useful: [Sending Messages](/guides/sending-without-reply/) (VC text), [Installation](/guides/installation/), [Basic bot](/guides/basic-bot/), [Events](/guides/events/).

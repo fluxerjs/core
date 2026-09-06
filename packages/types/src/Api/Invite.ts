@@ -3,17 +3,12 @@ import type { APIChannelPartial } from './Channel.js';
 import type { APIUser } from './User.js';
 
 /**
- * Invite type discriminator (OpenAPI InviteType).
- * - `Guild` — invite to a guild
- * - `GroupDM` — invite to a group DM
- * - `EmojiPack` — invite to clone an emoji pack
- * - `StickerPack` — invite to clone a sticker pack
+ * Invite type discriminator (OpenAPI InviteTypes).
+ * Fluxer only has guild and group-DM invites.
  */
 export enum InviteType {
   Guild = 0,
   GroupDM = 1,
-  EmojiPack = 2,
-  StickerPack = 3,
 }
 
 /** Partial guild embedded on guild invites. */
@@ -32,26 +27,6 @@ export interface APIGuildPartial {
   features?: string[];
 }
 
-/** Pack summary embedded on pack invites. */
-export interface APIPackInviteInfo {
-  /** Pack ID. */
-  id: Snowflake;
-  /** Pack name. */
-  name: string;
-  /** Pack description. */
-  description?: string | null;
-  /** Pack type (emoji or sticker). */
-  type: 'emoji' | 'sticker';
-  /** Creator user ID. */
-  creator_id: Snowflake;
-  /** ISO-8601 timestamp when the pack was created. */
-  created_at: string;
-  /** ISO-8601 timestamp when the pack was last updated. */
-  updated_at: string;
-  /** Pack creator user object. */
-  creator: APIUser;
-}
-
 /** Request body for POST /channels/{id}/invites (ChannelInviteCreateRequest). */
 export interface ChannelInviteCreateRequest {
   /** Maximum number of uses (null = unlimited). */
@@ -62,16 +37,6 @@ export interface ChannelInviteCreateRequest {
   unique?: boolean | null;
   /** Whether membership is temporary (kicked on disconnect). */
   temporary?: boolean | null;
-}
-
-/** Request body for POST /packs/{id}/invites (PackInviteCreateRequest). */
-export interface PackInviteCreateRequest {
-  /** Maximum number of uses (null = unlimited). */
-  max_uses?: number | null;
-  /** Expiration in seconds (null = never). */
-  max_age?: number | null;
-  /** Whether to create a unique code (no reuse). */
-  unique?: boolean | null;
 }
 
 /** Shared fields on all invite types. */
@@ -122,15 +87,8 @@ export interface APIGroupDmInvite extends InviteShared {
   member_count?: number;
 }
 
-/** Pack invite (type 2 or 3). */
-export interface APIPackInvite extends InviteShared {
-  type: InviteType.EmojiPack | InviteType.StickerPack;
-  /** Pack being invited to clone. */
-  pack: APIPackInviteInfo;
-}
-
 /** Union of all invite types (GET /invites/{code}). */
-export type APIInviteResponse = APIGuildInvite | APIGroupDmInvite | APIPackInvite;
+export type APIInviteResponse = APIGuildInvite | APIGroupDmInvite;
 
 /** Guild invite with full metadata (list/metadata responses). */
 export type APIGuildInviteMetadata = APIGuildInvite &
@@ -142,15 +100,8 @@ export type APIGroupDmInviteMetadata = APIGroupDmInvite &
   Required<Pick<InviteShared, 'created_at' | 'uses' | 'max_uses' | 'max_age' | 'temporary'>> &
   Required<Pick<APIGroupDmInvite, 'member_count'>>;
 
-/** Pack invite with full metadata (list/metadata responses). */
-export type APIPackInviteMetadata = APIPackInvite &
-  Required<Pick<InviteShared, 'created_at' | 'uses' | 'max_uses' | 'temporary'>>;
-
 /** Union of all invite metadata types. */
-export type APIInviteMetadata =
-  | APIGuildInviteMetadata
-  | APIGroupDmInviteMetadata
-  | APIPackInviteMetadata;
+export type APIInviteMetadata = APIGuildInviteMetadata | APIGroupDmInviteMetadata;
 
 /** Any invite payload (REST, list, or gateway INVITE_CREATE). */
 export type APIInvite = APIInviteResponse;
@@ -163,9 +114,4 @@ export function isGuildInvite(invite: APIInvite): invite is APIGuildInvite {
 /** Type guard to check if invite is a group DM invite. */
 export function isGroupDmInvite(invite: APIInvite): invite is APIGroupDmInvite {
   return invite.type === InviteType.GroupDM;
-}
-
-/** Type guard to check if invite is a pack invite. */
-export function isPackInvite(invite: APIInvite): invite is APIPackInvite {
-  return invite.type === InviteType.EmojiPack || invite.type === InviteType.StickerPack;
 }

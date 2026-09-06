@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       'packages/*/src/**/*.test.ts',
       'packages/*/src/**/*.spec.ts',
+      'apps/docs/lib/**/*.test.ts',
       'benchmarks/**/*.test.ts',
     ],
     coverage: {

@@ -1,8 +1,21 @@
 import type { Snowflake } from '../Common/Snowflake.js';
 
 /**
- * Route builder helpers for REST API.
- * All routes are relative to /v1
+ * REST path helpers. Builds `/v1`-relative paths; it is not an HTTP client.
+ * Pass the result to {@link REST} (`client.rest`). Prefer high-level helpers
+ * (`channel.send()`, `guild.members.fetch()`) when they exist.
+ *
+ * @example
+ * const channel = await client.rest.get(Client.Routes.channel(channelId));
+ *
+ * @example
+ * await client.rest.post(Client.Routes.channelMessages(channelId), {
+ *   body: { content: 'hello' },
+ * });
+ *
+ * @see {@link REST}
+ * @see {@link Client}
+ * @see {@link /rest/ REST API reference}
  */
 export const Routes = {
   // Channels
@@ -119,25 +132,11 @@ export const Routes = {
   checkUsernameTag: () => '/users/check-tag' as const,
   preloadMessages: () => '/users/@me/preload-messages' as const,
   preloadMessagesAlt: () => '/users/@me/channels/messages/preload' as const,
+  searchMessages: () => '/search/messages' as const,
 
   // Streams (voice channel screen share preview)
   streamPreview: (streamKey: string) =>
     `/streams/${encodeURIComponent(streamKey)}/preview` as const,
-
-  // Expression packs
-  packs: () => '/packs' as const,
-  packsByType: (packType: string) => `/packs/${packType}` as const,
-  pack: (packId: Snowflake) => `/packs/${packId}` as const,
-  packInstall: (packId: Snowflake) => `/packs/${packId}/install` as const,
-  packInvites: (packId: Snowflake) => `/packs/${packId}/invites` as const,
-  packEmojis: (packId: Snowflake) => `/packs/emojis/${packId}` as const,
-  packEmojisBulk: (packId: Snowflake) => `/packs/emojis/${packId}/bulk` as const,
-  packEmoji: (packId: Snowflake, emojiId: Snowflake) =>
-    `/packs/emojis/${packId}/${emojiId}` as const,
-  packStickers: (packId: Snowflake) => `/packs/stickers/${packId}` as const,
-  packStickersBulk: (packId: Snowflake) => `/packs/stickers/${packId}/bulk` as const,
-  packSticker: (packId: Snowflake, stickerId: Snowflake) =>
-    `/packs/stickers/${packId}/${stickerId}` as const,
 
   // OAuth2 / Bot
   oauth2ApplicationBot: (id: Snowflake) => `/oauth2/applications/${id}/bot` as const,

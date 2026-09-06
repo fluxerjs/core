@@ -1,9 +1,12 @@
 ---
 title: Discovery
 description: Point a Client at a self-hosted instance with Client.fromDiscovery.
-category: getting-started
-order: 5
+category: additional
+order: 44
+searchTerms: fromDiscovery well-known self-hosted instance
 ---
+
+This page is **instance** discovery (where the API lives). Listing a guild in the public server directory is [Server Discovery](/guides/server-discovery/). Bots cannot join a guild via discovery.
 
 Hosted Fluxer works with a normal `new Client()`. Self-hosted instances expose `GET /.well-known/fluxer`. `Client.fromDiscovery` loads that document and wires REST (and related endpoints) for you.
 

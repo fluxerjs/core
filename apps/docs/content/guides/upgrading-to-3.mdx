@@ -1,0 +1,240 @@
+---
+title: Upgrading to 3.0
+description: Breaking changes and upgrade steps from Fluxer.js 2.x to 3.0 (DX overhaul).
+category: upgrading
+order: 0
+---
+
+For bots already on 2.x. New to Fluxer? Start with [Installation](/guides/installation/). Still on 1.x? Finish [Migrating to 2.0](/guides/migration/) first, then return here.
+
+3.0 tightens types and a few event payloads. If your bot already used structures (`message.reply`, `guild.members.fetch`, `channel.send` after fetch), runtime is close to 2.2.
+
+## Install
+
+Set every `@fluxerjs/*` dependency you already have to `^3.0.0` (a `^2.2.0` range will not install 3.0), then install:
+
+```json
+{
+  "dependencies": {
+    "@fluxerjs/core": "^3.0.0"
+  }
+}
+```
+
+```bash
+pnpm install
+```
+
+Bump builders, rest, ws, voice, and types the same way if they are direct dependencies. Add `@fluxerjs/sharding` only if you want one process per shard. Core already re-exports builders.
+
+## Quick map (2.x → 3.0)
+
+| 2.x | 3.0 |
+| --- | --- |
+| `MessageDelete` typed as `Message` | `PartialMessage` (`message.partial`, `fetch()`) |
+| Uncached `MessageUpdate` typed as `Message` | `PartialMessage` |
+| Uncached `GuildMemberRemove` typed as `GuildMember` | `PartialGuildMember` |
+| `fetch()` return type without `send` / `delete` | `Channel.send` / `Channel.delete` |
+| `message.channel` always a channel in types | `(TextChannel \| VoiceChannel \| DMChannel) \| null` |
+| `attachment.proxy_url`, `embed.icon_url` | `proxyUrl`, `iconUrl` |
+| `'send' in channel` / `'guildId' in channel` | `isTextBased()` / `isGuild()` via `ChannelType` |
+| Sweep filter sees wire `APIMessage` | Sweep filter sees `Message` (`createdAt` is a `Date`) |
+| `createChannel({ parent_id, rate_limit_per_user })` | `parentId`, `rateLimitPerUser` |
+| `client.packs` / `PackManager` | Guild emoji/sticker CRUD |
+| `channel.editPermission` / `deletePermission` | `channel.permissionOverwrites.edit` / `.delete` |
+| `Events.GuildRoleUpdate` payload object | `(oldRole, role)` positional (`oldRole` may be `null`) |
+| `Events.GuildRoleDelete` payload object | `(role, guildId, roleId)` positional (`role` may be `null`) |
+
+## Partial events
+
+**Before (2.x):** deletes type-checked as a full `Message`, so `message.author` and `message.reply()` compiled even when the message was never cached.
+
+```javascript
+client.on(Events.MessageDelete, async (message) => {
+  console.log(message.author.username, message.createdAt);
+  await message.reply('gone');
+});
+```
+
+**After:** `MessageDelete` is a `PartialMessage`. It has `id`, `channelId`, `guildId`, `channel`, `content`, `authorId`, plus `author` / `createdAt` when the message was cached. It has `fetch()` and `resolveChannel()`. It does not have `edit`, `reply`, or `react`.
+
+```javascript
+client.on(Events.MessageDelete, async (message) => {
+  if (message.partial) {
+    console.log('uncached delete', message.id, message.authorId);
+    return;
+  }
+  console.log('cached delete', message.content);
+});
+
+client.on(Events.MessageUpdate, async (_old, message) => {
+  if (message.partial) return;
+  console.log(message.content);
+});
+
+client.on(Events.GuildMemberRemove, async (member) => {
+  if (member.partial) return;
+  console.log(member.user.username);
+});
+```
+
+Cached edits are still `Message`. Uncached `GuildMemberRemove` is `PartialGuildMember` (`id`, `guildId`, `user`, `guild`). Use `message.partial` / `member.partial`, or `Message.resolve(msg)` when a handler accepts both.
+
+`MessageDeleteBulk` still has the channel and ids, and now includes `messages: PartialMessage[]`.
+
+## Channel.send and Channel.delete
+
+**Before (2.x workaround):** `client.channels.fetch` did not type `send` / `delete` on the value you held, so people dropped to REST or `client.channels.send(id, …)`.
+
+```javascript
+await client.rest.delete(Routes.channel(channelId));
+await client.channels.send(channelId, 'hello');
+```
+
+**After:** fetch (or `resolveChannel`), then call methods on the channel.
+
+```javascript
+const channel = await client.channels.fetch(channelId);
+await channel.send('hello');
+await channel.delete();
+
+const ch = await message.resolveChannel();
+if (ch) await ch.send('got it');
+```
+
+`send` exists on text-capable channels: guild text, **guild voice** (Fluxer treats voice as text-based), DMs, and notes. Category and link channels do not have `send`. `isTextBased()` / `isGuild()` look at `ChannelType`.
+
+`client.channels.delete(id)` only drops the cache entry. HTTP delete is `channel.delete()`.
+
+`message.channel` is `(TextChannel | VoiceChannel | DMChannel) | null`. If it is null, `await message.resolveChannel()` then send or delete.
+
+## Nested camelCase on received messages
+
+**Before:** some nested reads were snake_case (`proxy_url`, `icon_url`, `content_type`).
+
+**After:** attachments are `MessageAttachment` (`proxyUrl`, `contentType`). Embeds are `MessageEmbed` (`iconUrl`, `proxyUrl`, `htmlWidth`). `messageReference`, invite snapshots, and `call.endedAt` follow the same rule.
+
+Sending is unchanged (`EmbedBuilder`, `toJSON()`, wire shape).
+
+## Sweep filters and createChannel
+
+```javascript
+client.cache.sweepMessages((msg) => Date.now() - msg.createdAt.getTime() > 3_600_000);
+
+await guild.createChannel({
+  type: ChannelType.GuildText,
+  name: 'general',
+  parentId: categoryId,
+  rateLimitPerUser: 5,
+});
+```
+
+Prefix commands use `parsePrefixCommand`. Collectors require `time` and/or `max`. Gateway `messageReactionAdd` is one object; collectors unwrap it to `(reaction, user)`. By default `awaitMessages` / `awaitReactions` reject on idle (`CollectorIdle`) and max (`CollectorMax`); use `errors: ['time']` when you want max to resolve successfully.
+
+## Login, intents, attachments, roles
+
+- `login()` returns `this` (was `Promise<string>` / the token in older lines). Chain or ignore the value.
+- Omit gateway `intents`. The option is deprecated on `ClientOptions` and ignored; prefer `ignoredEvents` to suppress dispatches.
+- `AttachmentBuilder(file, { name })`: buffer or URL plus required `name`; pass in `files: [builder]`. See [File attachments](/guides/attachments/).
+- Role events: `GuildRoleCreate` → `Role`; `GuildRoleUpdate` → `(oldRole, role)` (was `{ oldRole, role }` in 2.2; `oldRole` is `null` if uncached); `GuildRoleDelete` → `(role, guildId, roleId)` (was `{ role, guildId, roleId }`; `role` is `null` if uncached).
+- `role.has(permission)` is an alias of `role.permissions.has`.
+- `message.reactions` is a `MessageReactionManager` (`.cache`), not a bare array/map of wire reactions.
+- `message.flags` is a `MessageFlagsBitField`, not a raw number.
+- `message.stickers` is `MessageSticker[]`, not `APIMessageSticker[]`.
+- Invite metadata uses `guildSnapshot` / `channelSnapshot`; call `resolveGuild()` / `resolveChannel()` for live structures.
+- Editing with `embeds: []` clears embeds; omit the field to leave embeds unchanged.
+- Wire serializers for raw REST bodies live on `@fluxerjs/core/internal`. Prefer structure methods; import `./internal` only when you need camelCase → wire helpers yourself. Pack serializers are gone.
+
+## Packs, flags, and overwrites
+
+**Expression packs are gone.** `client.packs`, `PackManager`, and every `Pack*` export (`PackCreateOptions`, `PackInvitePayload`, and similar) are removed. Create and clone emoji/stickers on the guild instead. See [Emojis & Stickers](/guides/emojis/).
+
+```javascript
+await guild.createEmoji({ name: 'ok', image: buf });
+await guild.cloneSticker(sourceStickerId);
+```
+
+`InviteType.EmojiPack` and `InviteType.StickerPack` are removed. Invites are guild or group-DM only (`invite.isGuild()` / `invite.isGroupDM()`).
+
+`MessageFlags.CompactAttachments` is removed. `GuildFeature` no longer includes `MT_MESSAGE_SCHEDULING` or `MT_EXPRESSION_PACKS`.
+
+**Permission overwrites** are a manager, not a wire array. `channel.editPermission` / `channel.deletePermission` are gone.
+
+```javascript
+import { OverwriteType, PermissionFlags } from '@fluxerjs/core';
+
+// Before (2.2)
+await channel.editPermission(roleId, { type: 0, allow: '8', deny: '0' });
+channel.permissionOverwrites.find((o) => o.id === roleId);
+
+// After
+await channel.permissionOverwrites.edit(roleId, {
+  type: OverwriteType.Role,
+  allow: PermissionFlags.Administrator,
+});
+channel.permissionOverwrites.cache.get(roleId);
+```
+
+`guild.roles` is a `GuildRoleManager` (still a `LimitedCollection`). `.get()` / `.filter()` still work. `.everyone` is the `@everyone` role.
+
+## New in 3.0
+
+Ignore these if you do not need them:
+
+- `client.uptime` (ms since Ready, or `null` before login)
+- `client.ws.ping` (heartbeat ACK RTT, `-1` until the first ACK; `client.ws.getShard(id)?.ping` when sharded)
+- `member.kick()` / `ban()` / `timeout()`, `message.member`
+- `channel.awaitMessages`, `message.awaitReactions` (require `time` and/or `max`; default reject on idle/max)
+- `users.resolve(id)`, `Invite.resolveGuild()` / `resolveChannel()`, `Reaction.fetchMessage()` (cache-first)
+- `isGuild` / `isText` / `isCategory` / `isVoice` / `isLink`
+- `guild.roles.everyone`, `channel.permissionOverwrites`
+- [`@fluxerjs/sharding`](/guides/sharding/) (`ShardingManager`) and `@fluxerjs/sharding-redis`
+
+```javascript
+import { ShardingManager } from '@fluxerjs/sharding';
+
+const manager = new ShardingManager('./bot.js', {
+  token: process.env.FLUXER_BOT_TOKEN,
+  totalShards: 2,
+});
+await manager.spawn();
+```
+
+Example: [sharded-bot](/examples/sharded-bot/). Release notes: [Changelog](/changelog/#3.0.0).
+
+## Breaking-change index
+
+| Change | Notes |
+| --- | --- |
+| No gateway intents | Omit `intents`; deprecated on `ClientOptions`. Prefer `ignoredEvents` |
+| `login()` returns `this` | Was `Promise<string>` (token) in older lines; chain or ignore the value |
+| Collectors require `time` and/or `max` | `CollectorOptionsRequired`; end rejects can be `CollectorIdle` / `CollectorMax` |
+| `GuildMemberRemove` uncached | `PartialGuildMember` **class** (`partial: true`), not a plain object |
+| `MessageDelete` / uncached `MessageUpdate` | `PartialMessage` |
+| `MessageDeleteBulk.messages` | `PartialMessage[]` |
+| `message.reactions` | `MessageReactionManager` (`.cache`), not a bare array/map of wire reactions |
+| `message.flags` | `MessageFlagsBitField`, not a raw number |
+| Invite guild/channel | `guildSnapshot` / `channelSnapshot`; use `resolveGuild()` / `resolveChannel()` |
+| `embeds: []` on edit | Clears embeds; omit the field to leave embeds unchanged |
+| `AttachmentBuilder(file, { name })` | Buffer/URL + required `name`; pass in `files: [builder]` |
+| `role.has(permission)` | Alias of `role.permissions.has` |
+| Role events | 2.2 update/delete were one payload object. Now `(oldRole, role)` and `(role, guildId, roleId)`; null if uncached |
+| Reaction gateway events | One DTO (`MessageReactionPayload`), not six positional args |
+| `Channel.send` / `Channel.delete` on fetch | `INVALID_CHANNEL_TYPE` on category and link channels |
+| `message.channel` | text, voice, or DM, or `null` |
+| Nested attachment / embed / reference / invite fields | camelCase on received data |
+| `message.stickers` | `MessageSticker[]`, not `APIMessageSticker[]` |
+| `isTextBased` / `isGuild` | `ChannelType`, not duck typing |
+| Sweep filters | `Message`, `createdAt` is a `Date` |
+| `Guild.createChannel` | `parentId`, `rateLimitPerUser` |
+| Wire serializers | `@fluxerjs/core/internal`; prefer structure methods on domain objects |
+| `client.packs` / `Pack*` types | Removed; use guild emoji/sticker CRUD |
+| `InviteType.EmojiPack` / `StickerPack` | Removed; invites are guild or group-DM |
+| `MessageFlags.CompactAttachments` | Removed |
+| `MT_MESSAGE_SCHEDULING` / `MT_EXPRESSION_PACKS` | Removed from `GuildFeature` |
+| `channel.editPermission` / `deletePermission` | `channel.permissionOverwrites.edit` / `.delete` |
+| `channel.permissionOverwrites` | `PermissionOverwriteManager`, not `APIChannelOverwrite[]` |
+| Expression packs | Removed with `client.packs`. Multi-channel history for bots: `preloadMessages` |
+| Voice channels | Text-capable (`isTextBased()`, `send`, `message.channel`) |
+
+Coming from discord.js instead of Fluxer 2.x? See [From discord.js](/guides/from-discordjs/).

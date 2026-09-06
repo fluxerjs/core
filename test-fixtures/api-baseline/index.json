@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-01T14:11:00.867Z",
+  "generatedAt": "2026-09-04T23:57:20.682Z",
   "packages": [
     "@fluxerjs/types",
     "@fluxerjs/util",
@@ -7,6 +7,8 @@
     "@fluxerjs/rest",
     "@fluxerjs/ws",
     "@fluxerjs/builders",
-    "@fluxerjs/core"
+    "@fluxerjs/core",
+    "@fluxerjs/sharding",
+    "@fluxerjs/sharding-redis"
   ]
 }

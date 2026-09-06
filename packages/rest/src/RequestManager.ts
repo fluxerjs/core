@@ -96,15 +96,37 @@ function isAPIErrorBody(value: unknown): value is APIErrorBody {
   );
 }
 
-function headerInt(headers: Headers, name: string): number {
-  const raw = headers.get(name);
-  if (raw === null) return 0;
-  const n = Number.parseInt(raw, 10);
-  return Number.isFinite(n) ? n : 0;
+function parseRetryAfterValue(value: unknown): number | undefined {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value >= 0 ? value : undefined;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    const n = Number(trimmed);
+    return Number.isFinite(n) && n >= 0 ? n : undefined;
+  }
+  return undefined;
+}
+
+/** Seconds from Retry-After (delay-seconds or HTTP-date). */
+function parseRetryAfterHeader(headers: Headers): number | undefined {
+  const raw = headers.get('Retry-After');
+  if (raw === null) return undefined;
+  const fromNumber = parseRetryAfterValue(raw);
+  if (fromNumber !== undefined) return fromNumber;
+  const at = Date.parse(raw.trim());
+  if (Number.isNaN(at)) return undefined;
+  return Math.max(0, (at - Date.now()) / 1000);
+}
+
+function retryAfterMsFromHeader(headers: Headers, fallbackMs: number): number {
+  const seconds = parseRetryAfterHeader(headers);
+  return seconds === undefined ? fallbackMs : Math.max(0, seconds * 1000);
 }
 
 function parseRateLimitBody(text: string, headers: Headers): RateLimitErrorBody {
-  const headerRetry = headerInt(headers, 'Retry-After');
+  const headerRetry = parseRetryAfterHeader(headers) ?? 0;
   const fallback: RateLimitErrorBody = {
     code: 'RATE_LIMITED',
     message: 'Rate limited',
@@ -113,12 +135,16 @@ function parseRateLimitBody(text: string, headers: Headers): RateLimitErrorBody 
   if (!text) return fallback;
   try {
     const parsed: unknown = JSON.parse(text);
-    if (!isAPIErrorBody(parsed)) return fallback;
-    const retry = (parsed as { retry_after?: unknown }).retry_after;
+    const bodyRetry =
+      typeof parsed === 'object' && parsed !== null
+        ? parseRetryAfterValue((parsed as { retry_after?: unknown }).retry_after)
+        : undefined;
+    const retryAfter = bodyRetry ?? headerRetry;
+    if (!isAPIErrorBody(parsed)) return { ...fallback, retry_after: retryAfter };
     return {
       ...parsed,
       code: 'RATE_LIMITED',
-      retry_after: typeof retry === 'number' && Number.isFinite(retry) ? retry : headerRetry,
+      retry_after: retryAfter,
     };
   } catch {
     return fallback;
@@ -367,16 +393,11 @@ export class RequestManager {
 
         if (response.status === 429) {
           const data = parseRateLimitBody(await response.text(), response.headers);
-          const retryAfterSec = data.retry_after || headerInt(response.headers, 'Retry-After');
-          const retryMs = Math.max(0, retryAfterSec * 1000);
+          const retryMs = Math.max(0, data.retry_after * 1000);
           this.rateLimiter.setBucket(routeHash, 1, 0, Date.now() + retryMs);
           if (data.global) this.rateLimiter.setGlobalReset(Date.now() + retryMs);
 
-          const err = new RateLimitError(
-            { ...data, code: 'RATE_LIMITED', retry_after: retryAfterSec },
-            response.status,
-            { method, path: errorPath },
-          );
+          const err = new RateLimitError(data, response.status, { method, path: errorPath });
           if (attempt < retries) {
             lastError = err;
             await sleep(retryMs, userSignal);
@@ -389,7 +410,7 @@ export class RequestManager {
           const err = await this.parseError(response, method, errorPath);
           if (err.isRetryable && attempt < retries) {
             lastError = err;
-            await sleep(backoffMs(attempt), userSignal);
+            await sleep(retryAfterMsFromHeader(response.headers, backoffMs(attempt)), userSignal);
             continue;
           }
           throw err;

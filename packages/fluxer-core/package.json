@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "A fully-featured SDK for Fluxer bots",
   "repository": {
     "type": "git",
@@ -11,10 +11,9 @@
     "directory": "packages/fluxer-core"
   },
   "bugs": "https://github.com/fluxerjs/core/issues",
-  "homepage": "https://fluxerjs.blstmo.com",
+  "homepage": "https://fluxer.js.org",
   "keywords": [
     "fluxer",
-    "discord",
     "sdk",
     "bot",
     "api"
@@ -49,6 +48,11 @@
       "types": "./dist/cluster.d.ts",
       "import": "./dist/cluster.mjs",
       "require": "./dist/cluster.js"
+    },
+    "./internal": {
+      "types": "./dist/internal.d.ts",
+      "import": "./dist/internal.mjs",
+      "require": "./dist/internal.js"
     }
   },
   "files": [

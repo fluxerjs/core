@@ -5,9 +5,7 @@ category: getting-started
 order: 1
 ---
 
-Smallest useful bot: connect, wait for Ready, reply to a prefix command.
-
-## Default style
+Connect, wait for Ready, reply to `!ping`. `client.on` is the default. `client.events` is an optional chainable alias if you want it.
 
 ```javascript
 import { Client, Events } from '@fluxerjs/core';
@@ -26,24 +24,7 @@ client.on(Events.MessageCreate, async (message) => {
 await client.login(process.env.FLUXER_BOT_TOKEN);
 ```
 
-## Chainable handlers
-
-Same thing with `client.events` if you like autocomplete chaining:
-
-```javascript
-import { Client, Events } from '@fluxerjs/core';
-
-const client = new Client();
-
-client
-  .events.Ready(() => console.log('Ready!'))
-  .events.MessageCreate(async (message) => {
-    if (message.author.bot) return;
-    if (message.content === '!ping') await message.reply('Pong!');
-  });
-
-await client.login(process.env.FLUXER_BOT_TOKEN);
-```
+After Ready, `client.uptime` is milliseconds since that moment (`null` before). Gateway heartbeat RTT is `client.ws.ping` (`-1` until the first ACK).
 
 <Tip>
 Run [minimal-bot](/examples/minimal-bot/) or [first-steps-bot](/examples/first-steps-bot/) for more commands (`!hello`, `!avatar`, `!embed`, `!perms`).
@@ -68,3 +49,5 @@ await message.reply({ embeds: [embed] });
 ```
 
 Ignore other bots unless you have a reason not to. Infinite bot loops are embarrassing.
+
+Next: [Prefix commands](/guides/prefix-commands/), then [Errors](/guides/errors/) and [Caching](/guides/caching/). Task index: [Where do I...?](/guides/where-do-i/).

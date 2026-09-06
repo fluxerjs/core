@@ -4,11 +4,13 @@ export { GuildEmoji } from './GuildEmoji.js';
 export { GuildMember } from './GuildMember.js';
 export { GuildMemberRoleManager, type RoleResolvable } from './GuildMemberRoleManager.js';
 export { GuildSticker } from './GuildSticker.js';
+export { PartialGuildMember } from './PartialGuildMember.js';
 export {
   type GatewayGuildPayload,
   normalizeGuildSnapshotPayload,
   normalizeGuildUpdatePayload,
 } from './Payload.js';
+export { GuildRoleManager } from './GuildRoleManager.js';
 export { Role } from './Role.js';
 export type { RoleCreateOptions, RoleEditOptions } from './RoleOptions.js';
 export {

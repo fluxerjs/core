@@ -11,8 +11,9 @@ import type {
   APIPreloadMessagesResponse,
   APIStickerMetadata,
   APIUserPartial,
-  APIUserTagCheck,
   GatewayReceivePayload,
+  GatewayRequestChannelMemberCountsData,
+  GatewayRequestGuildCountsData,
   GatewayRequestGuildMembersData,
   GatewaySendPayload,
 } from '@fluxerjs/types';
@@ -20,6 +21,7 @@ import { GatewayOpcodes, Routes } from '@fluxerjs/types';
 import { createLogger, type Logger } from '@fluxerjs/util';
 import type { WebSocketManager } from '@fluxerjs/ws';
 import type { GuildMember } from '../Domain/Guild/GuildMember.js';
+import { Message } from '../Domain/Message/index.js';
 import { User } from '../Domain/User.js';
 import {
   normalizeApiOrigin,
@@ -36,7 +38,6 @@ import { ChannelManager } from './ChannelManager.js';
 import {
   resolveClientEmoji,
   bulkFetchMessages as runBulkFetchMessages,
-  checkUsernameTag as runCheckUsernameTag,
   fetchApplication as runFetchApplication,
   fetchEmojiMetadata as runFetchEmojiMetadata,
   fetchGatewayInfo as runFetchGatewayInfo,
@@ -45,6 +46,7 @@ import {
   fetchStickerMetadata as runFetchStickerMetadata,
   preloadMessages as runPreloadMessages,
   preloadMessagesAlt as runPreloadMessagesAlt,
+  searchMessages as runSearchMessages,
 } from './ClientEmoji.js';
 import {
   type ClientEventListener,
@@ -63,8 +65,11 @@ import {
 import { GuildManager } from './GuildManager.js';
 import { MessageCache } from './MessageCache.js';
 import type { BulkFetchMessagesOptions, BulkFetchMessagesResult } from './MessageManager.js';
-import { PackManager } from './PackManager.js';
-import type { BulkFetchMessagesRequest } from './SdkOptions/index.js';
+import type {
+  BulkFetchMessagesRequest,
+  MessageSearchOptions,
+  MessageSearchResponse,
+} from './SdkOptions/index.js';
 import { UserManager } from './UserManager.js';
 
 export type { ResolvedInstance } from '../Helpers/Instance.js';
@@ -95,14 +100,24 @@ export class Client extends EventEmitter {
   readonly users: UserManager;
   /** Cache limits, stats, sweeps, and cascade entry points. */
   readonly cache: CacheController;
-  /** Emoji/sticker pack REST wrappers (`/packs/*`). */
-  readonly packs = new PackManager(this);
-  /** Typed event handlers. Prefer `client.events.*` or `client.on(Events.*, ...)`. */
+  /** Typed event handlers. Prefer `client.on(Events.*, ...)`. */
   readonly events: ClientEventMethods;
   /** The authenticated bot user. Null until READY is received. */
   user: ClientUser | null = null;
   /** Timestamp when the client became ready. Null until READY is received. */
   readyAt: Date | null = null;
+
+  /**
+   * Milliseconds since {@link readyAt}, or `null` if the client is not ready.
+   * @example
+   * client.on(Events.Ready, () => {
+   *   console.log(client.uptime);
+   * });
+   */
+  get uptime(): number | null {
+    return this.readyAt ? Date.now() - this.readyAt.getTime() : null;
+  }
+
   /** @internal WebSocket manager. */
   _ws: WebSocketManager | null = null;
   /** When waitForGuilds, guild IDs still expected via GUILD_CREATE. */
@@ -282,27 +297,17 @@ export class Client extends EventEmitter {
   }
 
   /**
-   * Fetch OAuth2 applications owned by this bot.
-   * @returns Array of OAuth application objects
+   * Fetch OAuth2 applications (`GET /oauth2/applications/@me`).
+   * A bot token returns the bot application object (normalized to a one-element array).
+   * A user token returns the owner's application list.
    */
   fetchOAuthApplications(): Promise<APIOAuthApplication[]> {
     return runFetchOAuthApplications(this);
   }
 
   /**
-   * Check username#discriminator availability.
-   * @param username - Username to check
-   * @param discriminator - Discriminator to check
-   * @returns Availability result
-   */
-  checkUsernameTag(username: string, discriminator: string): Promise<APIUserTagCheck> {
-    return runCheckUsernameTag(this, username, discriminator);
-  }
-
-  /**
    * Preload recent messages for multiple channels (batch endpoint).
-   * @param channelIds - Array of channel IDs to preload
-   * @returns Preload response with message counts/timestamps
+   * Prefer this over {@link bulkFetchMessages} for bots (`bulkFetchMessages` is user-account only).
    */
   preloadMessages(channelIds: string[]): Promise<APIPreloadMessagesResponse> {
     return runPreloadMessages(this, channelIds);
@@ -310,13 +315,17 @@ export class Client extends EventEmitter {
 
   /**
    * Preload recent messages (alternate endpoint).
-   * @param channelIds - Array of channel IDs to preload
-   * @returns Preload response with message counts/timestamps
+   * Prefer this over {@link bulkFetchMessages} for bots.
    */
   preloadMessagesAlt(channelIds: string[]): Promise<APIPreloadMessagesResponse> {
     return runPreloadMessagesAlt(this, channelIds);
   }
 
+  /**
+   * Multi-channel message fetch (`POST /channels/messages/bulk`).
+   * User-account only (`DefaultUserOnly`); bots receive `AccessDeniedError`.
+   * Bots should use {@link preloadMessages} or `channel.messages.fetch` instead.
+   */
   bulkFetchMessages(
     requests: BulkFetchMessagesRequest[],
     options?: BulkFetchMessagesOptions & { hydrate?: true },
@@ -330,6 +339,15 @@ export class Client extends EventEmitter {
     options: BulkFetchMessagesOptions = {},
   ): Promise<BulkFetchMessagesResult | APIBulkMessageFetchResponse> {
     return runBulkFetchMessages(this, requests, options);
+  }
+
+  /**
+   * Search messages in the current bot scope (`POST /search/messages`, `scope: current`).
+   * Other scopes are denied for bots (`BOT_SEARCH_SCOPE_UNAVAILABLE`).
+   * Returns camelCase results (`hitsPerPage`) or `{ indexing: true }` while channels are indexed.
+   */
+  searchMessages(options?: MessageSearchOptions): Promise<MessageSearchResponse> {
+    return runSearchMessages(this, options);
   }
 
   /** @internal */
@@ -360,15 +378,19 @@ export class Client extends EventEmitter {
   /**
    * Sweep cached messages (remove entries matching filter).
    * Prefer {@link CacheController.sweepMessages} (`client.cache.sweepMessages`).
+   * The filter receives a hydrated {@link Message} (`createdAt`), not the stored wire payload.
    * @param filter - Predicate to test each message (return true to remove)
    * @param channelId - Optional channel ID to scope sweep
    * @returns Count of messages removed
    */
   sweepMessages(
-    filter?: (message: APIMessage, channelId: string) => boolean,
+    filter?: (message: Message, channelId: string) => boolean,
     channelId?: string,
   ): number {
-    return this._messageCache.sweep(filter, channelId);
+    return this._messageCache.sweep(
+      filter ? (data, chId) => filter(new Message(this, data), chId) : undefined,
+      channelId,
+    );
   }
 
   /**
@@ -404,6 +426,9 @@ export class Client extends EventEmitter {
 
   /**
    * The underlying {@link WebSocketManager} (throws if not logged in).
+   * Gateway heartbeat ACK latency: `client.ws.ping` (ms, or `-1` before the first ACK).
+   * @example
+   * console.log(client.ws.ping);
    * @throws {@link FluxerError} with {@link ErrorCodes.NotLoggedIn}
    */
   get ws(): WebSocketManager {
@@ -454,6 +479,44 @@ export class Client extends EventEmitter {
   }
 
   /**
+   * Request guild member/online counts via gateway opcode 15.
+   * Listen for `guildCountsUpdate`. Cached `guild.memberCount` / `guild.onlineCount` update when that event arrives.
+   */
+  requestGuildCounts(options: { guildIds: string[]; nonce?: string }): void {
+    const guildIds = [...new Set(options.guildIds.filter(Boolean))];
+    if (!guildIds.length) {
+      throw new FluxerError('requestGuildCounts requires at least one guildId', {
+        code: ErrorCodes.InvalidGatewayRequest,
+      });
+    }
+    const data: GatewayRequestGuildCountsData = { guild_ids: guildIds };
+    if (options.nonce !== undefined) data.nonce = options.nonce;
+    this._sendToAllShards({ op: GatewayOpcodes.RequestGuildCounts, d: data });
+  }
+
+  /**
+   * Request per-channel member counts via gateway opcode 16.
+   * Event-only: listen for `channelMemberCountsUpdate`. There is no `channel.memberCount` field.
+   */
+  requestChannelMemberCounts(options: {
+    guildId: string;
+    channelId?: string;
+    channelIds?: string[];
+    nonce?: string;
+  }): void {
+    if (!options.guildId) {
+      throw new FluxerError('requestChannelMemberCounts requires guildId', {
+        code: ErrorCodes.InvalidGatewayRequest,
+      });
+    }
+    const data: GatewayRequestChannelMemberCountsData = { guild_id: options.guildId };
+    if (options.channelId !== undefined) data.channel_id = options.channelId;
+    if (options.channelIds !== undefined) data.channel_ids = [...new Set(options.channelIds)];
+    if (options.nonce !== undefined) data.nonce = options.nonce;
+    this._sendToAllShards({ op: GatewayOpcodes.RequestChannelMemberCounts, d: data });
+  }
+
+  /**
    * Broadcast a gateway payload to all shards.
    * @param payload - Gateway send payload
    * @internal
@@ -467,12 +530,16 @@ export class Client extends EventEmitter {
 
   /**
    * Connect to the gateway with a bot token.
+   * @example
+   * const client = new Client();
+   * client.on(Events.Ready, () => console.log('Ready!'));
+   * await client.login(process.env.FLUXER_BOT_TOKEN);
    * @param token - Bot token from the developer portal
    * @param options - Optional abort signal for cancellation
-   * @returns The token that was used (echo)
+   * @returns This client (for chaining)
    * @throws {@link FluxerError} if already logged in or token is invalid
    */
-  async login(token: string, options?: { signal?: AbortSignal }): Promise<string> {
+  async login(token: string, options?: { signal?: AbortSignal }): Promise<this> {
     if (this._ws) {
       throw new FluxerError('Client is already logged in. Call destroy() first.', {
         code: ErrorCodes.AlreadyLoggedIn,
@@ -484,7 +551,7 @@ export class Client extends EventEmitter {
     this.rest.setToken(token);
     try {
       this._ws = await connectClientGateway(this, token, options?.signal);
-      return token;
+      return this;
     } catch (err) {
       this._ws?.destroy();
       this._ws = null;
@@ -543,6 +610,20 @@ export class Client extends EventEmitter {
     }
   }
 
+  /**
+   * REST path helpers ({@link Routes}). Pass the path to {@link REST client.rest}.
+   * Prefer high-level helpers (`channel.send()`, `guild.members.fetch()`) when they exist.
+   *
+   * @example
+   * const channel = await client.rest.get(Client.Routes.channel(channelId));
+   *
+   * @example
+   * await client.rest.post(Client.Routes.channelMessages(channelId), {
+   *   body: { content: 'hello' },
+   * });
+   *
+   * @see {@link Routes}
+   */
   static get Routes(): typeof Routes {
     return Routes;
   }

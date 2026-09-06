@@ -1,6 +1,6 @@
 {
   "package": "@fluxerjs/util",
-  "generatedAt": "2026-08-01T14:11:00.866Z",
+  "generatedAt": "2026-09-04T23:57:20.678Z",
   "entries": [
     {
       "subpath": ".",
@@ -14,6 +14,7 @@
         "FLUXER_EPOCH",
         "FluxerError",
         "FluxerErrorOptions",
+        "KlipyMediaResult",
         "LogFields",
         "LogLevel",
         "Logger",
@@ -30,7 +31,6 @@
         "PermissionString",
         "PermissionsBitField",
         "SnowflakeUtil",
-        "KlipyMediaResult",
         "TimestampStyle",
         "UserFlagsBitField",
         "UserFlagsBits",
@@ -50,8 +50,8 @@
         "parseRoleMention",
         "parseUserMention",
         "resolveColor",
-        "resolvePermissionsToBitfield",
         "resolveKlipyToImageUrl",
+        "resolvePermissionsToBitfield",
         "serializeError",
         "str",
         "truncate"

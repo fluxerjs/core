@@ -3,8 +3,8 @@
   "openapi": "3.1.0",
   "apiVersion": "1.0.0",
   "title": "Fluxer API",
-  "fetchedAt": "2026-08-01T01:21:57.721Z",
-  "sha256": "2f2804422cc8dd9b7efee3145b108a12037ef6b91e93f981c451f73143e0c70f",
-  "pathCount": 259,
-  "schemaCount": 423
+  "fetchedAt": "2026-09-04T23:45:11.074Z",
+  "sha256": "4dbb738a3e2296aba860078522adb7e52743964b0825f24f0b6a3ff01be13cca",
+  "pathCount": 247,
+  "schemaCount": 416
 }

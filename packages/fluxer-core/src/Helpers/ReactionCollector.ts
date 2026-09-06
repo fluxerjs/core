@@ -103,18 +103,20 @@ export class ReactionCollector extends EventEmitter {
             ...(entry.emoji.animated !== undefined ? { animated: entry.emoji.animated } : {}),
           },
         });
+        const cached = this.client.users.get(entry.userId);
         const user =
           entry.member?.user ??
-          this.client.users.get(entry.userId) ??
-          this.client.getOrCreateUser({
+          cached ??
+          // Ephemeral stub only; do not cache fake "Unknown" users as real Users.
+          ({
             id: entry.userId,
             username: 'Unknown',
             discriminator: '0',
-            global_name: null,
+            globalName: null,
             avatar: null,
-            avatar_color: null,
-            flags: 0,
-          });
+            bot: false,
+            system: false,
+          } as User);
         this._collect(reaction, user, entry.userId);
       }
     };
@@ -148,6 +150,27 @@ export class ReactionCollector extends EventEmitter {
       this._timeout = null;
     }
     this.emit('end', this.collected, reason);
+  }
+
+  /**
+   * One-shot helper used by {@link Message.awaitReactions}.
+   * Resolves with the collected reactions when the collector ends.
+   * Rejects if `options.errors` includes the end reason.
+   */
+  static awaitReactions(
+    client: Client,
+    messageId: string,
+    channelId: string,
+    options?: ReactionCollectorOptions & { errors?: ReactionCollectorEndReason[] },
+  ): Promise<Collection<string, CollectedReaction>> {
+    const errors = options?.errors ?? [];
+    return new Promise((resolve, reject) => {
+      const collector = new ReactionCollector(client, messageId, channelId, options);
+      collector.on('end', (collected, reason) => {
+        if (errors.includes(reason)) reject(collected);
+        else resolve(collected);
+      });
+    });
   }
 
   override on<K extends keyof ReactionCollectorEvents>(

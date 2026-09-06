@@ -1,13 +1,13 @@
 /**
- * Moderation example — !ban, !kick, !unban, !perms.
+ * Moderation example: !ban, !kick, !timeout, !untimeout, !unban, !perms.
  *
  * Requires Ban Members / Kick Members (server owner has all permissions).
  *
  * Usage:
  *   FLUXER_BOT_TOKEN=your_token node examples/moderation-bot.js
  *
- * @see https://fluxerjs.blstmo.com/guides/permissions/
- * @see https://fluxerjs.blstmo.com/guides/moderation/
+ * @see https://fluxer.js.org/guides/permissions/
+ * @see https://fluxer.js.org/guides/moderation/
  */
 
 import {
@@ -24,11 +24,10 @@ import {
 const PREFIX = '!';
 
 async function getModeratorPerms(message) {
-  const guild =
-    message.guild ??
-    (message.guildId ? await message.client.guilds.fetch(message.guildId).catch(() => null) : null);
+  const guild = await message.resolveGuild();
   if (!guild) return null;
   const member =
+    message.member ??
     guild.members.get(message.author.id) ??
     (await guild.fetchMember(message.author.id).catch(() => null));
   return member?.permissions ?? null;
@@ -41,7 +40,9 @@ function getPermissionNames(perms) {
 const client = new Client();
 
 client.on(Events.Ready, () => {
-  console.log(`Logged in as ${client.user?.username}. Commands: !ban, !kick, !unban, !perms`);
+  console.log(
+    `Logged in as ${client.user?.username}. Commands: !ban, !kick, !timeout, !untimeout, !unban, !perms`,
+  );
 });
 
 client.on(Events.MessageCreate, async (message) => {
@@ -53,9 +54,7 @@ client.on(Events.MessageCreate, async (message) => {
   const targetArg = args[0];
   const reason = args.slice(1).join(' ') || null;
 
-  const guild =
-    message.guild ??
-    (message.guildId ? await message.client.guilds.fetch(message.guildId).catch(() => null) : null);
+  const guild = await message.resolveGuild();
   if (!guild) {
     await message.reply('Moderation commands only work in a server.');
     return;
@@ -73,6 +72,8 @@ client.on(Events.MessageCreate, async (message) => {
   const canBan = perms.has(PermissionFlags.BanMembers) || perms.has(PermissionFlags.Administrator);
   const canKick =
     perms.has(PermissionFlags.KickMembers) || perms.has(PermissionFlags.Administrator);
+  const canTimeout =
+    perms.has(PermissionFlags.ModerateMembers) || perms.has(PermissionFlags.Administrator);
 
   if (command === 'perms') {
     const names = getPermissionNames(perms);
@@ -94,10 +95,16 @@ client.on(Events.MessageCreate, async (message) => {
       return;
     }
     try {
-      await guild.ban(userId, {
-        reason: reason ?? undefined,
-        deleteMessageDays: 1,
-      });
+      const target =
+        guild.members.get(userId) ?? (await guild.fetchMember(userId).catch(() => null));
+      if (target) {
+        await target.ban({ reason: reason ?? undefined, deleteMessageDays: 1 });
+      } else {
+        await guild.ban(userId, {
+          reason: reason ?? undefined,
+          deleteMessageDays: 1,
+        });
+      }
       const targetUser = message.mentions.find((u) => u.id === userId) ?? { username: 'Unknown' };
       const embed = new EmbedBuilder()
         .setTitle('User Banned')
@@ -131,7 +138,10 @@ client.on(Events.MessageCreate, async (message) => {
       return;
     }
     try {
-      await guild.kick(userId);
+      const target =
+        guild.members.get(userId) ?? (await guild.fetchMember(userId).catch(() => null));
+      if (target) await target.kick();
+      else await guild.kick(userId);
       const targetUser = message.mentions.find((u) => u.id === userId) ?? { username: 'Unknown' };
       const embed = new EmbedBuilder()
         .setTitle('User Kicked')
@@ -150,6 +160,62 @@ client.on(Events.MessageCreate, async (message) => {
         code === ErrorCodes.MemberNotFound || status === 404
           ? 'User not found or not in this server.'
           : (err?.message ?? 'Failed to kick user.');
+      await message.reply(`Error: ${msg}`);
+    }
+    return;
+  }
+
+  if (command === 'timeout') {
+    if (!canTimeout) {
+      await message.reply('You need the Moderate Members permission to use this command.');
+      return;
+    }
+    if (!userId) {
+      await message.reply('Usage: `!timeout @user [seconds] [reason]`');
+      return;
+    }
+    const seconds = Math.min(28 * 24 * 60 * 60, Math.max(1, Number(args[1]) || 60));
+    const timeoutReason = args.slice(Number.isFinite(Number(args[1])) ? 2 : 1).join(' ') || null;
+    try {
+      const target =
+        guild.members.get(userId) ?? (await guild.fetchMember(userId).catch(() => null));
+      if (!target) {
+        await message.reply('User not found in this server.');
+        return;
+      }
+      if (!target.moderatable) {
+        await message.reply('I cannot timeout that member (role hierarchy or missing permission).');
+        return;
+      }
+      await target.timeout(seconds * 1000, timeoutReason ?? undefined);
+      await message.reply(`Timed out <@${userId}> for ${seconds}s.`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to timeout user.';
+      await message.reply(`Error: ${msg}`);
+    }
+    return;
+  }
+
+  if (command === 'untimeout') {
+    if (!canTimeout) {
+      await message.reply('You need the Moderate Members permission to use this command.');
+      return;
+    }
+    if (!userId) {
+      await message.reply('Usage: `!untimeout @user`');
+      return;
+    }
+    try {
+      const target =
+        guild.members.get(userId) ?? (await guild.fetchMember(userId).catch(() => null));
+      if (!target) {
+        await message.reply('User not found in this server.');
+        return;
+      }
+      await target.timeout(null);
+      await message.reply(`Cleared timeout for <@${userId}>.`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to clear timeout.';
       await message.reply(`Error: ${msg}`);
     }
     return;

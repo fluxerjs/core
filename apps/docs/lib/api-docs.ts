@@ -65,16 +65,19 @@ export function isTaggedVersion(version?: string): boolean {
 
 export function loadApiDocsFor(version?: string): DocOutput {
   const key = versionKey(version);
-  const cached = docsCache.get(key);
-  if (cached) return cached;
+  const useCache = process.env.NODE_ENV !== 'development';
+  if (useCache) {
+    const cached = docsCache.get(key);
+    if (cached) return cached;
+  }
 
   const file = resolveApiFile(key);
   if (!fs.existsSync(file)) {
-    docsCache.set(key, EMPTY_DOCS);
+    if (useCache) docsCache.set(key, EMPTY_DOCS);
     return EMPTY_DOCS;
   }
   const docs = JSON.parse(fs.readFileSync(file, 'utf8')) as DocOutput;
-  docsCache.set(key, docs);
+  if (useCache) docsCache.set(key, docs);
   return docs;
 }
 

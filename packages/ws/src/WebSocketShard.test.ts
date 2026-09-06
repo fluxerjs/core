@@ -1,7 +1,12 @@
 import { GatewayOpcodes } from '@fluxerjs/types';
 import { describe, expect, it, vi } from 'vitest';
 import { GatewayCloseCodes } from './Utils/Constants.js';
-import { narrowGatewayPayload, shouldReconnectOnClose, WebSocketShard } from './WebSocketShard.js';
+import {
+  averageShardPings,
+  narrowGatewayPayload,
+  shouldReconnectOnClose,
+  WebSocketShard,
+} from './WebSocketShard.js';
 
 class MockWebSocket {
   readyState = 1;
@@ -51,6 +56,11 @@ describe('shouldReconnectOnClose', () => {
     expect(shouldReconnectOnClose(GatewayCloseCodes.SessionTimeout)).toBe(true);
     expect(shouldReconnectOnClose(GatewayCloseCodes.RateLimited)).toBe(true);
     expect(shouldReconnectOnClose(GatewayCloseCodes.AckBackpressure)).toBe(true);
+  });
+
+  it('does not reconnect on InvalidShard or ShardingRequired', () => {
+    expect(shouldReconnectOnClose(GatewayCloseCodes.InvalidShard)).toBe(false);
+    expect(shouldReconnectOnClose(GatewayCloseCodes.ShardingRequired)).toBe(false);
   });
 });
 
@@ -172,5 +182,42 @@ describe('WebSocketShard', () => {
     (shard as unknown as { lastHeartbeatAck: boolean }).lastHeartbeatAck = false;
     shard.handlePayload({ op: GatewayOpcodes.HeartbeatAck });
     expect((shard as unknown as { lastHeartbeatAck: boolean }).lastHeartbeatAck).toBe(true);
+  });
+
+  it('records heartbeat ACK round-trip as ping', () => {
+    class TrackingWS extends MockWebSocket {
+      send = vi.fn();
+    }
+
+    const shard = new WebSocketShard({
+      url: 'wss://gateway.fluxer.app',
+      token: 'test-token',
+      shardId: 0,
+      numShards: 1,
+      WebSocket: TrackingWS,
+    });
+
+    (shard as unknown as { ws: TrackingWS }).ws = new TrackingWS('wss://x');
+    expect(shard.ping).toBe(-1);
+
+    const now = vi.spyOn(Date, 'now');
+    now.mockReturnValueOnce(1_000).mockReturnValueOnce(1_042);
+    shard.handlePayload({ op: GatewayOpcodes.Heartbeat });
+    shard.handlePayload({ op: GatewayOpcodes.HeartbeatAck });
+    now.mockRestore();
+
+    expect(shard.ping).toBe(42);
+  });
+});
+
+describe('averageShardPings', () => {
+  it('returns -1 when empty or all unknown', () => {
+    expect(averageShardPings([])).toBe(-1);
+    expect(averageShardPings([-1, -1])).toBe(-1);
+  });
+
+  it('averages known RTTs and skips -1', () => {
+    expect(averageShardPings([10, 20])).toBe(15);
+    expect(averageShardPings([10, -1, 30])).toBe(20);
   });
 });

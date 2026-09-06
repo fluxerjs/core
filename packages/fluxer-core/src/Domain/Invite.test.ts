@@ -2,35 +2,40 @@ import { InviteType } from '@fluxerjs/types';
 import { describe, expect, it } from 'vitest';
 import { type Client, Invite } from '../';
 import { DEFAULT_INSTANCE_ENDPOINTS } from '../Helpers/Instance.js';
-import { fixtureUser } from '../TestKit/Fixtures.js';
 
 function createMockClient() {
   return {
     getOrCreateUser: (u: { id: string }) => u,
-    guilds: { get: () => null },
+    guilds: { get: () => null, resolve: async () => null },
+    channels: { get: () => null, resolve: async () => null },
     instance: { endpoints: DEFAULT_INSTANCE_ENDPOINTS, discovery: null },
   } as unknown as Client;
 }
 
 describe('Invite', () => {
   describe('guild invite', () => {
-    it('exposes guild and channel', () => {
+    it('exposes guildSnapshot and channelSnapshot', () => {
       const invite = new Invite(createMockClient(), {
         code: 'xyz789',
         type: InviteType.Guild,
         guild: { id: 'g1', name: 'Test' },
-        channel: { id: 'ch1', name: 'general', type: 0 },
+        channel: { id: 'ch1', name: 'general', type: 0, parent_id: 'cat1' },
+        created_at: '2026-01-01T00:00:00.000Z',
+        expires_at: '2026-02-01T00:00:00.000Z',
       });
       expect(invite.url).toBe('https://fluxer.gg/xyz789');
       expect(invite.isGuild()).toBe(true);
-      expect(invite.guild?.name).toBe('Test');
-      expect(invite.channel?.name).toBe('general');
-      expect(invite.pack).toBeNull();
+      expect(invite.guildSnapshot?.name).toBe('Test');
+      expect(invite.channelSnapshot?.name).toBe('general');
+      expect(invite.channelSnapshot?.parentId).toBe('cat1');
+      expect(invite.channelSnapshot).not.toHaveProperty('parent_id');
+      expect(invite.createdAt).toEqual(new Date('2026-01-01T00:00:00.000Z'));
+      expect(invite.expiresAt).toEqual(new Date('2026-02-01T00:00:00.000Z'));
     });
   });
 
   describe('group DM invite', () => {
-    it('has channel but no guild', () => {
+    it('has channelSnapshot but no guildSnapshot', () => {
       const invite = new Invite(createMockClient(), {
         code: 'gdm1',
         type: InviteType.GroupDM,
@@ -38,36 +43,9 @@ describe('Invite', () => {
         member_count: 4,
       });
       expect(invite.isGroupDM()).toBe(true);
-      expect(invite.guild).toBeNull();
-      expect(invite.channel?.id).toBe('ch2');
+      expect(invite.guildSnapshot).toBeNull();
+      expect(invite.channelSnapshot?.id).toBe('ch2');
       expect(invite.memberCount).toBe(4);
-    });
-  });
-
-  describe('pack invite', () => {
-    it('exposes pack and no channel', () => {
-      const invite = new Invite(createMockClient(), {
-        code: 'pack1',
-        type: InviteType.EmojiPack,
-        pack: {
-          id: 'p1',
-          name: 'Cool Emojis',
-          type: 'emoji',
-          creator_id: 'u1',
-          created_at: '2026-01-01T00:00:00.000Z',
-          updated_at: '2026-01-01T00:00:00.000Z',
-          creator: fixtureUser({
-            id: 'u1',
-            username: 'creator',
-            avatar: null,
-            bot: false,
-          }),
-        },
-      });
-      expect(invite.isPack()).toBe(true);
-      expect(invite.pack?.name).toBe('Cool Emojis');
-      expect(invite.guild).toBeNull();
-      expect(invite.channel).toBeNull();
     });
   });
 });

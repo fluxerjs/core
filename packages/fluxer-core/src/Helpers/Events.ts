@@ -52,4 +52,10 @@ export const Events = {
   Resumed: 'resumed',
   Error: 'error',
   Debug: 'debug',
+  ShardReady: 'shardReady',
+  ShardResumed: 'shardResumed',
+  ShardDisconnect: 'shardDisconnect',
+  ShardReconnecting: 'shardReconnecting',
+  ShardError: 'shardError',
+  ShardingRequired: 'shardingRequired',
 } as const;

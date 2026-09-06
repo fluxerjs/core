@@ -15,11 +15,7 @@ import { syncEmojis, syncStickers } from '../../Domain/Guild/Cache.js';
 import { GuildBan } from '../../Domain/Guild/GuildBan.js';
 import { Role } from '../../Domain/Guild/Role.js';
 import { Events } from '../../Helpers/Events.js';
-import type {
-  AuditLogEntryPayload,
-  GuildRoleDeletePayload,
-  GuildStickersUpdatePayload,
-} from '../EventPayloads.js';
+import type { AuditLogEntryPayload, GuildStickersUpdatePayload } from '../EventPayloads.js';
 import type { HandlerMap } from './Types.js';
 
 function toAuditLogEntry(data: GatewayGuildAuditLogEntryCreateDispatchData): AuditLogEntryPayload {
@@ -89,7 +85,7 @@ export const guildResourceHandlers: HandlerMap = {
       role = new Role(client, data.role, data.guild_id);
       guild?.roles.set(role.id, role);
     }
-    client.emit(Events.GuildRoleUpdate, { role, oldRole });
+    client.emit(Events.GuildRoleUpdate, oldRole, role);
   },
 
   GUILD_ROLE_UPDATE_BULK(client, d) {
@@ -107,11 +103,7 @@ export const guildResourceHandlers: HandlerMap = {
     const guild = client.guilds.get(data.guild_id);
     const role = guild?.roles.get(data.role_id) ?? null;
     guild?.roles.delete(data.role_id);
-    client.emit(Events.GuildRoleDelete, {
-      roleId: data.role_id,
-      guildId: data.guild_id,
-      role,
-    } satisfies GuildRoleDeletePayload);
+    client.emit(Events.GuildRoleDelete, role, data.guild_id, data.role_id);
   },
 
   GUILD_BAN_ADD(client, d) {

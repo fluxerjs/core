@@ -27,8 +27,8 @@ describe('GuildEmoji.identifier', () => {
   });
 });
 
-describe('message.react synthetic MessageReactionAdd', () => {
-  it('emits structured emoji (name + id) after REST success for name:id input', async () => {
+describe('message.react', () => {
+  it('PUTs the reaction and does not synthesize MessageReactionAdd', async () => {
     const client = createTestClient();
     client.user = new ClientUser(client, fixtureUser({ id: 'bot1', username: 'bot', bot: true }));
     vi.spyOn(client.rest, 'put').mockResolvedValue(undefined);
@@ -51,14 +51,10 @@ describe('message.react synthetic MessageReactionAdd', () => {
     await message.react('custom:123456789012345678');
 
     expect(client.rest.put).toHaveBeenCalled();
-    expect(seen).toHaveLength(1);
-    expect(seen[0]!.emoji).toEqual({ name: 'custom', id: '123456789012345678' });
-    expect(seen[0]!.reaction.emoji.id).toBe('123456789012345678');
-    expect(seen[0]!.reaction.emoji.name).toBe('custom');
-    expect(seen[0]!.userId).toBe('bot1');
+    expect(seen).toHaveLength(0);
   });
 
-  it('emits animated flag for a:name:id wire format', async () => {
+  it('resolves animated emoji objects for the REST path without a local emit', async () => {
     const client = createTestClient();
     client.user = new ClientUser(client, fixtureUser({ id: 'bot1', username: 'bot', bot: true }));
     vi.spyOn(client, 'resolveEmoji').mockResolvedValue('a:wiggle:999');
@@ -81,8 +77,8 @@ describe('message.react synthetic MessageReactionAdd', () => {
 
     await message.react({ name: 'wiggle', id: '999', animated: true });
 
-    expect(seen).toHaveLength(1);
-    expect(seen[0]!.emoji).toEqual({ name: 'wiggle', id: '999', animated: true });
-    expect(seen[0]!.reaction.emojiIdentifier).toBe('a:wiggle:999');
+    expect(client.resolveEmoji).toHaveBeenCalled();
+    expect(client.rest.put).toHaveBeenCalled();
+    expect(seen).toHaveLength(0);
   });
 });

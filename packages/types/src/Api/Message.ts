@@ -40,17 +40,13 @@ export enum MessageReferenceType {
 
 /**
  * Message flags bitfield (OpenAPI MessageFlags).
- * - `SuppressEmbeds` — hide embeds in this message
- * - `SuppressNotifications` — silent message (no ping)
- * - `VoiceMessage` — message contains voice memo
- * - `CompactAttachments` — render attachments in compact grid
+ * Sendable flags are `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS`, and `VOICE_MESSAGE`.
  * Use with {@link MessageFlagsBitField} in `@fluxerjs/util` for composition.
  */
 export const MessageFlags = {
   SuppressEmbeds: 4,
   SuppressNotifications: 4096,
   VoiceMessage: 8192,
-  CompactAttachments: 131072,
 } as const;
 
 /** Union of all valid {@link MessageFlags} values. */
@@ -257,8 +253,6 @@ export interface APIMessage {
   attachments?: APIMessageAttachment[] | null;
   /** Stickers in the message. */
   stickers?: APIMessageSticker[] | null;
-  /** IDs of custom NSFW emojis in this message. */
-  nsfw_emojis?: Snowflake[];
   /** Reactions to the message. */
   reactions?: APIMessageReaction[] | null;
   /** Reply/forward reference (see {@link APIMessageReference}). */

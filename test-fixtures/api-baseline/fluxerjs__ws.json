@@ -1,20 +1,44 @@
 {
   "package": "@fluxerjs/ws",
-  "generatedAt": "2026-08-01T14:11:00.867Z",
+  "generatedAt": "2026-09-04T23:57:20.680Z",
   "entries": [
     {
       "subpath": ".",
       "exports": [
+        "BuildShardingStrategy",
+        "BuildShardingStrategyFn",
+        "DEFAULT_GUILDS_PER_SHARD",
+        "DEFAULT_RESUME_TTL_MS",
         "GatewayCloseCodes",
+        "IIdentifyThrottler",
+        "ISessionStore",
+        "IShardingStrategy",
+        "MAX_GUILDS_PER_SHARD",
+        "MAX_SHARD_COUNT",
+        "MemorySessionStore",
+        "SessionInfo",
+        "ShardStatus",
+        "SimpleIdentifyThrottler",
+        "SimpleIdentifyThrottlerOptions",
+        "SimpleShardingStrategy",
+        "SimpleShardingStrategyContext",
         "WebSocketConstructor",
         "WebSocketLike",
         "WebSocketManager",
         "WebSocketManagerOptions",
+        "WebSocketManagerRest",
         "WebSocketShard",
         "WebSocketShardOptions",
+        "WorkerShardingStrategy",
+        "WorkerShardingStrategyOptions",
         "getDefaultWebSocket",
         "getDefaultWebSocketSync",
-        "narrowGatewayPayload"
+        "guildMatchesShard",
+        "isSessionInfoFresh",
+        "narrowGatewayPayload",
+        "recommendedShardCount",
+        "shardIdForGuild",
+        "shouldReconnectOnClose"
       ]
     }
   ]

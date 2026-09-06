@@ -13,6 +13,8 @@ export interface GuildMemberSearchOptions {
   userCreatedAtLte?: number;
   sortBy?: 'joinedAt' | 'relevance';
   sortOrder?: 'asc' | 'desc';
+  joinSourceType?: number[];
+  sourceInviteCode?: string[];
 }
 
 /** Convert {@link GuildMemberSearchOptions} to the wire search body. */
@@ -29,6 +31,8 @@ export function toMemberSearchBody(options: GuildMemberSearchOptions): Record<st
   if (options.userCreatedAtLte !== undefined) body.user_created_at_lte = options.userCreatedAtLte;
   if (options.sortBy !== undefined) body.sort_by = options.sortBy;
   if (options.sortOrder !== undefined) body.sort_order = options.sortOrder;
+  if (options.joinSourceType !== undefined) body.join_source_type = options.joinSourceType;
+  if (options.sourceInviteCode !== undefined) body.source_invite_code = options.sourceInviteCode;
   return body;
 }
 
@@ -42,6 +46,7 @@ export interface GuildMemberEditOptions {
   pronouns?: string | null;
   accentColor?: number | null;
   profileFlags?: number | null;
+  mentionFlags?: number | null;
   mute?: boolean;
   deaf?: boolean;
   communicationDisabledUntil?: string | null;
@@ -61,6 +66,7 @@ export function toMemberEditBody(options: GuildMemberEditOptions): Record<string
   if (options.pronouns !== undefined) body.pronouns = options.pronouns;
   if (options.accentColor !== undefined) body.accent_color = options.accentColor;
   if (options.profileFlags !== undefined) body.profile_flags = options.profileFlags;
+  if (options.mentionFlags !== undefined) body.mention_flags = options.mentionFlags;
   if (options.mute !== undefined) body.mute = options.mute;
   if (options.deaf !== undefined) body.deaf = options.deaf;
   if (options.communicationDisabledUntil !== undefined) {

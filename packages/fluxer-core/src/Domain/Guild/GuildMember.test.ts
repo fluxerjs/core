@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Client } from '../../ClientCore/Client.js';
 import { fixtureGuild, fixtureMember, fixtureUser } from '../../TestKit/Fixtures.js';
 import { Guild } from './Guild.js';
@@ -171,6 +171,49 @@ describe('GuildMember', () => {
         channelId: 'voicechannel123',
         connectionId: 'connection456',
       });
+    });
+  });
+
+  describe('kick / ban / timeout', () => {
+    it('kick delegates to guild.kick', async () => {
+      const member = createMember();
+      const kick = vi.spyOn(member.guild, 'kick').mockResolvedValue(undefined);
+      await member.kick();
+      expect(kick).toHaveBeenCalledWith(member.id);
+    });
+
+    it('ban delegates to guild.ban', async () => {
+      const member = createMember();
+      const ban = vi.spyOn(member.guild, 'ban').mockResolvedValue(undefined);
+      await member.ban({ reason: 'spam' });
+      expect(ban).toHaveBeenCalledWith(member.id, { reason: 'spam' });
+    });
+
+    it('timeout(null) clears communicationDisabledUntil', async () => {
+      const member = createMember();
+      let editParams:
+        | { communicationDisabledUntil?: string | null; timeoutReason?: string | null }
+        | undefined;
+      member.edit = async (params) => {
+        editParams = params;
+        return member;
+      };
+      await member.timeout(null);
+      expect(editParams).toEqual({ communicationDisabledUntil: null });
+    });
+
+    it('timeout(ms) sets a future ISO timestamp', async () => {
+      const member = createMember();
+      let editParams:
+        | { communicationDisabledUntil?: string | null; timeoutReason?: string | null }
+        | undefined;
+      member.edit = async (params) => {
+        editParams = params;
+        return member;
+      };
+      await member.timeout(60_000, 'cool down');
+      expect(editParams?.timeoutReason).toBe('cool down');
+      expect(editParams?.communicationDisabledUntil).toEqual(expect.any(String));
     });
   });
 });

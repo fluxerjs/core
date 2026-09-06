@@ -1,184 +1,138 @@
-﻿---
+---
 title: Channels
-description: "Create and manage channels, roles, and invites. Covers guild.createChannel(), channel.edit(), channel.createInvite(), guild.createRole(), and more."
-category: channels
-order: 22
+description: Fetch a channel, then delete or send. Create text, voice, category, or link channels. Edit overwrites.
+category: popular
+order: 19
+searchTerms: permissionOverwrites LinkChannel GuildLink isLink isVoice isTextBased setSlowmode
 ---
 
-## Channels  -  Create
-
-Use guild.createChannel() to create text (0), voice (2), category (4), or link (5) channels. Requires Manage Channels permission. Pass parent_id to put a channel under a category.
+Fetch the channel, then call methods on it: `client.channels.fetch` then `channel.delete()` / `channel.send()`.
 
 ```javascript
-import { Client, Events } from '@fluxerjs/core';
-
-const client = new Client();
-
-client.on(Events.MessageCreate, async (message) => {
-  if (!message.guildId || message.content !== '!createchannel') return;
-  const guild = client.guilds.get(message.guildId) ?? await client.guilds.resolve(message.guildId);
-  if (!guild) return;
-
-  // Text channel (0), voice (2), category (4), link (5)
-  const textChannel = await guild.createChannel({
-    type: 0,
-    name: 'general',
-  });
-
-  // Category, then voice channel under it
-  const category = await guild.createChannel({
-    type: 4,
-    name: 'Voice Chats',
-  });
-  const voiceChannel = await guild.createChannel({
-    type: 2,
-    name: 'Lounge',
-    parent_id: category.id,
-    bitrate: 64000,
-  });
-
-  await message.reply(`Created ${textChannel.name} and ${voiceChannel.name} in ${category.name}`);
-});
-
-await client.login(process.env.FLUXER_BOT_TOKEN);
+const channel = await client.channels.fetch(channelId);
+await channel.delete();
+if (channel.isTextBased()) await channel.send('hi');
 ```
 
-## Channels  -  Fetch and Edit
+Text-based means guild text, **guild voice**, DMs, and notes. Category and link channels fail `isTextBased()` and throw `INVALID_CHANNEL_TYPE` on `send`.
 
-Use guild.fetchChannels() to load all guild channels. Use channel.edit() to rename, set topic, move to a category, set slowmode, or update permission overwrites.
+From a message, resolve the channel (cache or REST):
 
 ```javascript
-const guild = client.guilds.get(guildId) ?? await client.guilds.resolve(guildId);
+const channel = await message.resolveChannel();
+await channel.delete();
+```
+
+`message.channel` is the cached text, voice, or DM channel, or `null`. Prefer that when it is already there. `channel.toString()` is `<#id>`. `client.channels.delete(id)` only evicts the cache; the API call is `channel.delete()`.
+
+## Create
+
+```javascript
+import { ChannelType } from '@fluxerjs/core';
+
+const guild = await message.resolveGuild();
 if (!guild) return;
 
-const channels = await guild.fetchChannels();
+const textChannel = await guild.createChannel({
+  type: ChannelType.GuildText,
+  name: 'general',
+});
+```
 
-// Edit a text channel
-const channel = guild.channels.get(channelId);
-if (channel) {
+Options are camelCase (`parentId`, `rateLimitPerUser`). Requires Manage Channels.
+
+Voice (also text-capable):
+
+```javascript
+const voice = await guild.createChannel({
+  type: ChannelType.GuildVoice,
+  name: 'Lounge',
+});
+await voice.send('VC chat is on.');
+```
+
+Link channel (no `send`; stores an external URL):
+
+```javascript
+const link = await guild.createChannel({
+  type: ChannelType.GuildLink,
+  name: 'website',
+  url: 'https://fluxer.js.org',
+});
+if (link.isLink()) console.log(link.url);
+```
+
+## Edit, slowmode, reorder
+
+```javascript
+const channel = await client.channels.fetch(channelId);
+if (channel.isGuild()) {
   await channel.edit({
     name: 'renamed-channel',
     topic: 'New topic here',
-    parent_id: categoryId,        // Move under category
-    rate_limit_per_user: 5,      // 5 second slowmode
-    nsfw: false,
+    parentId: categoryId,
+    rateLimitPerUser: 5,
   });
+  if (channel.isTextBased()) await channel.setSlowmode(5);
 }
-```
 
-## Channels  -  Delete and Reorder
-
-Use channel.delete() to remove a channel. Use guild.setChannelPositions() to reorder channels or move them between categories.
-
-```javascript
-// Delete channel (silent: true skips system message)
-await channel.delete();
-await channel.delete({ silent: true });
-
-// Reorder channels
 await guild.setChannelPositions([
   { id: channelId1, position: 0 },
-  { id: channelId2, position: 1, parent_id: categoryId },
+  { id: channelId2, position: 1, parentId: categoryId },
 ]);
 ```
 
-## Channel Permission Overwrites
+`fetchRtcRegions()` is **user-account** only. Bots receive `AccessDeniedError`.
 
-Use channel.editPermission() to add or update overwrites (type 0=role, 1=member). Use channel.deletePermission() to remove. Use resolvePermissionsToBitfield() for allow/deny bitfields.
-
-```javascript
-import { resolvePermissionsToBitfield, PermissionFlags } from '@fluxerjs/core';
-
-// Deny SendMessages for a role (type 0=role, 1=member)
-await channel.editPermission(roleId, {
-  type: 0,
-  deny: resolvePermissionsToBitfield(['SendMessages']),
-});
-
-// Allow ViewChannel for a specific member
-await channel.editPermission(userId, {
-  type: 1,
-  allow: resolvePermissionsToBitfield([PermissionFlags.ViewChannel]),
-});
-
-// Remove overwrite
-await channel.deletePermission(roleId);
-```
-
-## Roles  -  Quick Reference
-
-Create roles with guild.createRole(), fetch with guild.fetchRoles() or guild.fetchRole(roleId). Add/remove with member.roles.add() / member.roles.remove(). Reorder with guild.setRolePositions().
+## Permission overwrites
 
 ```javascript
-// See the Roles guide for full examples and permission bitfields.
-const role = await guild.createRole({ name: 'Mod', permissions: ['KickMembers', 'BanMembers'] });
-const member = await guild.fetchMember(userId);
-await member.roles.add(role.id);
-await member.roles.remove(role.id);
-await guild.setRolePositions([{ id: role.id, position: 5 }]);
+import { OverwriteType, PermissionFlags } from '@fluxerjs/core';
+
+if (!channel.isGuild()) return;
+
+await channel.permissionOverwrites.edit(roleId, {
+  type: OverwriteType.Role,
+  deny: ['SendMessages'],
+});
+
+await channel.permissionOverwrites.edit(memberId, {
+  type: OverwriteType.Member,
+  allow: [PermissionFlags.ViewChannel, PermissionFlags.SendMessages],
+  deny: [PermissionFlags.MentionEveryone],
+});
+
+await channel.permissionOverwrites.delete(roleId);
 ```
 
-<Tip>
-See the Roles guide for full examples, permission bitfields, and role.edit() / role.delete().
-</Tip>
+`allow` / `deny` accept a bitfield string or `PermissionResolvable` (flag names, arrays, bitfields). Requires Manage Roles. Check effective perms with `member.permissionsIn(channel)` ([Permissions](/guides/permissions/)).
+
+You can also pass `permissionOverwrites` on `guild.createChannel` / `channel.edit`.
 
 ## Invites
 
-Use channel.createInvite() to create an invite. Use channel.fetchInvites() to list channel invites. Use invite.delete() to revoke. invite.url gives the full invite URL.
+`createInvite` / `fetchInvites` are on guild channels. Narrow with `channel.isGuild()`.
 
 ```javascript
-import { Client, Events } from '@fluxerjs/core';
+const channel = message.channel ?? (await message.resolveChannel());
+if (!channel.isGuild()) return;
 
-const client = new Client();
-
-client.on(Events.MessageCreate, async (message) => {
-  if (!message.content.startsWith('!invite') || !message.guildId) return;
-  const channel = message.channel;
-  if (!channel?.createInvite) return;
-
-  if (message.content === '!invite') {
-    const invite = await channel.createInvite({
-      max_age: 86400,    // 24 hours
-      max_uses: 10,
-      temporary: false,
-    });
-    await message.reply(`Invite: ${invite.url}`);
-  }
-
-  if (message.content === '!invitelist') {
-    const invites = await channel.fetchInvites();
-    const list = invites.map((i) => `${i.code} (${i.max_uses ?? '∞'} uses)`).join('\n');
-    await message.reply(list || 'No invites.');
-  }
-
-  if (message.content.startsWith('!inviterevoke ')) {
-    const code = message.content.slice(13).trim();
-    const invites = await channel.fetchInvites();
-    const inv = invites.find((i) => i.code === code);
-    if (inv) {
-      await inv.delete();
-      await message.reply('Invite revoked.');
-    }
-  }
-});
-
-await client.login(process.env.FLUXER_BOT_TOKEN);
+const invite = await channel.createInvite({ maxAge: 86400, maxUses: 10 });
+await message.reply(`Invite: ${invite.url}`);
 ```
 
-## Quick Reference
+Roles live in [Roles](/guides/roles/), not here. Content warnings: [Content Warnings](/guides/content-warnings/).
 
-| `API` | `Method` | Purpose |
-| --- | --- | --- |
-| `Channels` | `guild.createChannel()` | Create text, voice, category, or link channel |
-| `Channels` | `guild.fetchChannels()` | Fetch all guild channels |
-| `Channels` | `channel.edit()` | Rename, set topic, slowmode, parent, overwrites |
-| `Channels` | `channel.delete()` | Delete a channel |
-| `Channels` | `guild.setChannelPositions()` | Reorder or reparent channels |
-| `Channels` | `channel.editPermission()` | Add or update permission overwrite |
-| `Channels` | `channel.deletePermission()` | Remove permission overwrite |
-| `Roles` | `guild.createRole()` | Create a role |
-| `Roles` | `member.roles.add()` | Add role to member |
-| `Roles` | `member.roles.remove()` | Remove role from member |
-| `Invites` | `channel.createInvite()` | Create invite with max_uses, max_age |
-| `Invites` | `channel.fetchInvites()` | List channel invites |
-| `Invites` | `invite.delete()` | Revoke invite |
+## Quick reference
+
+| Method | Purpose |
+| --- | --- |
+| `client.channels.fetch(id)` | Load a channel, then call `delete` / `send` / `edit` |
+| `message.resolveChannel()` | Same channel as the message |
+| `channel.isTextBased()` | Guild text, guild voice, DMs, notes |
+| `channel.isVoice()` / `channel.isLink()` | Voice vs link |
+| `channel.send()` | Post in a text-based channel |
+| `channel.delete()` | Delete (or close a DM) |
+| `guild.createChannel()` | Create text, voice, category, or link |
+| `channel.permissionOverwrites.edit()` | Allow / deny a role or member |
+| `channel.createInvite()` | Invite with `maxUses`, `maxAge` |

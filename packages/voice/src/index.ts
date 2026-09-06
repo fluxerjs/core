@@ -13,7 +13,7 @@ import type { LiveKitRtcConnection } from './LiveKitRtcConnection';
 import type { VoiceConnection } from './VoiceConnection';
 import { VoiceManager } from './VoiceManager.js';
 
-/** Union of connection types (Discord-style or LiveKit). */
+/** Union of connection types (UDP voice or LiveKit). */
 export type VoiceConnectionLike = VoiceConnection | LiveKitRtcConnection;
 
 /**

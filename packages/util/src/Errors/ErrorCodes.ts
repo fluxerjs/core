@@ -57,6 +57,12 @@ export const ErrorCodes = {
   InvalidChannelType: 'INVALID_CHANNEL_TYPE',
   /** Gateway opcode payload missing required fields. */
   InvalidGatewayRequest: 'INVALID_GATEWAY_REQUEST',
+  /** Collector ended because its time limit elapsed. */
+  CollectorIdle: 'COLLECTOR_IDLE',
+  /** Collector ended because its max item limit was reached. */
+  CollectorMax: 'COLLECTOR_MAX',
+  /** Collector requires `time` and/or `max`. */
+  CollectorOptionsRequired: 'COLLECTOR_OPTIONS_REQUIRED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

@@ -1,14 +1,7 @@
 import type { APIUserPartial } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
-import { parseEmoji } from '@fluxerjs/util';
-import type {
-  MessageReactionPayload,
-  ReactionEmojiPayload,
-} from '../../ClientCore/EventPayloads.js';
-import { Events } from '../../Helpers/Events.js';
 import type { User } from '../User.js';
 import type { Message } from './Message.js';
-import { MessageReaction } from './MessageReaction.js';
 
 type EmojiInput = string | { name: string; id?: string; animated?: boolean };
 
@@ -23,81 +16,14 @@ async function emojiPath(message: Message, emoji: EmojiInput): Promise<string> {
   return message.client.resolveEmoji(emoji, message.guildId);
 }
 
-/**
- * Normalize emoji input / resolved wire (`name:id`, `a:name:id`, unicode, mention)
- * into a structured reaction emoji payload.
- */
-function toReactionEmoji(emoji: EmojiInput | string): ReactionEmojiPayload {
-  if (typeof emoji !== 'string') {
-    return {
-      name: emoji.name,
-      ...(emoji.id !== undefined ? { id: emoji.id } : {}),
-      ...(emoji.animated !== undefined ? { animated: emoji.animated } : {}),
-    };
-  }
-
-  const animatedWire = /^a:(\w+):(\d+)$/.exec(emoji);
-  if (animatedWire) {
-    return { name: animatedWire[1]!, id: animatedWire[2]!, animated: true };
-  }
-
-  const parsed = parseEmoji(emoji);
-  if (parsed?.id) {
-    return {
-      name: parsed.name,
-      id: parsed.id,
-      ...(parsed.animated ? { animated: true } : {}),
-    };
-  }
-
-  let name = emoji;
-  try {
-    name = decodeURIComponent(emoji);
-  } catch {
-    /* keep raw */
-  }
-  return { name: parsed?.name ?? name };
-}
-
-/**
- * Emit a local {@link Events.MessageReactionAdd} after REST succeeds.
- * Gateways often omit the bot's own reactions; collectors still need the event.
- * {@link ReactionCollector} dedupes if the gateway later echoes the same reaction.
- */
-function emitOwnReactionAdd(message: Message, wireOrInput: string | EmojiInput): void {
-  const user = message.client.user;
-  if (!user) return;
-  const emojiPayload = toReactionEmoji(wireOrInput);
-  const reaction = new MessageReaction(message.client, {
-    user_id: user.id,
-    channel_id: message.channelId,
-    message_id: message.id,
-    guild_id: message.guildId ?? undefined,
-    emoji: {
-      name: emojiPayload.name,
-      ...(emojiPayload.id !== undefined ? { id: emojiPayload.id } : {}),
-      ...(emojiPayload.animated !== undefined ? { animated: emojiPayload.animated } : {}),
-    },
-  });
-  const payload: MessageReactionPayload = {
-    reaction,
-    user,
-    messageId: message.id,
-    channelId: message.channelId,
-    emoji: emojiPayload,
-    userId: user.id,
-  };
-  message.client.emit(Events.MessageReactionAdd, payload);
-}
-
 /** Add a reaction to a message (as the bot). */
 export async function reactToMessage(message: Message, emoji: EmojiInput): Promise<void> {
   const wire = await emojiPath(message, emoji);
   await message.client.rest.put(
     Routes.channelMessageReactionMe(message.channelId, message.id, wire),
   );
-  // Prefer resolved wire so collectors see name/id/animated correctly.
-  emitOwnReactionAdd(message, wire);
+  // Do not synthesize MessageReactionAdd here. Rely on the gateway echo (or ADD_MANY)
+  // so Client listeners are not double-fired when the gateway does send the event.
 }
 
 /** Remove a reaction (bot's own or a user's if `userId` is set). */

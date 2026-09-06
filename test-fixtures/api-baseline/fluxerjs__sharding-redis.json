@@ -1,0 +1,17 @@
+{
+  "package": "@fluxerjs/sharding-redis",
+  "generatedAt": "2026-09-04T23:57:20.682Z",
+  "entries": [
+    {
+      "subpath": ".",
+      "exports": [
+        "RedisBroker",
+        "RedisBrokerOptions",
+        "RedisClusterCoordinator",
+        "RedisClusterCoordinatorOptions",
+        "RedisSessionStore",
+        "RedisSessionStoreOptions"
+      ]
+    }
+  ]
+}

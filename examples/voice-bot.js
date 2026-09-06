@@ -15,7 +15,7 @@
  *
  * Optional: VOICE_DEBUG=1, FLUXER_VIDEO_FFMPEG=1
  *
- * See the Voice guide: https://fluxerjs.blstmo.com/guides/voice/
+ * See the Voice guide: https://fluxer.js.org/guides/voice/
  */
 
 import { Client, Events, parsePrefixCommand, VoiceChannel } from '@fluxerjs/core';

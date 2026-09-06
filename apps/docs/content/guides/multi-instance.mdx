@@ -1,13 +1,17 @@
 ﻿---
 title: "Self-hosting & multi-instance"
-description: "Run bots against hosted Fluxer, a self-hosted instance, or both in the same Node process. One Client per instance. ClientCluster (beta) can add/remove runtimes without restart."
-category: getting-started
-order: 2
+description: "Advanced: run bots against hosted Fluxer, a self-hosted instance, or both in the same Node process. One Client per instance. ClientCluster (beta) can add/remove runtimes without restart."
+category: additional
+order: 45
 ---
+
+<Warning>
+**Advanced.** Hosted bots with one token can ignore this page. Use it for self-hosted discovery or when you deliberately run multiple instances in one process.
+</Warning>
 
 ## Beta: ClientCluster
 
-ClientCluster is a beta supervisor for multiple independently-tokened clients in one process. The API may change before stabilization. Each runtime requires a bot token issued by that specific instance  -  tokens are not portable. Do not share Message/Guild objects across clients. Import from @fluxerjs/core or @fluxerjs/core/cluster.
+ClientCluster is a beta supervisor for multiple independently-tokened clients in one process. The API may change before stabilization. Each runtime requires a bot token issued by that specific instance (tokens are not portable). Do not share Message/Guild objects across clients. Import from @fluxerjs/core or @fluxerjs/core/cluster.
 
 <Tip>
 Constructing ClientCluster emits a FluxerClientClusterBeta process warning once per process (suppress with suppressBetaWarning for tests only).

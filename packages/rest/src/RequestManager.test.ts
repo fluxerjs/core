@@ -119,6 +119,105 @@ describe('RequestManager', () => {
     expect(result).toEqual({ id: '1' });
   });
 
+  it('falls back to Retry-After when 429 JSON omits retry_after', async () => {
+    vi.useFakeTimers();
+    try {
+      const rm = new RequestManager({ retries: 1 });
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse(
+            { code: 'RATE_LIMITED', message: 'slow down' },
+            { status: 429, headers: { 'Retry-After': '1' } },
+          ),
+        )
+        .mockResolvedValueOnce(jsonResponse({ id: '1' }));
+
+      const pending = rm.request('GET', '/channels/1');
+      await vi.advanceTimersByTimeAsync(999);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(1);
+      await expect(pending).resolves.toEqual({ id: '1' });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('prefers JSON retry_after of 0 over a Retry-After header', async () => {
+    vi.useFakeTimers();
+    try {
+      const rm = new RequestManager({ retries: 1 });
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse(
+            { code: 'RATE_LIMITED', message: 'slow down', retry_after: 0 },
+            { status: 429, headers: { 'Retry-After': '30' } },
+          ),
+        )
+        .mockResolvedValueOnce(jsonResponse({ id: '1' }));
+
+      const pending = rm.request('GET', '/channels/1');
+      await vi.advanceTimersByTimeAsync(0);
+      await expect(pending).resolves.toEqual({ id: '1' });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('falls back to Retry-After when the 429 body is not JSON', async () => {
+    const rm = new RequestManager({ retries: 1 });
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        text: () => Promise.resolve('<html>rate limited</html>'),
+        headers: new Headers({ 'Retry-After': '0' }),
+      } as unknown as Response)
+      .mockResolvedValueOnce(jsonResponse({ id: '1' }));
+
+    await expect(rm.request('GET', '/channels/1')).resolves.toEqual({ id: '1' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('surfaces Retry-After on RateLimitError when JSON omits retry_after', async () => {
+    const rm = new RequestManager({ retries: 0 });
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(
+        { code: 'RATE_LIMITED', message: 'slow down' },
+        { status: 429, headers: { 'Retry-After': '7' } },
+      ),
+    );
+
+    const error = await rm.request('GET', '/channels/1').catch((cause: unknown) => cause);
+    expect(error).toBeInstanceOf(RateLimitError);
+    expect((error as RateLimitError).retryAfter).toBe(7);
+  });
+
+  it('honors Retry-After on retryable 5xx instead of default backoff', async () => {
+    vi.useFakeTimers();
+    try {
+      const rm = new RequestManager({ retries: 1 });
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 503,
+          text: () => Promise.resolve('unavailable'),
+          headers: new Headers({ 'Retry-After': '1' }),
+        } as unknown as Response)
+        .mockResolvedValueOnce(jsonResponse({ ok: true }));
+
+      const pending = rm.request('GET', '/channels/1');
+      await vi.advanceTimersByTimeAsync(499);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(501);
+      await expect(pending).resolves.toEqual({ ok: true });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('throws RateLimitError when retries exhausted', async () => {
     const rm = new RequestManager({ retries: 0 });
     fetchMock.mockResolvedValueOnce(

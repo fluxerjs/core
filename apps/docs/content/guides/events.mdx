@@ -1,17 +1,15 @@
 ---
 title: Events
 description: "Listen to gateway events with client.on. Handlers receive hydrated structures, camelCase DTOs, or wire payloads depending on the event."
-category: events
-order: 16
+category: popular
+order: 21
 ---
 
 ## Basic Usage
 
-Use `client.on(Events.X, handler)` to subscribe. Handlers receive event-specific payloads typed by `ClientEvents`.
+Use `client.on(Events.X, handler)` to subscribe. Handlers receive event-specific payloads typed by `ClientEvents`. `client.events` is an optional chainable alias.
 
-<CodeTabs>
-
-```javascript title="Default"
+```javascript
 import { Client, Events } from '@fluxerjs/core';
 
 const client = new Client();
@@ -27,23 +25,7 @@ client.on(Events.MessageCreate, async (message) => {
 await client.login(process.env.FLUXER_BOT_TOKEN);
 ```
 
-```javascript title="client.events"
-import { Client, Events } from '@fluxerjs/core';
-
-const client = new Client();
-
-client
-  .events.Ready(() => console.log('Bot is ready!'))
-  .events.MessageCreate(async (message) => console.log(message.content));
-
-await client.login(process.env.FLUXER_BOT_TOKEN);
-```
-
-</CodeTabs>
-
-<Tip>
-client.events.X(handler) offers the same API with chaining and better autocomplete.
-</Tip>
+After Ready, `client.uptime` is milliseconds since that moment (`null` before). `client.ws.ping` is the last gateway heartbeat RTT in milliseconds (`-1` until the first ACK; average when sharded).
 
 ## Payload shapes
 
@@ -51,9 +33,29 @@ After the major rewrite, `ClientEvents` payloads fall into three groups:
 
 1. **Hydrated structures**  -  `Message`, `PartialMessage`, `Guild`, `Channel`, `GuildMember`, `Role`, `Invite`, `User`, `GuildBan`, `MessageReaction`, `GuildEmoji` (via DTOs). Prefer these for bot logic.
 2. **CamelCase DTOs**  -  normalized objects from `EventPayloads.ts` (and a few inline camelCase shapes). Use `channelId` / `guildId`, not snake_case wire fields.
-3. **Wire gateway shapes**  -  still `Gateway*DispatchData` from `@fluxerjs/types` (snake_case). Voice events stay wire on purpose so [`@fluxerjs/voice`](/guides/voice/) can consume them unchanged.
+3. **Wire gateway shapes**: still `Gateway*DispatchData` from `@fluxerjs/types` (snake_case). Voice events stay wire on purpose so [`@fluxerjs/voice`](/guides/voice/) can consume them unchanged.
 
-`*Update` handlers that receive old/new structures may see the **same instance** for both args when the cache patches in place (member, channel, guild).
+Nested message and invite fields are camelCase: `message.call.endedAt`, `message.messageSnapshots`, invite snapshots (`parentId`, `creatorId`, `createdAt`).
+
+`*Update` handlers that receive old/new structures may see the **same instance** for both args when the cache patches in place (member, channel, guild). Message updates clone from cache; uncached edits emit a `PartialMessage` instead of a fake `Message`.
+
+`PartialMessage` is a class with `.partial` (`true`) and `.fetch()`. It also has `resolveChannel()` (same as `Message`). `edit()` / `reply()` are not on partials. `Message.partial` is `false`.
+
+Hydrate an update with `Message.resolve(msg)`:
+
+```javascript
+client.on(Events.MessageUpdate, async (_old, msg) => {
+  const message = await Message.resolve(msg);
+  console.log(message.content);
+});
+
+client.on(Events.MessageDelete, async (message) => {
+  const channel = await message.resolveChannel();
+  await channel.send(`${message.authorId} deleted a message`);
+});
+```
+
+`GuildMemberRemove` may be a `PartialGuildMember` (`user` + `guild` only). Check `member.partial` before `joinedAt` or roles.
 
 ## Common Events
 
@@ -61,8 +63,10 @@ After the major rewrite, `ClientEvents` payloads fall into three groups:
 client.on(Events.Ready, () => {});
 
 client.on(Events.MessageCreate, async (message) => {});
-client.on(Events.MessageUpdate, (oldMessage, newMessage) => {});
-client.on(Events.MessageDelete, (message) => {}); // PartialMessage
+client.on(Events.MessageUpdate, (oldMessage, newMessage) => {
+  if (newMessage.partial) return; // uncached edit: ids/content only
+});
+client.on(Events.MessageDelete, (message) => {}); // PartialMessage (not Message)
 
 client.on(Events.MessageReactionAdd, (payload) => {});
 client.on(Events.MessageReactionRemove, (payload) => {});
@@ -79,7 +83,10 @@ client.on(Events.ChannelDelete, (channel) => {});
 
 client.on(Events.GuildMemberAdd, (member) => {});
 client.on(Events.GuildMemberUpdate, (oldMember, newMember) => {}); // oldMember may be null
-client.on(Events.GuildMemberRemove, (member) => {});
+client.on(Events.GuildMemberRemove, (member) => {
+  console.log(`${member.user.username} left ${member.guild.name}`);
+  if (!member.partial) console.log(`joined ${member.joinedAt}`);
+});
 
 client.on(Events.GuildRoleCreate, (role) => {});
 client.on(Events.GuildRoleUpdate, ({ role, oldRole }) => {});
@@ -104,20 +111,19 @@ client.on(Events.VoiceServerUpdate, (data) => {});
 
 ## Reaction Events
 
-`MessageReactionAdd` / `MessageReactionRemove` emit a single **camelCase** DTO (`MessageReactionPayload`: `reaction`, `user`, `messageId`, `channelId`, `emoji`, `userId`). `MessageReactionRemoveAll` and `MessageReactionRemoveEmoji` also emit camelCase DTOs.
+`MessageReactionAdd` / `MessageReactionRemove` emit a single **camelCase** DTO (`MessageReactionPayload`). `message` / `channel` are cached or `null`. Reply with `payload.message` when it is there; otherwise `reaction.fetchMessage()`.
 
 ```javascript
 import { Client, Events } from '@fluxerjs/core';
 
 const client = new Client();
 
-client.on(Events.MessageReactionAdd, ({ reaction, user, messageId, channelId, emoji, userId }) => {
+client.on(Events.MessageReactionAdd, async ({ reaction, message, emoji, userId, messageId }) => {
   const emojiStr = emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name;
   console.log(`User ${userId} reacted with ${emojiStr} on message ${messageId}`);
 
-  if (emoji.name === '👍') {
-    console.log('Someone voted yes!');
-  }
+  const msg = message ?? (await reaction.fetchMessage());
+  if (emoji.name === '👍') await msg.react('✅');
 });
 
 client.on(Events.MessageReactionRemove, ({ userId, emoji, messageId }) => {
@@ -177,10 +183,10 @@ Handler argument types from `ClientEvents`. Structure names are classes from `@f
 | `Error` | `Error` |
 | `Debug` | `string` |
 | `MessageCreate` | `Message` |
-| `MessageUpdate` | `Message \| null`, `Message` |
-| `MessageDelete` | `PartialMessage` |
-| `MessageDeleteBulk` | `MessageDeleteBulkPayload`  -  `&#123; ids, channelId, guildId &#125;` |
-| `MessageReactionAdd` | `MessageReactionPayload`  -  `{ reaction, user, messageId, channelId, emoji, userId }` |
+| `MessageUpdate` | `Message \| null`, `Message \| PartialMessage` (narrow with `newMessage.partial`) |
+| `MessageDelete` | `PartialMessage` (`.partial`, `.fetch()`, `.resolveChannel()`) |
+| `MessageDeleteBulk` | `MessageDeleteBulkPayload`  -  `{ ids, channelId, guildId, channel, messages }` |
+| `MessageReactionAdd` | `MessageReactionPayload`  -  `{ reaction, user, message, channel, member, messageId, channelId, emoji, userId }` |
 | `MessageReactionAddMany` | `MessageReactionAddManyPayload` |
 | `MessageReactionRemove` | `MessageReactionPayload` |
 | `MessageReactionRemoveAll` | `MessageReactionRemoveAllPayload` |
@@ -192,7 +198,7 @@ Handler argument types from `ClientEvents`. Structure names are classes from `@f
 | `GuildDelete` | `Guild` |
 | `GuildMemberAdd` | `GuildMember` |
 | `GuildMemberUpdate` | `GuildMember \| null`, `GuildMember` (old is a clone, or `null` if uncached) |
-| `GuildMemberRemove` | `GuildMember` |
+| `GuildMemberRemove` | `GuildMember \| PartialGuildMember` (narrow with `member.partial`) |
 | `GuildMembersChunk` | `GuildMembersChunkPayload` |
 | `GuildCountsUpdate` | `GuildCountsUpdatePayload` |
 | `ChannelMemberCountsUpdate` | `ChannelMemberCountsUpdatePayload` |
@@ -231,11 +237,11 @@ Exported from `@fluxerjs/core` (defined in `EventPayloads.ts`). Voice events rem
 
 | Payload | Notes |
 | --- | --- |
-| `MessageDeleteBulkPayload` | `ids`, `channelId`, `guildId` |
+| `MessageDeleteBulkPayload` | `ids`, `channelId`, `guildId`, `channel`, `messages` (`PartialMessage[]`) |
 | `InviteDeletePayload` | `code`, `guildId`, `channelId` |
 | `TypingStartPayload` | `channelId`, `guildId`, `userId`, `timestamp` |
 | `GuildEmojisUpdatePayload` / `GuildStickersUpdatePayload` | cached structures |
-| `MessageReactionRemoveAllPayload` / `RemoveEmoji` / `AddMany` | camelCase |
+| `MessageReactionRemoveAllPayload` / `RemoveEmoji` / `AddMany` | camelCase plus cached `message` / `channel` |
 | `ChannelPinsUpdatePayload` | `channelId`, `guildId`, `lastPinTimestamp` |
 | `ChannelRecipientPayload` | `channelId`, `user` |
 | `PresenceUpdatePayload` / `PresenceUpdateBulkPayload` | camelCase |
@@ -247,3 +253,7 @@ Exported from `@fluxerjs/core` (defined in `EventPayloads.ts`). Voice events rem
 | `GuildRoleUpdatePayload` | `{ role, oldRole }` |
 | `GuildRoleDeletePayload` | `{ roleId, guildId, role }` |
 | `MessageReactionAddManyEntry` | nested entry on add-many batches |
+
+Ask for live counts with `client.requestGuildCounts({ guildIds })`. That updates `guild.memberCount` / `guild.onlineCount` when `GuildCountsUpdate` arrives. `client.requestChannelMemberCounts({ guildId })` is **event-only**: listen for `ChannelMemberCountsUpdate`. There is no `channel.memberCount` field.
+
+See also: [Sending Messages](/guides/sending-without-reply/), [Channels](/guides/channels/), [Collectors](/guides/collectors/), [Where do I...?](/guides/where-do-i/).

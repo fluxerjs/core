@@ -5,6 +5,20 @@ import { GuildMember } from '../Domain/Guild/GuildMember.js';
 import type { GuildMemberSearchPayload } from './EventPayloads.js';
 import { type GuildMemberSearchOptions, toMemberSearchBody } from './SdkOptions/index.js';
 
+/** Options for single-member {@link GuildMemberManager.fetch}. */
+export interface FetchGuildMemberOptions {
+  /** When true, always hit REST even if the member is cached. */
+  force?: boolean;
+}
+
+/** Options for list {@link GuildMemberManager.fetch}. */
+export interface FetchGuildMembersOptions {
+  /** Max members to return (1-1000). */
+  limit?: number;
+  /** User ID cursor for pagination. */
+  after?: string;
+}
+
 /**
  * Manages guild members with a Collection-like API.
  * Extends LimitedCollection so you can use .get(), .set(), .filter(), etc.
@@ -25,7 +39,7 @@ export class GuildMemberManager extends LimitedCollection<string, GuildMember> {
    * console.log(member.displayName);
    */
   async resolve(userId: string): Promise<GuildMember> {
-    return this.get(userId) ?? this.guild.fetchMember(userId);
+    return this.get(userId) ?? this.fetch(userId);
   }
 
   /**
@@ -56,11 +70,30 @@ export class GuildMemberManager extends LimitedCollection<string, GuildMember> {
   }
 
   /**
+   * Fetch a single guild member by user ID.
+   * Returns the cached member unless `force` is set.
+   * @throws FluxerError with MEMBER_NOT_FOUND if missing
+   */
+  async fetch(userId: string, options?: FetchGuildMemberOptions): Promise<GuildMember>;
+  /**
    * Fetch guild members with pagination. GET /guilds/{id}/members.
    * @param options - limit (1-1000), after (user ID for pagination)
    * @returns Array of GuildMember objects (cached in guild.members)
    */
-  async fetch(options?: { limit?: number; after?: string }): Promise<GuildMember[]> {
+  async fetch(options?: FetchGuildMembersOptions): Promise<GuildMember[]>;
+  async fetch(
+    userIdOrOptions?: string | FetchGuildMembersOptions,
+    options?: FetchGuildMemberOptions,
+  ): Promise<GuildMember | GuildMember[]> {
+    if (typeof userIdOrOptions === 'string') {
+      const cached = this.get(userIdOrOptions);
+      if (cached && !options?.force) return cached;
+      return this.guild.fetchMember(userIdOrOptions);
+    }
+    return this.fetchMany(userIdOrOptions);
+  }
+
+  private async fetchMany(options?: FetchGuildMembersOptions): Promise<GuildMember[]> {
     const params = new URLSearchParams();
     if (options?.limit != null) params.set('limit', String(options.limit));
     if (options?.after) params.set('after', options.after);

@@ -30,7 +30,21 @@ export function extractToc(content: string): TocHeading[] {
   return headings;
 }
 
-export function OnPageToc({ headings }: { headings: TocHeading[] }): React.ReactElement | null {
-  if (!headings.length) return null;
-  return <OnPageTocClient headings={headings} />;
+/** Long pages: drop h3s so the rail stays a section list, not every subsection. */
+const H3_CAP = 12;
+
+export function OnPageToc({
+  headings,
+  sectionsOnly = false,
+}: {
+  headings: TocHeading[];
+  /** Class/interface rails: Properties / Methods / Constructor only, never each member. */
+  sectionsOnly?: boolean;
+}): React.ReactElement | null {
+  let items = headings;
+  if (sectionsOnly || headings.length > H3_CAP) {
+    items = headings.filter((h) => h.depth <= 2);
+  }
+  if (!items.length) return null;
+  return <OnPageTocClient headings={items} />;
 }

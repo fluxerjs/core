@@ -1,12 +1,13 @@
 import { LimitedCollection } from '@fluxerjs/collection';
 import type {
   AuditLogActionType,
-  ChannelCreateRequest,
+  ContentWarningLevel,
   DefaultMessageNotifications,
   GuildExplicitContentFilter,
   GuildFeature,
   GuildMFALevel,
   GuildVerificationLevel,
+  SplashCardAlignment,
 } from '@fluxerjs/types';
 import { GuildNSFWLevel } from '@fluxerjs/types';
 import { SnowflakeUtil } from '@fluxerjs/util';
@@ -17,6 +18,7 @@ import type {
   DiscoveryApplicationOptions,
   DiscoveryApplicationPayload,
   DiscoveryStatusPayload,
+  GuildChannelCreateOptions,
   SudoVerificationOptions,
 } from '../../ClientCore/SdkOptions/index.js';
 import { cdnGuildAssetURL } from '../../Helpers/Cdn.js';
@@ -35,6 +37,7 @@ import type { GuildSticker } from './GuildSticker.js';
 import * as members from './MemberHttp.js';
 import * as moderation from './Moderation.js';
 import { Role } from './Role.js';
+import { GuildRoleManager } from './GuildRoleManager.js';
 import type { RoleCreateOptions } from './RoleOptions.js';
 import * as roles from './Roles.js';
 import * as stickers from './Stickers.js';
@@ -83,8 +86,26 @@ export class Guild extends Base {
   systemChannelId: string | null;
   /** Rules channel ID (for Community guilds), or null if none. */
   rulesChannelId: string | null;
+  /** {@link SystemChannelFlags} bitfield. */
+  systemChannelFlags: number;
+  /** Splash card alignment. */
+  splashCardAlignment: SplashCardAlignment;
+  /** Embed splash hash. */
+  embedSplash: string | null;
   /** NSFW level for this guild. */
   nsfwLevel: GuildNSFWLevel;
+  /** Whether the guild is marked as adult (18+) content. */
+  nsfw: boolean;
+  /** Content warning level. */
+  contentWarningLevel: ContentWarningLevel;
+  /** Custom guild-wide content warning text. */
+  contentWarningText: string | null;
+  /** {@link GuildOperations} bitfield of disabled operations. */
+  disabledOperations: number;
+  /** ISO-8601 timestamp before which message history is not available. */
+  messageHistoryCutoff: string | null;
+  /** Permissions for the current member in this guild (bitfield string). */
+  permissions: string | null;
   /** MFA level required for moderation actions. */
   mfaLevel: GuildMFALevel;
   /** Banner width in pixels. */
@@ -104,7 +125,7 @@ export class Guild extends Base {
   /** Cached channels in this guild. */
   channels: LimitedCollection<string, GuildChannel>;
   /** Cached roles in this guild. */
-  roles: LimitedCollection<string, Role>;
+  roles: GuildRoleManager;
   /** Cached emojis in this guild. */
   emojis: LimitedCollection<string, GuildEmoji>;
   /** Cached stickers in this guild. */
@@ -123,7 +144,7 @@ export class Guild extends Base {
       maxSize: Number.POSITIVE_INFINITY,
       onEvict: (_id, channel) => client.cache.cascadeChannel(channel, 'guild'),
     });
-    this.roles = new LimitedCollection({ maxSize: client.cache.limits.roles });
+    this.roles = new GuildRoleManager(this.id, { maxSize: client.cache.limits.roles });
     this.emojis = new LimitedCollection({ maxSize: client.cache.limits.emojis });
     this.stickers = new LimitedCollection({ maxSize: client.cache.limits.stickers });
     this.name = data.name ?? '';
@@ -140,7 +161,16 @@ export class Guild extends Base {
     this.afkTimeout = data.afk_timeout ?? 0;
     this.systemChannelId = data.system_channel_id ?? null;
     this.rulesChannelId = data.rules_channel_id ?? null;
+    this.systemChannelFlags = data.system_channel_flags ?? 0;
+    this.splashCardAlignment = data.splash_card_alignment ?? 0;
+    this.embedSplash = data.embed_splash ?? null;
     this.nsfwLevel = data.nsfw_level ?? GuildNSFWLevel.Safe;
+    this.nsfw = data.nsfw ?? false;
+    this.contentWarningLevel = data.content_warning_level ?? 0;
+    this.contentWarningText = data.content_warning_text ?? null;
+    this.disabledOperations = data.disabled_operations ?? 0;
+    this.messageHistoryCutoff = data.message_history_cutoff ?? null;
+    this.permissions = data.permissions ?? null;
     this.mfaLevel = data.mfa_level ?? 0;
     this.bannerWidth = data.banner_width ?? null;
     this.bannerHeight = data.banner_height ?? null;
@@ -176,7 +206,28 @@ export class Guild extends Base {
     if (data.afk_timeout !== undefined) this.afkTimeout = data.afk_timeout ?? 0;
     if (data.system_channel_id !== undefined) this.systemChannelId = data.system_channel_id ?? null;
     if (data.rules_channel_id !== undefined) this.rulesChannelId = data.rules_channel_id ?? null;
+    if (data.system_channel_flags !== undefined) {
+      this.systemChannelFlags = data.system_channel_flags ?? 0;
+    }
+    if (data.splash_card_alignment !== undefined) {
+      this.splashCardAlignment = data.splash_card_alignment ?? 0;
+    }
+    if (data.embed_splash !== undefined) this.embedSplash = data.embed_splash ?? null;
     if (data.nsfw_level !== undefined) this.nsfwLevel = data.nsfw_level ?? GuildNSFWLevel.Safe;
+    if (data.nsfw !== undefined) this.nsfw = data.nsfw ?? false;
+    if (data.content_warning_level !== undefined) {
+      this.contentWarningLevel = data.content_warning_level ?? 0;
+    }
+    if (data.content_warning_text !== undefined) {
+      this.contentWarningText = data.content_warning_text ?? null;
+    }
+    if (data.disabled_operations !== undefined) {
+      this.disabledOperations = data.disabled_operations ?? 0;
+    }
+    if (data.message_history_cutoff !== undefined) {
+      this.messageHistoryCutoff = data.message_history_cutoff ?? null;
+    }
+    if (data.permissions !== undefined) this.permissions = data.permissions ?? null;
     if (data.mfa_level !== undefined) this.mfaLevel = data.mfa_level ?? 0;
     if (data.banner_width !== undefined) this.bannerWidth = data.banner_width ?? null;
     if (data.banner_height !== undefined) this.bannerHeight = data.banner_height ?? null;
@@ -237,11 +288,11 @@ export class Guild extends Base {
   }
 
   /**
-   * Create a channel. `data.type`: 0=text, 2=voice, 4=category, 998=link (set `url`).
+   * Create a channel. `type`: 0=text, 2=voice, 4=category, 998=link (set `url`).
    * Requires Manage Channels.
    */
-  createChannel(data: ChannelCreateRequest): Promise<GuildChannel> {
-    return channels.createChannel(this, data);
+  createChannel(options: GuildChannelCreateOptions): Promise<GuildChannel> {
+    return channels.createChannel(this, options);
   }
 
   /** Fetch all channels in this guild from the API. */
@@ -318,7 +369,7 @@ export class Guild extends Base {
     return roles.resetRoleHoistPositions(this);
   }
 
-  /** Ban a user from the guild. Requires Ban Members. `ban_duration_seconds`: 0 = permanent. */
+  /** Ban a user from the guild. Requires Ban Members. `banDurationSeconds`: 0 = permanent. */
   ban(userId: string, options?: GuildBanOptions): Promise<void> {
     return moderation.ban(this, userId, options);
   }

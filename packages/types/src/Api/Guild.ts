@@ -195,55 +195,39 @@ export const GuildOperations = {
 export type GuildOperationsValue = (typeof GuildOperations)[keyof typeof GuildOperations];
 
 /**
- * Guild feature flags (OpenAPI GuildFeatures).
- * - `ANIMATED_ICON` — animated guild icon
- * - `ANIMATED_BANNER` — animated guild banner
- * - `BANNER` — guild banner
- * - `DETACHED_BANNER` — banner on separate canvas
- * - `INVITE_SPLASH` — invite splash screen
- * - `INVITES_DISABLED` — invites disabled
- * - `TEXT_CHANNEL_FLEXIBLE_NAMES` — flexible text channel naming
- * - `MORE_EMOJI` — extra emoji slots
- * - `MORE_STICKERS` — extra sticker slots
- * - `UNLIMITED_EMOJI` — unlimited emoji
- * - `UNLIMITED_STICKERS` — unlimited stickers
- * - `EXPRESSION_PURGE_ALLOWED` — can purge emoji/stickers
- * - `VANITY_URL` — custom vanity URL
- * - `VERIFIED` — verified guild badge
- * - `VIP_VOICE` — VIP voice regions
- * - `UNAVAILABLE_FOR_EVERYONE` — guild unavailable for non-staff
- * - `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` — guild unavailable except for staff
- * - `VISIONARY` — visionary guild badge
- * - `OPERATOR` — operator guild badge
- * - `LARGE_GUILD_OVERRIDE` — large guild override
- * - `VERY_LARGE_GUILD` — very large guild (>100k members)
- * - `MT_MESSAGE_SCHEDULING` — message scheduling enabled
- * - `MT_EXPRESSION_PACKS` — expression packs enabled
+ * Known guild feature flags (OpenAPI GuildFeatureSchema `x-enumNames`).
+ * Fluxer may send additional strings; keep those at runtime.
  */
 export type GuildFeature =
   | 'ANIMATED_ICON'
   | 'ANIMATED_BANNER'
   | 'BANNER'
+  | 'CLONE_EMOJI_DISABLED'
+  | 'CLONE_STICKER_DISABLED'
   | 'DETACHED_BANNER'
   | 'INVITE_SPLASH'
   | 'INVITES_DISABLED'
+  | 'RAID_DETECTED'
   | 'TEXT_CHANNEL_FLEXIBLE_NAMES'
+  | 'HIDE_OWNER_CROWN'
   | 'MORE_EMOJI'
   | 'MORE_STICKERS'
   | 'UNLIMITED_EMOJI'
   | 'UNLIMITED_STICKERS'
   | 'EXPRESSION_PURGE_ALLOWED'
   | 'VANITY_URL'
+  | 'DISCOVERABLE'
+  | 'PARTNERED'
   | 'VERIFIED'
   | 'VIP_VOICE'
+  | 'VOICE_E2EE'
   | 'UNAVAILABLE_FOR_EVERYONE'
   | 'UNAVAILABLE_FOR_EVERYONE_BUT_STAFF'
+  | 'UNAVAILABLE_HIDDEN'
   | 'VISIONARY'
-  | 'OPERATOR'
   | 'LARGE_GUILD_OVERRIDE'
   | 'VERY_LARGE_GUILD'
-  | 'MT_MESSAGE_SCHEDULING'
-  | 'MT_EXPRESSION_PACKS';
+  | (string & {});
 
 /**
  * Full guild object from GET /guilds/{id} or gateway GUILD_CREATE.

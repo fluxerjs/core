@@ -1,0 +1,61 @@
+---
+title: Content Warnings
+description: Set guild and channel content warning level and custom warning text.
+category: guilds
+order: 35
+searchTerms: content warning NSFW nsfwOverride ContentWarningLevel inherit
+---
+
+Fluxer can show a content warning before a channel (or the whole guild). Bots set this with camelCase options on create/edit. Requires Manage Channels (channel) or Manage Guild / owner (guild).
+
+## Channel warning
+
+```javascript
+import { ContentWarningLevel } from '@fluxerjs/core';
+
+const channel = await client.channels.fetch(channelId);
+if (!channel.isGuild()) return;
+
+await channel.edit({
+  contentWarningLevel: ContentWarningLevel.ContentWarning,
+  contentWarningText: 'Spoilers for the raid tonight.',
+});
+```
+
+`ContentWarningLevel.Inherit` (0) uses the parent category or guild. `ContentWarningLevel.ContentWarning` (1) shows the warning.
+
+Read the current values off the structure after fetch:
+
+```javascript
+console.log(channel.contentWarningLevel, channel.contentWarningText);
+```
+
+## Create with a warning
+
+```javascript
+import { ChannelType, ContentWarningLevel } from '@fluxerjs/core';
+
+const channel = await guild.createChannel({
+  type: ChannelType.GuildText,
+  name: 'spoilers',
+  contentWarningLevel: ContentWarningLevel.ContentWarning,
+  contentWarningText: 'Marked spoilers.',
+});
+```
+
+Voice channels accept the same fields. Category and link channels do not send messages, but a category can still carry a warning that children inherit.
+
+## Guild-wide warning
+
+```javascript
+await guild.edit({
+  contentWarningLevel: ContentWarningLevel.ContentWarning,
+  contentWarningText: 'This server discusses mature topics.',
+});
+```
+
+Guild NSFW is separate: `guild.nsfw` (adult flag) and `guild.nsfwLevel`. Channel `nsfw` / `nsfwOverride` are the per-channel flags.
+
+## Related
+
+[Channels](/guides/channels/), [Permissions](/guides/permissions/).

@@ -11,6 +11,7 @@ import type { Channel } from '../Domain/Channel/index.js';
 import type { Guild } from '../Domain/Guild/Guild.js';
 import type { GuildBan } from '../Domain/Guild/GuildBan.js';
 import type { GuildMember } from '../Domain/Guild/GuildMember.js';
+import type { PartialGuildMember } from '../Domain/Guild/PartialGuildMember.js';
 import type { Role } from '../Domain/Guild/Role.js';
 import type { Invite } from '../Domain/Invite.js';
 import type { Message } from '../Domain/Message/index.js';
@@ -26,8 +27,6 @@ import type {
   GuildCountsUpdatePayload,
   GuildEmojisUpdatePayload,
   GuildMembersChunkPayload,
-  GuildRoleDeletePayload,
-  GuildRoleUpdatePayload,
   GuildStickersUpdatePayload,
   InviteDeletePayload,
   MessageDeleteBulkPayload,
@@ -48,7 +47,7 @@ import type {
 export interface ClientEvents {
   [Events.Ready]: [];
   [Events.MessageCreate]: [message: Message];
-  [Events.MessageUpdate]: [oldMessage: Message | null, newMessage: Message];
+  [Events.MessageUpdate]: [oldMessage: Message | null, newMessage: Message | PartialMessage];
   [Events.MessageDelete]: [message: PartialMessage];
   [Events.MessageReactionAdd]: [payload: MessageReactionPayload];
   [Events.MessageReactionAddMany]: [payload: MessageReactionAddManyPayload];
@@ -66,7 +65,7 @@ export interface ClientEvents {
   [Events.ChannelDelete]: [channel: Channel];
   [Events.GuildMemberAdd]: [member: GuildMember];
   [Events.GuildMemberUpdate]: [oldMember: GuildMember | null, newMember: GuildMember];
-  [Events.GuildMemberRemove]: [member: GuildMember];
+  [Events.GuildMemberRemove]: [member: GuildMember | PartialGuildMember];
   [Events.GuildMembersChunk]: [payload: GuildMembersChunkPayload];
   [Events.GuildCountsUpdate]: [payload: GuildCountsUpdatePayload];
   [Events.ChannelMemberCountsUpdate]: [payload: ChannelMemberCountsUpdatePayload];
@@ -83,8 +82,10 @@ export interface ClientEvents {
   [Events.GuildEmojisUpdate]: [payload: GuildEmojisUpdatePayload];
   [Events.GuildStickersUpdate]: [payload: GuildStickersUpdatePayload];
   [Events.GuildRoleCreate]: [role: Role];
-  [Events.GuildRoleUpdate]: [payload: GuildRoleUpdatePayload];
-  [Events.GuildRoleDelete]: [payload: GuildRoleDeletePayload];
+  /** `oldRole` is null when the role was not cached before the update. */
+  [Events.GuildRoleUpdate]: [oldRole: Role | null, role: Role];
+  /** `role` is null when the role was not cached before delete. */
+  [Events.GuildRoleDelete]: [role: Role | null, guildId: string, roleId: string];
   [Events.ChannelPinsUpdate]: [payload: ChannelPinsUpdatePayload];
   [Events.ChannelRecipientAdd]: [payload: ChannelRecipientPayload];
   [Events.ChannelRecipientRemove]: [payload: ChannelRecipientPayload];
@@ -100,6 +101,21 @@ export interface ClientEvents {
   [Events.Resumed]: [];
   [Events.Error]: [error: Error];
   [Events.Debug]: [message: string];
+  /** A single gateway shard completed READY. */
+  [Events.ShardReady]: [shardId: number];
+  /** A single gateway shard successfully resumed. */
+  [Events.ShardResumed]: [shardId: number];
+  /** A gateway shard closed. */
+  [Events.ShardDisconnect]: [shardId: number, code: number];
+  /** A gateway shard is reconnecting. */
+  [Events.ShardReconnecting]: [shardId: number];
+  /** A gateway shard emitted an error. */
+  [Events.ShardError]: [shardId: number, error: Error];
+  /**
+   * The gateway closed with 4011 — this bot needs more shards.
+   * Non-zero shards drop guild-less events; DMs only reach shard 0.
+   */
+  [Events.ShardingRequired]: [payload: { shardId: number; numShards: number }];
 }
 
 export type ClientEventName = keyof ClientEvents;

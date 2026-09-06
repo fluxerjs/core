@@ -1,17 +1,17 @@
 /**
- * Collectors example — ask a question, wait for a reply or a reaction.
+ * Collectors example: awaitMessages / awaitReactions.
  *
  * Commands:
- *   !ask   — wait for your next message in this channel (15s)
- *   !vote  — post a prompt and wait for 👍 / 👎 (30s)
+ *   !ask   wait for your next message in this channel (15s)
+ *   !vote  post a prompt and wait for thumbs up / down (30s)
  *
  * Usage:
  *   FLUXER_BOT_TOKEN=your_token node examples/collectors-bot.js
  *
- * Guide: https://fluxerjs.blstmo.com/guides/collectors/
+ * Guide: https://fluxer.js.org/guides/collectors/
  */
 
-import { Client, Events, parsePrefixCommand } from '@fluxerjs/core';
+import { Client, ErrorCodes, Events, FluxerError, parsePrefixCommand } from '@fluxerjs/core';
 
 const PREFIX = '!';
 const client = new Client();
@@ -25,8 +25,8 @@ client.on(Events.MessageCreate, async (message) => {
   const parsed = parsePrefixCommand(message.content, PREFIX);
   if (!parsed) return;
 
-  const channel = message.channel;
-  if (!channel?.createMessageCollector) {
+  const channel = message.channel ?? (await message.resolveChannel().catch(() => null));
+  if (!channel) {
     await message.reply('This channel cannot collect messages.');
     return;
   }
@@ -34,49 +34,39 @@ client.on(Events.MessageCreate, async (message) => {
   try {
     if (parsed.command === 'ask') {
       await message.reply('What is your favorite color? (15s)');
-      const collector = channel.createMessageCollector({
+      const collected = await channel.awaitMessages({
         filter: (m) => m.author.id === message.author.id,
         time: 15_000,
         max: 1,
+        errors: ['time'],
       });
-
-      collector.on('collect', async (m) => {
-        await m.reply(`Nice. You said: **${m.content}**`);
-      });
-
-      collector.on('end', async (collected, reason) => {
-        if (reason === 'time' && collected.size === 0) {
-          await message.reply('Timed out. No answer.').catch(() => {});
-        }
-      });
+      const answer = collected.first();
+      if (answer) await answer.reply(`Nice. You said: **${answer.content}**`);
       return;
     }
 
     if (parsed.command === 'vote') {
-      const prompt = await message.reply('React 👍 or 👎 (30s)');
+      const prompt = await message.reply('React with a thumbs up or down (30s)');
       await prompt.react('👍');
       await prompt.react('👎');
 
-      const collector = prompt.createReactionCollector({
+      const collected = await prompt.awaitReactions({
         filter: (reaction, user) =>
           !user.bot &&
           user.id === message.author.id &&
           (reaction.emoji.name === '👍' || reaction.emoji.name === '👎'),
         time: 30_000,
         max: 1,
+        errors: ['time'],
       });
-
-      collector.on('collect', async (reaction, user) => {
-        await prompt.reply(`${user.username} voted ${reaction.emoji.name}`);
-      });
-
-      collector.on('end', async (collected, reason) => {
-        if (reason === 'time' && collected.size === 0) {
-          await prompt.reply('No vote received.').catch(() => {});
-        }
-      });
+      const hit = collected.first();
+      if (hit) await prompt.reply(`${message.author.username} voted ${hit.emoji.name}`);
     }
   } catch (err) {
+    if (err instanceof FluxerError && err.code === ErrorCodes.CollectorIdle) {
+      await message.reply('Timed out.').catch(() => {});
+      return;
+    }
     console.error(err);
     await message.reply('Collector failed.').catch(() => {});
   }

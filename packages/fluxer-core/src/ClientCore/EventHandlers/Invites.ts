@@ -2,7 +2,6 @@ import {
   type APIChannelPartial,
   type APIGuildPartial,
   type APIInvite,
-  type APIPackInviteInfo,
   ChannelType,
   type GatewayInviteCreateDispatchData,
   type GatewayInviteDeleteDispatchData,
@@ -24,12 +23,7 @@ function normalizeInviteCreate(
   if (!raw || !code) return null;
 
   const typeNum = num(raw.type);
-  const type =
-    typeNum === InviteType.GroupDM ||
-    typeNum === InviteType.EmojiPack ||
-    typeNum === InviteType.StickerPack
-      ? typeNum
-      : InviteType.Guild;
+  const type = typeNum === InviteType.GroupDM ? InviteType.GroupDM : InviteType.Guild;
 
   const shared = {
     code,
@@ -42,12 +36,6 @@ function normalizeInviteCreate(
     max_uses: num(raw.max_uses),
     max_age: num(raw.max_age),
   };
-
-  if (type === InviteType.EmojiPack || type === InviteType.StickerPack) {
-    const pack = asRecord(raw.pack);
-    if (!pack || !str(pack.id) || !str(pack.name)) return null;
-    return { ...shared, type, pack: pack as unknown as APIPackInviteInfo };
-  }
 
   const guildObj = asRecord(raw.guild);
   const channelObj = asRecord(raw.channel);

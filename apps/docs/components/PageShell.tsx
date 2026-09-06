@@ -15,6 +15,8 @@ export interface SidebarItem {
   badge?: string;
   active?: boolean;
   hint?: string;
+  /** Extra text matched by the sidebar filter (method names, etc). */
+  keywords?: string;
 }
 
 export interface SidebarGroup {
@@ -80,6 +82,8 @@ function SidebarNav({
           (i) =>
             i.label.toLowerCase().includes(q) ||
             (i.badge?.toLowerCase().includes(q) ?? false) ||
+            (i.hint?.toLowerCase().includes(q) ?? false) ||
+            (i.keywords?.toLowerCase().includes(q) ?? false) ||
             g.label.toLowerCase().includes(q),
         ),
         defaultOpen: true,
@@ -90,7 +94,12 @@ function SidebarNav({
   const filteredItems = useMemo(() => {
     if (!items) return undefined;
     if (!q) return items;
-    return items.filter((i) => i.label.toLowerCase().includes(q));
+    return items.filter(
+      (i) =>
+        i.label.toLowerCase().includes(q) ||
+        (i.hint?.toLowerCase().includes(q) ?? false) ||
+        (i.keywords?.toLowerCase().includes(q) ?? false),
+    );
   }, [items, q]);
 
   const flat = !filteredGroups?.length && !groups?.length;
@@ -105,7 +114,7 @@ function SidebarNav({
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Filter…"
+          placeholder="Filter classes, methods…"
           className="h-8 border-border/80 bg-background/60 pl-8 text-xs"
           aria-label={`Filter ${title}`}
         />
@@ -160,7 +169,9 @@ export function DocsSidebar({
   groups?: SidebarGroup[];
 }): React.ReactElement {
   return (
-    <aside className="sticky top-[var(--header-h)] hidden h-[calc(100vh-var(--header-h))] w-[var(--sidebar-w)] shrink-0 border-r border-border/80 bg-card/40 lg:block">
+    <aside
+      data-docs-sidebar
+      className="docs-sidebar sticky top-[var(--header-h)] z-20 hidden h-[calc(100vh-var(--header-h))] w-[var(--sidebar-w)] shrink-0 border-r border-border/80 bg-card lg:block">
       <div className="scrollbar-none h-full overflow-y-auto px-3 py-4">
         <SidebarNav title={title} items={items} groups={groups} />
       </div>
@@ -234,7 +245,7 @@ export function PageShell({
             </div>
           </main>
           {toc ? (
-            <aside className="scrollbar-none sticky top-[var(--header-h)] hidden h-[calc(100vh-var(--header-h))] w-[clamp(11rem,15vw,15rem)] shrink-0 overflow-y-auto border-l border-border/60 py-8 pl-4 pr-[var(--content-pad)] xl:block">
+            <aside className="scrollbar-none sticky top-[var(--header-h)] z-10 hidden h-[calc(100vh-var(--header-h))] w-56 shrink-0 overflow-y-auto py-8 pl-6 pr-4 xl:block">
               {toc}
             </aside>
           ) : null}

@@ -37,11 +37,13 @@ export async function CodeBlock({
   lang = 'typescript',
   className,
   showLang = true,
+  filename,
 }: {
   code: string;
   lang?: string;
   className?: string;
   showLang?: boolean;
+  filename?: string;
 }): Promise<React.ReactElement> {
   const normalized = normalizeLang(lang);
   const source = code.trimEnd();
@@ -54,7 +56,16 @@ export async function CodeBlock({
         className,
       )}>
       <div className="flex h-9 items-center justify-between border-b border-border/70 bg-muted/50 px-3">
-        {showLang ? (
+        {filename ? (
+          <span className="inline-flex items-center gap-2.5 text-[12px] text-muted-foreground">
+            <span aria-hidden className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-border" />
+              <span className="h-2.5 w-2.5 rounded-full bg-border" />
+              <span className="h-2.5 w-2.5 rounded-full bg-border" />
+            </span>
+            <span className="font-mono text-foreground/80">{filename}</span>
+          </span>
+        ) : showLang ? (
           <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
             <span
               aria-hidden

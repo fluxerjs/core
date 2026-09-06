@@ -1,175 +1,106 @@
 ---
-title: Sending Without Reply
-description: "Send messages to the same channel or to specific channels. Covers message.send(), message.sendTo(), client.channels.send(), and client.channels.resolve()."
-category: sending-messages
-order: 3
+title: Sending Messages
+description: Fetch a channel, then channel.send. Reply with message.reply. Forward with send({ forward }).
+category: popular
+order: 10
+searchTerms: voice text send reply forward replyTo ping sendTyping INVALID_CHANNEL_TYPE
 ---
 
-## message.send() vs message.reply()
-
-`message.reply()` posts a threaded reply to the triggering message. `message.send()` posts in the same channel with no reference: a normal standalone message.
-
-## Sending to the same channel
-
-Use message.send() when you want to post in the channel without replying. Same signature as reply(): pass a string or object with content and/or embeds.
+Fetch the channel, then send. Guild text, **guild voice**, and DMs are text-based. `channel.send` throws `INVALID_CHANNEL_TYPE` on category and link channels only. Voice chat uses the same `send` / `reply` path as a text channel.
 
 ```javascript
-import { Client, Events } from '@fluxerjs/core';
+const channel = await client.channels.fetch(channelId);
+if (!channel.isTextBased()) return;
+await channel.send('hi');
+```
 
-const client = new Client();
+From a message (full `Message` or `PartialMessage`):
 
+```javascript
+const channel = await message.resolveChannel();
+await channel.send('hi');
+```
+
+`channel.toString()` is `<#id>`. `client.channels.delete(id)` only drops the cache; API delete is `channel.delete()`.
+
+## Reply vs send
+
+`message.reply()` is a threaded reply. Use `channel.send()` for a standalone post in that channel.
+
+```javascript
 client.on(Events.MessageCreate, async (message) => {
+  if (message.content === '!ping') await message.reply('Pong!');
   if (message.content === '!hello') {
-    await message.send('Hello! This is a regular message, not a reply.');
-  }
-});
-
-await client.login(process.env.FLUXER_BOT_TOKEN);
-```
-
-## Sending to a specific channel (e.g. logging)
-
-Use `message.sendTo(channelId, payload)` to post elsewhere (logs, announcements, forwarding). You only need the target channel ID.
-
-```javascript
-import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
-
-const client = new Client();
-const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID; // Your log channel's snowflake
-
-client.on(Events.MessageCreate, async (message) => {
-  if (message.content === '!report' && message.guildId && LOG_CHANNEL_ID) {
-    const embed = new EmbedBuilder()
-      .setTitle('User report')
-      .setDescription(message.content)
-      .addFields(
-        { name: 'Author', value: message.author.username, inline: true },
-        { name: 'Channel', value: `<#${message.channelId}>`, inline: true }
-      )
-      .setTimestamp();
-
-    await message.sendTo(LOG_CHANNEL_ID, { embeds: [embed] });
-    await message.send('Report logged.');
-  }
-});
-
-await client.login(process.env.FLUXER_BOT_TOKEN);
-```
-
-## client.channels.send()  -  send by channel ID
-
-Use client.channels.send(channelId, payload) when you have a channel ID. Works even if the channel is not cached. No need to fetch first when you only need to send.
-
-```javascript
-import { Client, Events } from '@fluxerjs/core';
-
-const client = new Client();
-const ANNOUNCE_CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID;
-
-client.on(Events.Ready, async () => {
-  if (ANNOUNCE_CHANNEL_ID) {
-    await client.channels.send(ANNOUNCE_CHANNEL_ID, 'Bot is online!');
-  }
-});
-
-await client.login(process.env.FLUXER_BOT_TOKEN);
-```
-
-## client.channels.resolve()  -  get channel by ID
-
-Resolve a channel by ID from cache or API. Use channel.canSendMessage() or channel.isTextBased() before sending. For sending when you only have an ID, prefer client.channels.send() which skips the fetch.
-
-```javascript
-import { Client } from '@fluxerjs/core';
-
-const client = new Client();
-await client.login(process.env.FLUXER_BOT_TOKEN);
-
-// Fetch channel (from API if not cached)
-const channel = await client.channels.resolve(channelId);
-if (channel?.canSendMessage()) {
-  await channel.send('Hello!');
-}
-// Or for webhooks: if (channel?.createWebhook) { ... }
-```
-
-## fetch message by id
-
-Use channel.messages.fetch(messageId) when you have the channel. For IDs-only, fetch the channel first.
-
-```javascript
-// When you have the channel
-const message = await channel.messages.fetch(messageId);
-if (message) {
-  await message.edit({ content: 'Updated!' });
-  await message.react('👍');
-}
-
-// When you only have IDs (e.g. from sqlite)
-const ch = await client.channels.resolve(channelId);
-const msg = await ch?.messages?.fetch(messageId);
-if (msg) await msg.delete();
-
-// When channel is cached
-const m = client.channels.get(channelId);
-if (m?.canSendMessage()) {
-  const mes = await m.messages.fetch(messageId);
-  if (mes) await mes.edit({ content: 'Edited!' });
-}
-
-// Refresh a stale message instance
-const updated = await message.fetch();
-if (updated) console.log(updated.content);
-```
-
-## message.channel and message.channel.send()
-
-message.channel returns the channel (from cache); null if not cached. Messages only exist in text-based channels, so when non-null it always has send(). Use message.channel.send() for the same as message.send() but via the channel object.
-
-```javascript
-client.on(Events.MessageCreate, async (message) => {
-  const channel = message.channel;   // TextChannel | DMChannel | GuildChannel | null
-  const guild = message.guild;       // Guild | null (null for DMs)
-  if (channel) {
-    await channel.send('Same channel, different API');  // or message.send()
+    const channel = message.channel ?? (await message.resolveChannel());
+    await channel.send('Hello. Not a reply.');
   }
 });
 ```
 
-## channel.canSendMessage()  -  permission check
-
-Before sending, use canSendMessage() to check if the bot has ViewChannel and SendMessages. For DMs always true; for guild channels uses guild.members.me permissions.
+Skip the reply ping:
 
 ```javascript
-const channel = await client.channels.resolve(channelId);
-if (channel?.canSendMessage()) {
-  await channel.send('Hello!');
+await message.reply('Got it.', { ping: false });
+```
+
+## Forward
+
+Post a copy of an existing message into this channel. Do not combine `replyTo` and `forward` on the same send.
+
+```javascript
+const dest = await client.channels.fetch(logChannelId);
+if (!dest.isTextBased()) return;
+
+await dest.send({
+  content: 'Forwarded from another channel:',
+  forward: {
+    channelId: message.channelId,
+    messageId: message.id,
+    guildId: message.guildId,
+  },
+});
+```
+
+Received forwards expose snapshots on `message.messageSnapshots`.
+
+## Voice text
+
+If `channel.isVoice()` (or `channel.isTextBased()`), `send` works. Playing audio is a different package: [Voice](/guides/voice/).
+
+```javascript
+if (channel.isVoice()) {
+  await channel.send('Talk in the VC chat.');
 }
 ```
 
-## Typing indicator
+## Another channel
 
-Use channel.sendTyping() before a slow operation so users see "Bot is typing...". Lasts ~10 seconds.
+```javascript
+const log = await client.channels.fetch(logChannelId);
+if (!log.isTextBased()) return;
+await log.send({ embeds: [embed] });
+```
+
+`message.channel` is the cached text, voice, or DM channel, or `null`. `message.member` is the author's cached member.
+
+## Fetch a message
+
+```javascript
+const channel = await client.channels.fetch(channelId);
+if (!channel.isTextBased()) return;
+const msg = await channel.messages.fetch(messageId);
+await msg.edit({ content: 'Updated!' });
+```
+
+## Typing
 
 ```javascript
 const channel = message.channel ?? (await message.resolveChannel());
-if (channel?.canSendMessage?.()) {
-  await channel.sendTyping();
-  await slowOperation(); // e.g. fetch external API
-  await message.reply('Done!');
-}
+await channel.sendTyping();
+await slowOperation();
+await message.reply('Done!');
 ```
 
-## Quick reference
+`message.send` / `message.sendTo` / `client.channels.send` still exist if you only have IDs and do not want the channel object. Prefer fetch then `channel.send`.
 
-```javascript
-// Same channel, no reply
-await message.send('Pong!');
-
-// Reply to the message
-await message.reply('Pong!');
-
-// Send to a specific channel
-await message.sendTo(logChannelId, 'User joined!');
-await client.channels.send(channelId, 'New update available!');
-```
+See also: [Embeds](/guides/embeds/), [File Attachments](/guides/attachments/), [Allowed Mentions](/guides/allowed-mentions/), [Channels](/guides/channels/).

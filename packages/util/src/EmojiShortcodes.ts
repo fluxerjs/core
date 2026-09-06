@@ -4,7 +4,7 @@
  * without requiring guild context. Custom emojis use guild lookup; known Unicode shortcodes
  * resolve here so they work in DMs and guild channels alike.
  *
- * Data is generated from Discord's emoji data (anyascii/discord-emojis).
+ * Data is generated from the anyascii/discord-emojis shortcode dataset.
  * Run: pnpm exec tsx scripts/generate-emoji-shortcodes.ts
  */
 import { UNICODE_EMOJI_SHORTCODES as SHORTCODES } from './emojiShortcodes.generated.js';

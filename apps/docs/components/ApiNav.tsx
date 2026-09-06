@@ -1,5 +1,6 @@
 import { Boxes, Braces, Hash } from 'lucide-react';
 import { DocsSidebar, type SidebarGroup, type SidebarItem } from '@/components/PageShell';
+import { symbolMemberNames } from '@/lib/access-paths';
 import { loadApiDocsFor } from '@/lib/api-docs';
 
 function normalizeBasePath(basePath = '/docs'): string {
@@ -20,18 +21,21 @@ export function getApiSidebarItems(
       label: c.name,
       badge: 'class',
       active: activeKind === 'class' && activeName === c.name,
+      keywords: symbolMemberNames(c),
     })),
     ...docs.interfaces.map((i) => ({
       href: `${base}/interface/${i.name}/`,
       label: i.name,
       badge: 'type',
       active: activeKind === 'interface' && activeName === i.name,
+      keywords: symbolMemberNames(i),
     })),
     ...docs.enums.map((e) => ({
       href: `${base}/enum/${e.name}/`,
       label: e.name,
       badge: 'enum',
       active: activeKind === 'enum' && activeName === e.name,
+      keywords: symbolMemberNames(e),
     })),
   ];
 }
@@ -55,6 +59,7 @@ export function getApiSidebarGroups(
         label: c.name,
         active: activeKind === 'class' && activeName === c.name,
         hint: c.package,
+        keywords: symbolMemberNames(c),
       })),
     },
     {
@@ -66,6 +71,7 @@ export function getApiSidebarGroups(
         href: `${base}/interface/${i.name}/`,
         label: i.name,
         active: activeKind === 'interface' && activeName === i.name,
+        keywords: symbolMemberNames(i),
       })),
     },
     {
@@ -77,6 +83,7 @@ export function getApiSidebarGroups(
         href: `${base}/enum/${e.name}/`,
         label: e.name,
         active: activeKind === 'enum' && activeName === e.name,
+        keywords: symbolMemberNames(e),
       })),
     },
   ].filter((g) => g.items.length > 0);

@@ -1,8 +1,10 @@
+import { SnowflakeUtil } from '@fluxerjs/util';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Invite } from '../../Domain/Invite.js';
 import { Message } from '../../Domain/Message/index.js';
+import { PartialMessage } from '../../Domain/Message/PartialMessage.js';
 import { Events } from '../../Helpers/Events.js';
-import { dispatchForTest, fixtureMessage } from '../../TestKit/Fixtures.js';
+import { dispatchForTest, fixtureMessage, fixtureUser } from '../../TestKit/Fixtures.js';
 import { Client } from '../Client.js';
 import type {
   InviteDeletePayload,
@@ -45,25 +47,104 @@ describe('messageHandlers', () => {
     expect(call![1]).toBeInstanceOf(Message);
     expect((call![1] as Message).content).toBe('old');
     expect((call![2] as Message).content).toBe('new');
+    expect((call![2] as Message).partial).toBe(false);
+  });
+
+  it('MESSAGE_UPDATE emits PartialMessage when uncached and does not poison cache', async () => {
+    const emit = vi.spyOn(client, 'emit');
+
+    await dispatchForTest(client, 'MESSAGE_UPDATE', {
+      id: 'm1',
+      channel_id: 'c1',
+      content: 'new',
+    });
+
+    const call = emit.mock.calls.find((c) => c[0] === Events.MessageUpdate);
+    expect(call![1]).toBeNull();
+    expect(call![2]).toMatchObject({
+      partial: true,
+      id: 'm1',
+      channelId: 'c1',
+      content: 'new',
+    });
+    expect(client._getMessageCache('c1')?.get('m1')).toBeUndefined();
   });
 
   it('MESSAGE_DELETE emits PartialMessage-shaped payload', async () => {
     const emit = vi.spyOn(client, 'emit');
+    const id = '500000000000000001';
     await dispatchForTest(client, 'MESSAGE_DELETE', {
-      id: 'm1',
+      id,
       channel_id: 'c1',
       guild_id: 'g1',
       content: 'bye',
       author_id: 'u1',
     });
 
-    expect(emit.mock.calls.find((c) => c[0] === Events.MessageDelete)?.[1]).toEqual({
-      id: 'm1',
+    expect(emit.mock.calls.find((c) => c[0] === Events.MessageDelete)?.[1]).toMatchObject({
+      partial: true,
+      id,
       channelId: 'c1',
+      guildId: 'g1',
       channel: null,
       content: 'bye',
       authorId: 'u1',
+      author: null,
+      createdAt: SnowflakeUtil.dateFromSnowflake(id),
     });
+    expect(emit.mock.calls.find((c) => c[0] === Events.MessageDelete)?.[1]).toBeInstanceOf(
+      PartialMessage,
+    );
+  });
+
+  it('MESSAGE_DELETE hydrates author and createdAt from cache', async () => {
+    const cached = fixtureMessage({
+      id: 'm1',
+      channel_id: 'c1',
+      guild_id: 'g1',
+      content: 'cached',
+      timestamp: '2024-06-01T12:00:00.000Z',
+      author: fixtureUser({ id: 'u1', username: 'alice' }),
+    });
+    client._addMessageToCache('c1', cached);
+    const emit = vi.spyOn(client, 'emit');
+
+    await dispatchForTest(client, 'MESSAGE_DELETE', {
+      id: 'm1',
+      channel_id: 'c1',
+    });
+
+    const payload = emit.mock.calls.find((c) => c[0] === Events.MessageDelete)?.[1] as
+      | PartialMessage
+      | undefined;
+    expect(payload).toMatchObject({
+      partial: true,
+      id: 'm1',
+      channelId: 'c1',
+      guildId: 'g1',
+      content: 'cached',
+      authorId: 'u1',
+    });
+    expect(payload?.author?.id).toBe('u1');
+    expect(payload?.createdAt).toEqual(new Date('2024-06-01T12:00:00.000Z'));
+    expect(client._getMessageCache('c1')?.get('m1')).toBeUndefined();
+  });
+
+  it('MESSAGE_DELETE resolves author from the user cache', async () => {
+    client.getOrCreateUser(fixtureUser({ id: 'u1', username: 'alice' }));
+    const emit = vi.spyOn(client, 'emit');
+    await dispatchForTest(client, 'MESSAGE_DELETE', {
+      id: 'm1',
+      channel_id: 'c1',
+      author_id: 'u1',
+    });
+
+    const payload = emit.mock.calls.find((c) => c[0] === Events.MessageDelete)?.[1] as
+      | PartialMessage
+      | undefined;
+    expect(payload?.authorId).toBe('u1');
+    expect(payload?.author?.id).toBe('u1');
+    expect(payload?.createdAt).toBeNull();
   });
 
   it('MESSAGE_DELETE_BULK emits camelCase ids payload', async () => {
@@ -77,7 +158,47 @@ describe('messageHandlers', () => {
     const payload = emit.mock.calls.find((c) => c[0] === Events.MessageDeleteBulk)?.[1] as
       | MessageDeleteBulkPayload
       | undefined;
-    expect(payload).toEqual({ ids: ['m1', 'm2'], channelId: 'c1', guildId: null });
+    expect(payload).toEqual({
+      ids: ['m1', 'm2'],
+      channelId: 'c1',
+      guildId: null,
+      channel: null,
+      messages: [
+        expect.objectContaining({ partial: true, id: 'm1', channelId: 'c1' }),
+        expect.objectContaining({ partial: true, id: 'm2', channelId: 'c1' }),
+      ],
+    });
+  });
+
+  it('MESSAGE_DELETE_BULK hydrates cached messages before dropping them', async () => {
+    client._addMessageToCache(
+      'c1',
+      fixtureMessage({
+        id: 'm1',
+        channel_id: 'c1',
+        guild_id: 'g1',
+        content: 'one',
+        author: fixtureUser({ id: 'u1' }),
+      }),
+    );
+    const emit = vi.spyOn(client, 'emit');
+    await dispatchForTest(client, 'MESSAGE_DELETE_BULK', {
+      ids: ['m1', 'm2'],
+      channel_id: 'c1',
+      guild_id: 'g1',
+    });
+
+    const payload = emit.mock.calls.find((c) => c[0] === Events.MessageDeleteBulk)?.[1] as
+      | MessageDeleteBulkPayload
+      | undefined;
+    expect(payload?.messages[0]).toMatchObject({
+      partial: true,
+      id: 'm1',
+      content: 'one',
+      authorId: 'u1',
+    });
+    expect(payload?.messages[1]).toMatchObject({ partial: true, id: 'm2', content: null });
+    expect(client._getMessageCache('c1')?.get('m1')).toBeUndefined();
   });
 
   it('MESSAGE_REACTION_ADD emits MessageReactionPayload', async () => {
@@ -99,6 +220,27 @@ describe('messageHandlers', () => {
       emoji: { name: '👍' },
     });
     expect(payload?.user.id).toBe('u1');
+    expect(payload?.message).toBeNull();
+    expect(payload?.channel).toBeNull();
+    expect(payload?.member).toBeNull();
+  });
+
+  it('MESSAGE_REACTION_ADD hydrates cached message', async () => {
+    client._addMessageToCache('c1', fixtureMessage({ id: 'm1', channel_id: 'c1', content: 'hi' }));
+    const emit = vi.spyOn(client, 'emit');
+    await dispatchForTest(client, 'MESSAGE_REACTION_ADD', {
+      user_id: 'u1',
+      channel_id: 'c1',
+      message_id: 'm1',
+      emoji: { name: '👍', id: null },
+    });
+
+    const payload = emit.mock.calls.find((c) => c[0] === Events.MessageReactionAdd)?.[1] as
+      | MessageReactionPayload
+      | undefined;
+    expect(payload?.message).toBeInstanceOf(Message);
+    expect(payload?.message?.content).toBe('hi');
+    expect(payload?.reaction.message?.id).toBe('m1');
   });
 });
 

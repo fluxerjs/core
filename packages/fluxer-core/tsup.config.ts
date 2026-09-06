@@ -7,6 +7,7 @@ export default defineConfig({
     errors: 'src/SubpathErrors.ts',
     message: 'src/SubpathMessage.ts',
     cluster: 'src/SubpathCluster.ts',
+    internal: 'src/SubpathInternal.ts',
   },
   format: ['cjs', 'esm'],
   dts: true,

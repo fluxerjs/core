@@ -8,10 +8,20 @@ export {
   TextChannel,
   VoiceChannel,
 } from './Guild.js';
+export { PermissionOverwrite } from './PermissionOverwrite.js';
+export {
+  type PermissionOverwriteEditOptions,
+  PermissionOverwriteManager,
+} from './PermissionOverwriteManager.js';
 export type { FetchPinnedMessagesOptions, PinnedMessagesPage } from './TextCapable.js';
 
 import { Channel } from './Base.js';
+import type { DMChannel } from './Dm.js';
 import { channelFrom, channelFromOrCreate, createDM } from './Factory.js';
+import type { TextChannel, VoiceChannel } from './Guild.js';
+
+/** Channel types that can carry messages (guild text, guild voice, DMs). */
+export type TextBasedChannel = TextChannel | VoiceChannel | DMChannel;
 
 // Wire the Channel factory statics here (the channel domain's composition root)
 // to avoid a circular import between Base.ts and Factory.ts.

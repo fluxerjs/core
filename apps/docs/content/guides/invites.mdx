@@ -1,15 +1,21 @@
 ---
 title: Invites
-description: Create and list channel invites with camelCase options.
-category: channels
-order: 24
+description: Create and list channel invites, plus guild vanity URLs.
+category: popular
+order: 20
+searchTerms: createInvite fetchInvites vanity fetchVanityURL editVanityURL guildSnapshot
 ---
 
 Invites are created on a channel and can be listed for that channel or the whole guild.
 
 ## Create an invite
 
+`createInvite` is on guild channels. Narrow with `channel.isGuild()` when you have `message.channel` or `client.channels.get()`.
+
 ```javascript
+const channel = message.channel;
+if (!channel?.isGuild()) return;
+
 const invite = await channel.createInvite({
   maxUses: 1,
   maxAge: 3600, // seconds; 0 = never expires
@@ -18,7 +24,7 @@ const invite = await channel.createInvite({
 await message.reply(`Invite: ${invite.url ?? invite.code}`);
 ```
 
-Options are camelCase (`maxUses`, `maxAge`). Wire JSON stays snake_case under the hood.
+Options are camelCase (`maxUses`, `maxAge`, `unique`, `temporary`).
 
 ## List invites
 
@@ -31,8 +37,28 @@ for (const invite of guildInvites) {
 }
 ```
 
+`invite.guildSnapshot` / `invite.channelSnapshot` are camelCase metadata, not live structures. Use `invite.resolveGuild()` / `invite.resolveChannel()` when you need the cached guild or channel. Discriminate with `invite.isGuild()` / `invite.isGroupDM()`.
+
+Deleted invites show up via `Events.InviteDelete` with a camelCase payload (`code`, `guildId`, `channelId`).
+
+## Vanity URL
+
+If the guild has a vanity invite:
+
+```javascript
+const vanity = await guild.fetchVanityURL();
+console.log(vanity.code, vanity.uses);
+
+await guild.editVanityURL('my-guild');
+await guild.editVanityURL(null); // clear
+```
+
+Requires Manage Guild. There is no bot API to **accept** an invite or join a guild.
+
 ## Tips
 
 - Creating invites needs Create Instant Invite (or Manage Channels, depending on server settings).
-- Prefer `channel.createInvite` when you already have the channel structure.
-- Deleted invites show up via `Events.InviteDelete` with a camelCase payload (`code`, `guildId`, `channelId`).
+- Prefer `channel.createInvite` when you already have a guild channel (`channel.isGuild()`).
+- How people find the server listing: [Server Discovery](/guides/server-discovery/) (apply, do not join).
+
+See [Channels](/guides/channels/).
