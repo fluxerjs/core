@@ -89,12 +89,10 @@ const EMPTY_QUERY_KINDS: SearchKind[] = ['guide', 'example', 'class', 'rest', 'c
 
 export function AppShell({
   children,
-  searchItems,
   latest,
   versions,
 }: {
   children: React.ReactNode;
-  searchItems: SearchItem[];
   latest: string;
   versions: string[];
 }): React.ReactElement {
@@ -125,7 +123,7 @@ export function AppShell({
         <ScrollToHash />
         <div className="flex-1">{children}</div>
         <HelpFab />
-        <SearchCommand open={open} onOpenChange={setOpen} items={searchItems} />
+        <SearchCommand open={open} onOpenChange={setOpen} />
       </div>
     </DocsVersionProvider>
   );
@@ -134,38 +132,60 @@ export function AppShell({
 function SearchCommand({
   open,
   onOpenChange,
-  items,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  items: SearchItem[];
 }): React.ReactElement {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
   const [kindFilter, setKindFilter] = useState<SearchKind | 'all'>('all');
+  const [items, setItems] = useState<SearchItem[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    if (!open || items !== null || loadError) return;
+    let cancelled = false;
+    void fetch('/search.json')
+      .then((res) => {
+        if (!res.ok) throw new Error(`search.json ${res.status}`);
+        return res.json() as Promise<SearchItem[]>;
+      })
+      .then((data) => {
+        if (!cancelled) setItems(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, items, loadError]);
 
   const fuse = useMemo(
     () =>
-      new Fuse(items, {
-        keys: [
-          { name: 'path', weight: 0.3 },
-          { name: 'name', weight: 0.25 },
-          { name: 'title', weight: 0.2 },
-          { name: 'keywords', weight: 0.15 },
-          { name: 'owner', weight: 0.05 },
-          { name: 'description', weight: 0.05 },
-        ],
-        threshold: 0.34,
-        ignoreLocation: true,
-        includeScore: true,
-        shouldSort: true,
-        minMatchCharLength: 1,
-      }),
+      items
+        ? new Fuse(items, {
+            keys: [
+              { name: 'path', weight: 0.3 },
+              { name: 'name', weight: 0.25 },
+              { name: 'title', weight: 0.2 },
+              { name: 'keywords', weight: 0.15 },
+              { name: 'owner', weight: 0.05 },
+              { name: 'description', weight: 0.05 },
+            ],
+            threshold: 0.34,
+            ignoreLocation: true,
+            includeScore: true,
+            shouldSort: true,
+            minMatchCharLength: 1,
+          })
+        : null,
     [items],
   );
 
   const results = useMemo(() => {
+    if (!items || !fuse) return [];
     const q = deferredQuery.trim();
     let list: SearchItem[];
     if (!q) {
@@ -242,7 +262,13 @@ function SearchCommand({
           </div>
 
           <Command.List className="scrollbar-none max-h-[min(70vh,32rem)] overflow-y-auto p-2">
-            {results.length === 0 ? (
+            {items === null && !loadError ? (
+              <div className="py-12 text-center text-sm text-muted-foreground">Loading search…</div>
+            ) : loadError ? (
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                Search index failed to load.
+              </div>
+            ) : results.length === 0 ? (
               <Command.Empty className="py-12 text-center text-sm text-muted-foreground">
                 No results for “{query.trim()}”.
               </Command.Empty>

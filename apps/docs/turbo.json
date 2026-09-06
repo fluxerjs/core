@@ -3,6 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build", "//#generate:docs"],
+      "cache": false,
       "outputs": [".next/**", "!.next/cache/**", "out/**"]
     }
   }

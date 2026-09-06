@@ -33,6 +33,7 @@ apps/docs/out
 # SDK API docs JSON + tagged guide snapshots (scripts/generate-docs.ts)
 apps/docs/public/api/
 apps/docs/public/guides/
+apps/docs/public/search.json
 
 # Local-only bots / live harnesses (not committed)
 local/

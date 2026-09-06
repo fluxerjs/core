@@ -3,7 +3,6 @@ import { JetBrains_Mono, Source_Sans_3 } from 'next/font/google';
 import { AppShell } from '@/components/AppShell';
 import { Providers } from '@/components/Providers';
 import { loadVersions } from '@/lib/api-docs';
-import { buildSearchIndex } from '@/lib/search-index';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -31,13 +30,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }): React.ReactElement {
-  const searchItems = buildSearchIndex();
   const { latest, versions } = loadVersions();
   return (
     <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
       <body className="min-h-screen font-sans antialiased">
         <Providers>
-          <AppShell searchItems={searchItems} latest={latest} versions={versions}>
+          <AppShell latest={latest} versions={versions}>
             {children}
           </AppShell>
         </Providers>

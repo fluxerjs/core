@@ -100,14 +100,12 @@ The manager owns the per-IP IDENTIFY budget; children use `ParentIdentifyThrottl
 
 ## Layer 3: multi-machine (beta)
 
+`ClusterManager` is not on the public `@fluxerjs/sharding` barrel yet (plan-change respawns are unfinished). Claim a lease, then spawn a local `ShardingManager` for those shard ids:
+
 ```javascript
-import { ClusterManager } from '@fluxerjs/sharding';
+import { ShardingManager } from '@fluxerjs/sharding';
 import { createClient } from 'redis';
-import {
-  RedisBroker,
-  RedisClusterCoordinator,
-  RedisSessionStore,
-} from '@fluxerjs/sharding-redis';
+import { RedisBroker, RedisClusterCoordinator } from '@fluxerjs/sharding-redis';
 
 const redis = createClient({ url: process.env.REDIS_URL });
 const subscriber = redis.duplicate();
@@ -120,19 +118,24 @@ const coordinator = new RedisClusterCoordinator({
   initialTotalShards: 64,
   shardsPerHost: 16,
 });
+const broker = new RedisBroker({ redis, subscriber });
 
-const cluster = new ClusterManager({
-  coordinator,
-  broker: new RedisBroker({ redis, subscriber }),
-});
+const lease = await coordinator.claim();
+const plan = (await coordinator.getPlan()) ?? {
+  generation: lease.generation,
+  totalShards: 64,
+  assignments: { [lease.hostId]: lease.shardIds },
+};
 
-await cluster.start(async (lease, plan) => {
-  // Spawn a local ShardingManager with lease.shardIds / plan.totalShards
-  console.log(lease.hostId, lease.shardIds, plan.generation);
+const manager = new ShardingManager('./bot.js', {
+  token: process.env.FLUXER_BOT_TOKEN,
+  totalShards: plan.totalShards,
+  shardList: lease.shardIds,
 });
+await manager.spawn();
 ```
 
-Pass `RedisSessionStore` into `Client` / `WebSocketManager` so a replacement host can RESUME within 60s.
+Pass `RedisSessionStore` into `Client` / `WebSocketManager` so a replacement host can RESUME within 60s. Heartbeat the lease (`coordinator.heartbeat()`) while this host is alive, and `coordinator.release()` on shutdown. `broker` is for cross-host `broadcastEval` once that path lands.
 
 ## Scaling math
 

@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "description": "@fluxerjs SDK monorepo",
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --filter=!@fluxerjs/docs",
     "test": "turbo run test",
     "test:esm": "node scripts/test-esm-imports.mjs",
     "test:cjs": "node scripts/test-cjs-require.mjs",

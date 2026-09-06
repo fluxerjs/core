@@ -23,17 +23,57 @@ if (!token) {
   process.exit(0);
 }
 
-const client = new Client({ intents: 0 });
+const client = new Client({ intents: 0, shardCount: 1 });
+const debugLog = [];
+const closeLog = [];
+
+function rememberDebug(msg) {
+  debugLog.push(msg);
+  if (debugLog.length > 40) debugLog.shift();
+}
 
 function fail(err) {
   const message = err instanceof Error ? err.stack || err.message : String(err);
   console.error('Bot login test failed:', message);
+  if (closeLog.length) {
+    console.error('Shard disconnects:', closeLog.join(', '));
+  }
+  if (debugLog.length) {
+    console.error('Last gateway debug lines:');
+    for (const line of debugLog) console.error(`  ${line}`);
+  }
   client.destroy().catch(() => {});
   process.exit(1);
 }
 
 client.on(Events.Error, (err) => {
   fail(err);
+});
+client.on(Events.Debug, (msg) => {
+  rememberDebug(typeof msg === 'string' ? msg : String(msg));
+});
+const FATAL_LOGIN_CLOSE = new Set([4003, 4004, 4005, 4010]);
+
+client.on(Events.ShardDisconnect, (shardId, code) => {
+  closeLog.push(`shard ${shardId} code ${code}`);
+  if (FATAL_LOGIN_CLOSE.has(code)) {
+    const name =
+      code === 4004
+        ? 'AuthenticationFailed'
+        : code === 4003
+          ? 'NotAuthenticated'
+          : code === 4005
+            ? 'AlreadyAuthenticated'
+            : 'InvalidShard';
+    fail(
+      new Error(
+        `Gateway closed shard ${shardId} with ${code} ${name}. Login cannot succeed. Check FLUXER_BOT_TOKEN.`,
+      ),
+    );
+  }
+});
+client.on(Events.ShardError, (shardId, err) => {
+  rememberDebug(`shard ${shardId} error: ${err instanceof Error ? err.message : String(err)}`);
 });
 
 const ready = new Promise((resolve, reject) => {

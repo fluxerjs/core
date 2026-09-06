@@ -7,7 +7,7 @@ import type {
   GatewayReceivePayload,
   GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
-import { WebSocketManager } from '@fluxerjs/ws';
+import { GatewayCloseCodes, WebSocketManager } from '@fluxerjs/ws';
 import type { GatewayGuildPayload } from '../Domain/Guild/Payload.js';
 import { applyGuildSnapshotFromGateway } from '../Domain/Guild/Snapshot.js';
 import { Events } from '../Helpers/Events.js';
@@ -156,9 +156,11 @@ export async function connectClientGateway(
   });
   ws.on('ready', ({ shardId, data }: { shardId: number; data: ReadyPayload }) => {
     client.emit(Events.ShardReady, shardId);
-    // Every shard READY carries that shard's guild subset — always hydrate.
-    // Client Ready still fires only once via finalizeClientReady.
-    handleReadyPayload(client, data);
+    try {
+      handleReadyPayload(client, data);
+    } catch (err: unknown) {
+      emitClientError(client, err);
+    }
   });
   ws.on('resumed', (shardId: number) => {
     // Per-shard signal only. Client-level {@link Events.Resumed} comes from the RESUMED dispatch.
@@ -166,6 +168,14 @@ export async function connectClientGateway(
   });
   ws.on('close', ({ shardId, code }: { shardId: number; code: number }) => {
     client.emit(Events.ShardDisconnect, shardId, code);
+    if (code === GatewayCloseCodes.AuthenticationFailed) {
+      emitClientError(
+        client,
+        new FluxerError('Gateway authentication failed (4004). Check the bot token.', {
+          code: ErrorCodes.InvalidToken,
+        }),
+      );
+    }
   });
   ws.on('error', ({ shardId, error }: { shardId: number; error: Error }) => {
     if (shardId >= 0) client.emit(Events.ShardError, shardId, error);

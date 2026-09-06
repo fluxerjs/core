@@ -54,7 +54,7 @@ async function exerciseBuilders() {
   const embed = new m.EmbedBuilder().setTitle('t').setDescription('d');
   const json = embed.toJSON();
   if (json.title !== 't' || json.description !== 'd') throw new Error('EmbedBuilder failed');
-  const att = new m.AttachmentBuilder(0, 'file.png', { spoiler: true });
+  const att = new m.AttachmentBuilder(new Uint8Array([0]), { name: 'file.png', spoiler: true });
   if (!att.filename.startsWith('SPOILER_')) throw new Error('AttachmentBuilder spoiler failed');
 }
 

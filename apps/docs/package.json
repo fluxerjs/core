@@ -5,10 +5,9 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "predev": "pnpm --dir ../.. run docs:generate",
+    "predev": "pnpm --dir ../.. run generate:docs && pnpm --dir ../.. exec tsx apps/docs/scripts/write-search-index.ts",
     "dev": "next dev --port 3333",
-    "prebuild": "pnpm --dir ../.. run docs:generate",
-    "build": "next build",
+    "build": "pnpm --dir ../.. exec tsx apps/docs/scripts/write-search-index.ts && next build",
     "start": "next start --port 3333",
     "lint": "next lint"
   },

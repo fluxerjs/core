@@ -1,10 +1,9 @@
-export {
-  ClusterManager,
-  type ClusterManagerOptions,
-  type IBroker,
-  type IClusterCoordinator,
-  type ReshardPlan,
-  type ShardLease,
+export type {
+  ClusterManagerOptions,
+  IBroker,
+  IClusterCoordinator,
+  ReshardPlan,
+  ShardLease,
 } from './Cluster.js';
 export {
   createEnvelope,

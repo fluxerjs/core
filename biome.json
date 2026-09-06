@@ -147,7 +147,13 @@
       }
     },
     {
-      "includes": ["scripts/**", "examples/**", "benchmarks/**", "local/**"],
+      "includes": [
+        "scripts/**",
+        "apps/docs/scripts/**",
+        "examples/**",
+        "benchmarks/**",
+        "local/**"
+      ],
       "linter": {
         "rules": {
           "style": {

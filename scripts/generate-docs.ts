@@ -4,22 +4,23 @@
  * Generate combined API documentation JSON from all SDK packages.
  *
  * Outputs:
- *   apps/docs/public/api/main.json          — latest (working tree)
- *   apps/docs/public/api/v<version>/main.json — one per 2.0+ git tag
- *   apps/docs/public/api/versions.json      — manifest
- *   apps/docs/public/guides/v<version>/     — MDX guide snapshots per tag
+ *   apps/docs/public/api/main.json            latest (working tree)
+ *   apps/docs/public/api/v<version>/main.json one per 2.0+ git tag
+ *   apps/docs/public/api/versions.json        manifest
+ *   apps/docs/public/guides/v<version>/       MDX guide snapshots per tag
  *
  * Deploy clones are often shallow and may lack an `origin` remote (e.g. Vercel).
  * Before generating tagged docs we fetch 2.0+ tags from the GitHub HTTPS URL
  * (override with DOCS_GIT_REMOTE). Set DOCS_ALLOW_PARTIAL=1 to warn instead of
  * failing when a tag cannot be built.
  *
- * Tag checkouts have no node_modules; docgen still emits signatures from the
- * TypeScript AST. Cross-package type text may be less precise than a fully
- * installed build — acceptable for reference docs.
+ * Tagged versions are extracted with `git archive` (package sources + guides
+ * only). Docgen still emits signatures from the TypeScript AST without an
+ * install. Cross-package type text may be less precise than a fully installed
+ * build: acceptable for reference docs.
  */
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import {
   cpSync,
@@ -196,7 +197,7 @@ async function listV2TagsFromGithub(repo: string): Promise<string[]> {
 /**
  * Ensure release tags (and their commits) exist locally.
  * Shallow deploy clones only have HEAD and often lack `origin`; fetch from the
- * GitHub HTTPS URL (or DOCS_GIT_REMOTE) so older versions can be worktree'd.
+ * GitHub HTTPS URL (or DOCS_GIT_REMOTE) so older versions can be archived.
  */
 async function ensureReleaseTags(): Promise<void> {
   let inGitRepo = true;
@@ -238,16 +239,28 @@ async function ensureReleaseTags(): Promise<void> {
 
   try {
     if (remoteVersions.length > 0) {
-      // Fetch only the tags we need (works without a named remote; deepens shallow clones).
-      const refspecs = remoteVersions.map((v) => `+refs/tags/v${v}:refs/tags/v${v}`);
-      execFileSync('git', ['fetch', '--force', '--no-tags', remote, ...refspecs], {
-        cwd: root,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-        maxBuffer: 32 * 1024 * 1024,
-      });
+      // Depth-1 per tag: Vercel images OOM/ENOSPC if we unshallow full history.
+      for (const version of remoteVersions) {
+        execFileSync(
+          'git',
+          [
+            'fetch',
+            '--depth=1',
+            '--force',
+            '--no-tags',
+            remote,
+            `+refs/tags/v${version}:refs/tags/v${version}`,
+          ],
+          {
+            cwd: root,
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+            maxBuffer: 32 * 1024 * 1024,
+          },
+        );
+      }
     } else {
-      execFileSync('git', ['fetch', '--tags', '--force', remote], {
+      execFileSync('git', ['fetch', '--tags', '--depth=1', '--force', remote], {
         cwd: root,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -296,7 +309,7 @@ function tagCommitResolvable(version: string): boolean {
 }
 
 /**
- * Build combined DocOutput for a given repo root (working tree or worktree).
+ * Build combined DocOutput for a given repo root (working tree or tag extract).
  * Uses the TypeScript compiler API only — no install/build of packages required.
  */
 export function buildCombinedDocs(repoRoot: string, version: string): DocOutput {
@@ -384,15 +397,65 @@ export function buildCombinedDocs(repoRoot: string, version: string): DocOutput 
 
 function writeDocsFile(filePath: string, docs: DocOutput): void {
   mkdirSync(dirname(filePath), { recursive: true });
-  writeFileSync(filePath, JSON.stringify(docs, null, 2), 'utf-8');
+  writeFileSync(filePath, JSON.stringify(docs), 'utf-8');
   console.log(
     `[generate-docs] -> ${filePath} (${docs.classes.length} classes, ${docs.interfaces.length} interfaces, ${docs.enums.length} enums)`,
   );
 }
 
-/** Copy guide MDX from a tag worktree into public/guides/v{version}/. */
-function snapshotGuides(worktreePath: string, version: string): void {
-  const src = resolve(worktreePath, 'apps/docs/content/guides');
+function pathExistsInTag(tag: string, filePath: string): boolean {
+  try {
+    execFileSync('git', ['cat-file', '-e', `${tag}:${filePath}`], {
+      cwd: root,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Paths needed to generate API docs + guide snapshots for a tag. */
+function listTagArchivePaths(tag: string): string[] {
+  const paths: string[] = [];
+  for (const pkg of PACKAGES) {
+    if (pathExistsInTag(tag, `${pkg.pkgPath}/tsconfig.json`)) {
+      paths.push(pkg.pkgPath);
+    }
+  }
+  if (pathExistsInTag(tag, 'apps/docs/content/guides')) {
+    paths.push('apps/docs/content/guides');
+  }
+  return paths;
+}
+
+function extractTagSparse(tag: string, dest: string, paths: string[]): boolean {
+  mkdirSync(dest, { recursive: true });
+  const archive = spawnSync('git', ['archive', tag, ...paths], {
+    cwd: root,
+    encoding: 'buffer',
+    maxBuffer: 128 * 1024 * 1024,
+  });
+  if (archive.status !== 0) {
+    const err = archive.stderr?.toString().trim() || `git archive exited ${archive.status}`;
+    console.warn(`[generate-docs] git archive ${tag} failed: ${err}`);
+    return false;
+  }
+  const tar = spawnSync('tar', ['-x', '-C', dest], {
+    input: archive.stdout,
+    maxBuffer: 128 * 1024 * 1024,
+  });
+  if (tar.status !== 0) {
+    const err = tar.stderr?.toString().trim() || `tar exited ${tar.status}`;
+    console.warn(`[generate-docs] tar extract ${tag} failed: ${err}`);
+    return false;
+  }
+  return true;
+}
+
+/** Copy guide MDX from a tag checkout into public/guides/v{version}/. */
+function snapshotGuides(checkoutPath: string, version: string): void {
+  const src = resolve(checkoutPath, 'apps/docs/content/guides');
   const dest = resolve(root, 'apps/docs/public/guides', `v${version}`);
   if (!existsSync(src)) {
     throw new Error(`missing guides directory at ${src}`);
@@ -411,42 +474,30 @@ function generateTagDocs(version: string): boolean {
     return false;
   }
 
-  const worktreePath = join(tmpdir(), `fluxer-docs-${version}-${randomBytes(4).toString('hex')}`);
-  console.log(`[generate-docs] worktree ${tag} -> ${worktreePath}`);
+  const paths = listTagArchivePaths(tag);
+  if (paths.length === 0) {
+    console.warn(`[generate-docs] tag ${tag} has no package or guides paths to archive`);
+    return false;
+  }
 
-  try {
-    execFileSync('git', ['worktree', 'add', '--detach', worktreePath, tag], {
-      cwd: root,
-      encoding: 'utf-8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-  } catch (err) {
-    console.warn(`[generate-docs] failed to add worktree for ${tag}: ${formatGitError(err)}`);
+  const checkoutPath = join(tmpdir(), `fluxer-docs-${version}-${randomBytes(4).toString('hex')}`);
+  console.log(`[generate-docs] archive ${tag} -> ${checkoutPath}`);
+
+  if (!extractTagSparse(tag, checkoutPath, paths)) {
+    rmSync(checkoutPath, { recursive: true, force: true });
     return false;
   }
 
   try {
-    const docs = buildCombinedDocs(worktreePath, version);
+    const docs = buildCombinedDocs(checkoutPath, version);
     writeDocsFile(resolve(API_DIR, `v${version}`, 'main.json'), docs);
-    snapshotGuides(worktreePath, version);
+    snapshotGuides(checkoutPath, version);
     return true;
   } catch (err) {
     console.warn(`[generate-docs] failed to generate docs for ${tag}:`, err);
     return false;
   } finally {
-    try {
-      execFileSync('git', ['worktree', 'remove', '--force', worktreePath], {
-        cwd: root,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-    } catch {
-      try {
-        rmSync(worktreePath, { recursive: true, force: true });
-      } catch {
-        /* ignore */
-      }
-    }
+    rmSync(checkoutPath, { recursive: true, force: true });
   }
 }
 
@@ -470,7 +521,7 @@ async function main(): Promise<void> {
     }
     writeFileSync(
       manifestPath,
-      JSON.stringify({ latest: latestVersion, versions: tagged }, null, 2),
+      JSON.stringify({ latest: latestVersion, versions: tagged }),
       'utf-8',
     );
     console.log(`[generate-docs] -> ${manifestPath} (latest ${latestVersion})`);
@@ -502,7 +553,7 @@ async function main(): Promise<void> {
     versions: generatedVersions,
   };
   const manifestPath = resolve(API_DIR, 'versions.json');
-  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
+  writeFileSync(manifestPath, JSON.stringify(manifest), 'utf-8');
   console.log(`[generate-docs] -> ${manifestPath}`);
   console.log(`[generate-docs] tagged versions: ${generatedVersions.join(', ') || '(none)'}`);
 
