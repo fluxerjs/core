@@ -82,10 +82,29 @@ export function clearGuildStreamSettle(client: Client): void {
   client._guildStreamSettleTimeout = null;
 }
 
+export function resetGuildStreamSettle(client: Client): void {
+  clearGuildStreamSettle(client);
+
+  client._guildStreamSettleTimeout = setTimeout(() => {
+    client._guildStreamSettleTimeout = null;
+
+    if (client.readyAt === null) {
+      finalizeClientReady(client);
+    }
+  }, GUILD_STREAM_SETTLE_MS);
+}
+
 function handleReadyPayload(client: Client, data: ReadyPayload): void {
   client.user = new ClientUser(client, data.user);
   const waitForGuilds = client.options.waitForGuilds === true;
   const guilds = data.guilds ?? [];
+
+  for (const guild of guilds) {
+    if (typeof guild.id === 'string') {
+      client._knownGuildIds.add(guild.id);
+    }
+  }
+
   const pending = hydrateReadyGuilds(client, guilds, waitForGuilds);
 
   // Already ready from an earlier shard — only hydrate additional guilds.
@@ -105,12 +124,7 @@ function handleReadyPayload(client: Client, data: ReadyPayload): void {
     return;
   }
   if (waitForGuilds && guilds.length === 0) {
-    if (client._guildStreamSettleTimeout === null) {
-      client._guildStreamSettleTimeout = setTimeout(() => {
-        client._guildStreamSettleTimeout = null;
-        if (client.readyAt === null) finalizeClientReady(client);
-      }, GUILD_STREAM_SETTLE_MS);
-    }
+    resetGuildStreamSettle(client);
     return;
   }
   finalizeClientReady(client);
