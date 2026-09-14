@@ -9,7 +9,6 @@ import { Events } from '../../Helpers/Events.js';
 import type { Client } from '../Client.js';
 import type { GuildCountsUpdatePayload } from '../EventPayloads.js';
 import type { HandlerMap } from './Types.js';
-import { resetGuildStreamSettle } from '../GatewayReady.js';
 
 function markGuildUnavailable(client: Client, id: string): void {
   const guild = client.guilds.get(id);
@@ -20,11 +19,7 @@ function markGuildUnavailable(client: Client, id: string): void {
 
 export const guildHandlers: HandlerMap = {
   GUILD_CREATE(client, d) {
-    const raw = d as {
-      id?: unknown;
-      unavailable?: unknown;
-    };
-
+    const raw = d as { id?: unknown; unavailable?: unknown };
     if (raw.unavailable === true) {
       if (typeof raw.id === 'string') {
         try {
@@ -33,39 +28,19 @@ export const guildHandlers: HandlerMap = {
           client._onGuildReceived(raw.id);
         }
       }
-
       return;
     }
-
-    const isPendingReadyGuild =
-      typeof raw.id === 'string' &&
-      client._pendingGuildIds?.has(raw.id) === true;
-
-    const isSettlingInitialStream =
-      client.options.waitForGuilds === true &&
-      client.readyAt === null &&
-      client._guildStreamSettleTimeout !== null;
-
-    const isInitialGuild =
-      isPendingReadyGuild ||
-      isSettlingInitialStream;
 
     const result = applyGuildSnapshotFromGateway(client, d);
     if (!result) return;
 
     const { guild, recovered } = result;
-
-    if (isSettlingInitialStream) {
-      resetGuildStreamSettle(client);
-    }
-
     if (recovered) {
       guild.available = true;
       client.emit(Events.GuildAvailable, guild);
-    } else if (!isInitialGuild) {
+    } else if (raw.unavailable !== false) {
       client.emit(Events.GuildCreate, guild);
     }
-
     client._onGuildReceived(guild.id);
   },
 
@@ -106,18 +81,14 @@ export const guildHandlers: HandlerMap = {
 
   GUILD_DELETE(client, d) {
     const { id, unavailable } = d as GatewayGuildDeleteDispatchData;
-
     try {
       if (unavailable === true) {
         markGuildUnavailable(client, id);
         return;
       }
 
-      client._knownGuildIds.delete(id);
-
       const guild = client.guilds.get(id);
       if (!guild) return;
-
       client.guilds.delete(id);
       client.emit(Events.GuildDelete, guild);
     } finally {

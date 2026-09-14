@@ -120,8 +120,6 @@ export class Client extends EventEmitter {
 
   /** @internal WebSocket manager. */
   _ws: WebSocketManager | null = null;
-  /** Guild IDs the current bot session is already a member of. */
-  _knownGuildIds = new Set<string>();
   /** When waitForGuilds, guild IDs still expected via GUILD_CREATE. */
   _pendingGuildIds: Set<string> | null = null;
   /** @internal Timeout when READY has no guilds but waitForGuilds is set. */
@@ -585,7 +583,6 @@ export class Client extends EventEmitter {
     this.user = null;
     this.readyAt = null;
     this._pendingGuildIds = null;
-    this._knownGuildIds.clear();
     this.guilds.clear();
     this.channels.clear();
     this.users.clear();
