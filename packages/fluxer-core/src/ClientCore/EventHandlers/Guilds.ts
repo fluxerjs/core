@@ -35,8 +35,12 @@ export const guildHandlers: HandlerMap = {
     if (!result) return;
 
     const { guild, recovered } = result;
-    if (recovered) guild.available = true;
-    client.emit(recovered ? Events.GuildAvailable : Events.GuildCreate, guild);
+    if (recovered) {
+      guild.available = true;
+      client.emit(Events.GuildAvailable, guild);
+    } else if (raw.unavailable !== false) {
+      client.emit(Events.GuildCreate, guild);
+    }
     client._onGuildReceived(guild.id);
   },
 
