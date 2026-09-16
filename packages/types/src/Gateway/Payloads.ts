@@ -185,11 +185,19 @@ export interface GatewayHelloData {
   heartbeat_interval: number;
 }
 
+/** Unavailable guild stub in bot READY (`guilds`). Full snapshot arrives via GUILD_CREATE. */
+export interface GatewayUnavailableGuild {
+  id: Snowflake;
+  unavailable: true;
+}
+
 /**
  * Guild snapshot in READY / GUILD_CREATE.
- * Fluxer nests guild metadata under `properties`; flat guild objects are also accepted.
+ * Bots typically receive {@link GatewayUnavailableGuild} stubs in READY.
+ * Fluxer nests full metadata under `properties`; flat guild objects are also accepted.
  */
 export type GatewayGuildSnapshot =
+  | GatewayUnavailableGuild
   | (APIGuild & {
       unavailable?: boolean;
       channels?: APIChannel[];

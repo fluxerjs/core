@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type {
   GatewayIdentifyData,
+  GatewayReadyDispatchData,
   GatewayVoiceServerUpdateDispatchData,
   GatewayVoiceStateUpdateData,
 } from './Payloads.js';
@@ -44,5 +45,16 @@ describe('GatewayVoiceServerUpdateDispatchData', () => {
     };
     expect(callGrant.guild_id).toBeUndefined();
     expect(callGrant.e2ee_key).toBe('key-material');
+  });
+});
+
+describe('GatewayReadyDispatchData', () => {
+  it('accepts unavailable guild stubs without properties', () => {
+    const ready: GatewayReadyDispatchData = {
+      user: { id: '1', username: 'bot', discriminator: '0' } as GatewayReadyDispatchData['user'],
+      session_id: 's1',
+      guilds: [{ id: 'g1', unavailable: true }],
+    };
+    expect(ready.guilds[0]).toEqual({ id: 'g1', unavailable: true });
   });
 });

@@ -1,15 +1,10 @@
 import type {
-  APIChannel,
-  APIEmoji,
-  APIGuildMember,
-  APISticker,
+  GatewayGuildSnapshot,
   GatewayReadyDispatchData,
   GatewayReceivePayload,
-  GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
 import { GatewayCloseCodes, WebSocketManager } from '@fluxerjs/ws';
 import { Guild } from '../Domain/Guild/Guild.js';
-import type { GatewayGuildPayload } from '../Domain/Guild/Payload.js';
 import { applyGuildSnapshotFromGateway } from '../Domain/Guild/Snapshot.js';
 import { Events } from '../Helpers/Events.js';
 import { ErrorCodes } from '../LibErrors/ErrorCodes.js';
@@ -25,15 +20,8 @@ import { toPresenceWire } from './SdkOptions/Presence.js';
 
 export type ReadyPayload = GatewayReadyDispatchData;
 
-type ReadyGuildPayload = GatewayGuildPayload & {
-  unavailable?: boolean;
-  channels?: APIChannel[];
-  emojis?: APIEmoji[];
-  members?: APIGuildMember[];
-  stickers?: APISticker[];
-  roles?: import('@fluxerjs/types').APIRole[];
-  voice_states?: GatewayVoiceStateUpdateDispatchData[];
-};
+/** READY guild: `{ id, unavailable: true }` stub or a full snapshot. */
+type ReadyGuildPayload = { id: string; unavailable: true } | GatewayGuildSnapshot;
 
 /** Milliseconds to wait for GUILD_CREATE stream when READY has no guilds. */
 export const GUILD_STREAM_SETTLE_MS = 500;
