@@ -199,6 +199,8 @@ const COMPARISONS: Array<[string, string, string]> = [
 const ALLOW_EXTRA = new Set([
   'MessageResponseSchema.guild_id',
   'MessageResponseSchema.member',
+  // REST snapshot has not caught up; API/gateway messages include classified emoji IDs
+  'MessageResponseSchema.nsfw_emojis',
   'WebhookResponse.type',
   'GuildBanResponse.expires_at',
   'ChannelPartialResponse.icon',
