@@ -1,8 +1,8 @@
 import { REST } from '@fluxerjs/rest';
 import type { APIInstance } from '@fluxerjs/types';
-import { Routes } from '@fluxerjs/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Events } from '../Helpers/Events.js';
+import { instanceDiscoveryUrl } from '../Helpers/Instance.js';
 import { ErrorCodes } from '../LibErrors/ErrorCodes.js';
 import { fixtureInstance } from '../TestKit/Fixtures.js';
 import { Client } from './Client.js';
@@ -14,12 +14,12 @@ import {
 import { ClientClusterEvents } from './ClientClusterEvents.js';
 import * as GatewayReady from './GatewayReady.js';
 
-function discoveryDoc(api = 'https://api.selfhost.example'): APIInstance {
+function discoveryDoc(apiPublic = 'https://api.selfhost.example'): APIInstance {
   return fixtureInstance({
     endpoints: {
-      api,
-      api_client: `${api}/client`,
-      api_public: api,
+      api: 'https://web.selfhost.example/api',
+      api_client: 'https://web.selfhost.example/api',
+      api_public: apiPublic,
       gateway: 'wss://gateway.selfhost.example',
       media: 'https://media.selfhost.example',
       static_cdn: 'https://static.selfhost.example',
@@ -89,7 +89,9 @@ describe('ClientCluster (beta)', () => {
     const cluster = new ClientCluster({ suppressBetaWarning: true });
     const rt = await cluster.add({ id: 'hosted', token: 'token-hosted' });
     expect(rt.id).toBe('hosted');
-    expect(rt.client.instance.endpoints.api).toBe('https://api.fluxer.app');
+    expect(rt.client.instance.endpoints.api).toBe('https://web.fluxer.app/api');
+    expect(rt.client.instance.endpoints.api_public).toBe('https://api.fluxer.app');
+    expect(rt.client.rest.baseUrl).toBe('https://api.fluxer.app/v1');
     expect(rt.client.rest.token).toBe('token-hosted');
     expect(cluster.size).toBe(1);
     expect(cluster.has('hosted')).toBe(true);
@@ -112,8 +114,9 @@ describe('ClientCluster (beta)', () => {
   it('adds via discovery with a distinct token', async () => {
     mockSuccessfulLogin();
     const doc = discoveryDoc();
+    const wellKnown = instanceDiscoveryUrl('https://bootstrap.selfhost.example');
     vi.spyOn(REST.prototype, 'get').mockImplementation(async (route: string) => {
-      if (route === Routes.instanceDiscovery()) return doc;
+      if (route === wellKnown) return doc;
       throw new Error(`unexpected ${route}`);
     });
     const cluster = new ClientCluster({ suppressBetaWarning: true });
@@ -122,7 +125,9 @@ describe('ClientCluster (beta)', () => {
       token: 'token-self',
       discovery: 'https://bootstrap.selfhost.example',
     });
-    expect(rt.client.instance.endpoints.api).toBe('https://api.selfhost.example');
+    expect(rt.client.instance.endpoints.api).toBe('https://web.selfhost.example/api');
+    expect(rt.client.instance.endpoints.api_public).toBe('https://api.selfhost.example');
+    expect(rt.client.rest.baseUrl).toBe('https://api.selfhost.example/v1');
     expect(rt.client.rest.token).toBe('token-self');
   });
 
@@ -359,8 +364,9 @@ describe('ClientCluster (beta)', () => {
   it('restarts a discovery runtime preserving endpoints', async () => {
     mockSuccessfulLogin();
     const doc = discoveryDoc();
+    const wellKnown = instanceDiscoveryUrl('https://bootstrap.selfhost.example');
     vi.spyOn(REST.prototype, 'get').mockImplementation(async (route: string) => {
-      if (route === Routes.instanceDiscovery()) return doc;
+      if (route === wellKnown) return doc;
       throw new Error(`unexpected ${route}`);
     });
     const cluster = new ClientCluster({ suppressBetaWarning: true });
@@ -370,7 +376,9 @@ describe('ClientCluster (beta)', () => {
       discovery: 'https://bootstrap.selfhost.example',
     });
     const restarted = await cluster.restart('self', { token: 't2' });
-    expect(restarted.client.instance.endpoints.api).toBe('https://api.selfhost.example');
+    expect(restarted.client.instance.endpoints.api).toBe('https://web.selfhost.example/api');
+    expect(restarted.client.instance.endpoints.api_public).toBe('https://api.selfhost.example');
+    expect(restarted.client.rest.baseUrl).toBe('https://api.selfhost.example/v1');
     expect(restarted.client.rest.token).toBe('t2');
   });
 

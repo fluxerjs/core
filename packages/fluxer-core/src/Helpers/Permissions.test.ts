@@ -1,5 +1,5 @@
 import { OverwriteType } from '@fluxerjs/types';
-import { PermissionFlags } from '@fluxerjs/util';
+import { ALL_PERMISSIONS_BIGINT, PermissionFlags } from '@fluxerjs/util';
 import { describe, expect, it } from 'vitest';
 import { computePermissions, hasPermission } from './Permissions.js';
 
@@ -91,5 +91,51 @@ describe('computePermissions', () => {
     const base = 2048n;
     const perms = computePermissions(base, [], [], 'user1', false);
     expect(perms).toBe(base);
+  });
+
+  it('Administrator on role base returns full mask before overwrites', () => {
+    const base = PermissionFlags.Administrator;
+    const overwrites = [
+      {
+        id: 'role1',
+        type: OverwriteType.Role,
+        allow: '0',
+        deny: String(PermissionFlags.Administrator | PermissionFlags.SendMessages),
+      },
+    ];
+    const perms = computePermissions(base, overwrites, ['role1'], 'user1', false);
+    expect(perms).toBe(ALL_PERMISSIONS_BIGINT);
+    expect(hasPermission(perms, PermissionFlags.SendMessages)).toBe(true);
+    expect(hasPermission(perms, PermissionFlags.BanMembers)).toBe(true);
+  });
+
+  it('member deny overwrite cannot strip role Administrator', () => {
+    const base = PermissionFlags.Administrator | PermissionFlags.ViewChannel;
+    const overwrites = [
+      {
+        id: 'user1',
+        type: OverwriteType.Member,
+        allow: '0',
+        deny: String(PermissionFlags.Administrator),
+      },
+    ];
+    const perms = computePermissions(base, overwrites, ['role1'], 'user1', false);
+    expect(perms).toBe(ALL_PERMISSIONS_BIGINT);
+  });
+
+  it('channel allow overwrite does not grant Administrator full mask', () => {
+    const base = PermissionFlags.ViewChannel;
+    const overwrites = [
+      {
+        id: 'role1',
+        type: OverwriteType.Role,
+        allow: String(PermissionFlags.Administrator),
+        deny: '0',
+      },
+    ];
+    const perms = computePermissions(base, overwrites, ['role1'], 'user1', false);
+    expect(perms).not.toBe(ALL_PERMISSIONS_BIGINT);
+    expect((perms & PermissionFlags.Administrator) !== 0n).toBe(true);
+    expect((perms & PermissionFlags.ViewChannel) !== 0n).toBe(true);
   });
 });

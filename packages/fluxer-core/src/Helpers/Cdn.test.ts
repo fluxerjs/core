@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CDN_SIZE_LADDER,
   cdnAvatarURL,
   cdnBannerURL,
   cdnDefaultAvatarURL,
   cdnDisplayAvatarURL,
+  cdnEmojiURL,
+  cdnGuildAssetURL,
   cdnMemberAvatarURL,
   cdnMemberBannerURL,
+  cdnStickerURL,
+  snapCdnSize,
 } from './Cdn.js';
 
 describe('cdnAvatarURL', () => {
@@ -31,6 +36,12 @@ describe('cdnAvatarURL', () => {
   it('appends size when provided', () => {
     const url = cdnAvatarURL('123', 'hash', { size: 256 });
     expect(url).toContain('?size=256');
+  });
+
+  it('snaps icon size to the ladder then clamps to 128-1024', () => {
+    expect(cdnAvatarURL('123', 'hash', { size: 110 })).toContain('?size=128');
+    expect(cdnAvatarURL('123', 'hash', { size: 64 })).toContain('?size=128');
+    expect(cdnAvatarURL('123', 'hash', { size: 2000 })).toContain('?size=1024');
   });
 
   it('uses custom extension', () => {
@@ -65,6 +76,12 @@ describe('cdnBannerURL', () => {
   it('uses gif for a_ prefix', () => {
     const url = cdnBannerURL('123', 'a_banner');
     expect(url).toContain('.gif');
+  });
+
+  it('snaps banner size then clamps to 480-2400 (ladder max 2048)', () => {
+    expect(cdnBannerURL('123', 'hash', { size: 16 })).toContain('?size=480');
+    expect(cdnBannerURL('123', 'hash', { size: 600 })).toContain('?size=600');
+    expect(cdnBannerURL('123', 'hash', { size: 2800 })).toContain('?size=2048');
   });
 });
 
@@ -109,5 +126,32 @@ describe('cdnDefaultAvatarURL', () => {
   it('handles negative index by taking abs and mod', () => {
     const url = cdnDefaultAvatarURL(-1);
     expect(url).toContain('/avatars/1.png');
+  });
+});
+
+describe('cdnGuildAssetURL / emoji / sticker size', () => {
+  it('clamps guild icons as icon and splashes as banner', () => {
+    expect(cdnGuildAssetURL('icons', 'g1', 'h', { size: 64 })).toContain('?size=128');
+    expect(cdnGuildAssetURL('splashes', 'g1', 'h', { size: 16 })).toContain('?size=480');
+    expect(cdnGuildAssetURL('banners', 'g1', 'h', { size: 512 })).toContain('?size=512');
+  });
+
+  it('clamps emoji to 32-512 and sticker to 128-512', () => {
+    expect(cdnEmojiURL('e1', false, { size: 16 })).toContain('?size=32');
+    expect(cdnEmojiURL('e1', false, { size: 256 })).toContain('?size=256');
+    expect(cdnEmojiURL('e1', false, { size: 1024 })).toContain('?size=512');
+    expect(cdnStickerURL('s1', false, { size: 64 })).toContain('?size=128');
+    expect(cdnStickerURL('s1', true, { size: 480 })).toContain('?size=480');
+    expect(cdnStickerURL('s1', false, { size: 2048 })).toContain('?size=512');
+  });
+});
+
+describe('snapCdnSize', () => {
+  it('uses the documented ladder', () => {
+    expect(CDN_SIZE_LADDER).toContain(16);
+    expect(CDN_SIZE_LADDER).toContain(16384);
+    expect(snapCdnSize(256, 'icon')).toBe(256);
+    expect(snapCdnSize(200, 'icon')).toBe(240);
+    expect(snapCdnSize(144, 'icon')).toBe(160);
   });
 });

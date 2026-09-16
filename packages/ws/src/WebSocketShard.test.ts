@@ -208,6 +208,73 @@ describe('WebSocketShard', () => {
 
     expect(shard.ping).toBe(42);
   });
+
+  it('Identify omits intents and leftover Discord fields', () => {
+    vi.useFakeTimers();
+    class TrackingWS extends MockWebSocket {
+      send = vi.fn();
+    }
+
+    const shard = new WebSocketShard({
+      url: 'wss://gateway.fluxer.app',
+      token: 'test-token',
+      shardId: 0,
+      numShards: 1,
+      intents: 0,
+      WebSocket: TrackingWS,
+    });
+    const ws = new TrackingWS('wss://x');
+    (shard as unknown as { ws: TrackingWS }).ws = ws;
+
+    try {
+      shard.handlePayload({ op: GatewayOpcodes.Hello, d: { heartbeat_interval: 41_250 } });
+      expect(ws.send).toHaveBeenCalledTimes(1);
+      const sent = JSON.parse(String(ws.send.mock.calls[0]?.[0])) as {
+        op: number;
+        d: Record<string, unknown> & { properties?: Record<string, unknown> };
+      };
+      expect(sent.op).toBe(GatewayOpcodes.Identify);
+      expect(sent.d).not.toHaveProperty('intents');
+      expect(sent.d).not.toHaveProperty('compress');
+      expect(sent.d).not.toHaveProperty('large_threshold');
+      expect(sent.d.token).toBe('test-token');
+      expect(sent.d.properties?.browser).toBe('fluxerjs');
+      expect(sent.d.properties?.device).toBe('fluxerjs');
+      expect(sent.d.properties?.e2ee_capable).toBe(true);
+    } finally {
+      shard.destroy();
+      vi.useRealTimers();
+    }
+  });
+
+  it('Identify sends properties.e2ee_capable false when opted out', () => {
+    vi.useFakeTimers();
+    class TrackingWS extends MockWebSocket {
+      send = vi.fn();
+    }
+
+    const shard = new WebSocketShard({
+      url: 'wss://gateway.fluxer.app',
+      token: 'test-token',
+      shardId: 0,
+      numShards: 1,
+      e2eeCapable: false,
+      WebSocket: TrackingWS,
+    });
+    const ws = new TrackingWS('wss://x');
+    (shard as unknown as { ws: TrackingWS }).ws = ws;
+
+    try {
+      shard.handlePayload({ op: GatewayOpcodes.Hello, d: { heartbeat_interval: 41_250 } });
+      const sent = JSON.parse(String(ws.send.mock.calls[0]?.[0])) as {
+        d: { properties: { e2ee_capable?: boolean } };
+      };
+      expect(sent.d.properties.e2ee_capable).toBe(false);
+    } finally {
+      shard.destroy();
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('averageShardPings', () => {

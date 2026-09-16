@@ -1,6 +1,6 @@
 {
   "name": "fluxer-core-monorepo",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "license": "Apache-2.0",
   "description": "@fluxerjs SDK monorepo",

@@ -15,6 +15,7 @@ interface WorkerData {
   numShards: number;
   version: string;
   intents: number;
+  e2eeCapable?: boolean;
   flags?: number;
   ignoredEvents?: string[];
   initialGuildId?: string;
@@ -70,6 +71,7 @@ for (const id of data.shardIds) {
     url: data.url,
     token: data.token,
     intents: data.intents,
+    e2eeCapable: data.e2eeCapable,
     flags: data.flags,
     ignoredEvents: data.ignoredEvents,
     initialGuildId: data.initialGuildId,

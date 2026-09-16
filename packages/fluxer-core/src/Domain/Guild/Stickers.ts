@@ -1,5 +1,6 @@
 import type { APIGuildStickerBulkCreateResponse, APISticker } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import { cacheSticker } from './Cache.js';
 import type { Guild } from './Guild.js';
 import type { GuildSticker } from './GuildSticker.js';
@@ -11,11 +12,14 @@ export async function createSticker(
     image: string;
     description?: string | null;
     tags?: string[];
+    reason?: string;
   },
 ): Promise<GuildSticker> {
+  const { reason, ...body } = options;
   const data = await guild.client.rest.post<APISticker>(Routes.guildStickers(guild.id), {
-    body: options,
+    body,
     auth: true,
+    ...auditReasonHeaders(reason),
   });
   return cacheSticker(guild, data);
 }

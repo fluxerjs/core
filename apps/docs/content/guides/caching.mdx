@@ -107,9 +107,10 @@ See [`examples/cache-bot.js`](https://github.com/fluxerjs/core/blob/main/example
 ## Reconnect / unavailable
 
 - **RESUMED**: cache is kept as-is
-- **Identify READY**: guilds upsert in place (same object identity when still cached)
-- **Unavailable** (`GUILD_DELETE` with `unavailable: true`): guild stays cached with `available === false`; the next available GUILD_CREATE recovers the **same** guild instance and syncs nested caches
+- **Identify READY**: unavailable guild stubs are inserted (or existing guilds marked unavailable); full snapshots arrive as GUILD_CREATE and reuse the same `Guild` instance
+- **Unavailable** (`GUILD_DELETE` with `unavailable: true`): guild stays cached with `available === false`; the next available GUILD_CREATE recovers the **same** guild instance and syncs nested caches (`GuildAvailable`)
 - Permanent **GUILD_DELETE**: guild removed; channels + message caches cascade away
+- Startup / reconnect backfill emits `GuildAvailable`; `GuildCreate` is for joining after Ready (unless `emitGuildCreateOnStartup: true`)
 
 ## When to fetch anyway
 

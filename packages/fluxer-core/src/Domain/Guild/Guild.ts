@@ -33,11 +33,11 @@ import * as emojis from './Emojis.js';
 import type { GuildBan } from './GuildBan.js';
 import type { GuildEmoji } from './GuildEmoji.js';
 import type { GuildMember } from './GuildMember.js';
+import { GuildRoleManager } from './GuildRoleManager.js';
 import type { GuildSticker } from './GuildSticker.js';
 import * as members from './MemberHttp.js';
 import * as moderation from './Moderation.js';
 import { Role } from './Role.js';
-import { GuildRoleManager } from './GuildRoleManager.js';
 import type { RoleCreateOptions } from './RoleOptions.js';
 import * as roles from './Roles.js';
 import * as stickers from './Stickers.js';
@@ -380,13 +380,13 @@ export class Guild extends Base {
   }
 
   /** Unban a user from the guild. Requires Ban Members. */
-  unban(userId: string): Promise<void> {
-    return moderation.unban(this, userId);
+  unban(userId: string, reason?: string): Promise<void> {
+    return moderation.unban(this, userId, reason);
   }
 
   /** Kick a user from the guild. Requires Kick Members. */
-  kick(userId: string): Promise<void> {
-    return moderation.kick(this, userId);
+  kick(userId: string, reason?: string): Promise<void> {
+    return moderation.kick(this, userId, reason);
   }
 
   /** Fetch all emojis in this guild from the API. */
@@ -400,7 +400,7 @@ export class Guild extends Base {
   }
 
   /** Create a new emoji in this guild. Requires Manage Emojis and Stickers. */
-  createEmoji(options: { name: string; image: string }): Promise<GuildEmoji> {
+  createEmoji(options: { name: string; image: string; reason?: string }): Promise<GuildEmoji> {
     return emojis.createEmoji(this, options);
   }
 
@@ -422,6 +422,7 @@ export class Guild extends Base {
     image: string;
     description?: string | null;
     tags?: string[];
+    reason?: string;
   }): Promise<GuildSticker> {
     return stickers.createSticker(this, options);
   }

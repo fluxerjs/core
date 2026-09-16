@@ -9,9 +9,15 @@ export interface DeconstructedSnowflake {
   /** Unix timestamp in milliseconds. */
   timestamp: number;
   date: Date;
+  /** Worker ID (10 bits, 0–1023). */
   workerId: number;
+  /** Per-worker sequence (12 bits, 0–4095). */
+  sequence: number;
+  /**
+   * @deprecated Fluxer snowflakes have no process ID. Always `0`.
+   * Present for discord.js migrants that read `processId`.
+   */
   processId: number;
-  increment: number;
 }
 
 function invalidSnowflake(value: string): never {
@@ -59,16 +65,18 @@ export class SnowflakeUtil {
     return ((BigInt(Math.trunc(timestamp)) - FLUXER_EPOCH) << 22n).toString();
   }
 
-  /** Deconstruct a snowflake into timestamp / worker / process / increment. */
+  /** Deconstruct a snowflake into timestamp / worker / sequence. */
   static deconstruct(snowflake: Snowflake): DeconstructedSnowflake {
     const big = SnowflakeUtil.parse(snowflake);
     const timestamp = Number((big >> 22n) + FLUXER_EPOCH);
+    const workerId = Number((big >> 12n) & 0x3ffn);
+    const sequence = Number(big & 0xfffn);
     return {
       timestamp,
       date: new Date(timestamp),
-      workerId: Number((big >> 17n) & 0x1fn),
-      processId: Number((big >> 12n) & 0x1fn),
-      increment: Number(big & 0xfffn),
+      workerId,
+      sequence,
+      processId: 0,
     };
   }
 }

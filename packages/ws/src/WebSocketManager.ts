@@ -75,8 +75,15 @@ export type BuildShardingStrategyFn = (manager: WebSocketManager) => IShardingSt
 
 export interface WebSocketManagerOptions {
   token: string;
-  /** Legacy intents; Fluxer ignores — send `0`. */
+  /**
+   * Legacy intents. Fluxer has no intents; shards do not send this on Identify.
+   * @deprecated Omit this option.
+   */
   intents?: number;
+  /**
+   * Identify `properties.e2ee_capable`. Defaults to `true` (needed for E2EE voice).
+   */
+  e2eeCapable?: boolean;
   /** Identify `flags` ({@link GatewayIdentifyFlags}). */
   flags?: number;
   /** Identify `ignored_events`. */
@@ -204,6 +211,7 @@ export class WebSocketManager extends EventEmitter {
         numShards: this.shardCount,
         version,
         intents: this.options.intents ?? 0,
+        e2eeCapable: this.options.e2eeCapable,
         flags: this.options.flags,
         ignoredEvents: this.options.ignoredEvents,
         initialGuildId: this.options.initialGuildId,

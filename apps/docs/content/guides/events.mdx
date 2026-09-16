@@ -107,6 +107,16 @@ client.on(Events.VoiceStateUpdate, (data) => {});
 client.on(Events.VoiceServerUpdate, (data) => {});
 ```
 
+`GuildCreate` means the bot joined a guild after Ready (invite / add). Guilds listed as unavailable stubs in READY are inserted into `client.guilds` with `available === false`; when their full `GUILD_CREATE` snapshot arrives, the same instance is refreshed and `GuildAvailable` fires instead. Gateways that still send an empty READY list get the same treatment for a short hydration window after Ready. Use `GuildAvailable` (or Ready + `client.guilds`) for startup hydration, not `GuildCreate`.
+
+To restore the old behavior where startup hydrations also emitted `GuildCreate`, set [`ClientOptions.emitGuildCreateOnStartup`](/guides/upgrading-to-3-1/):
+
+```javascript
+const client = new Client({
+  emitGuildCreateOnStartup: true,
+});
+```
+
 `GuildUnavailable` means the gateway temporarily lost access to a guild. The guild remains in `client.guilds` with `guild.available === false`, and repeated unavailable dispatches do not re-emit the event. When it returns, the same `Guild` instance is refreshed, `available` becomes `true`, and `GuildAvailable` fires. `GuildDelete` is reserved for permanent removal.
 
 ## Reaction Events

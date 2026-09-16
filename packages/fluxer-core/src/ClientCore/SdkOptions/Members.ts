@@ -53,6 +53,8 @@ export interface GuildMemberEditOptions {
   timeoutReason?: string | null;
   channelId?: string | null;
   connectionId?: string | null;
+  /** Audit log reason (`X-Audit-Log-Reason`). Not sent in the JSON body. */
+  reason?: string;
 }
 
 /** Convert {@link GuildMemberEditOptions} to the member PATCH wire body. */

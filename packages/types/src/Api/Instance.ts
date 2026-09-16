@@ -5,11 +5,14 @@
 
 /** Endpoint URLs for a Fluxer instance. */
 export interface APIInstanceEndpoints {
-  /** Base URL for authenticated API requests (origin, no `/vN` suffix). */
+  /**
+   * First-party authenticated API (same configured endpoint as {@link api_client}).
+   * Third-party clients MUST use {@link api_public} for REST, not this field.
+   */
   api: string;
-  /** Base URL for client API requests. */
+  /** First-party client API. Same configured endpoint as {@link api}. */
   api_client: string;
-  /** Base URL for public API requests. */
+  /** Public API for bots, libraries, and other third-party clients. */
   api_public: string;
   /** WebSocket URL for the gateway. */
   gateway: string;

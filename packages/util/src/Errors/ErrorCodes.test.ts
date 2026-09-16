@@ -22,6 +22,7 @@ describe('ErrorCodes', () => {
     expect(ErrorCodes.InvalidBulkDelete).toBe('INVALID_BULK_DELETE');
     expect(ErrorCodes.InvalidFetchLimit).toBe('INVALID_FETCH_LIMIT');
     expect(ErrorCodes.InvalidAttachmentInput).toBe('INVALID_ATTACHMENT_INPUT');
+    expect(ErrorCodes.AttachmentTooLarge).toBe('ATTACHMENT_TOO_LARGE');
     expect(ErrorCodes.AttachmentUploadFailed).toBe('ATTACHMENT_UPLOAD_FAILED');
     expect(ErrorCodes.InvalidChannelType).toBe('INVALID_CHANNEL_TYPE');
     expect(ErrorCodes.InvalidGatewayRequest).toBe('INVALID_GATEWAY_REQUEST');

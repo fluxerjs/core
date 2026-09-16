@@ -92,6 +92,7 @@ export class WorkerShardingStrategy implements IShardingStrategy {
           numShards: this.manager.getShardCount(),
           version: opts.version ?? '1',
           intents: opts.intents ?? 0,
+          e2eeCapable: opts.e2eeCapable,
           flags: opts.flags,
           ignoredEvents: opts.ignoredEvents,
           initialGuildId: opts.initialGuildId,

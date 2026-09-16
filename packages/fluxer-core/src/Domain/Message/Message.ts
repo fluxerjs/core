@@ -12,6 +12,7 @@ import {
 import { MessageFlagsBitField } from '@fluxerjs/util';
 import type { Client } from '../../ClientCore/Client.js';
 import { toMessageAttachmentEditWire } from '../../ClientCore/SdkOptions/index.js';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import {
   type MessagePrepareInput,
   type MessageSendOptions,
@@ -140,6 +141,8 @@ export class Message extends Base {
   mentionRoles: string[];
   /** Client-side nonce for deduplication. */
   nonce: string | null;
+  /** IDs of custom emojis in the message classified as explicit. */
+  nsfwEmojis: string[];
 
   /**
    * Cached text-capable channel (guild text, guild voice, or DM), or null if uncached / not text-based.
@@ -226,6 +229,7 @@ export class Message extends Base {
     this.mentions = (data.mentions ?? []).map((u) => client.getOrCreateUser(u));
     this.mentionRoles = data.mention_roles ?? [];
     this.nonce = data.nonce ?? null;
+    this.nsfwEmojis = data.nsfw_emojis ?? [];
   }
 
   /**
@@ -265,6 +269,7 @@ export class Message extends Base {
     this.mentions = (data.mentions ?? []).map((u) => this.client.getOrCreateUser(u));
     this.mentionRoles = data.mention_roles ?? [];
     this.nonce = data.nonce ?? null;
+    this.nsfwEmojis = data.nsfw_emojis ?? [];
   }
 
   /**
@@ -376,8 +381,10 @@ export class Message extends Base {
   }
 
   /** Delete this message. */
-  async delete(): Promise<void> {
-    await this.client.rest.delete(Routes.channelMessage(this.channelId, this.id));
+  async delete(reason?: string): Promise<void> {
+    await this.client.rest.delete(Routes.channelMessage(this.channelId, this.id), {
+      ...auditReasonHeaders(reason),
+    });
     this.client._removeMessageFromCache(this.channelId, this.id);
   }
 

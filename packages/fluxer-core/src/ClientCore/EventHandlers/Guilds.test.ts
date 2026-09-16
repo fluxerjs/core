@@ -11,11 +11,12 @@ import {
 } from '../../TestKit/Fixtures.js';
 import { Client } from '../Client.js';
 import { shouldDeferGatewayDispatchUntilReady } from '../GatewayDispatch.js';
+import { handleReadyPayload, hydrateReadyGuilds, resetGuildStreamSettle } from '../GatewayReady.js';
 import { guildHandlers } from './Guilds.js';
 
-function guildPayload(name: string) {
+function guildPayload(name: string, id = 'g1') {
   return fixtureGuild({
-    id: 'g1',
+    id,
     name,
     owner_id: 'owner1',
     afk_timeout: 0,
@@ -345,5 +346,117 @@ describe('guild availability lifecycle', () => {
 
     expect(client.guilds.has('g1')).toBe(false);
     expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('emits GuildAvailable (not GuildCreate) when hydrating a READY unavailable stub', async () => {
+    const client = new Client({ gatewayDeferHandlers: false });
+    hydrateReadyGuilds(client, [{ id: 'g1', unavailable: true }], false);
+    expect(client.guilds.get('g1')?.available).toBe(false);
+    expect(client._readyStubGuildIds.has('g1')).toBe(true);
+
+    const emit = vi.spyOn(client, 'emit');
+    await dispatch(client, 'GUILD_CREATE', {
+      ...guildPayload('Hydrated'),
+      roles: [role('r1')],
+      channels: [channel('c1')],
+    });
+
+    const guild = client.guilds.get('g1');
+    expect(guild?.available).toBe(true);
+    expect(guild?.name).toBe('Hydrated');
+    expect(client._readyStubGuildIds.has('g1')).toBe(false);
+    expect(emit).toHaveBeenCalledWith(Events.GuildAvailable, guild);
+    expect(emit.mock.calls.some(([event]) => event === Events.GuildCreate)).toBe(false);
+  });
+
+  it('emits GuildCreate for a real join after Ready with no prior stub', async () => {
+    const client = new Client({ gatewayDeferHandlers: false });
+    client.readyAt = new Date();
+    const emit = vi.spyOn(client, 'emit');
+
+    await dispatch(client, 'GUILD_CREATE', guildPayload('Newly joined'));
+
+    const guild = client.guilds.get('g1');
+    expect(guild?.name).toBe('Newly joined');
+    expect(emit).toHaveBeenCalledWith(Events.GuildCreate, guild);
+    expect(emit.mock.calls.some(([event]) => event === Events.GuildAvailable)).toBe(false);
+  });
+
+  it('emits GuildCreate for READY stub hydration when emitGuildCreateOnStartup is true', async () => {
+    const client = new Client({
+      gatewayDeferHandlers: false,
+      emitGuildCreateOnStartup: true,
+    });
+    hydrateReadyGuilds(client, [{ id: 'g1', unavailable: true }], false);
+    const emit = vi.spyOn(client, 'emit');
+
+    await dispatch(client, 'GUILD_CREATE', guildPayload('Legacy startup'));
+
+    const guild = client.guilds.get('g1');
+    expect(emit).toHaveBeenCalledWith(Events.GuildCreate, guild);
+    expect(emit.mock.calls.some(([event]) => event === Events.GuildAvailable)).toBe(false);
+  });
+
+  it('keeps GuildAvailable for outage recovery even with emitGuildCreateOnStartup', async () => {
+    const client = new Client({
+      gatewayDeferHandlers: false,
+      emitGuildCreateOnStartup: true,
+    });
+    await dispatch(client, 'GUILD_CREATE', guildPayload('Before outage'));
+    const guild = client.guilds.get('g1');
+    client.readyAt = new Date();
+    await dispatch(client, 'GUILD_DELETE', { id: 'g1', unavailable: true });
+    const emit = vi.spyOn(client, 'emit');
+
+    await dispatch(client, 'GUILD_CREATE', guildPayload('After outage'));
+
+    expect(emit).toHaveBeenCalledWith(Events.GuildAvailable, guild);
+    expect(emit.mock.calls.some(([event]) => event === Events.GuildCreate)).toBe(false);
+  });
+
+  it('emits GuildAvailable during empty-READY settle stream (not GuildCreate)', async () => {
+    const client = new Client({ waitForGuilds: true, gatewayDeferHandlers: false });
+    resetGuildStreamSettle(client);
+    expect(client._guildStreamSettleTimeout).not.toBeNull();
+    const emit = vi.spyOn(client, 'emit');
+
+    await dispatch(client, 'GUILD_CREATE', guildPayload('Stream guild'));
+
+    const guild = client.guilds.get('g1');
+    expect(guild?.name).toBe('Stream guild');
+    expect(emit).toHaveBeenCalledWith(Events.GuildAvailable, guild);
+    expect(emit.mock.calls.some(([event]) => event === Events.GuildCreate)).toBe(false);
+    expect(client._guildStreamSettleTimeout).not.toBeNull();
+  });
+
+  it('treats empty-READY hydrations after Ready as GuildAvailable without waitForGuilds', async () => {
+    vi.useFakeTimers();
+    try {
+      const client = new Client({ gatewayDeferHandlers: false });
+      handleReadyPayload(client, {
+        user: fixtureUser({ id: 'bot1', username: 'bot' }),
+        guilds: [],
+        session_id: 's1',
+      });
+      expect(client.readyAt).toBeInstanceOf(Date);
+      expect(client._guildStreamSettleTimeout).not.toBeNull();
+
+      const emit = vi.spyOn(client, 'emit');
+      await dispatch(client, 'GUILD_CREATE', guildPayload('Existing guild'));
+
+      const guild = client.guilds.get('g1');
+      expect(emit).toHaveBeenCalledWith(Events.GuildAvailable, guild);
+      expect(emit.mock.calls.some(([event]) => event === Events.GuildCreate)).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(500);
+      expect(client._guildStreamSettleTimeout).toBeNull();
+      emit.mockClear();
+
+      await dispatch(client, 'GUILD_CREATE', guildPayload('Joined later', 'g2'));
+      expect(emit).toHaveBeenCalledWith(Events.GuildCreate, client.guilds.get('g2'));
+      expect(emit.mock.calls.some(([event]) => event === Events.GuildAvailable)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

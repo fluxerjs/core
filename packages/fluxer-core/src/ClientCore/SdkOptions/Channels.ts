@@ -43,6 +43,8 @@ export interface ChannelEditOptions {
   permissionOverwrites?: ChannelPermissionOverwriteOptions[];
   /** Group DM icon hash (base64 image). */
   icon?: string | null;
+  /** Audit log reason (`X-Audit-Log-Reason`). Not sent in the JSON body. */
+  reason?: string;
 }
 
 /** Options for {@link Guild.createChannel}. */

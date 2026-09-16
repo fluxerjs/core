@@ -9,6 +9,7 @@ import {
 
 import type { Client } from '../../ClientCore/Client.js';
 import { toRoleEditBody } from '../../ClientCore/SdkOptions/Guild.js';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import { Base } from '../Base.js';
 import type { RoleEditOptions } from './RoleOptions.js';
 
@@ -136,6 +137,7 @@ export class Role extends Base {
     const data = await this.client.rest.patch<APIRole>(Routes.guildRole(this.guildId, this.id), {
       body: Object.keys(body).length ? body : undefined,
       auth: true,
+      ...auditReasonHeaders(options.reason),
     });
     this._patch(data);
     return this;
@@ -143,9 +145,13 @@ export class Role extends Base {
 
   /**
    * DELETE role. Requires Manage Roles.
+   * @param reason - Audit log reason (`X-Audit-Log-Reason`)
    */
-  async delete(): Promise<void> {
-    await this.client.rest.delete(Routes.guildRole(this.guildId, this.id), { auth: true });
+  async delete(reason?: string): Promise<void> {
+    await this.client.rest.delete(Routes.guildRole(this.guildId, this.id), {
+      auth: true,
+      ...auditReasonHeaders(reason),
+    });
     this.client.guilds.get(this.guildId)?.roles.delete(this.id);
   }
 }

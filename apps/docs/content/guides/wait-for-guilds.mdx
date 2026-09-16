@@ -5,7 +5,9 @@ category: additional
 order: 46
 ---
 
-By default Ready fires when the gateway READY payload arrives. Some guilds may still be unavailable stubs that show up later as GUILD_CREATE. If your Ready handler needs a complete `client.guilds` map, turn on `waitForGuilds`.
+By default Ready fires when the gateway READY payload arrives. READY lists the bot's guilds as unavailable stubs (`{ id, unavailable: true }`) that land in `client.guilds` with `available === false`. Full snapshots arrive shortly after as GUILD_CREATE and emit `GuildAvailable` (not `GuildCreate`). If your Ready handler needs every guild fully loaded, turn on `waitForGuilds`.
+
+If a gateway still sends `READY.guilds: []`, Fluxer opens a short hydration window (`GUILD_STREAM_SETTLE_MS`) and treats those later snapshots as `GuildAvailable` even when `waitForGuilds` is off. Ready still fires immediately in that case; turn on `waitForGuilds` if you need the cache complete first.
 
 While guilds are syncing, other gateway events (like MESSAGE_CREATE) are held and replayed after Ready. That keeps setup work in Ready from racing with early message handlers.
 
@@ -28,6 +30,10 @@ client.on(Events.Ready, () => {
 
 await client.login(process.env.FLUXER_BOT_TOKEN);
 ```
+
+## GuildCreate vs GuildAvailable
+
+`GuildCreate` is for guilds the bot joins after Ready. Startup / reconnect backfill uses `GuildAvailable`. If an older bot still seeds state from `GuildCreate` on every restart, set `emitGuildCreateOnStartup: true` (not recommended for new code). See [Upgrading to 3.1](/guides/upgrading-to-3-1/).
 
 ## When you need it
 

@@ -29,8 +29,8 @@ describe('SnowflakeUtil', () => {
     expect(result).toHaveProperty('timestamp');
     expect(result).toHaveProperty('date');
     expect(result).toHaveProperty('workerId');
+    expect(result).toHaveProperty('sequence');
     expect(result).toHaveProperty('processId');
-    expect(result).toHaveProperty('increment');
   });
 
   it('snowflakeFromTimestamp round-trips within second', () => {
@@ -54,8 +54,38 @@ describe('SnowflakeUtil', () => {
     expect(d.timestamp).toBe(1_609_459_200_000);
     expect(d.date).toBeInstanceOf(Date);
     expect(typeof d.workerId).toBe('number');
-    expect(typeof d.processId).toBe('number');
-    expect(typeof d.increment).toBe('number');
+    expect(typeof d.sequence).toBe('number');
+    expect(d.processId).toBe(0);
+  });
+
+  it('deconstruct uses 10-bit worker and 12-bit sequence', () => {
+    const ts = 1_609_459_200_000;
+    const workerId = 1023;
+    const sequence = 4095;
+    const snowflake = (
+      ((BigInt(ts) - SnowflakeUtil.EPOCH) << 22n) |
+      (BigInt(workerId) << 12n) |
+      BigInt(sequence)
+    ).toString();
+    const d = SnowflakeUtil.deconstruct(snowflake);
+    expect(d.timestamp).toBe(ts);
+    expect(d.workerId).toBe(1023);
+    expect(d.sequence).toBe(4095);
+    expect(d.processId).toBe(0);
+  });
+
+  it('deconstruct extracts worker values above Discord 5-bit range', () => {
+    const ts = 1_609_459_200_000;
+    const workerId = 512;
+    const sequence = 1;
+    const snowflake = (
+      ((BigInt(ts) - SnowflakeUtil.EPOCH) << 22n) |
+      (BigInt(workerId) << 12n) |
+      BigInt(sequence)
+    ).toString();
+    const d = SnowflakeUtil.deconstruct(snowflake);
+    expect(d.workerId).toBe(512);
+    expect(d.sequence).toBe(1);
   });
 
   it('deconstruct throws for non-numeric string', () => {

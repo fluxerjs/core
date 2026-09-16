@@ -8,6 +8,15 @@ import type { Client } from '../../ClientCore/Client.js';
 import { ErrorCodes } from '../../LibErrors/ErrorCodes.js';
 import { FluxerError } from '../../LibErrors/FluxerError.js';
 
+/** Bot uploads are clamped to 50 MiB even when a guild allowance is higher. */
+export const BOT_ATTACHMENT_MAX_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Server split between singlepart and multipart presigned uploads.
+ * Documented here so callers can size files; the plan response still chooses `upload_mode`.
+ */
+export const ATTACHMENT_MULTIPART_THRESHOLD_BYTES = 10 * 1024 * 1024;
+
 export type UploadFileForSend = {
   id: number;
   filename: string;
@@ -15,6 +24,30 @@ export type UploadFileForSend = {
   /** MIME type sent on the plan request and used for singlepart PUT. */
   contentType: string;
 };
+
+/** Merged `limits.rules[].overrides` from instance discovery, when present. */
+export function instanceLimitOverridesSnapshot(client: Client): Record<string, number> | null {
+  const rules = client.instance.discovery?.limits?.rules;
+  if (!rules?.length) return null;
+  const snapshot: Record<string, number> = {};
+  for (const rule of rules) {
+    Object.assign(snapshot, rule.overrides);
+  }
+  return Object.keys(snapshot).length ? snapshot : null;
+}
+
+function assertBotAttachmentLimits(client: Client, files: UploadFileForSend[]): void {
+  const snapshot = instanceLimitOverridesSnapshot(client);
+  for (const file of files) {
+    const size = file.data.byteLength;
+    if (size <= BOT_ATTACHMENT_MAX_BYTES) continue;
+    const snapshotNote = snapshot ? ` Instance limit overrides: ${JSON.stringify(snapshot)}.` : '';
+    throw new FluxerError(
+      `Bot attachments are limited to 50 MiB (${BOT_ATTACHMENT_MAX_BYTES} bytes); "${file.filename}" is ${size} bytes.${snapshotNote}`,
+      { code: ErrorCodes.AttachmentTooLarge },
+    );
+  }
+}
 
 function asBytes(data: ArrayBuffer | Uint8Array | Buffer): Uint8Array<ArrayBuffer> {
   const src = data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data);
@@ -36,12 +69,18 @@ async function putBlob(url: string, body: Blob, contentType?: string): Promise<v
   }
 }
 
-/** Plan → PUT → `uploadedAttachments` for `send()`. */
+/**
+ * Plan → PUT → `uploadedAttachments` for `send()`.
+ * Bots are clamped to {@link BOT_ATTACHMENT_MAX_BYTES} (50 MiB) before PUT.
+ * The server splits singlepart vs multipart at {@link ATTACHMENT_MULTIPART_THRESHOLD_BYTES} (10 MiB).
+ */
 export async function uploadAttachmentsForSend(
   client: Client,
   channelId: string,
   files: UploadFileForSend[],
 ): Promise<RESTPostAPIMessageUploadedAttachment[]> {
+  assertBotAttachmentLimits(client, files);
+
   const plan = await client.rest.post<RESTPostAPIChannelAttachmentUploadResponse>(
     Routes.channelAttachments(channelId),
     {

@@ -83,4 +83,35 @@ describe('REST', () => {
   it('Routes is exposed', () => {
     expect(REST.Routes).toBe(Routes);
   });
+
+  it('baseUrl is versioned; well-known GET is not', async () => {
+    const rest = new REST({ api: 'https://fluxer.app' });
+    expect(rest.baseUrl).toBe('https://fluxer.app/v1');
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve('{}'),
+      headers: new Headers(),
+    } as unknown as Response);
+    await rest.get('/.well-known/fluxer', { auth: false });
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://fluxer.app/.well-known/fluxer');
+    expect(String(fetchMock.mock.calls[0]?.[0])).not.toContain('/v1/');
+  });
+
+  it('sends Accept-Language from locale option', async () => {
+    const rest = new REST({ locale: 'ja' });
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve('{}'),
+      headers: new Headers(),
+    } as unknown as Response);
+    await rest.get('/gateway/bot');
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ 'Accept-Language': 'ja' }),
+      }),
+    );
+  });
 });

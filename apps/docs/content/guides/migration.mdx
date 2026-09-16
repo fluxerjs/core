@@ -362,7 +362,8 @@ bitField.valueOf(); // string
 // After
 PermissionFlags.ManageExpressions;
 bitField.valueOf(); // bigint
-SnowflakeUtil.parse(id); // { timestamp, workerId, processId, increment }
+SnowflakeUtil.deconstruct(id); // { timestamp, workerId, sequence }
+// processId is a deprecated always-0 alias (discord.js migrants)
 ```
 
 - `PermissionsBitField.has()` treats Administrator as implying all permissions.

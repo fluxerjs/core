@@ -79,7 +79,10 @@ export async function resolveClientEmoji(
 // --- Client REST helpers (co-located under T-SLIM-CLIENT write set) ---
 
 export async function fetchInstance(client: Client): Promise<APIInstance> {
-  const raw: unknown = await client.rest.get(Routes.instanceDiscovery(), { auth: false });
+  const raw: unknown = await client.rest.get(Routes.instanceDiscovery(), {
+    auth: false,
+    unversioned: true,
+  });
   return parseInstanceDiscovery(raw);
 }
 

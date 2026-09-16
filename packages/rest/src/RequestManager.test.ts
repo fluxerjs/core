@@ -517,4 +517,57 @@ describe('RequestManager', () => {
     expect(getRouteHash('POST', hot)).toBe(`POST ${hot}`);
     expect(getRouteHash('GET', '/channels/22222222222222222')).not.toBe(`GET ${hot}`);
   });
+
+  it('fetches /.well-known/fluxer without /v1', async () => {
+    const rm = new RequestManager({ api: 'https://fluxer.app', retries: 0 });
+    fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true }));
+    await rm.request('GET', '/.well-known/fluxer');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://fluxer.app/.well-known/fluxer',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    const url = fetchMock.mock.calls[0]?.[0];
+    expect(url).not.toContain('/v1/');
+  });
+
+  it('unversioned flag skips /v{version} for relative paths', async () => {
+    const rm = new RequestManager({ api: 'https://api.example.com', version: '1', retries: 0 });
+    fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true }));
+    await rm.request('GET', '/healthz', { unversioned: true });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.com/healthz',
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  it('keeps /v{version} for ordinary relative routes', async () => {
+    const rm = new RequestManager({ retries: 0 });
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: '1' }));
+    await rm.request('GET', '/channels/1');
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://api.fluxer.app/v1/channels/1');
+  });
+
+  it('sends Accept-Language en-US by default', async () => {
+    const rm = new RequestManager({ retries: 0 });
+    fetchMock.mockResolvedValueOnce(jsonResponse({}));
+    await rm.request('GET', '/gateway/bot');
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ 'Accept-Language': 'en-US' }),
+      }),
+    );
+  });
+
+  it('sends configured locale as Accept-Language', async () => {
+    const rm = new RequestManager({ retries: 0, locale: 'de' });
+    fetchMock.mockResolvedValueOnce(jsonResponse({}));
+    await rm.request('GET', '/gateway/bot');
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ 'Accept-Language': 'de' }),
+      }),
+    );
+  });
 });

@@ -11,6 +11,8 @@ export interface RoleCreateOptions {
   permissions?: string | PermissionResolvable;
   /** Role color as 24-bit RGB. */
   color?: number;
+  /** Audit log reason (`X-Audit-Log-Reason`). Not sent in the JSON body. */
+  reason?: string;
 }
 
 /**
@@ -31,4 +33,6 @@ export interface RoleEditOptions {
   mentionable?: boolean;
   /** Hoisted position (visual separator group). */
   hoistPosition?: number | null;
+  /** Audit log reason (`X-Audit-Log-Reason`). Not sent in the JSON body. */
+  reason?: string;
 }

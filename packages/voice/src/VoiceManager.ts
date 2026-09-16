@@ -1,9 +1,12 @@
+import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { Collection } from '@fluxerjs/collection';
 import { type Client, Events, type VoiceChannel } from '@fluxerjs/core';
 import {
   GatewayOpcodes,
   type GatewayVoiceServerUpdateDispatchData,
+  type GatewayVoiceStateAckDispatchData,
+  type GatewayVoiceStateUpdateData,
   type GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
 import { type LiveKitReceiveSubscription, LiveKitRtcConnection } from './LiveKitRtcConnection.js';
@@ -15,12 +18,22 @@ export type VoiceStateMap = Map<string, Map<string, string | null>>;
 
 type PendingVoiceJoin = {
   channel: VoiceChannel;
+  mutationId: string;
   resolve: (connection: VoiceConnection | LiveKitRtcConnection) => void;
   reject: (error: Error) => void;
   server?: GatewayVoiceServerUpdateDispatchData;
   state?: GatewayVoiceStateUpdateDispatchData;
   connection?: VoiceConnection | LiveKitRtcConnection;
 };
+
+function voiceAckRejectionError(data: GatewayVoiceStateAckDispatchData): Error {
+  const code = data.error_code;
+  const message = data.error_message;
+  if (message && code) return new Error(`Voice placement rejected (${code}): ${message}`);
+  if (message) return new Error(message);
+  if (code) return new Error(`Voice placement rejected: ${code}`);
+  return new Error('Voice placement rejected');
+}
 
 /**
  * Options for creating a VoiceManager.
@@ -55,6 +68,9 @@ export class VoiceManager extends EventEmitter {
     );
     this.client.on(Events.VoiceServerUpdate, (data: GatewayVoiceServerUpdateDispatchData) =>
       this.handleVoiceServerUpdate(data),
+    );
+    this.client.on(Events.VoiceStateAck, (data: GatewayVoiceStateAckDispatchData) =>
+      this.handleVoiceStateAck(data),
     );
     this.client.on(
       Events.VoiceStatesSync,
@@ -154,9 +170,12 @@ export class VoiceManager extends EventEmitter {
 
   private handleVoiceServerUpdate(data: GatewayVoiceServerUpdateDispatchData): void {
     const guildId = data.guild_id;
+    const grantChannelId = data.channel_id;
 
-    let pending = this.pending.get(guildId);
-    if (!pending) {
+    let pending: PendingVoiceJoin | undefined;
+    if (grantChannelId) pending = this.pending.get(grantChannelId);
+    if (!pending && guildId) pending = this.pending.get(guildId);
+    if (!pending && guildId) {
       for (const [, p] of this.pending) {
         if (p.channel?.guildId === guildId) {
           pending = p;
@@ -165,11 +184,11 @@ export class VoiceManager extends EventEmitter {
       }
     }
     if (pending) {
-      const channelKey = pending.channel?.id ?? guildId;
+      const channelKey = pending.channel?.id ?? grantChannelId ?? guildId ?? '';
       const hasToken = !!(data.token && data.token.length > 0);
       this.client.emit?.(
         'debug',
-        `[VoiceManager] VoiceServerUpdate guild=${guildId} channel=${channelKey} endpoint=${data.endpoint ?? 'null'} token=${hasToken ? 'yes' : 'NO'}`,
+        `[VoiceManager] VoiceServerUpdate guild=${guildId ?? 'none'} channel=${channelKey} endpoint=${data.endpoint ?? 'null'} token=${hasToken ? 'yes' : 'NO'}`,
       );
       pending.server = data;
       this.tryCompletePending(channelKey, pending);
@@ -186,10 +205,13 @@ export class VoiceManager extends EventEmitter {
     }
 
     let conn: VoiceConnection | LiveKitRtcConnection | undefined;
-    for (const [, c] of this.connections) {
-      if (c?.channel?.guildId === guildId) {
-        conn = c;
-        break;
+    if (grantChannelId) conn = this.connections.get(grantChannelId);
+    if (!conn && guildId) {
+      for (const [, c] of this.connections) {
+        if (c?.channel?.guildId === guildId) {
+          conn = c;
+          break;
+        }
       }
     }
     if (!conn) return;
@@ -197,7 +219,7 @@ export class VoiceManager extends EventEmitter {
     if (!data.endpoint || !data.token) {
       this.client.emit?.(
         'debug',
-        `[VoiceManager] Voice server endpoint null for guild ${guildId}; disconnecting`,
+        `[VoiceManager] Voice server endpoint null for guild ${guildId ?? 'none'}; disconnecting`,
       );
       conn.destroy();
       this.connections.delete(conn.channel.id);
@@ -213,7 +235,7 @@ export class VoiceManager extends EventEmitter {
     const channel = conn.channel;
     this.client.emit?.(
       'debug',
-      `[VoiceManager] Voice server migration for guild ${guildId} channel ${channel.id}; reconnecting`,
+      `[VoiceManager] Voice server migration for guild ${guildId ?? 'none'} channel ${channel.id}; reconnecting`,
     );
     conn.destroy();
     this.connections.delete(channel.id);
@@ -238,6 +260,45 @@ export class VoiceManager extends EventEmitter {
     newConn.connect(data, state).catch((e) => {
       this.connections.delete(channel.id);
       newConn.emit('error', e instanceof Error ? e : new Error(String(e)));
+    });
+  }
+
+  private handleVoiceStateAck(data: GatewayVoiceStateAckDispatchData): void {
+    if (!data.mutation_id) return;
+
+    let pendingKey: string | undefined;
+    let pending: PendingVoiceJoin | undefined;
+    for (const [key, p] of this.pending) {
+      if (p.mutationId === data.mutation_id) {
+        pendingKey = key;
+        pending = p;
+        break;
+      }
+    }
+    if (!pending || pendingKey === undefined) return;
+
+    if (data.connection_id) {
+      this.storeConnectionId(pending.channel.id, data.connection_id);
+    }
+
+    const rejected =
+      data.status === 'rejected' ||
+      (typeof data.error_code === 'string' && data.error_code.length > 0);
+    if (!rejected) return;
+
+    this.pending.delete(pendingKey);
+    if (pending.connection && this.connections.get(pending.channel.id) === pending.connection) {
+      this.connections.delete(pending.channel.id);
+      this.connectionIds.delete(pending.channel.id);
+      pending.connection.destroy();
+    }
+    pending.reject(voiceAckRejectionError(data));
+  }
+
+  private sendVoiceStateUpdate(data: GatewayVoiceStateUpdateData): void {
+    this.client.sendToGateway(this.shardId, {
+      op: GatewayOpcodes.VoiceStateUpdate,
+      d: data,
     });
   }
 
@@ -359,8 +420,10 @@ export class VoiceManager extends EventEmitter {
         `[VoiceManager] Requesting voice join guild=${guildId} channel=${channelId}`,
       );
       let timeout: ReturnType<typeof setTimeout>;
+      const mutationId = randomUUID();
       const pending: PendingVoiceJoin = {
         channel,
+        mutationId,
         resolve: (connection: VoiceConnection | LiveKitRtcConnection) => {
           clearTimeout(timeout);
           resolve(connection);
@@ -387,14 +450,12 @@ export class VoiceManager extends EventEmitter {
         );
       }, 20_000);
       this.pending.set(channelId, pending);
-      this.client.sendToGateway(this.shardId, {
-        op: GatewayOpcodes.VoiceStateUpdate,
-        d: {
-          guild_id: guildId,
-          channel_id: channel.id,
-          self_mute: false,
-          self_deaf: false,
-        },
+      this.sendVoiceStateUpdate({
+        guild_id: guildId,
+        channel_id: channel.id,
+        self_mute: false,
+        self_deaf: false,
+        mutation_id: mutationId,
       });
     });
   }
@@ -405,24 +466,29 @@ export class VoiceManager extends EventEmitter {
    * @param guildId - Guild ID to leave
    */
   leave(guildId: string): void {
-    const toLeave: { channelId: string; conn: VoiceConnection | LiveKitRtcConnection }[] = [];
+    const toLeave: {
+      channelId: string;
+      conn: VoiceConnection | LiveKitRtcConnection;
+      connectionId: string | undefined;
+    }[] = [];
     for (const [cid, c] of this.connections) {
-      if (c?.channel?.guildId === guildId) toLeave.push({ channelId: cid, conn: c });
+      if (c?.channel?.guildId === guildId) {
+        toLeave.push({ channelId: cid, conn: c, connectionId: this.connectionIds.get(cid) });
+      }
     }
     for (const { channelId, conn } of toLeave) {
       conn.destroy();
       this.connections.delete(channelId);
       this.connectionIds.delete(channelId);
     }
-    if (toLeave.length > 0) {
-      this.client.sendToGateway(this.shardId, {
-        op: GatewayOpcodes.VoiceStateUpdate,
-        d: {
-          guild_id: guildId,
-          channel_id: null,
-          self_mute: false,
-          self_deaf: false,
-        },
+    for (const { connectionId } of toLeave) {
+      if (!connectionId) continue;
+      this.sendVoiceStateUpdate({
+        guild_id: guildId,
+        channel_id: null,
+        connection_id: connectionId,
+        self_mute: false,
+        self_deaf: false,
       });
     }
   }
@@ -435,25 +501,18 @@ export class VoiceManager extends EventEmitter {
     const conn = this.connections.get(channelId);
     if (!conn) return;
     const guildId = conn.channel?.guildId;
+    const connectionId = this.connectionIds.get(channelId);
     conn.destroy();
     this.connections.delete(channelId);
     this.connectionIds.delete(channelId);
-    if (!guildId) return;
+    if (!guildId || !connectionId) return;
 
-    // Fluxer supports multiple voice channels per guild. Only clear guild voice
-    // state when this was the last connection in the guild.
-    for (const other of this.connections.values()) {
-      if (other?.channel?.guildId === guildId) return;
-    }
-
-    this.client.sendToGateway(this.shardId, {
-      op: GatewayOpcodes.VoiceStateUpdate,
-      d: {
-        guild_id: guildId,
-        channel_id: null,
-        self_mute: false,
-        self_deaf: false,
-      },
+    this.sendVoiceStateUpdate({
+      guild_id: guildId,
+      channel_id: null,
+      connection_id: connectionId,
+      self_mute: false,
+      self_deaf: false,
     });
   }
 
@@ -500,17 +559,14 @@ export class VoiceManager extends EventEmitter {
       return;
     }
 
-    this.client.sendToGateway(this.shardId, {
-      op: GatewayOpcodes.VoiceStateUpdate,
-      d: {
-        guild_id: guildId ?? '',
-        channel_id: conn.channel.id,
-        connection_id: connectionId,
-        self_mute: partial.self_mute ?? false,
-        self_deaf: partial.self_deaf ?? false,
-        self_video: partial.self_video ?? false,
-        self_stream: partial.self_stream ?? false,
-      },
+    this.sendVoiceStateUpdate({
+      guild_id: guildId,
+      channel_id: conn.channel.id,
+      connection_id: connectionId,
+      self_mute: partial.self_mute ?? false,
+      self_deaf: partial.self_deaf ?? false,
+      self_video: partial.self_video ?? false,
+      self_stream: partial.self_stream ?? false,
     });
   }
 }

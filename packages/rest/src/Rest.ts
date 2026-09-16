@@ -3,6 +3,7 @@ import { Routes } from '@fluxerjs/types';
 import { RequestManager, type RequestOptions, type RetryPolicy } from './RequestManager.js';
 import {
   DEFAULT_API,
+  DEFAULT_LOCALE,
   DEFAULT_USER_AGENT,
   DEFAULT_VERSION,
   MAX_RETRIES,
@@ -18,6 +19,8 @@ export interface RESTOptions {
   /** Select the retry budget for each logical request. */
   retryPolicy?: RetryPolicy;
   userAgent?: string;
+  /** BCP 47 tag sent as `Accept-Language`. Defaults to {@link DEFAULT_LOCALE}. */
+  locale?: string;
 }
 
 /** HTTP client for the Fluxer API. */
@@ -35,6 +38,7 @@ export class REST extends EventEmitter {
       retries: options.retries ?? MAX_RETRIES,
       ...(options.retryPolicy ? { retryPolicy: options.retryPolicy } : {}),
       userAgent: options.userAgent ?? DEFAULT_USER_AGENT,
+      locale: options.locale ?? DEFAULT_LOCALE,
     });
   }
 
@@ -47,9 +51,14 @@ export class REST extends EventEmitter {
     return this.requestManager.getToken();
   }
 
+  /** Versioned API base URL (`{api}/v{version}`). */
+  get baseUrl(): string {
+    return this.requestManager.baseUrl;
+  }
+
   async get<T>(
     route: string,
-    options?: Pick<RequestOptions, 'auth' | 'signal' | 'headers'>,
+    options?: Pick<RequestOptions, 'auth' | 'signal' | 'headers' | 'unversioned'>,
   ): Promise<T> {
     return this.requestManager.request<T>('GET', route, options);
   }

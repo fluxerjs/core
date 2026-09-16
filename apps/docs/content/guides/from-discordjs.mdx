@@ -70,5 +70,6 @@ Managers are collections (or collection-backed). Prefer `guild.members.get` / `f
 | Uncached member remove as full member | `PartialGuildMember` class (`member.partial`) |
 | Await collectors without bounds | Require `time` and/or `max` (`CollectorOptionsRequired`) |
 | `channel.editPermission` / overwrite array | `channel.permissionOverwrites.edit` / `.cache` |
+| `GuildCreate` on every bot restart | Startup backfill is `GuildAvailable`; `GuildCreate` is joins after Ready (or `emitGuildCreateOnStartup: true`) |
 
-Deep upgrade tables: [Upgrading to 3.0](/guides/upgrading-to-3/). Coming from Fluxer 1.x: [Migrating to 2.0](/guides/migration/). Starter path: [Installation](/guides/installation/).
+Deep upgrade tables: [Upgrading to 3.1](/guides/upgrading-to-3-1/), [Upgrading to 3.0](/guides/upgrading-to-3/). Coming from Fluxer 1.x: [Migrating to 2.0](/guides/migration/). Starter path: [Installation](/guides/installation/).

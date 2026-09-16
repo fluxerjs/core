@@ -5,6 +5,8 @@ import { ALL_PERMISSIONS_BIGINT, PermissionFlags } from '@fluxerjs/util';
  * Compute the effective permission bitfield for a member in a channel.
  * Applies role permissions and channel overwrites.
  * Guild owner always receives all permissions (matches Fluxer API behavior).
+ * Administrator on the role base mask also receives the full mask, and
+ * channel overwrites are not applied afterwards.
  * @param basePermissions - Combined permissions from all member roles (guild base)
  * @param overwrites - Channel permission overwrites
  * @param memberRoles - Role IDs the member has
@@ -20,6 +22,9 @@ export function computePermissions(
   isOwner: boolean,
 ): bigint {
   if (isOwner) return ALL_PERMISSIONS_BIGINT;
+  if ((basePermissions & PermissionFlags.Administrator) !== 0n) {
+    return ALL_PERMISSIONS_BIGINT;
+  }
   let perms = basePermissions;
   for (const overwrite of overwrites ?? []) {
     const applies =
@@ -30,7 +35,7 @@ export function computePermissions(
     const deny = BigInt(overwrite.deny || '0');
     perms = (perms & ~deny) | allow;
   }
-  return (perms & PermissionFlags.Administrator) !== 0n ? ALL_PERMISSIONS_BIGINT : perms;
+  return perms;
 }
 
 /**

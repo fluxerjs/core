@@ -1682,9 +1682,20 @@ export class LiveKitRtcConnection extends EventEmitter {
       _streamEnded = true;
       this.audioDebug('stream ended', { framesCaptured });
 
-      while (processing || opusFrameQueue.length > 0) {
+      // Yield with setTimeout, not setImmediate: setImmediate never lets the
+      // event loop idle, so this wait loop pins one core at ~100% for as long
+      // as the (unbounded) queue takes to drain at realtime pace. stop() does
+      // not clear opusFrameQueue, so also bail out once playback stopped or the
+      // source was closed; otherwise skipping a track after its stream ended
+      // spins this loop forever.
+      while (
+        (processing || opusFrameQueue.length > 0) &&
+        this._playing &&
+        source &&
+        !source.closed
+      ) {
         await drainOpusQueue();
-        await new Promise((r) => setImmediate(r));
+        await new Promise((r) => setTimeout(r, 10));
       }
 
       while (sampleBuffer.length >= FRAME_SAMPLES && this._playing && source) {

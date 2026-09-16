@@ -7,6 +7,7 @@ import {
   type GuildMemberEditOptions,
   toMemberEditBody,
 } from '../../ClientCore/SdkOptions/index.js';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import { cdnMemberAvatarURL, cdnMemberBannerURL } from '../../Helpers/Cdn.js';
 import { computePermissions } from '../../Helpers/Permissions.js';
 import { Base } from '../Base.js';
@@ -188,6 +189,7 @@ export class GuildMember extends Base {
     const data = await this.client.rest.patch<APIGuildMember>(route, {
       body: toMemberEditBody(options),
       auth: true,
+      ...auditReasonHeaders(options.reason ?? options.timeoutReason),
     });
     this._patch(data);
     if (options.bio !== undefined) this.bio = options.bio;
@@ -225,8 +227,8 @@ export class GuildMember extends Base {
   }
 
   /** Kick this member. Requires Kick Members. */
-  async kick(): Promise<void> {
-    await this.guild.kick(this.id);
+  async kick(reason?: string): Promise<void> {
+    await this.guild.kick(this.id, reason);
   }
 
   /** Ban this member. Requires Ban Members. */

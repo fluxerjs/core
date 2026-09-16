@@ -1,5 +1,6 @@
 import type { APIEmoji, APIGuildEmojiBulkCreateResponse } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import { rethrowMapped } from '../../Helpers/HttpErrors.js';
 import { ErrorCodes } from '../../LibErrors/ErrorCodes.js';
 import { cacheEmoji } from './Cache.js';
@@ -25,11 +26,13 @@ export async function fetchEmoji(guild: Guild, emojiId: string): Promise<GuildEm
 
 export async function createEmoji(
   guild: Guild,
-  options: { name: string; image: string },
+  options: { name: string; image: string; reason?: string },
 ): Promise<GuildEmoji> {
+  const { reason, ...body } = options;
   const data = await guild.client.rest.post<APIEmoji>(Routes.guildEmojis(guild.id), {
-    body: options,
+    body,
     auth: true,
+    ...auditReasonHeaders(reason),
   });
   return cacheEmoji(guild, data);
 }

@@ -10,5 +10,10 @@ export {
   type RetryPolicyContext,
 } from './RequestManager.js';
 export { REST, type RESTOptions } from './Rest.js';
-export { DEFAULT_API, DEFAULT_USER_AGENT, DEFAULT_VERSION } from './Utils/Constants.js';
+export {
+  DEFAULT_API,
+  DEFAULT_LOCALE,
+  DEFAULT_USER_AGENT,
+  DEFAULT_VERSION,
+} from './Utils/Constants.js';
 export { type AttachmentData, type AttachmentPayload, buildFormData } from './Utils/Files.js';

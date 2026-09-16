@@ -1,7 +1,8 @@
 import type { Snowflake } from '../Common/Snowflake.js';
 
 /**
- * REST path helpers. Builds `/v1`-relative paths; it is not an HTTP client.
+ * REST path helpers. Most paths are `/v{version}`-relative; it is not an HTTP client.
+ * {@link Routes.instanceDiscovery} is unversioned (`GET /.well-known/fluxer` on the origin).
  * Pass the result to {@link REST} (`client.rest`). Prefer high-level helpers
  * (`channel.send()`, `guild.members.fetch()`) when they exist.
  *
@@ -117,8 +118,12 @@ export const Routes = {
   userProfile: (id: Snowflake, guildId?: Snowflake): string =>
     guildId ? `/users/${id}/profile?guild_id=${guildId}` : `/users/${id}/profile`,
 
-  // Instance (unauthenticated)
-  /** Canonical instance discovery document (`GET /.well-known/fluxer`). */
+  // Instance (unauthenticated, unversioned on the given origin)
+  /**
+   * Canonical instance discovery document (`GET /.well-known/fluxer`).
+   * Unversioned: request as an absolute `{origin}/.well-known/fluxer` URL, or with REST `unversioned: true`.
+   * Do not prefix `/v1`.
+   */
   instanceDiscovery: () => '/.well-known/fluxer' as const,
 
   // Gateway

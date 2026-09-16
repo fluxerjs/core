@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_API,
+  DEFAULT_LOCALE,
   DEFAULT_USER_AGENT,
   DEFAULT_VERSION,
   MAX_RETRIES,
@@ -10,6 +11,10 @@ import {
 describe('rest constants', () => {
   it('DEFAULT_API points to Fluxer API', () => {
     expect(DEFAULT_API).toBe('https://api.fluxer.app');
+  });
+
+  it('DEFAULT_LOCALE is en-US', () => {
+    expect(DEFAULT_LOCALE).toBe('en-US');
   });
 
   it('DEFAULT_VERSION is 1', () => {

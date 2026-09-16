@@ -267,6 +267,8 @@ export interface APIMessage {
   referenced_message?: APIMessage | null;
   /** Author's guild member object (gateway MESSAGE_CREATE only, when guild message). */
   member?: APIGuildMember | null;
+  /** IDs of custom emojis in the message classified as explicit. */
+  nsfw_emojis?: Snowflake[] | null;
 }
 
 /** Single channel window in POST /channels/messages/bulk request. */

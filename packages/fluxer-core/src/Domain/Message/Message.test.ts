@@ -464,6 +464,14 @@ describe('Message.flags / reactions / stickers / edit clear', () => {
     expect(msg.stickers[0]?.id).toBe('s1');
   });
 
+  it('maps nsfw_emojis onto nsfwEmojis (default [])', () => {
+    expect(makeMessage(createMessageStubClient()).nsfwEmojis).toEqual([]);
+    expect(
+      makeMessage(createMessageStubClient(), { nsfw_emojis: ['e1', 'e2'] }).nsfwEmojis,
+    ).toEqual(['e1', 'e2']);
+    expect(makeMessage(createMessageStubClient(), { nsfw_emojis: null }).nsfwEmojis).toEqual([]);
+  });
+
   it('edit sends embeds: [] and attachments: [] to clear', async () => {
     const client = createMessageStubClient();
     const msg = makeMessage(client);

@@ -24,6 +24,108 @@ export interface ChangelogEntry {
 /** Hand-authored release notes for the docs site. */
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '3.1.0',
+    date: '2026-09-15',
+    github: 'https://github.com/fluxerjs/core/compare/v3.0.0...main',
+    summary:
+      'GuildCreate matches Discord.js (startup backfill is GuildAvailable), REST uses api_public and unversioned discovery, audit reason headers, voice connection_id / VOICE_STATE_ACK, and Snowflake deconstruct field renames. Upgrade steps: /guides/upgrading-to-3-1/.',
+    sections: [
+      {
+        title: 'Breaking Changes',
+        items: [
+          {
+            summary: 'GuildCreate is for joins after Ready only',
+            detail:
+              'READY unavailable stubs land in client.guilds with available === false. Full startup / reconnect snapshots emit GuildAvailable, not GuildCreate. Set ClientOptions.emitGuildCreateOnStartup: true to keep the old startup GuildCreate behavior.',
+          },
+          {
+            summary: 'REST host is api_public, not api',
+            detail:
+              'Bot REST calls use endpoints.api_public. Hosted defaults keep api / api_client on https://web.fluxer.app/api and api_public on https://api.fluxer.app. Client.fromDiscovery and fetchInstance use unversioned GET {origin}/.well-known/fluxer.',
+          },
+          {
+            summary: 'SnowflakeUtil.deconstruct uses sequence',
+            detail:
+              'The bit layout exposes sequence instead of increment. processId is always 0 (deprecated alias). Update any code that read increment.',
+          },
+          {
+            summary: 'Voice leave needs connection_id',
+            detail:
+              'Leave and mute updates send connection_id. Leave without it throws VOICE_MISSING_CONNECTION_ID. Joins send mutation_id; a rejected VOICE_STATE_ACK fails the pending join.',
+          },
+          {
+            summary: 'Identify omits intents; e2ee_capable defaults true',
+            detail:
+              'Shards no longer send intents on Identify. properties.e2ee_capable defaults to true; pass e2eeCapable: false to opt out. Identify types no longer include compress or large_threshold.',
+          },
+          {
+            summary: 'Bot attachment uploads max 50 MiB',
+            detail:
+              'Files larger than BOT_ATTACHMENT_MAX_BYTES fail before PUT with AttachmentTooLarge / ATTACHMENT_TOO_LARGE.',
+          },
+          {
+            summary: 'CDN size is snapped to the asset ladder',
+            detail:
+              'CdnUrlOptions.size is snapped via snapCdnSize / CDN_SIZE_LADDER and clamped by asset class (icon, banner, emoji, sticker). Arbitrary exact sizes no longer pass through.',
+          },
+          {
+            summary: 'Administrator skips channel overwrites in computePermissions',
+            detail:
+              'If base roles include Administrator, computePermissions returns the full mask and does not apply channel overwrites (owner path unchanged).',
+          },
+        ],
+      },
+      {
+        title: 'Features',
+        items: [
+          {
+            summary: 'emitGuildCreateOnStartup ClientOption',
+            detail:
+              'Legacy escape hatch when bots still seed state from GuildCreate on every restart. Prefer GuildAvailable or Ready + client.guilds for new code.',
+          },
+          {
+            summary: 'Audit reason on moderation mutations',
+            detail:
+              'Optional reason on channel edit/delete, member edit, ban/kick/unban, roles, emojis, stickers, and message delete. Sent as X-Audit-Log-Reason (not JSON body).',
+          },
+          {
+            summary: 'ClientOptions.locale / RESTOptions.locale',
+            detail:
+              'Sent as Accept-Language (default en-US / DEFAULT_LOCALE). Client locale overrides rest.locale when both are set.',
+          },
+          {
+            summary: 'waitForGuilds settle timer resets as guilds arrive',
+            detail:
+              'Empty READY streams no longer finalize Ready mid-stream when guilds keep arriving within GUILD_STREAM_SETTLE_MS. The same window classifies those snapshots as GuildAvailable even when waitForGuilds is off (Ready still fires immediately).',
+          },
+          'Message.nsfwEmojis / API nsfw_emojis',
+          'CDN helpers accept size for emoji and sticker URLs; export CDN_SIZE_LADDER and snapCdnSize',
+        ],
+      },
+      {
+        title: 'Fixes',
+        items: [
+          {
+            summary: 'Voice play() no longer pins a CPU core after a track ends',
+            detail:
+              'The LiveKit demuxer end handler now yields with setTimeout and bails out when playback stopped or the source closed, instead of busy-waiting on setImmediate. parseOpusPacketBoundaries passes complete packets to libopus instead of splitting TOC codes, which stalled decode on code 3 packets.',
+          },
+        ],
+      },
+      {
+        title: 'Packages',
+        items: [
+          '`@fluxerjs/core` 3.1.0',
+          '`@fluxerjs/rest` 3.1.0',
+          '`@fluxerjs/types` 3.1.0',
+          '`@fluxerjs/util` 3.1.0',
+          '`@fluxerjs/voice` 3.1.0',
+          '`@fluxerjs/ws` 3.1.0',
+        ],
+      },
+    ],
+  },
+  {
     version: '3.0.0',
     date: '2026-08-23',
     github: 'https://github.com/fluxerjs/core/compare/v2.2.0...main',

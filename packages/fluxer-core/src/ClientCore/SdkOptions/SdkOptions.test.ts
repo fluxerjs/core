@@ -135,6 +135,7 @@ describe('SdkOptions serializers', () => {
         rtc_region: null,
         permission_overwrites: [{ id: 'r1', type: 0, allow: '8', deny: '0' }],
       });
+      expect(toChannelEditBody({ name: 'general', reason: 'audit' })).toEqual({ name: 'general' });
     });
 
     it('toChannelEditBody resolves PermissionResolvable overwrites', () => {
@@ -291,6 +292,7 @@ describe('SdkOptions serializers', () => {
       expect(toRoleCreateBody({ permissions: PermissionFlags.Administrator })).toEqual({
         permissions: '8',
       });
+      expect(toRoleCreateBody({ name: 'mod', reason: 'audit' })).toEqual({ name: 'mod' });
     });
 
     it('toRoleEditBody maps hoist and mentionable, not unicodeEmoji', () => {
@@ -335,6 +337,10 @@ describe('SdkOptions serializers', () => {
         accent_color: 1,
         communication_disabled_until: null,
         channel_id: 'c1',
+      });
+      expect(toMemberEditBody({ nick: 'N', reason: 'audit', timeoutReason: 'spam' })).toEqual({
+        nick: 'N',
+        timeout_reason: 'spam',
       });
     });
   });

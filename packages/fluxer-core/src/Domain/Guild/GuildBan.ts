@@ -1,6 +1,7 @@
 import type { APIBan } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import type { Client } from '../../ClientCore/Client.js';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import { Base } from '../Base.js';
 import type { User } from '../User.js';
 
@@ -33,9 +34,10 @@ export class GuildBan extends Base {
    * Remove this ban (unban the user).
    * Requires Ban Members permission.
    */
-  async unban(): Promise<void> {
+  async unban(reason?: string): Promise<void> {
     await this.client.rest.delete(Routes.guildBan(this.guildId, this.user.id), {
       auth: true,
+      ...auditReasonHeaders(reason),
     });
   }
 }

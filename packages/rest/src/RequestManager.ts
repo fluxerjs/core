@@ -5,6 +5,7 @@ import { sharedFetch } from './Fetch/SharedFetch.js';
 import { RateLimitManager } from './RateLimitManager.js';
 import {
   DEFAULT_API,
+  DEFAULT_LOCALE,
   DEFAULT_USER_AGENT,
   DEFAULT_VERSION,
   MAX_RETRIES,
@@ -18,6 +19,12 @@ export interface RequestOptions {
   files?: AttachmentPayload[];
   /** Include the configured token. Defaults to false for cross-origin absolute URLs. */
   auth?: boolean;
+  /**
+   * Skip `/v{version}` and request `{api}{route}` instead.
+   * Absolute `http(s)` URLs are never version-prefixed.
+   * Paths under `/.well-known/` are unversioned even when this is omitted.
+   */
+  unversioned?: boolean;
   /** Aborts the request when triggered (e.g. shutdown). Combined with the client timeout. */
   signal?: AbortSignal;
 }
@@ -48,6 +55,8 @@ export interface RestOptions {
   /** Per-request override; required to opt mutations into automatic retries. */
   retryPolicy?: RetryPolicy;
   userAgent: string;
+  /** BCP 47 tag sent as `Accept-Language`. Defaults to `en-US`. */
+  locale: string;
 }
 
 const ROUTE_HASH_CACHE_MAX = 1000;
@@ -162,6 +171,24 @@ function validateRetryCount(value: number, source: string): number {
   return value;
 }
 
+function isWellKnownPath(route: string): boolean {
+  return stripQueryAndFragment(route).startsWith('/.well-known/');
+}
+
+/** Absolute http(s) URLs and unversioned / well-known paths skip `{api}/v{version}`. */
+function resolveRequestUrl(
+  api: string,
+  version: string,
+  route: string,
+  unversioned?: boolean,
+): string {
+  if (route.startsWith('http')) return route;
+  const origin = api.replace(/\/+$/, '');
+  const path = route.startsWith('/') ? route : `/${route}`;
+  if (unversioned || isWellKnownPath(path)) return `${origin}${path}`;
+  return `${origin}/v${version}${path}`;
+}
+
 function stripQueryAndFragment(route: string): string {
   const query = route.indexOf('?');
   const fragment = route.indexOf('#');
@@ -227,6 +254,7 @@ export class RequestManager {
       retries,
       ...(options.retryPolicy ? { retryPolicy: options.retryPolicy } : {}),
       userAgent: options.userAgent ?? DEFAULT_USER_AGENT,
+      locale: options.locale?.trim() || DEFAULT_LOCALE,
     };
   }
 
@@ -297,6 +325,7 @@ export class RequestManager {
   ): Record<string, string> {
     const headers: Record<string, string> = {
       'User-Agent': this.options.userAgent,
+      'Accept-Language': this.options.locale,
       ...options.headers,
     };
     let useAuth = options.auth !== false;
@@ -351,7 +380,12 @@ export class RequestManager {
     const routeHash = this.getRouteHash(method, route);
     const retries = this.resolveRetries(method, getRetryPolicyRouteKey(route));
     const errorPath = getErrorPath(route, this.baseUrl);
-    const url = route.startsWith('http') ? route : `${this.baseUrl}${route}`;
+    const url = resolveRequestUrl(
+      this.options.api,
+      this.options.version,
+      route,
+      options.unversioned,
+    );
     const body = this.buildBody(options);
     const headers = this.buildHeaders(options, body, route);
     const userSignal = options.signal;

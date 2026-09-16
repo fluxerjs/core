@@ -8,8 +8,12 @@ import { applyGuildSnapshotFromGateway } from '../../Domain/Guild/Snapshot.js';
 import { Events } from '../../Helpers/Events.js';
 import type { Client } from '../Client.js';
 import type { GuildCountsUpdatePayload } from '../EventPayloads.js';
+import { resetGuildStreamSettle } from '../GatewayReady.js';
 import type { HandlerMap } from './Types.js';
 
+/**
+ * Mark a cached guild unavailable and emit {@link Events.GuildUnavailable} once.
+ */
 function markGuildUnavailable(client: Client, id: string): void {
   const guild = client.guilds.get(id);
   if (!guild || guild.available === false) return;
@@ -17,7 +21,16 @@ function markGuildUnavailable(client: Client, id: string): void {
   client.emit(Events.GuildUnavailable, guild);
 }
 
+/** True while an empty-READY guild stream is still hydrating. */
+function isStartupGuildHydration(client: Client): boolean {
+  return client._guildStreamSettleTimeout !== null;
+}
+
 export const guildHandlers: HandlerMap = {
+  /**
+   * Available snapshots: {@link Events.GuildAvailable} for READY stubs / outage recovery,
+   * {@link Events.GuildCreate} for real joins (unless {@link ClientOptions.emitGuildCreateOnStartup}).
+   */
   GUILD_CREATE(client, d) {
     const raw = d as { id?: unknown; unavailable?: unknown };
     if (raw.unavailable === true) {
@@ -31,14 +44,33 @@ export const guildHandlers: HandlerMap = {
       return;
     }
 
+    const startupHydration = isStartupGuildHydration(client);
+    if (startupHydration) {
+      resetGuildStreamSettle(client);
+    }
+
     const result = applyGuildSnapshotFromGateway(client, d);
     if (!result) return;
 
     const { guild, recovered } = result;
+    const legacyStartup = client.options.emitGuildCreateOnStartup === true;
+    const wasReadyStub = client._readyStubGuildIds.delete(guild.id);
+    const isStartupBackfill = wasReadyStub || startupHydration;
+
     if (recovered) {
       guild.available = true;
-      client.emit(Events.GuildAvailable, guild);
-    } else if (raw.unavailable !== false) {
+      if (legacyStartup && isStartupBackfill) {
+        client.emit(Events.GuildCreate, guild);
+      } else {
+        client.emit(Events.GuildAvailable, guild);
+      }
+    } else if (startupHydration) {
+      if (legacyStartup) {
+        client.emit(Events.GuildCreate, guild);
+      } else {
+        client.emit(Events.GuildAvailable, guild);
+      }
+    } else {
       client.emit(Events.GuildCreate, guild);
     }
     client._onGuildReceived(guild.id);
@@ -87,6 +119,7 @@ export const guildHandlers: HandlerMap = {
         return;
       }
 
+      client._readyStubGuildIds.delete(id);
       const guild = client.guilds.get(id);
       if (!guild) return;
       client.guilds.delete(id);

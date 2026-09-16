@@ -8,6 +8,7 @@ import {
   toChannelEditBody,
   toChannelInviteBody,
 } from '../../ClientCore/SdkOptions/index.js';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import { Invite } from '../Invite.js';
 import { Webhook } from '../Webhook.js';
 import { Channel } from './Base.js';
@@ -116,6 +117,7 @@ export class GuildChannel extends Channel {
     const data = await this.client.rest.patch<APIChannel>(Routes.channel(this.id), {
       body: toChannelEditBody(options),
       auth: true,
+      ...auditReasonHeaders(options.reason),
     });
     this.name = data.name ?? this.name;
     this.parentId = data.parent_id ?? this.parentId;

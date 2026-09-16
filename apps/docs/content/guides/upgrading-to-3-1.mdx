@@ -1,0 +1,87 @@
+---
+title: Upgrading to 3.1
+description: Breaking changes and upgrade steps from Fluxer.js 3.0 to 3.1.
+category: upgrading
+order: -1
+---
+
+For bots already on 3.0. New to Fluxer? Start with [Installation](/guides/installation/). Still on 2.x? Finish [Upgrading to 3.0](/guides/upgrading-to-3/) first, then return here.
+
+3.1 aligns guild startup events with Discord.js, switches bot REST to `api_public`, tightens voice leave / Identify, and renames snowflake deconstruct fields. Release notes: [Changelog](/changelog/#3.1.0).
+
+## Install
+
+Set every `@fluxerjs/*` dependency you already have to `^3.1.0`, then install:
+
+```json
+{
+  "dependencies": {
+    "@fluxerjs/core": "^3.1.0"
+  }
+}
+```
+
+```bash
+pnpm install
+```
+
+Bump `rest`, `ws`, `voice`, `util`, and `types` the same way if they are direct dependencies. Packages without 3.1 changes (`builders`, `collection`, `sharding`, …) can stay on `^3.0.0` via workspace ranges, but prefer aligning majors.minor when you publish apps.
+
+## Breaking-change index
+
+| Change | What to do |
+| --- | --- |
+| Startup guilds emit `GuildAvailable`, not `GuildCreate` | Move “joined” logic to post-Ready joins; seed state from `GuildAvailable` or Ready + `client.guilds`. Legacy: `emitGuildCreateOnStartup: true` |
+| REST host is `api_public` | Stop treating `endpoints.api` as the bot REST base. Discovery is unversioned `/.well-known/fluxer` |
+| `SnowflakeUtil.deconstruct().sequence` | Rename reads from `increment`; ignore `processId` (always `0`) |
+| Voice leave needs `connection_id` | Keep the id from the join / state path; catch `VOICE_MISSING_CONNECTION_ID` |
+| Identify omits intents; `e2ee_capable` default true | Remove Identify intent expectations; set `e2eeCapable: false` only if you must opt out |
+| Attachments over 50 MiB | Cap uploads client-side; handle `ATTACHMENT_TOO_LARGE` |
+| CDN `size` snapped to ladder | Pass a nearby ladder size; do not rely on arbitrary exact query values |
+| Administrator skips overwrites in `computePermissions` | Expect full mask when the member has Administrator |
+
+## GuildCreate vs GuildAvailable
+
+```javascript
+import { Client, Events } from '@fluxerjs/core';
+
+const client = new Client({ waitForGuilds: true });
+
+// Real join after Ready (invite / add)
+client.on(Events.GuildCreate, (guild) => {
+  console.log(`Joined ${guild.name}`);
+});
+
+// Startup / reconnect backfill (and outage recovery)
+client.on(Events.GuildAvailable, (guild) => {
+  console.log(`Guild ready: ${guild.name}`);
+});
+
+await client.login(process.env.FLUXER_BOT_TOKEN);
+```
+
+If an older bot still treats every restart as a join:
+
+```javascript
+const client = new Client({
+  emitGuildCreateOnStartup: true,
+});
+```
+
+More detail: [Events](/guides/events/), [Wait for guilds](/guides/wait-for-guilds/).
+
+## Instance / discovery
+
+```javascript
+// REST uses api_public from the instance document
+const client = await Client.fromDiscovery('https://fluxer.app');
+
+// Or pass endpoints explicitly
+const client2 = new Client({
+  instance: {
+    api_public: 'https://api.example.com',
+  },
+});
+```
+
+See [Discovery](/guides/discovery/) and [Multi-instance](/guides/multi-instance/).

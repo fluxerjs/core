@@ -341,6 +341,30 @@ describe('Client gateway helpers and dispatch', () => {
     expect(emit.mock.calls.some((c) => c[0] === Events.Ready)).toBe(false);
   });
 
+  it('inserts unavailable READY stubs into the guild cache', () => {
+    hydrateReadyGuilds(client, [{ id: 'g1', unavailable: true }], true);
+
+    const guild = client.guilds.get('g1');
+    expect(guild?.available).toBe(false);
+    expect(client._readyStubGuildIds.has('g1')).toBe(true);
+  });
+
+  it('emits GuildAvailable for stub hydration after Ready without waitForGuilds', async () => {
+    hydrateReadyGuilds(client, [{ id: 'g1', unavailable: true }], false);
+    client.readyAt = new Date();
+    const emit = vi.spyOn(client, 'emit');
+
+    await dispatchForTest(client, 'GUILD_CREATE', {
+      ...fixtureGuild({ id: 'g1', name: 'Backfill' }),
+      channels: [],
+      roles: [],
+      members: [],
+    });
+
+    expect(emit).toHaveBeenCalledWith(Events.GuildAvailable, client.guilds.get('g1'));
+    expect(emit.mock.calls.some((c) => c[0] === Events.GuildCreate)).toBe(false);
+  });
+
   it('uptime is null until readyAt is set', () => {
     expect(client.uptime).toBeNull();
     client.readyAt = new Date(Date.now() - 250);

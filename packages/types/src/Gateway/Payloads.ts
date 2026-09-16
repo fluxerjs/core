@@ -35,10 +35,16 @@ export interface GatewayIdentifyData {
     os: string;
     browser: string;
     device: string;
+    /**
+     * Advertise E2EE voice capability. Required to join an E2EE voice channel
+     * (bots are exempt from `VOICE_E2EE_REQUIRED`, but still send this for E2EE).
+     */
+    e2ee_capable?: boolean;
   };
   /**
-   * Legacy intents bitfield. Fluxer ignores this; prefer {@link flags}.
-   * @deprecated Fluxer has no gateway intents — omit or send `0`.
+   * Legacy intents bitfield. Fluxer has no gateway intents and ignores this field.
+   * Prefer {@link flags}. Do not send it on Identify.
+   * @deprecated Fluxer has no gateway intents. Omit this field.
    */
   intents?: number;
   /** {@link GatewayIdentifyFlags} bitfield. */
@@ -47,10 +53,6 @@ export interface GatewayIdentifyData {
   ignored_events?: string[];
   /** Prefer hydrating this guild first after READY. */
   initial_guild_id?: Snowflake;
-  /** Whether to use zlib compression. */
-  compress?: boolean;
-  /** Threshold for large guild offline member fetching. */
-  large_threshold?: number;
   /** Shard info [shard_id, num_shards]. */
   shard?: [shardId: number, numShards: number];
   /** Initial presence. */
@@ -98,8 +100,8 @@ export interface GatewayPresenceUpdateData {
 
 /** Voice state update payload (opcode 4) — join/leave/mute/deaf. */
 export interface GatewayVoiceStateUpdateData {
-  /** Guild ID. */
-  guild_id: Snowflake;
+  /** Guild ID. Null/omitted for private call placement. */
+  guild_id?: Snowflake | null;
   /** Channel ID (null to disconnect). */
   channel_id: Snowflake | null;
   /** Whether self-muted. */
@@ -110,8 +112,17 @@ export interface GatewayVoiceStateUpdateData {
   self_video?: boolean;
   /** Whether the user is screen sharing / streaming. */
   self_stream?: boolean;
-  /** Connection ID from VoiceServerUpdate; required for updates when already in channel. */
+  /**
+   * Connection ID from VoiceServerUpdate.
+   * Required to update or leave a guild connection. Leaving a guild with
+   * `channel_id: null` and no `connection_id` is refused (`VOICE_MISSING_CONNECTION_ID`).
+   */
   connection_id?: string | null;
+  /**
+   * Client-generated id echoed on `VOICE_STATE_ACK`.
+   * Guild placement failures are only dispatched when this is set.
+   */
+  mutation_id?: string;
 }
 
 /** Client request for guild member/online counts (opcode 15). */
@@ -212,7 +223,9 @@ export interface GatewayReadyDispatchData {
   user: APIUser;
   /**
    * Guilds for this session.
-   * Bot tokens typically receive `[]` here; full snapshots arrive via GUILD_CREATE.
+   * Bots receive unavailable stubs (`{ id, unavailable: true }`); full snapshots arrive via later
+   * `GUILD_CREATE` dispatches. User clients may receive fuller guild objects inline.
+   * @see {@link GatewayGuildSnapshot}
    */
   guilds: GatewayGuildSnapshot[];
   /** Session ID for resuming. */
@@ -501,13 +514,21 @@ export interface GatewayVoiceStatesSyncData {
   voiceStates: APIVoiceState[];
 }
 
-/** VOICE_SERVER_UPDATE — token, guild_id, endpoint, connection_id? */
+/** VOICE_SERVER_UPDATE — media grant for the requesting session. */
 export interface GatewayVoiceServerUpdateDispatchData {
   token: string;
-  guild_id: Snowflake;
+  /**
+   * Guild ID for a guild voice channel.
+   * Omitted for private calls; read grant scope from this field.
+   */
+  guild_id?: Snowflake;
+  /** Channel the grant is for. */
+  channel_id?: Snowflake;
   endpoint: string | null;
   /** Connection ID for subsequent voice state updates (Fluxer). */
   connection_id?: string | null;
+  /** End-to-end encryption key when the channel is E2EE. */
+  e2ee_key?: string | null;
 }
 
 /** VOICE_STATE_ACK — acknowledgement for a voice state mutation. */

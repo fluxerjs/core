@@ -1,5 +1,5 @@
 import { Client, ClientUser, Events, VoiceChannel } from '@fluxerjs/core';
-import { ChannelType } from '@fluxerjs/types';
+import { ChannelType, GatewayOpcodes } from '@fluxerjs/types';
 import { describe, expect, it, vi } from 'vitest';
 import { LiveKitRtcConnection } from './LiveKitRtcConnection.js';
 import { VoiceManager } from './VoiceManager.js';
@@ -153,5 +153,88 @@ describe('VoiceManager', () => {
       connect.mockRestore();
       sendToGateway.mockRestore();
     }
+  });
+
+  it('join sends mutation_id and rejects on VOICE_STATE_ACK', async () => {
+    const client = createClient('bot1');
+    const sendToGateway = vi.spyOn(client, 'sendToGateway').mockImplementation(() => {});
+    const channel = createVoiceChannel(client);
+
+    try {
+      const vm = new VoiceManager(client);
+      const joining = vm.join(channel);
+      expect(sendToGateway).toHaveBeenCalledWith(
+        0,
+        expect.objectContaining({
+          op: GatewayOpcodes.VoiceStateUpdate,
+          d: expect.objectContaining({
+            guild_id: 'g1',
+            channel_id: 'c1',
+            mutation_id: expect.any(String),
+          }),
+        }),
+      );
+      const sent = sendToGateway.mock.calls[0]?.[1] as {
+        d: { mutation_id: string };
+      };
+      client.emit(Events.VoiceStateAck, {
+        mutation_id: sent.d.mutation_id,
+        status: 'rejected',
+        error_code: 'VOICE_PERMISSION_DENIED',
+        error_message: 'Missing CONNECT',
+      });
+      await expect(joining).rejects.toThrow('Missing CONNECT');
+    } finally {
+      sendToGateway.mockRestore();
+    }
+  });
+
+  it('leave sends null channel_id with connection_id', () => {
+    const client = createClient('bot1');
+    const sendToGateway = vi.spyOn(client, 'sendToGateway').mockImplementation(() => {});
+    const vm = new VoiceManager(client);
+    const channel = createVoiceChannel(client);
+    const conn = { channel, destroy: vi.fn() };
+    (
+      vm as unknown as {
+        connections: Map<string, { channel: VoiceChannel; destroy: () => void }>;
+        connectionIds: Map<string, string>;
+      }
+    ).connections.set('c1', conn);
+    (vm as unknown as { connectionIds: Map<string, string> }).connectionIds.set('c1', 'conn-1');
+
+    vm.leave('g1');
+
+    expect(conn.destroy).toHaveBeenCalledOnce();
+    expect(sendToGateway).toHaveBeenCalledWith(0, {
+      op: GatewayOpcodes.VoiceStateUpdate,
+      d: {
+        guild_id: 'g1',
+        channel_id: null,
+        connection_id: 'conn-1',
+        self_mute: false,
+        self_deaf: false,
+      },
+    });
+    sendToGateway.mockRestore();
+  });
+
+  it('leaveChannel does not send VoiceStateUpdate without connection_id', () => {
+    const client = createClient('bot1');
+    const sendToGateway = vi.spyOn(client, 'sendToGateway').mockImplementation(() => {});
+    const vm = new VoiceManager(client);
+    const channel = createVoiceChannel(client);
+    const conn = { channel, destroy: vi.fn() };
+    (
+      vm as unknown as {
+        connections: Map<string, { channel: VoiceChannel; destroy: () => void }>;
+      }
+    ).connections.set('c1', conn);
+
+    vm.leaveChannel('c1');
+
+    expect(conn.destroy).toHaveBeenCalledOnce();
+    expect(sendToGateway).not.toHaveBeenCalled();
+    sendToGateway.mockRestore();
   });
 });

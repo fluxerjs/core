@@ -10,6 +10,7 @@ export interface SimpleShardingStrategyContext {
   numShards: number;
   version: string;
   intents: number;
+  e2eeCapable?: boolean;
   flags?: number;
   ignoredEvents?: string[];
   initialGuildId?: string;
@@ -45,6 +46,7 @@ export class SimpleShardingStrategy implements IShardingStrategy {
         url: this.ctx.url,
         token: this.ctx.token,
         intents: this.ctx.intents,
+        e2eeCapable: this.ctx.e2eeCapable,
         flags: this.ctx.flags,
         ignoredEvents: this.ctx.ignoredEvents,
         initialGuildId: this.ctx.initialGuildId,

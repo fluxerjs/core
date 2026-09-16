@@ -24,6 +24,7 @@ import {
   toAttachmentUploadPlanResponse,
   toSudoBody,
 } from '../../ClientCore/SdkOptions/index.js';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import {
   MessageCollector,
   type MessageCollectorEndReason,
@@ -330,17 +331,22 @@ export abstract class Channel extends Base {
    * await channel.delete();
    */
   async delete(
-    options?: SudoVerificationOptions & { silent?: boolean; deleteMessages?: boolean },
+    options?: SudoVerificationOptions & {
+      silent?: boolean;
+      deleteMessages?: boolean;
+      reason?: string;
+    },
   ): Promise<void> {
     const params = new URLSearchParams();
     if (options?.silent) params.set('silent', 'true');
     if (options?.deleteMessages) params.set('delete_messages', 'true');
     const qs = params.toString();
-    const { silent: _s, deleteMessages: _d, ...sudo } = options ?? {};
+    const { silent: _s, deleteMessages: _d, reason: _reason, ...sudo } = options ?? {};
     const body = Object.keys(sudo).length ? toSudoBody(sudo) : undefined;
     await this.client.rest.delete(Routes.channel(this.id) + (qs ? `?${qs}` : ''), {
       body,
       auth: true,
+      ...auditReasonHeaders(_reason),
     });
     this.client.channels.delete(this.id);
     this.client._clearMessageCache(this.id);

@@ -25,8 +25,16 @@ export type WebSocketConstructor = new (url: string) => WebSocketLike;
 export interface WebSocketShardOptions {
   url: string;
   token: string;
-  /** Legacy intents; Fluxer ignores — send `0`. */
+  /**
+   * Legacy intents. Fluxer has no intents; this is not sent on Identify.
+   * @deprecated Omit this option.
+   */
   intents?: number;
+  /**
+   * Identify `properties.e2ee_capable`. Defaults to `true` (needed for E2EE voice).
+   * Set `false` to advertise that this session is not E2EE capable.
+   */
+  e2eeCapable?: boolean;
   /** Identify `flags`. */
   flags?: number;
   /** Identify `ignored_events`. */
@@ -430,11 +438,11 @@ export class WebSocketShard extends EventEmitter {
 
     const identify: GatewayIdentifyData = {
       token: this.options.token,
-      intents: this.options.intents ?? 0,
       properties: {
         os: typeof process !== 'undefined' ? (process.platform ?? 'unknown') : 'unknown',
         browser: 'fluxerjs',
         device: 'fluxerjs',
+        e2ee_capable: this.options.e2eeCapable !== false,
       },
     };
     if (this.options.flags !== undefined) identify.flags = this.options.flags;

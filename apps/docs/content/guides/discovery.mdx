@@ -3,28 +3,42 @@ title: Discovery
 description: Point a Client at a self-hosted instance with Client.fromDiscovery.
 category: additional
 order: 44
-searchTerms: fromDiscovery well-known self-hosted instance
+searchTerms: fromDiscovery well-known self-hosted instance api_public
 ---
 
 This page is **instance** discovery (where the API lives). Listing a guild in the public server directory is [Server Discovery](/guides/server-discovery/). Bots cannot join a guild via discovery.
 
-Hosted Fluxer works with a normal `new Client()`. Self-hosted instances expose `GET /.well-known/fluxer`. `Client.fromDiscovery` loads that document and wires REST (and related endpoints) for you.
+Hosted Fluxer works with a normal `new Client()`. Self-hosted instances expose unversioned `GET /.well-known/fluxer` on the origin you were given (hosted: `https://fluxer.app/.well-known/fluxer`). `Client.fromDiscovery` loads that document and wires REST from `endpoints.api_public`. First-party `endpoints.api` / `api_client` stay on the instance for inspection.
 
 ## Bootstrap from an origin
+
+Pass the Fluxer origin, not `{api}/v1/.well-known/fluxer`. Discovery is unversioned.
 
 ```javascript
 import { Client, Events } from '@fluxerjs/core';
 
-const client = await Client.fromDiscovery('https://api.my.instance');
+const client = await Client.fromDiscovery('https://my.instance');
 
 client.on(Events.Ready, () => {
+  console.log(client.instance.endpoints.api_public);
   console.log(client.instance.endpoints.api);
 });
 
 await client.login(process.env.SELFHOST_BOT_TOKEN);
 ```
 
-Use a **token issued by that instance**. Hosted and self-hosted tokens are not interchangeable.
+Hosted discovery is the same pattern with `https://fluxer.app`. Use a **token issued by that instance**. Hosted and self-hosted tokens are not interchangeable.
+
+`fromDiscovery` does not log in. Call `login` afterward.
+
+## REST uses api_public
+
+A third-party client (bots, this SDK) MUST use `endpoints.api_public`. On hosted Fluxer that is `https://api.fluxer.app`. `endpoints.api` and `endpoints.api_client` are the first-party web endpoint (`https://web.fluxer.app/api` on hosted) and are not interchangeable with `api_public`.
+
+```javascript
+console.log(client.rest.baseUrl);
+// hosted: https://api.fluxer.app/v1
+```
 
 ## Inspect the instance
 
@@ -33,11 +47,19 @@ const doc = await client.fetchInstance();
 console.log(doc);
 ```
 
-Or read what discovery already applied:
+`fetchInstance` also uses the unversioned well-known path (no `/v1`). Or read what discovery already applied:
 
 ```javascript
 console.log(client.instance.endpoints);
 console.log(client.instance.discovery?.features);
+```
+
+## Locale
+
+Error `message` text is localised from `Accept-Language` when the request has no stored user locale. The SDK sends `en-US` by default. Override with `ClientOptions.locale` or `rest.locale`:
+
+```javascript
+const client = new Client({ locale: 'de' });
 ```
 
 ## Multiple instances
@@ -46,4 +68,4 @@ One `Client` equals one Fluxer instance. To run hosted and self-hosted together,
 
 ## Prefer discovery over rest.api
 
-`ClientOptions.rest.api` can override the API host for legacy setups. For self-hosted media/CDN/invite hosts, discovery is the better path so you do not leave CDN URLs pointing at hosted defaults.
+`ClientOptions.rest.api` can override the public API host for legacy setups. For self-hosted media/CDN/invite hosts, discovery is the better path so you do not leave CDN URLs pointing at hosted defaults.

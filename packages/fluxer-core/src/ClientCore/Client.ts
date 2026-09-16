@@ -24,6 +24,7 @@ import type { GuildMember } from '../Domain/Guild/GuildMember.js';
 import { Message } from '../Domain/Message/index.js';
 import { User } from '../Domain/User.js';
 import {
+  instanceDiscoveryUrl,
   normalizeApiOrigin,
   parseInstanceDiscovery,
   type ResolvedInstance,
@@ -80,7 +81,7 @@ export type {
   ClientEvents,
 } from './ClientEvents.js';
 
-/** Bootstrap origin for {@link Client.fromDiscovery}. */
+/** Bootstrap origin for {@link Client.fromDiscovery} (`GET {origin}/.well-known/fluxer`, unversioned). */
 export type DiscoveryOrigin = string | { api: string; version?: string };
 
 /** Main Fluxer bot client. Connects to the gateway, emits events, and provides REST access. */
@@ -122,7 +123,12 @@ export class Client extends EventEmitter {
   _ws: WebSocketManager | null = null;
   /** When waitForGuilds, guild IDs still expected via GUILD_CREATE. */
   _pendingGuildIds: Set<string> | null = null;
-  /** @internal Timeout when READY has no guilds but waitForGuilds is set. */
+  /** Guild IDs inserted as unavailable stubs from READY (startup / reconnect backfill). */
+  _readyStubGuildIds = new Set<string>();
+  /**
+   * @internal Empty-READY guild stream window.
+   * Classifies incoming GUILD_CREATE as startup hydration. Also delays Ready when waitForGuilds.
+   */
   _guildStreamSettleTimeout: ReturnType<typeof setTimeout> | null = null;
   /** @internal Dispatches queued until Ready when waitForGuilds delays Ready. */
   _deferredGatewayDispatches: GatewayReceivePayload[] = [];
@@ -156,9 +162,9 @@ export class Client extends EventEmitter {
     const restApi = options.rest?.api;
     if (options.instance !== undefined) {
       this.instance = resolveInstanceEndpoints(options.instance);
-      resolveRestApi(this.instance.endpoints.api, restApi); // throws on conflict
+      resolveRestApi(this.instance.endpoints.api_public, restApi); // throws on conflict
     } else {
-      // Legacy: `rest.api` alone overrides the hosted API host.
+      // Legacy: `rest.api` alone overrides the public API host used for REST.
       this.instance = resolveInstanceEndpoints(
         restApi !== undefined ? { api: restApi } : undefined,
       );
@@ -170,17 +176,20 @@ export class Client extends EventEmitter {
     }
     this.rest = new REST({
       ...this.options.rest,
-      api: this.instance.endpoints.api,
+      api: this.instance.endpoints.api_public,
       version: this.options.rest?.version ?? '1',
+      locale: this.options.locale ?? this.options.rest?.locale,
     });
   }
 
   /**
    * Create a client from instance discovery (`GET /.well-known/fluxer`).
-   * Does not log in — call {@link login} with a token afterward.
+   * Fetches the unversioned well-known document from the given origin (not `{api}/v1/.well-known/fluxer`).
+   * Wires REST from `endpoints.api_public`. `endpoints.api` / `api_client` stay on the instance for inspection.
+   * Does not log in. Call {@link login} with a token afterward.
    *
-   * @param origin - API origin used only to fetch discovery (e.g. `https://api.example.com`)
-   * @param options - Client options (must not conflict with discovered `endpoints.api`)
+   * @param origin - Origin used only to fetch discovery (e.g. `https://fluxer.app` or `https://my.instance`)
+   * @param options - Client options (must not conflict with discovered `endpoints.api_public`)
    * @param connectOptions - Optional abort signal for the discovery request
    */
   static async fromDiscovery(
@@ -188,7 +197,7 @@ export class Client extends EventEmitter {
     options: Omit<ClientOptions, 'instance'> = {},
     connectOptions?: { signal?: AbortSignal },
   ): Promise<Client> {
-    const bootstrapApi =
+    const bootstrapOrigin =
       typeof origin === 'string' ? normalizeApiOrigin(origin) : normalizeApiOrigin(origin.api);
     const version =
       typeof origin === 'string'
@@ -196,10 +205,11 @@ export class Client extends EventEmitter {
         : (origin.version ?? options.rest?.version ?? '1');
     const bootstrap = new REST({
       ...(options.rest ?? {}),
-      api: bootstrapApi,
+      api: bootstrapOrigin,
       version,
+      locale: options.locale ?? options.rest?.locale,
     });
-    const raw: unknown = await bootstrap.get(Routes.instanceDiscovery(), {
+    const raw: unknown = await bootstrap.get(instanceDiscoveryUrl(bootstrapOrigin), {
       auth: false,
       ...(connectOptions?.signal ? { signal: connectOptions.signal } : {}),
     });
@@ -207,7 +217,7 @@ export class Client extends EventEmitter {
     const { rest, ...restOptions } = options;
     return new Client({
       ...restOptions,
-      // Drop rest.api so discovered endpoints.api owns the host; keep other REST opts.
+      // Drop rest.api so discovered endpoints.api_public owns the REST host; keep other REST opts.
       ...(rest ? { rest: { ...rest, api: undefined } } : {}),
       instance: discovery,
     });
@@ -255,7 +265,7 @@ export class Client extends EventEmitter {
   }
 
   /**
-   * Fetch instance discovery document (`/.well-known/fluxer`).
+   * Fetch instance discovery document (unversioned `GET /.well-known/fluxer` on the REST host).
    * @returns Instance configuration (endpoints, features, metadata)
    */
   fetchInstance(): Promise<APIInstance> {
@@ -583,6 +593,7 @@ export class Client extends EventEmitter {
     this.user = null;
     this.readyAt = null;
     this._pendingGuildIds = null;
+    this._readyStubGuildIds.clear();
     this.guilds.clear();
     this.channels.clear();
     this.users.clear();

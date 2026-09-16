@@ -6,7 +6,7 @@ import { CDN_URL, STATIC_CDN_URL } from './Constants.js';
 
 /** Hosted Fluxer production endpoints (default when no instance is configured). */
 export const DEFAULT_INSTANCE_ENDPOINTS: Readonly<APIInstanceEndpoints> = Object.freeze({
-  api: 'https://api.fluxer.app',
+  api: 'https://web.fluxer.app/api',
   api_client: 'https://web.fluxer.app/api',
   api_public: 'https://api.fluxer.app',
   gateway: 'wss://gateway.fluxer.app',
@@ -50,6 +50,17 @@ function requireString(obj: Record<string, unknown>, key: string, path: string):
   return value;
 }
 
+/** Unversioned well-known path (`GET /.well-known/fluxer`). */
+export const INSTANCE_DISCOVERY_PATH = '/.well-known/fluxer' as const;
+
+/**
+ * Absolute unversioned discovery URL for an origin.
+ * Hosted Fluxer: `https://fluxer.app/.well-known/fluxer` (may 308 to `api_public`).
+ */
+export function instanceDiscoveryUrl(origin: string): string {
+  return `${normalizeApiOrigin(origin)}${INSTANCE_DISCOVERY_PATH}`;
+}
+
 /** Strip trailing `/vN` and trailing slash from an API origin. */
 export function normalizeApiOrigin(api: string): string {
   const trimmed = api.trim().replace(/\/+$/, '');
@@ -87,6 +98,8 @@ export function parseInstanceDiscovery(raw: unknown): APIInstance {
     endpoints[key] = requireString(raw.endpoints, key, 'endpoints');
   }
   endpoints.api = normalizeApiOrigin(endpoints.api);
+  endpoints.api_client = normalizeApiOrigin(endpoints.api_client);
+  endpoints.api_public = normalizeApiOrigin(endpoints.api_public);
   endpoints.invite = normalizeInviteBase(endpoints.invite);
   endpoints.media = endpoints.media.replace(/\/+$/, '');
   endpoints.static_cdn = endpoints.static_cdn.replace(/\/+$/, '');
@@ -178,6 +191,16 @@ export function resolveInstanceEndpoints(
     }
   }
   merged.api = normalizeApiOrigin(merged.api);
+  merged.api_client = normalizeApiOrigin(merged.api_client);
+  merged.api_public = normalizeApiOrigin(merged.api_public);
+  // Legacy partials set `api` as the bot REST host; copy onto api_public when omitted.
+  if (
+    typeof partial.api === 'string' &&
+    partial.api.length > 0 &&
+    (typeof partial.api_public !== 'string' || partial.api_public.length === 0)
+  ) {
+    merged.api_public = merged.api;
+  }
   merged.invite = normalizeInviteBase(merged.invite);
   merged.media = merged.media.replace(/\/+$/, '');
   merged.static_cdn = merged.static_cdn.replace(/\/+$/, '');
@@ -189,16 +212,16 @@ export function resolveInstanceEndpoints(
 }
 
 /**
- * Resolve REST `api` from instance + optional `rest.api`.
+ * Resolve REST `api` from instance `api_public` + optional `rest.api`.
  * Throws when both are set and disagree.
  */
-export function resolveRestApi(instanceApi: string, restApi: string | undefined): string {
-  const fromInstance = normalizeApiOrigin(instanceApi);
+export function resolveRestApi(instanceApiPublic: string, restApi: string | undefined): string {
+  const fromInstance = normalizeApiOrigin(instanceApiPublic);
   if (restApi === undefined) return fromInstance;
   const fromRest = normalizeApiOrigin(restApi);
   if (fromRest !== fromInstance) {
     throw new FluxerError(
-      `Conflicting API hosts: instance.api (${fromInstance}) vs rest.api (${fromRest}). Prefer ClientOptions.instance.`,
+      `Conflicting API hosts: instance.api_public (${fromInstance}) vs rest.api (${fromRest}). Prefer ClientOptions.instance.`,
       { code: ErrorCodes.ConflictingInstanceConfig },
     );
   }

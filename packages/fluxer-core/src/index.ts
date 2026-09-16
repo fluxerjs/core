@@ -123,8 +123,8 @@ export type {
   VanityURLPayload,
   WebhooksUpdatePayload,
 } from './ClientCore/EventPayloads.js';
-export { GuildMemberManager } from './ClientCore/GuildMemberManager.js';
 export { GuildManager } from './ClientCore/GuildManager.js';
+export { GuildMemberManager } from './ClientCore/GuildMemberManager.js';
 export {
   type BulkFetchMessagesChannelResult,
   type BulkFetchMessagesOptions,
@@ -146,10 +146,10 @@ export type {
   DiscoveryStatusPayload,
   ExpressionCreateOptions,
   ExpressionEditOptions,
+  GroupDmEditOptions,
   GuildChannelCreateOptions,
   GuildMemberEditOptions,
   GuildMemberSearchOptions,
-  GroupDmEditOptions,
   MessageAttachmentEdit,
   MessageSearchIndexing,
   MessageSearchOptions,
@@ -192,9 +192,9 @@ export {
   GuildMemberRoleManager,
   type RoleResolvable,
 } from './Domain/Guild/GuildMemberRoleManager.js';
+export { GuildRoleManager } from './Domain/Guild/GuildRoleManager.js';
 export { GuildSticker } from './Domain/Guild/GuildSticker.js';
 export { PartialGuildMember } from './Domain/Guild/PartialGuildMember.js';
-export { GuildRoleManager } from './Domain/Guild/GuildRoleManager.js';
 export { Role } from './Domain/Guild/Role.js';
 export type { RoleCreateOptions, RoleEditOptions } from './Domain/Guild/RoleOptions.js';
 export {
@@ -248,6 +248,8 @@ export { CDN_URL, STATIC_CDN_URL } from './Helpers/Constants.js';
 export { Events } from './Helpers/Events.js';
 export {
   DEFAULT_INSTANCE_ENDPOINTS,
+  INSTANCE_DISCOVERY_PATH,
+  instanceDiscoveryUrl,
   inviteUrl,
   normalizeApiOrigin,
   parseInstanceDiscovery,

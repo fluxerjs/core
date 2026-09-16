@@ -8,6 +8,7 @@ import type {
   GatewayVoiceStateUpdateDispatchData,
 } from '@fluxerjs/types';
 import { GatewayCloseCodes, WebSocketManager } from '@fluxerjs/ws';
+import { Guild } from '../Domain/Guild/Guild.js';
 import type { GatewayGuildPayload } from '../Domain/Guild/Payload.js';
 import { applyGuildSnapshotFromGateway } from '../Domain/Guild/Snapshot.js';
 import { Events } from '../Helpers/Events.js';
@@ -37,7 +38,12 @@ type ReadyGuildPayload = GatewayGuildPayload & {
 /** Milliseconds to wait for GUILD_CREATE stream when READY has no guilds. */
 export const GUILD_STREAM_SETTLE_MS = 500;
 
-/** Hydrate guild and channel caches from the READY payload. Returns pending unavailable guild IDs when waitForGuilds. */
+/**
+ * Hydrate guild and channel caches from the READY payload.
+ * Unavailable stubs are inserted into {@link Client.guilds} with `available === false`.
+ * Returns pending IDs when {@link ClientOptions.waitForGuilds} is enabled.
+ * @see {@link ClientOptions.emitGuildCreateOnStartup}
+ */
 export function hydrateReadyGuilds(
   client: Client,
   guilds: ReadyGuildPayload[],
@@ -47,10 +53,15 @@ export function hydrateReadyGuilds(
   for (const g of guilds ?? []) {
     if (g.unavailable === true) {
       if (typeof g.id === 'string') {
-        const existing = client.guilds.get(g.id);
-        if (existing && existing.available !== false) {
-          existing.available = false;
+        let guild = client.guilds.get(g.id);
+        if (!guild) {
+          guild = new Guild(client, { id: g.id });
+          guild.available = false;
+          client.guilds.set(g.id, guild);
+        } else if (guild.available !== false) {
+          guild.available = false;
         }
+        client._readyStubGuildIds.add(g.id);
         if (pending !== null) pending.add(g.id);
       }
       continue;
@@ -69,6 +80,10 @@ export function finalizeClientReady(client: Client): void {
   );
 }
 
+/**
+ * Mark a pending READY guild as received. When {@link ClientOptions.waitForGuilds} is enabled and the
+ * pending set empties, emits {@link Events.Ready} via {@link finalizeClientReady}.
+ */
 export function onClientGuildReceived(client: Client, guildId: string): void {
   const pending = client._pendingGuildIds;
   if (pending === null) return;
@@ -82,7 +97,20 @@ export function clearGuildStreamSettle(client: Client): void {
   client._guildStreamSettleTimeout = null;
 }
 
-function handleReadyPayload(client: Client, data: ReadyPayload): void {
+/**
+ * Restart the empty-READY guild stream window (extends as guilds arrive).
+ * When {@link ClientOptions.waitForGuilds} delayed Ready, expiry also emits {@link Events.Ready}.
+ * @see {@link GUILD_STREAM_SETTLE_MS}
+ */
+export function resetGuildStreamSettle(client: Client): void {
+  clearGuildStreamSettle(client);
+  client._guildStreamSettleTimeout = setTimeout(() => {
+    client._guildStreamSettleTimeout = null;
+    if (client.readyAt === null) finalizeClientReady(client);
+  }, GUILD_STREAM_SETTLE_MS);
+}
+
+export function handleReadyPayload(client: Client, data: ReadyPayload): void {
   client.user = new ClientUser(client, data.user);
   const waitForGuilds = client.options.waitForGuilds === true;
   const guilds = data.guilds ?? [];
@@ -104,14 +132,9 @@ function handleReadyPayload(client: Client, data: ReadyPayload): void {
     client._pendingGuildIds = existing;
     return;
   }
-  if (waitForGuilds && guilds.length === 0) {
-    if (client._guildStreamSettleTimeout === null) {
-      client._guildStreamSettleTimeout = setTimeout(() => {
-        client._guildStreamSettleTimeout = null;
-        if (client.readyAt === null) finalizeClientReady(client);
-      }, GUILD_STREAM_SETTLE_MS);
-    }
-    return;
+  if (guilds.length === 0) {
+    resetGuildStreamSettle(client);
+    if (waitForGuilds) return;
   }
   finalizeClientReady(client);
 }

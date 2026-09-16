@@ -2,6 +2,7 @@ import type { APIEmoji } from '@fluxerjs/types';
 import { Routes } from '@fluxerjs/types';
 import { SnowflakeUtil } from '@fluxerjs/util';
 import type { Client } from '../../ClientCore/Client.js';
+import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import { cdnEmojiURL } from '../../Helpers/Cdn.js';
 import { Base } from '../Base.js';
 
@@ -60,9 +61,10 @@ export class GuildEmoji extends Base {
   }
 
   /** Delete this emoji. Requires Manage Emojis and Stickers permission. */
-  async delete(): Promise<void> {
+  async delete(reason?: string): Promise<void> {
     await this.client.rest.delete(Routes.guildEmoji(this.guildId, this.id), {
       auth: true,
+      ...auditReasonHeaders(reason),
     });
     const guild = this.client.guilds.get(this.guildId);
     if (guild) guild.emojis.delete(this.id);
@@ -72,10 +74,12 @@ export class GuildEmoji extends Base {
    * Edit this emoji's name.
    * Requires Manage Emojis and Stickers permission.
    */
-  async edit(options: { name: string }): Promise<GuildEmoji> {
+  async edit(options: { name: string; reason?: string }): Promise<GuildEmoji> {
+    const { reason, name } = options;
     const data = await this.client.rest.patch(Routes.guildEmoji(this.guildId, this.id), {
-      body: options,
+      body: { name },
       auth: true,
+      ...auditReasonHeaders(reason),
     });
     this.name = (data as APIEmoji).name;
     return this;

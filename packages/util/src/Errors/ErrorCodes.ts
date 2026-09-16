@@ -51,6 +51,8 @@ export const ErrorCodes = {
   InvalidFetchLimit: 'INVALID_FETCH_LIMIT',
   /** Attachment plan/file mismatch or invalid attachment input. */
   InvalidAttachmentInput: 'INVALID_ATTACHMENT_INPUT',
+  /** File exceeds the bot attachment size ceiling (50 MiB). */
+  AttachmentTooLarge: 'ATTACHMENT_TOO_LARGE',
   /** Presigned CDN PUT failed. */
   AttachmentUploadFailed: 'ATTACHMENT_UPLOAD_FAILED',
   /** Operation requires a personal-notes channel (or wrong channel type). */

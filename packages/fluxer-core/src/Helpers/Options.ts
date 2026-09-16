@@ -149,7 +149,7 @@ export function resolveCacheLimits(input?: CacheSizeLimits): ResolvedCacheOption
  * @example
  * ```ts
  * const client = new Client({
- *   instance: { api: 'https://api.example.com' },
+ *   instance: { api_public: 'https://api.example.com' },
  *   cache: { guilds: 100, messages: 20 },
  *   waitForGuilds: true,
  * });
@@ -160,33 +160,51 @@ export interface ClientOptions {
    * Instance endpoints for this client (API, CDN, invite, etc.).
    * Pass a partial map to override hosted defaults, or a full discovery document.
    * Prefer this over `rest.api` for multi-instance / self-hosted bots.
+   * REST uses `api_public`; `api` / `api_client` are kept for inspection.
    * @see {@link Client.fromDiscovery}
    */
   instance?: Partial<APIInstanceEndpoints> | APIInstance;
   /**
    * REST options. Prefer {@link ClientOptions.instance} for the API host.
-   * If both `instance.api` (or resolved default) and `rest.api` are set and differ, construction throws.
+   * If both `instance.api_public` (or resolved default) and `rest.api` are set and differ, construction throws.
    */
   rest?: Partial<ConstructorParameters<typeof REST>[0]>;
   /**
-   * @deprecated Fluxer has no intents. Prefer {@link ignoredEvents}. Kept only for migration; identify always sends `0`.
+   * BCP 47 locale sent as REST `Accept-Language`. Defaults to {@link import('@fluxerjs/rest').DEFAULT_LOCALE}.
+   * Overrides `rest.locale` when both are set.
+   * @see {@link ClientOptions.rest}
+   */
+  locale?: string;
+  /**
+   * @deprecated Fluxer has no intents. Prefer {@link ClientOptions.ignoredEvents}. Kept only for migration; identify always sends `0`.
    */
   intents?: number;
   /**
    * @deprecated No-op. Fluxer has no intents warning to suppress.
    */
   suppressIntentWarning?: boolean;
-  /** {@link GatewayIdentifyFlags} bitfield sent as Identify `flags`. */
+  /** {@link import('@fluxerjs/types').GatewayIdentifyFlags} bitfield sent as Identify `flags`. */
   identifyFlags?: number;
   /** Dispatch event names to suppress for this session (`ignored_events`). */
   ignoredEvents?: string[];
   /** Prefer hydrating this guild first after READY (`initial_guild_id`). */
   initialGuildId?: string;
   /**
-   * Delay Ready until all READY guilds arrive via GUILD_CREATE; queue other dispatches until then.
+   * Delay {@link Events.Ready} until all READY guilds arrive via GUILD_CREATE; queue other dispatches until then.
+   * Startup backfill emits {@link Events.GuildAvailable} (not {@link Events.GuildCreate}) unless
+   * {@link ClientOptions.emitGuildCreateOnStartup} is set.
    * @default false
+   * @see {@link ClientOptions.emitGuildCreateOnStartup}
    */
   waitForGuilds?: boolean;
+  /**
+   * Emit {@link Events.GuildCreate} for READY / initial-stream guild hydrations instead of {@link Events.GuildAvailable}.
+   * Default behavior matches Discord.js: startup backfill uses {@link Events.GuildAvailable}, and
+   * {@link Events.GuildCreate} means the bot joined after {@link Events.Ready}.
+   * @default false
+   * @see {@link ClientOptions.waitForGuilds}
+   */
+  emitGuildCreateOnStartup?: boolean;
   /**
    * Cache size limits per bucket. Defaults to {@link DEFAULT_CACHE_LIMITS}.
    * Pass `0` / `Infinity` per numeric field for unbounded; `messages: false` to disable message caching.

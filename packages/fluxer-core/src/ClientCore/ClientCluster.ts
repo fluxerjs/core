@@ -63,7 +63,7 @@ export interface AddClientRuntimeOptions {
   id: string;
   /** Bot token issued by the target instance. Required; never shared across runtimes. */
   token: string;
-  /** Discover endpoints via `GET /.well-known/fluxer` from this origin. */
+  /** Discover endpoints via unversioned `GET {origin}/.well-known/fluxer`. */
   discovery?: DiscoveryOrigin;
   /** Construct a new Client with these options (ignored when `client` or `discovery` is set). */
   clientOptions?: ClientOptions;

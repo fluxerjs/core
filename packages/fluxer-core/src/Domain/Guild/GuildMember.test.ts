@@ -179,7 +179,14 @@ describe('GuildMember', () => {
       const member = createMember();
       const kick = vi.spyOn(member.guild, 'kick').mockResolvedValue(undefined);
       await member.kick();
-      expect(kick).toHaveBeenCalledWith(member.id);
+      expect(kick).toHaveBeenCalledWith(member.id, undefined);
+    });
+
+    it('kick passes an audit reason through', async () => {
+      const member = createMember();
+      const kick = vi.spyOn(member.guild, 'kick').mockResolvedValue(undefined);
+      await member.kick('spam');
+      expect(kick).toHaveBeenCalledWith(member.id, 'spam');
     });
 
     it('ban delegates to guild.ban', async () => {
