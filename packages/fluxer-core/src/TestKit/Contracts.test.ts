@@ -245,8 +245,10 @@ describe('Channel type guard smoke', () => {
       rate_limit_per_user: 0,
     });
     expect(announcement).toBeInstanceOf(AnnouncementChannel);
+    if (!announcement.isAnnouncement()) {
+      throw new Error('expected announcement channel');
+    }
     expect(announcement.isGuild()).toBe(true);
-    expect(announcement.isAnnouncement()).toBe(true);
     expect(announcement.isText()).toBe(false);
     expect(announcement.isTextBased()).toBe(true);
     expect(typeof announcement.send).toBe('function');
