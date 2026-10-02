@@ -27,7 +27,8 @@ export const changelogEntries: ChangelogEntry[] = [
     version: '3.2.0',
     date: '2026-10-02',
     github: 'https://github.com/fluxerjs/core/compare/v3.1.0...main',
-    summary: 'Guild announcement channels (type 5): create them, detect them, and convert a text channel.',
+    summary:
+      'Guild announcement channels (type 5): create them, detect them, and convert a text channel.',
     sections: [
       {
         title: 'Features',
