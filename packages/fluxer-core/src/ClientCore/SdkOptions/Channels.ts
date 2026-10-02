@@ -27,6 +27,11 @@ function toOverwriteWire(overwrite: ChannelPermissionOverwriteOptions): {
 
 /** Options for {@link GuildChannel.edit}. */
 export interface ChannelEditOptions {
+  /**
+   * Convert between a guild text channel ({@link ChannelType.GuildText}) and an announcement
+   * channel ({@link ChannelType.GuildAnnouncement}). Any other conversion is rejected.
+   */
+  type?: ChannelType.GuildText | ChannelType.GuildAnnouncement;
   name?: string | null;
   topic?: string | null;
   url?: string | null;
@@ -68,6 +73,7 @@ export interface GuildChannelCreateOptions {
 /** Convert {@link ChannelEditOptions} to the channel PATCH wire body. */
 export function toChannelEditBody(options: ChannelEditOptions): Record<string, unknown> {
   const body: Record<string, unknown> = {};
+  if (options.type !== undefined) body.type = options.type;
   if (options.name !== undefined) body.name = options.name;
   if (options.topic !== undefined) body.topic = options.topic;
   if (options.url !== undefined) body.url = options.url;

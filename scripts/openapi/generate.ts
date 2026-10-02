@@ -55,6 +55,7 @@ function main(): void {
     'GuildTextChannelCreateRequest',
     'GuildVoiceChannelCreateRequest',
     'GuildCategoryChannelCreateRequest',
+    'GuildAnnouncementChannelCreateRequest',
     'GuildLinkChannelCreateRequest',
   ]) {
     const s = resolve(schemas, schemas[name]);
@@ -77,7 +78,7 @@ function main(): void {
   channelTypeValues.add(999);
 
   const createTypes = [...channelTypeValues]
-    .filter((v) => [0, 2, 4, 998].includes(v))
+    .filter((v) => [0, 2, 4, 5, 998].includes(v))
     .sort((a, b) => a - b);
   const allChannelTypes = [...channelTypeValues].sort((a, b) => a - b);
 

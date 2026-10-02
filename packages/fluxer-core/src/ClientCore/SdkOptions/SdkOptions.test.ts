@@ -1,4 +1,4 @@
-import { GuildNSFWLevel } from '@fluxerjs/types';
+import { ChannelType, GuildNSFWLevel } from '@fluxerjs/types';
 import { PermissionFlags } from '@fluxerjs/util';
 import { describe, expect, it } from 'vitest';
 import {
@@ -136,6 +136,7 @@ describe('SdkOptions serializers', () => {
         permission_overwrites: [{ id: 'r1', type: 0, allow: '8', deny: '0' }],
       });
       expect(toChannelEditBody({ name: 'general', reason: 'audit' })).toEqual({ name: 'general' });
+      expect(toChannelEditBody({ type: ChannelType.GuildAnnouncement })).toEqual({ type: 5 });
     });
 
     it('toChannelEditBody resolves PermissionResolvable overwrites', () => {

@@ -169,6 +169,7 @@ export {
 } from './ClientCore/UserManager.js';
 export { Base } from './Domain/Base.js';
 export {
+  AnnouncementChannel,
   CategoryChannel,
   Channel,
   DMChannel,

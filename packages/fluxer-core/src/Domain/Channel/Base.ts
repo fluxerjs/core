@@ -37,6 +37,7 @@ import type { Message } from '../Message/index.js';
 import { type UploadFileForSend, uploadAttachmentsForSend } from './Attachments.js';
 import type { DMChannel } from './Dm.js';
 import type {
+  AnnouncementChannel,
   CategoryChannel,
   GuildChannel,
   LinkChannel,
@@ -115,22 +116,24 @@ export abstract class Channel extends Base {
   }
 
   /**
-   * Whether this channel type can carry messages (text, voice, DM, group DM, notes).
+   * Whether this channel type can carry messages (text, announcement, voice, DM, group DM, notes).
    * Checks {@link ChannelType}, not whether `send` exists on the instance.
    */
   isTextBased(): this is TextChannel | VoiceChannel | DMChannel {
     return (
       this.type === ChannelType.GuildText ||
+      this.type === ChannelType.GuildAnnouncement ||
       this.type === ChannelType.GuildVoice ||
       this.type === ChannelType.DM ||
       this.type === ChannelType.GroupDM ||
       this.type === ChannelType.DMPersonalNotes
     );
   }
-  /** Check if this is a guild channel (text, voice, category, or link). */
+  /** Check if this is a guild channel (text, announcement, voice, category, or link). */
   isGuild(): this is GuildChannel {
     return (
       this.type === ChannelType.GuildText ||
+      this.type === ChannelType.GuildAnnouncement ||
       this.type === ChannelType.GuildVoice ||
       this.type === ChannelType.GuildCategory ||
       this.type === ChannelType.GuildLink
@@ -139,6 +142,10 @@ export abstract class Channel extends Base {
   /** Check if this is a guild text channel. */
   isText(): this is TextChannel {
     return this.type === ChannelType.GuildText;
+  }
+  /** Check if this is a guild announcement channel. */
+  isAnnouncement(): this is AnnouncementChannel {
+    return this.type === ChannelType.GuildAnnouncement;
   }
   /** Check if this is a category channel. */
   isCategory(): this is CategoryChannel {

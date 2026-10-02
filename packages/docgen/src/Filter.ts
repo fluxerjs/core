@@ -25,7 +25,6 @@ export const DISCORD_GHOST_NAMES = new Set([
   'NewsChannel',
   'ForumChannel',
   'MediaChannel',
-  'AnnouncementChannel',
   'TextBasedChannel',
   'ThreadMember',
   'GuildScheduledEvent',

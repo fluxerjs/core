@@ -2,6 +2,7 @@ export type { UploadFileForSend } from './Attachments.js';
 export { Channel } from './Base.js';
 export { DMChannel } from './Dm.js';
 export {
+  AnnouncementChannel,
   CategoryChannel,
   GuildChannel,
   LinkChannel,
@@ -20,7 +21,7 @@ import type { DMChannel } from './Dm.js';
 import { channelFrom, channelFromOrCreate, createDM } from './Factory.js';
 import type { TextChannel, VoiceChannel } from './Guild.js';
 
-/** Channel types that can carry messages (guild text, guild voice, DMs). */
+/** Channel types that can carry messages (guild text, announcement, guild voice, DMs). */
 export type TextBasedChannel = TextChannel | VoiceChannel | DMChannel;
 
 // Wire the Channel factory statics here (the channel domain's composition root)

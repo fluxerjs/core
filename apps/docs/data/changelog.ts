@@ -24,6 +24,28 @@ export interface ChangelogEntry {
 /** Hand-authored release notes for the docs site. */
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '3.2.0',
+    date: '2026-10-02',
+    github: 'https://github.com/fluxerjs/core/compare/v3.1.0...main',
+    summary: 'Guild announcement channels (type 5): create them, detect them, and convert a text channel.',
+    sections: [
+      {
+        title: 'Features',
+        items: [
+          {
+            summary: 'ChannelType.GuildAnnouncement is 5',
+            detail:
+              'AnnouncementChannel is text-capable (send, topic, slowmode). isAnnouncement() is true only for type 5. isText() stays type 0. edit({ type }) converts between GuildText and GuildAnnouncement.',
+          },
+        ],
+      },
+      {
+        title: 'Packages',
+        items: ['`@fluxerjs/core` 3.2.0', '`@fluxerjs/types` 3.2.0'],
+      },
+    ],
+  },
+  {
     version: '3.1.0',
     date: '2026-09-15',
     github: 'https://github.com/fluxerjs/core/compare/v3.0.0...main',

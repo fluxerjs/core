@@ -24,6 +24,7 @@ export const INSTANCE_ALIASES: Record<string, string[]> = {
   Channel: ['channel'],
   GuildChannel: ['channel'],
   TextChannel: ['channel'],
+  AnnouncementChannel: ['channel'],
   DMChannel: ['channel'],
   VoiceChannel: ['channel'],
   CategoryChannel: ['channel'],
@@ -53,7 +54,6 @@ export const DISCORD_GHOST_NAMES = new Set([
   'ThreadChannel',
   'NewsChannel',
   'ForumChannel',
-  'AnnouncementChannel',
   'TextBasedChannel',
   'ThreadMember',
 ]);

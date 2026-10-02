@@ -1,9 +1,9 @@
 ---
 title: Channels
-description: Fetch a channel, then delete or send. Create text, voice, category, or link channels. Edit overwrites.
+description: Fetch a channel, then delete or send. Create text, announcement, voice, category, or link channels. Edit overwrites.
 category: popular
 order: 19
-searchTerms: permissionOverwrites LinkChannel GuildLink isLink isVoice isTextBased setSlowmode
+searchTerms: permissionOverwrites LinkChannel GuildLink GuildAnnouncement AnnouncementChannel isAnnouncement isLink isVoice isTextBased setSlowmode
 ---
 
 Fetch the channel, then call methods on it: `client.channels.fetch` then `channel.delete()` / `channel.send()`.
@@ -14,7 +14,7 @@ await channel.delete();
 if (channel.isTextBased()) await channel.send('hi');
 ```
 
-Text-based means guild text, **guild voice**, DMs, and notes. Category and link channels fail `isTextBased()` and throw `INVALID_CHANNEL_TYPE` on `send`.
+Text-based means guild text, **announcement**, **guild voice**, DMs, and notes. Category and link channels fail `isTextBased()` and throw `INVALID_CHANNEL_TYPE` on `send`.
 
 From a message, resolve the channel (cache or REST):
 
@@ -49,6 +49,16 @@ const voice = await guild.createChannel({
   name: 'Lounge',
 });
 await voice.send('VC chat is on.');
+```
+
+Announcement channel (text-capable; type `5`). Convert a text channel with `edit({ type: ChannelType.GuildAnnouncement })`, or back with `ChannelType.GuildText`:
+
+```javascript
+const updates = await guild.createChannel({
+  type: ChannelType.GuildAnnouncement,
+  name: 'updates',
+});
+if (updates.isAnnouncement()) await updates.send('Published from here.');
 ```
 
 Link channel (no `send`; stores an external URL):

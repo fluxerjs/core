@@ -182,6 +182,12 @@ export class TextChannel extends TextCapable(GuildChannel) {
   }
 }
 
+/**
+ * A guild announcement channel (type 5).
+ * Same fields and slowmode as a text channel. Published messages are copied into channels that follow it.
+ */
+export class AnnouncementChannel extends TextChannel {}
+
 /** A category channel (container for organizing channels). */
 export class CategoryChannel extends GuildChannel {}
 

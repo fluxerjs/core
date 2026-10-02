@@ -14,6 +14,10 @@ describe('ChannelType OpenAPI alignment', () => {
   it('GuildLink is canonical 998', () => {
     expect(ChannelType.GuildLink).toBe(998);
   });
+
+  it('GuildAnnouncement is canonical 5', () => {
+    expect(ChannelType.GuildAnnouncement).toBe(5);
+  });
 });
 
 describe('wire discriminator enums', () => {

@@ -208,7 +208,7 @@ Also removed as Discord-compat stubs: `GUILD_INTEGRATIONS_UPDATE`, `GUILD_SCHEDU
 ## Channel types
 
 **Before:** `ChannelType.GuildLink === 5`, `ChannelType.GuildLinkExtended === 998`  
-**After:** `ChannelType.GuildLink === 998` (value `5` and `GuildLinkExtended` removed)
+**After:** `ChannelType.GuildLink === 998`. `GuildLinkExtended` is removed. Type `5` is `ChannelType.GuildAnnouncement`.
 
 Link channels require `url`:
 
@@ -454,7 +454,7 @@ Quick index of every known break. Details and code live in the sections above.
 
 | Change | Package | Notes |
 | --- | --- | --- |
-| `ChannelType.GuildLink` is `998`; `5` / `GuildLinkExtended` removed | `@fluxerjs/types`, `@fluxerjs/core` | Link create requires `url` |
+| `ChannelType.GuildLink` is `998`; `GuildLinkExtended` removed | `@fluxerjs/types`, `@fluxerjs/core` | Type `5` is `GuildAnnouncement`. Link create requires `url` |
 | `EmbedBuilder.setVideo` / `setAudio` removed | `@fluxerjs/builders` | Response-only on `APIEmbed` |
 | `EmbedBuilder.clearFields` removed | `@fluxerjs/builders` | Use `setFields()` / `setFields([])` |
 | Request embed type is `RESTPostAPIEmbed` | `@fluxerjs/types`, builders | Response remains `APIEmbed` |

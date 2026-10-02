@@ -10,6 +10,7 @@ import type { APIUser } from './User.js';
  * - `GuildVoice` — voice channel in a guild
  * - `GroupDM` — group DM with multiple users
  * - `GuildCategory` — category container for channels
+ * - `GuildAnnouncement` — guild text channel whose messages can be published to followers (type 5)
  * - `GuildLink` — Fluxer link channel (OpenAPI GUILD_LINK, type 998)
  * - `DMPersonalNotes` — Fluxer personal notes DM (OpenAPI DM_PERSONAL_NOTES, type 999)
  */
@@ -19,6 +20,7 @@ export enum ChannelType {
   GuildVoice = 2,
   GroupDM = 3,
   GuildCategory = 4,
+  GuildAnnouncement = 5,
   GuildLink = 998,
   DMPersonalNotes = 999,
 }
@@ -192,6 +194,11 @@ export interface GuildCategoryChannelCreateRequest extends ChannelCreateShared {
   type: ChannelType.GuildCategory;
 }
 
+/** POST /guilds/{id}/channels — announcement channel (type 5). */
+export interface GuildAnnouncementChannelCreateRequest extends ChannelCreateShared {
+  type: ChannelType.GuildAnnouncement;
+}
+
 /** POST /guilds/{id}/channels — link channel (type 998); set `url`. */
 export interface GuildLinkChannelCreateRequest extends ChannelCreateShared {
   type: ChannelType.GuildLink;
@@ -203,4 +210,5 @@ export type ChannelCreateRequest =
   | GuildTextChannelCreateRequest
   | GuildVoiceChannelCreateRequest
   | GuildCategoryChannelCreateRequest
+  | GuildAnnouncementChannelCreateRequest
   | GuildLinkChannelCreateRequest;

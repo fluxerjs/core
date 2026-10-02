@@ -3,6 +3,7 @@ import { ChannelType, Routes } from '@fluxerjs/types';
 import { describe, expect, it, vi } from 'vitest';
 import type { Client } from '../ClientCore/Client.js';
 import {
+  AnnouncementChannel,
   CategoryChannel,
   Channel,
   LinkChannel,
@@ -232,6 +233,23 @@ describe('Channel type guard smoke', () => {
     expect(text.isTextBased()).toBe(true);
     expect(text.isVoice()).toBe(false);
     expect(text.isLink()).toBe(false);
+    expect(text.isAnnouncement()).toBe(false);
+
+    const announcement = Channel.from(client, {
+      id: 'a1',
+      type: ChannelType.GuildAnnouncement,
+      guild_id: 'g1',
+      name: 'updates',
+      parent_id: null,
+      topic: 'News',
+      rate_limit_per_user: 0,
+    });
+    expect(announcement).toBeInstanceOf(AnnouncementChannel);
+    expect(announcement.isGuild()).toBe(true);
+    expect(announcement.isAnnouncement()).toBe(true);
+    expect(announcement.isText()).toBe(false);
+    expect(announcement.isTextBased()).toBe(true);
+    expect(typeof announcement.send).toBe('function');
 
     const voice = new VoiceChannel(client, {
       id: 'v1',

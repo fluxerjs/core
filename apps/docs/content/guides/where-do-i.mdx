@@ -30,6 +30,7 @@ Do not use `client.bulkFetchMessages` on a bot token. That route is user-account
 | Task | Guide | SDK |
 | --- | --- | --- |
 | Create or edit a channel | [Channels](/guides/channels/) | `guild.createChannel()`, `channel.edit()` |
+| Announcement channel | [Channels](/guides/channels/) | `ChannelType.GuildAnnouncement`, `channel.isAnnouncement()` |
 | Link channel (URL, no send) | [Channels](/guides/channels/) | `ChannelType.GuildLink`, `channel.isLink()` |
 | Permission overwrites | [Channels](/guides/channels/), [Permissions](/guides/permissions/) | `channel.permissionOverwrites.edit()` |
 | Roles | [Roles](/guides/roles/) | `guild.createRole({ name, color, permissions })` |
