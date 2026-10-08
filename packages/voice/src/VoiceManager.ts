@@ -350,7 +350,7 @@ export class VoiceManager extends EventEmitter {
       this.connectionIds.delete(cid);
     });
     events.on('requestVoiceStateSync', (p: { self_stream?: boolean; self_video?: boolean }) => {
-      this.updateVoiceState(cid, p);
+      this.updateVoiceState(cid, { selfVideo: p.self_video, selfStream: p.self_stream });
     });
   }
 
@@ -566,17 +566,9 @@ export class VoiceManager extends EventEmitter {
    * Requires connection_id (from VoiceServerUpdate); without it, the gateway would treat
    * the update as a new join and trigger a new VoiceServerUpdate, causing connection loops.
    * @param channelId - Channel ID (connection key)
-   * @param partial - Partial voice state to update (self_stream, self_video, self_mute, self_deaf)
+   * @param options - Partial voice state options to update (`self_stream`, `self_video`, `self_mute`, `self_deaf`)
    */
-  updateVoiceState(
-    channelId: string,
-    partial: {
-      self_stream?: boolean;
-      self_video?: boolean;
-      self_mute?: boolean;
-      self_deaf?: boolean;
-    },
-  ): void {
+  updateVoiceState(channelId: string, options: VoiceStateOptions): void {
     const conn = this.connections.get(channelId);
     if (!conn) return;
 
@@ -594,10 +586,7 @@ export class VoiceManager extends EventEmitter {
       guild_id: guildId,
       channel_id: conn.channel.id,
       connection_id: connectionId,
-      self_mute: partial.self_mute ?? false,
-      self_deaf: partial.self_deaf ?? false,
-      self_video: partial.self_video ?? false,
-      self_stream: partial.self_stream ?? false,
+      ...optionsToUpdateData(options),
     });
   }
 }
