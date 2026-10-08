@@ -20,6 +20,7 @@ fluxer-ai-bot.js
 
 # IDE files
 .vscode
+.gram
 .idea
 
 # OS files
