@@ -46,6 +46,35 @@ export interface VoiceManagerOptions {
   shardId?: number;
 }
 
+/**
+ * Options for updating a VoiceManager's "voice state".
+ */
+export interface VoiceStateOptions {
+  selfMute?: boolean;
+  selfDeaf?: boolean;
+  selfStream?: boolean;
+  selfVideo?: boolean;
+}
+
+/**
+ * Specifically not partial.
+ *
+ * @see GatewayVoiceStateUpdateData
+ */
+type VoiceStateUpdateData = Record<
+  'self_mute' | 'self_deaf' | 'self_video' | 'self_stream',
+  boolean
+>;
+
+function optionsToUpdateData(options: VoiceStateOptions): VoiceStateUpdateData {
+  return {
+    self_mute: options.selfMute ?? false,
+    self_deaf: options.selfDeaf ?? false,
+    self_video: options.selfVideo ?? false,
+    self_stream: options.selfStream ?? false,
+  };
+}
+
 /** Manages voice connections. Use `getVoiceManager(client)` to obtain an instance. */
 export class VoiceManager extends EventEmitter {
   readonly client: Client;
@@ -401,7 +430,10 @@ export class VoiceManager extends EventEmitter {
    * @param channel - The voice channel to join
    * @returns The voice connection (LiveKitRtcConnection when Fluxer uses LiveKit)
    */
-  async join(channel: VoiceChannel): Promise<VoiceConnection | LiveKitRtcConnection> {
+  async join(
+    channel: VoiceChannel,
+    options: VoiceStateOptions = {},
+  ): Promise<VoiceConnection | LiveKitRtcConnection> {
     const guildId = channel.guildId;
     if (!guildId) {
       throw new Error('Voice channel is missing guildId');
@@ -453,8 +485,7 @@ export class VoiceManager extends EventEmitter {
       this.sendVoiceStateUpdate({
         guild_id: guildId,
         channel_id: channel.id,
-        self_mute: false,
-        self_deaf: false,
+        ...optionsToUpdateData(options),
         mutation_id: mutationId,
       });
     });

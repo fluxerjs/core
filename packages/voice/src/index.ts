@@ -6,7 +6,12 @@ export {
   type VideoPlayOptions,
 } from './LiveKitRtcConnection.js';
 export { VoiceConnection, type VoiceConnectionEvents } from './VoiceConnection.js';
-export { VoiceManager, type VoiceManagerOptions, type VoiceStateMap } from './VoiceManager.js';
+export {
+  VoiceManager,
+  type VoiceManagerOptions,
+  type VoiceStateMap,
+  type VoiceStateOptions,
+} from './VoiceManager.js';
 
 import type { Client, VoiceChannel } from '@fluxerjs/core';
 import type { LiveKitRtcConnection } from './LiveKitRtcConnection';
