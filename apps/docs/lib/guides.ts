@@ -1,7 +1,28 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import matter from 'gray-matter';
+import { parse as parseYaml } from 'yaml';
 import { isTaggedVersion } from './api-docs';
+
+function readFrontmatter(raw: string): { data: Record<string, unknown>; content: string } {
+  const input = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+  const open = '---';
+  if (!input.startsWith(open) || input.charAt(open.length) === '-') {
+    return { data: {}, content: input };
+  }
+  const rest = input.slice(open.length);
+  const closeAt = rest.indexOf('\n---');
+  if (closeAt === -1) return { data: {}, content: input };
+  const matter = rest.slice(0, closeAt);
+  let content = rest.slice(closeAt + '\n---'.length);
+  if (content.startsWith('\r')) content = content.slice(1);
+  if (content.startsWith('\n')) content = content.slice(1);
+  const parsed = parseYaml(matter);
+  const data =
+    parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  return { data, content };
+}
 
 export interface GuideFrontmatter {
   title: string;
@@ -61,7 +82,7 @@ export function getAllGuides(version?: string): GuideMeta[] {
   return getGuideSlugs(version)
     .map((slug) => {
       const raw = fs.readFileSync(path.join(dir, `${slug}.mdx`), 'utf8');
-      const { data } = matter(raw);
+      const { data } = readFrontmatter(raw);
       return {
         slug,
         title: String(data.title ?? slug),
@@ -83,7 +104,7 @@ export function getGuideBySlug(
   const file = path.join(resolveGuidesDir(version), `${slug}.mdx`);
   if (!fs.existsSync(file)) return null;
   const raw = fs.readFileSync(file, 'utf8');
-  const { data, content } = matter(raw);
+  const { data, content } = readFrontmatter(raw);
   return {
     meta: {
       slug,
