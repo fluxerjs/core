@@ -46,6 +46,35 @@ export interface VoiceManagerOptions {
   shardId?: number;
 }
 
+/**
+ * Options for updating a VoiceManager's "voice state".
+ */
+export interface VoiceStateOptions {
+  selfMute?: boolean;
+  selfDeaf?: boolean;
+  selfStream?: boolean;
+  selfVideo?: boolean;
+}
+
+/**
+ * Specifically not partial.
+ *
+ * @see GatewayVoiceStateUpdateData
+ */
+type VoiceStateUpdateData = Record<
+  'self_mute' | 'self_deaf' | 'self_video' | 'self_stream',
+  boolean
+>;
+
+function optionsToUpdateData(options: VoiceStateOptions): VoiceStateUpdateData {
+  return {
+    self_mute: options.selfMute ?? false,
+    self_deaf: options.selfDeaf ?? false,
+    self_video: options.selfVideo ?? false,
+    self_stream: options.selfStream ?? false,
+  };
+}
+
 /** Manages voice connections. Use `getVoiceManager(client)` to obtain an instance. */
 export class VoiceManager extends EventEmitter {
   readonly client: Client;
@@ -321,7 +350,7 @@ export class VoiceManager extends EventEmitter {
       this.connectionIds.delete(cid);
     });
     events.on('requestVoiceStateSync', (p: { self_stream?: boolean; self_video?: boolean }) => {
-      this.updateVoiceState(cid, p);
+      this.updateVoiceState(cid, { selfVideo: p.self_video, selfStream: p.self_stream });
     });
   }
 
@@ -401,7 +430,10 @@ export class VoiceManager extends EventEmitter {
    * @param channel - The voice channel to join
    * @returns The voice connection (LiveKitRtcConnection when Fluxer uses LiveKit)
    */
-  async join(channel: VoiceChannel): Promise<VoiceConnection | LiveKitRtcConnection> {
+  async join(
+    channel: VoiceChannel,
+    options: VoiceStateOptions = {},
+  ): Promise<VoiceConnection | LiveKitRtcConnection> {
     const guildId = channel.guildId;
     if (!guildId) {
       throw new Error('Voice channel is missing guildId');
@@ -453,8 +485,7 @@ export class VoiceManager extends EventEmitter {
       this.sendVoiceStateUpdate({
         guild_id: guildId,
         channel_id: channel.id,
-        self_mute: false,
-        self_deaf: false,
+        ...optionsToUpdateData(options),
         mutation_id: mutationId,
       });
     });
@@ -535,17 +566,9 @@ export class VoiceManager extends EventEmitter {
    * Requires connection_id (from VoiceServerUpdate); without it, the gateway would treat
    * the update as a new join and trigger a new VoiceServerUpdate, causing connection loops.
    * @param channelId - Channel ID (connection key)
-   * @param partial - Partial voice state to update (self_stream, self_video, self_mute, self_deaf)
+   * @param options - Partial voice state options to update (`self_stream`, `self_video`, `self_mute`, `self_deaf`)
    */
-  updateVoiceState(
-    channelId: string,
-    partial: {
-      self_stream?: boolean;
-      self_video?: boolean;
-      self_mute?: boolean;
-      self_deaf?: boolean;
-    },
-  ): void {
+  updateVoiceState(channelId: string, options: VoiceStateOptions): void {
     const conn = this.connections.get(channelId);
     if (!conn) return;
 
@@ -563,10 +586,7 @@ export class VoiceManager extends EventEmitter {
       guild_id: guildId,
       channel_id: conn.channel.id,
       connection_id: connectionId,
-      self_mute: partial.self_mute ?? false,
-      self_deaf: partial.self_deaf ?? false,
-      self_video: partial.self_video ?? false,
-      self_stream: partial.self_stream ?? false,
+      ...optionsToUpdateData(options),
     });
   }
 }
