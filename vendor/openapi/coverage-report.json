@@ -1,20 +1,20 @@
 {
   "summary": {
-    "total": 315,
+    "total": 377,
     "byCategory": {
-      "public": 56,
-      "bot": 105,
-      "session": 146,
+      "public": 65,
+      "bot": 133,
+      "session": 171,
       "voice": 8
     },
     "byStatus": {
-      "public": 56,
-      "wrapped": 104,
-      "session_only": 146,
-      "voice_excluded": 8,
-      "bot_denied": 1
+      "public": 65,
+      "wrapped": 121,
+      "needs_wrapper": 12,
+      "session_only": 171,
+      "voice_excluded": 8
     },
-    "generatedAt": "2026-09-06T01:43:46.945Z"
+    "generatedAt": "2026-10-08T12:13:17.873Z"
   },
   "operations": [
     {
@@ -32,6 +32,14 @@
       "auth": "botToken",
       "category": "bot",
       "status": "wrapped"
+    },
+    {
+      "method": "POST",
+      "path": "/attachments/refresh-urls",
+      "operationId": "refresh_attachment_urls",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
     },
     {
       "method": "POST",
@@ -157,9 +165,73 @@
       "method": "POST",
       "path": "/auth/logout",
       "operationId": "logout_user",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/origin-handoff",
+      "operationId": "create_origin_handoff",
       "auth": "sessionToken",
       "category": "session",
       "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/origin-handoff/redeem",
+      "operationId": "redeem_origin_handoff",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/passkey-bridge",
+      "operationId": "start_passkey_bridge_login",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/passkey-bridge/{ceremony_id}/cancel",
+      "operationId": "cancel_passkey_bridge",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/passkey-bridge/{ceremony_id}/complete",
+      "operationId": "complete_passkey_bridge",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/passkey-bridge/{ceremony_id}/options",
+      "operationId": "get_passkey_bridge_options",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/passkey-bridge/{ceremony_id}/redeem",
+      "operationId": "redeem_passkey_bridge_login",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/recover",
+      "operationId": "recover_account",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
     },
     {
       "method": "POST",
@@ -221,6 +293,14 @@
       "method": "GET",
       "path": "/auth/sso/status",
       "operationId": "get_sso_status",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/username-availability",
+      "operationId": "get_username_availability",
       "auth": "none",
       "category": "public",
       "status": "public"
@@ -354,6 +434,22 @@
       "status": "session_only"
     },
     {
+      "method": "GET",
+      "path": "/channels/{channel_id}/follower-stats",
+      "operationId": "get_channel_follower_stats",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
+      "method": "POST",
+      "path": "/channels/{channel_id}/followers",
+      "operationId": "follow_channel",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
       "method": "POST",
       "path": "/channels/{channel_id}/invites",
       "operationId": "create_channel_invite",
@@ -467,6 +563,22 @@
     },
     {
       "method": "POST",
+      "path": "/channels/{channel_id}/messages/{message_id}/crosspost",
+      "operationId": "crosspost_message",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
+      "method": "GET",
+      "path": "/channels/{channel_id}/messages/{message_id}/crosspost-source",
+      "operationId": "get_message_crosspost_source",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
+      "method": "POST",
       "path": "/channels/{channel_id}/messages/{message_id}/memes",
       "operationId": "create_meme_from_message",
       "auth": "sessionToken",
@@ -530,6 +642,14 @@
       "status": "wrapped"
     },
     {
+      "method": "POST",
+      "path": "/channels/{channel_id}/messages/{message_id}/threads",
+      "operationId": "start_thread_from_message",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
       "method": "PUT",
       "path": "/channels/{channel_id}/permissions/{overwrite_id}",
       "operationId": "set_channel_permission_overwrite",
@@ -570,6 +690,14 @@
       "status": "wrapped"
     },
     {
+      "method": "POST",
+      "path": "/channels/{channel_id}/post-data",
+      "operationId": "get_channel_post_data",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
       "method": "PUT",
       "path": "/channels/{channel_id}/recipients/{user_id}",
       "operationId": "add_group_dm_recipient",
@@ -603,8 +731,128 @@
     },
     {
       "method": "POST",
+      "path": "/channels/{channel_id}/tags",
+      "operationId": "create_forum_tag",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "PUT",
+      "path": "/channels/{channel_id}/tags/{tag_id}",
+      "operationId": "update_forum_tag",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "DELETE",
+      "path": "/channels/{channel_id}/tags/{tag_id}",
+      "operationId": "delete_forum_tag",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "GET",
+      "path": "/channels/{channel_id}/thread-members",
+      "operationId": "list_thread_members",
+      "auth": "botToken",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "PUT",
+      "path": "/channels/{channel_id}/thread-members/@me",
+      "operationId": "join_thread",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "DELETE",
+      "path": "/channels/{channel_id}/thread-members/@me",
+      "operationId": "leave_thread",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "PATCH",
+      "path": "/channels/{channel_id}/thread-members/@me/settings",
+      "operationId": "update_thread_member_settings",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/channels/{channel_id}/thread-members/{user_id}",
+      "operationId": "get_thread_member",
+      "auth": "botToken",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "PUT",
+      "path": "/channels/{channel_id}/thread-members/{user_id}",
+      "operationId": "add_thread_member",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "DELETE",
+      "path": "/channels/{channel_id}/thread-members/{user_id}",
+      "operationId": "remove_thread_member",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "POST",
+      "path": "/channels/{channel_id}/threads",
+      "operationId": "start_thread",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "GET",
+      "path": "/channels/{channel_id}/threads/archived/private",
+      "operationId": "list_private_archived_threads",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "GET",
+      "path": "/channels/{channel_id}/threads/archived/public",
+      "operationId": "list_public_archived_threads",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "GET",
+      "path": "/channels/{channel_id}/threads/search",
+      "operationId": "search_threads",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "POST",
       "path": "/channels/{channel_id}/typing",
       "operationId": "indicate_typing",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
+      "method": "GET",
+      "path": "/channels/{channel_id}/users/@me/threads/archived/private",
+      "operationId": "list_joined_private_archived_threads",
       "auth": "mixed",
       "category": "bot",
       "status": "wrapped"
@@ -629,14 +877,22 @@
       "method": "GET",
       "path": "/discovery/categories",
       "operationId": "list_discovery_categories",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
     },
     {
       "method": "GET",
       "path": "/discovery/guilds",
       "operationId": "search_discovery_guilds",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
+      "method": "GET",
+      "path": "/discovery/guilds/{guild_id}/channels/{channel_id}",
+      "operationId": "get_discovery_channel_preview",
       "auth": "sessionToken",
       "category": "session",
       "status": "session_only"
@@ -667,6 +923,14 @@
     },
     {
       "method": "POST",
+      "path": "/donations/manage",
+      "operationId": "redeem_donation_magic_link",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "POST",
       "path": "/donations/request-link",
       "operationId": "request_donation_magic_link",
       "auth": "none",
@@ -683,11 +947,67 @@
     },
     {
       "method": "GET",
+      "path": "/emojis/{emoji_id}/source",
+      "operationId": "get_emoji_source",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
+      "method": "GET",
+      "path": "/experiments",
+      "operationId": "get_experiments",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
+    },
+    {
+      "method": "GET",
       "path": "/gateway/bot",
       "operationId": "get_gateway_bot",
       "auth": "none",
       "category": "public",
       "status": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/gifs/featured",
+      "operationId": "get_featured_gifs",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/gifs/register-share",
+      "operationId": "register_gifs_share",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/gifs/search",
+      "operationId": "search_gifs",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/gifs/suggest",
+      "operationId": "get_gifs_search_suggestions",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/gifs/trending",
+      "operationId": "get_trending_gifs",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
     },
     {
       "method": "GET",
@@ -709,9 +1029,9 @@
       "method": "POST",
       "path": "/guilds",
       "operationId": "create_guild",
-      "auth": "mixed",
-      "category": "bot",
-      "status": "bot_denied"
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
     },
     {
       "method": "GET",
@@ -1058,6 +1378,14 @@
       "status": "wrapped"
     },
     {
+      "method": "GET",
+      "path": "/guilds/{guild_id}/threads/active",
+      "operationId": "list_guild_active_threads",
+      "auth": "botToken",
+      "category": "bot",
+      "status": "wrapped"
+    },
+    {
       "method": "POST",
       "path": "/guilds/{guild_id}/transfer-ownership",
       "operationId": "transfer_guild_ownership",
@@ -1098,6 +1426,14 @@
       "status": "public"
     },
     {
+      "method": "PUT",
+      "path": "/instance/setup/account-identity",
+      "operationId": "set_instance_account_identity",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
       "method": "GET",
       "path": "/invites/{invite_code}",
       "operationId": "get_invite",
@@ -1128,6 +1464,46 @@
       "auth": "none",
       "category": "public",
       "status": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/klipy/featured",
+      "operationId": "get_featured_klipy",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/klipy/register-share",
+      "operationId": "register_klipy_share",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/klipy/search",
+      "operationId": "search_klipy",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/klipy/suggest",
+      "operationId": "get_klipy_search_suggestions",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/klipy/trending-gifs",
+      "operationId": "get_trending_klipy",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
     },
     {
       "method": "GET",
@@ -1370,6 +1746,54 @@
       "status": "session_only"
     },
     {
+      "method": "GET",
+      "path": "/premium/store",
+      "operationId": "get_store_billing_context",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/premium/store/app-store/transactions",
+      "operationId": "claim_app_store_transaction",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/premium/store/google-play/purchases",
+      "operationId": "claim_google_play_purchase",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/premium/store/purchases",
+      "operationId": "list_store_purchases",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "DELETE",
+      "path": "/premium/store/purchases/{purchase_id}",
+      "operationId": "release_store_purchase",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/premium/switch-to-list-price",
+      "operationId": "switch_subscription_to_list_price",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
       "method": "POST",
       "path": "/premium/visionary/rejoin",
       "operationId": "rejoin_visionary_guild",
@@ -1445,9 +1869,9 @@
       "method": "POST",
       "path": "/search/messages",
       "operationId": "search_messages",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
+      "auth": "mixed",
+      "category": "bot",
+      "status": "wrapped"
     },
     {
       "method": "GET",
@@ -1456,6 +1880,14 @@
       "auth": "mixed",
       "category": "bot",
       "status": "wrapped"
+    },
+    {
+      "method": "GET",
+      "path": "/stickers/{sticker_id}/source",
+      "operationId": "get_sticker_source",
+      "auth": "mixed",
+      "category": "bot",
+      "status": "needs_wrapper"
     },
     {
       "method": "GET",
@@ -1515,27 +1947,51 @@
     },
     {
       "method": "POST",
-      "path": "/stripe/checkout/subscription/preapproval",
-      "operationId": "create_localized_card_preapproval_session",
+      "path": "/stripe/webhook",
+      "operationId": "process_stripe_webhook",
+      "auth": "none",
+      "category": "public",
+      "status": "public"
+    },
+    {
+      "method": "GET",
+      "path": "/tenor/featured",
+      "operationId": "get_featured_tenor",
       "auth": "sessionToken",
       "category": "session",
       "status": "session_only"
     },
     {
       "method": "POST",
-      "path": "/stripe/checkout/subscription/preapproval/continue",
-      "operationId": "continue_localized_card_preapproval_session",
-      "auth": "none",
-      "category": "public",
-      "status": "public"
+      "path": "/tenor/register-share",
+      "operationId": "register_tenor_share",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
     },
     {
-      "method": "POST",
-      "path": "/stripe/webhook",
-      "operationId": "process_stripe_webhook",
-      "auth": "none",
-      "category": "public",
-      "status": "public"
+      "method": "GET",
+      "path": "/tenor/search",
+      "operationId": "search_tenor",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/tenor/suggest",
+      "operationId": "get_tenor_search_suggestions",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/tenor/trending-gifs",
+      "operationId": "get_trending_tenor",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
     },
     {
       "method": "POST",
@@ -1677,14 +2133,6 @@
       "method": "DELETE",
       "path": "/users/@me/connections/{type}/{connection_id}",
       "operationId": "delete_connection",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/users/@me/connections/{type}/{connection_id}/verify",
-      "operationId": "verify_connection",
       "auth": "sessionToken",
       "category": "session",
       "status": "session_only"
@@ -2106,6 +2554,38 @@
       "status": "session_only"
     },
     {
+      "method": "GET",
+      "path": "/users/@me/mfa/webauthn/migration",
+      "operationId": "get_webauthn_migration",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/users/@me/mfa/webauthn/migration",
+      "operationId": "complete_webauthn_migration",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/users/@me/mfa/webauthn/migration/registration-options",
+      "operationId": "get_webauthn_migration_registration_options",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/@me/mfa/webauthn/two-factor",
+      "operationId": "set_webauthn_two_factor",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
       "method": "POST",
       "path": "/users/@me/mobile-devices",
       "operationId": "register_mobile_push_device",
@@ -2163,6 +2643,30 @@
     },
     {
       "method": "POST",
+      "path": "/users/@me/passkey-bridge",
+      "operationId": "start_passkey_bridge_sudo",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/users/@me/passkey-bridge/{ceremony_id}/redeem",
+      "operationId": "redeem_passkey_bridge_sudo",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/users/@me/password",
+      "operationId": "update_current_user_password",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
       "path": "/users/@me/password-change/complete",
       "operationId": "complete_password_change",
       "auth": "sessionToken",
@@ -2189,30 +2693,6 @@
       "method": "POST",
       "path": "/users/@me/password-change/verify",
       "operationId": "verify_password_change_code",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/users/@me/phone/inbound-challenge",
-      "operationId": "start_inbound_phone_challenge",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/users/@me/phone/send-verification",
-      "operationId": "send_phone_verification_code",
-      "auth": "sessionToken",
-      "category": "session",
-      "status": "session_only"
-    },
-    {
-      "method": "POST",
-      "path": "/users/@me/phone/verify",
-      "operationId": "verify_phone_code",
       "auth": "sessionToken",
       "category": "session",
       "status": "session_only"
@@ -2261,6 +2741,22 @@
       "method": "DELETE",
       "path": "/users/@me/push/subscriptions/{subscription_id}",
       "operationId": "unsubscribe_from_push_notifications",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "GET",
+      "path": "/users/@me/recovery-kit",
+      "operationId": "get_recovery_kit_status",
+      "auth": "sessionToken",
+      "category": "session",
+      "status": "session_only"
+    },
+    {
+      "method": "POST",
+      "path": "/users/@me/recovery-kit",
+      "operationId": "create_recovery_kit",
       "auth": "sessionToken",
       "category": "session",
       "status": "session_only"

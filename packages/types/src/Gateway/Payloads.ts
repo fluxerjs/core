@@ -1,6 +1,7 @@
 import type {
   APIChannel,
   APIEmoji,
+  APIThreadMember,
   APIGuild,
   APIGuildAuditLogEntry,
   APIGuildMember,
@@ -145,6 +146,38 @@ export interface GatewayRequestChannelMemberCountsData {
   nonce?: string;
 }
 
+/** One post in a Request Forum Unreads command (opcode 28). */
+export interface GatewayRequestForumUnreadsThread {
+  /** Thread (post) ID. */
+  thread_id: Snowflake;
+  /** Newest message the client has read in that post. Omit to receive `missing`. */
+  ack_message_id?: Snowflake;
+}
+
+/** Client request for unread counts in one forum or media channel (opcode 28). */
+export interface GatewayRequestForumUnreadsData {
+  /** Guild ID. */
+  guild_id: Snowflake;
+  /** Forum or media channel ID. */
+  channel_id: Snowflake;
+  /** Posts to count, deduplicated. The gateway keeps at most 40. */
+  threads: GatewayRequestForumUnreadsThread[];
+}
+
+/** Thread fields on one guild entry of a Lazy Request (opcode 14). */
+export interface GatewayLazyRequestSubscription {
+  /** Receive every thread event and thread message in the guild. */
+  threads?: boolean;
+  /** Threads whose member lists to subscribe to. The gateway keeps at most 10. */
+  thread_member_lists?: Snowflake[];
+}
+
+/** Client request to update guild subscriptions (opcode 14). */
+export interface GatewayLazyRequestData {
+  /** Subscriptions keyed by guild ID. */
+  subscriptions: Record<string, GatewayLazyRequestSubscription>;
+}
+
 /** Client request for guild members (opcode 8). */
 export interface GatewayRequestGuildMembersData {
   /** Single guild ID. */
@@ -175,7 +208,9 @@ export type GatewaySendPayload =
       d: GatewayRequestGuildMembersData;
     }
   | { op: GatewayOpcodes.RequestGuildCounts; d: GatewayRequestGuildCountsData }
-  | { op: GatewayOpcodes.RequestChannelMemberCounts; d: GatewayRequestChannelMemberCountsData };
+  | { op: GatewayOpcodes.RequestChannelMemberCounts; d: GatewayRequestChannelMemberCountsData }
+  | { op: GatewayOpcodes.LazyRequest; d: GatewayLazyRequestData }
+  | { op: GatewayOpcodes.RequestForumUnreads; d: GatewayRequestForumUnreadsData };
 
 // ─── Incoming (gateway -> client) ────────────────────────────────────────────
 
@@ -209,6 +244,8 @@ export type GatewayGuildSnapshot =
       member_count?: number;
       online_count?: number;
       joined_at?: string;
+      /** Active threads this session can see. Absent when the session cannot view threads. */
+      threads?: APIChannel[];
     })
   | {
       id: Snowflake;
@@ -223,6 +260,8 @@ export type GatewayGuildSnapshot =
       member_count?: number;
       online_count?: number;
       joined_at?: string;
+      /** Active threads this session can see. Absent when the session cannot view threads. */
+      threads?: APIChannel[];
     };
 
 /** READY dispatch (op 0, t = READY) — initial connection established. */
@@ -388,6 +427,96 @@ export interface GatewayChannelUpdateBulkDispatchData {
 }
 /** CHANNEL_DELETE — full channel */
 export type GatewayChannelDeleteDispatchData = APIChannel;
+
+/** THREAD_CREATE — thread channel */
+export type GatewayThreadCreateDispatchData = APIChannel;
+/** THREAD_UPDATE — thread channel */
+export type GatewayThreadUpdateDispatchData = APIChannel;
+/**
+ * THREAD_DELETE. Fluxer sends the thread id, guild, parent, and type, not the full channel.
+ */
+export interface GatewayThreadDeleteDispatchData {
+  /** Thread ID. */
+  id: Snowflake;
+  /** Guild the thread belonged to. */
+  guild_id: Snowflake;
+  /** Parent channel ID. */
+  parent_id: Snowflake;
+  /** Thread channel type. */
+  type: number;
+}
+/**
+ * THREAD_LIST_SYNC — active threads for the given parent channels.
+ * `channel_ids` are the parents whose thread lists were replaced.
+ */
+export interface GatewayThreadListSyncDispatchData {
+  /** Guild these threads belong to. */
+  guild_id: Snowflake;
+  /** Parent channel IDs included in this sync. */
+  channel_ids: Snowflake[];
+  /** Active threads the current user can see. */
+  threads: APIChannel[];
+  /** Membership for each returned thread the current user has joined. */
+  members: APIThreadMember[];
+}
+/** THREAD_MEMBER_UPDATE — one thread membership. */
+export interface GatewayThreadMemberUpdateDispatchData extends APIThreadMember {
+  /** Guild the thread belongs to. */
+  guild_id?: Snowflake;
+}
+/** THREAD_MEMBERS_UPDATE — members added or removed. */
+export interface GatewayThreadMembersUpdateDispatchData {
+  /** Thread ID. */
+  id: Snowflake;
+  /** Guild the thread belongs to. */
+  guild_id: Snowflake;
+  /** Approximate member count after the change, capped at 50. */
+  member_count: number;
+  /** Members who joined. */
+  added_members?: APIThreadMember[];
+  /** User IDs who left. */
+  removed_member_ids?: Snowflake[];
+}
+/** One row in THREAD_MEMBER_LIST_UPDATE. */
+export interface GatewayThreadMemberListEntry {
+  /** User ID. */
+  user_id: Snowflake;
+  /** When the user joined the thread, or null when Fluxer has none. */
+  join_timestamp: string | null;
+  /** Thread member flags. */
+  flags: number;
+  /** Guild member, or null when Fluxer has none. */
+  member: APIGuildMember | null;
+  /** Presence, or null when Fluxer has none. */
+  presence?: { status?: string } | null;
+}
+/** THREAD_MEMBER_LIST_UPDATE. A subscribed thread member list was resent. */
+export interface GatewayThreadMemberListUpdateDispatchData {
+  /** Guild the thread belongs to. */
+  guild_id: Snowflake;
+  /** Thread ID. */
+  thread_id: Snowflake;
+  /** Members of the thread, at most 1,000. */
+  members: GatewayThreadMemberListEntry[];
+}
+/** One post in FORUM_UNREADS. */
+export interface GatewayForumUnreadEntry {
+  /** Thread (post) ID. */
+  thread_id: Snowflake;
+  /** Unread messages after the sent ack, capped at 25. */
+  count?: number;
+  /** True when the request sent no ack for this post. */
+  missing?: boolean;
+}
+/** FORUM_UNREADS. Reply to Request Forum Unreads (opcode 28). */
+export interface GatewayForumUnreadsDispatchData {
+  /** Guild the forum or media channel belongs to. */
+  guild_id: Snowflake;
+  /** Forum or media channel ID. */
+  channel_id: Snowflake;
+  /** One entry for each requested post the session can view. */
+  threads: GatewayForumUnreadEntry[];
+}
 /** CHANNEL_RECIPIENT_ADD — channel_id, user (group DM) */
 export interface GatewayChannelRecipientAddDispatchData {
   channel_id: Snowflake;

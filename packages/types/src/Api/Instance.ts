@@ -151,6 +151,42 @@ export interface APIInstance {
   limits: APIInstanceLimits;
   push: APIInstancePush;
   app_public: APIInstanceAppPublic;
+  /** Protocol generation spoken by this instance. */
+  codename?: string;
+  /** Regional age policy. */
+  age_policy?: APIInstanceAgePolicy;
+  /** Web domain migration switch. Official instance clients act on this. */
+  domain_migration?: APIInstanceDomainMigration;
+}
+
+/** One region in {@link APIInstanceAgePolicy}. */
+export interface APIInstanceAgePolicyGeo {
+  /** ISO 3166-1 alpha-2 country code. */
+  country_code: string;
+  /** ISO 3166-2 subdivision code, or null for the whole country. */
+  region_code: string | null;
+  /** Whether the region restricts or blocks access. */
+  action: string;
+  /** Whether card age verification is available in the region. */
+  card_verification_available: boolean;
+}
+
+/** Regional age policy from instance discovery. */
+export interface APIInstanceAgePolicy {
+  /** Regions with an age policy. */
+  geos: APIInstanceAgePolicyGeo[];
+}
+
+/** Anonymous rollout of a web domain migration. */
+export interface APIInstanceDomainMigration {
+  /** Whether the domain migration is switched on. */
+  enabled: boolean;
+  /** Share of logged-out devices, in basis points, that move to the new domain. */
+  anonymous_rollout_basis_points: number;
+  /** Salt used to bucket devices and users. */
+  rollout_salt: string;
+  /** Whether installed desktop web apps forward to the new domain after moving their session. */
+  standalone_forwarding: boolean;
 }
 
 /** @deprecated Use {@link APIInstance} — alias kept for clarity with OpenAPI naming. */

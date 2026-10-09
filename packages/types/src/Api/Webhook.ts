@@ -30,8 +30,24 @@ export interface APIWebhook {
   token: string;
   /** User who created the webhook. */
   user: APIUser;
-  /** Webhook type (audit-log / some list responses). */
-  type?: WebhookType;
+  /** Webhook type (incoming or channel follower). */
+  type: WebhookType;
+  /** Guild of a followed announcement channel, on channel-follower webhooks. */
+  source_guild?: {
+    /** Guild ID. */
+    id: Snowflake;
+    /** Guild name. */
+    name: string;
+    /** Guild icon hash. */
+    icon: string | null;
+  };
+  /** Followed announcement channel, on channel-follower webhooks. */
+  source_channel?: {
+    /** Channel ID. */
+    id: Snowflake;
+    /** Channel name. */
+    name: string;
+  };
 }
 
 /** Request body for PATCH /webhooks/{id} (bot auth). All fields optional. */

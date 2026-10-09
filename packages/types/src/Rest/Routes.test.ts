@@ -149,6 +149,54 @@ const ROUTE_OPENAPI: {
     openapi: '/channels/{channel_id}/messages/{message_id}/attachments/{attachment_id}',
     call: () => Routes.channelMessageAttachment(C, M, A),
   },
+  channelThreads: {
+    openapi: '/channels/{channel_id}/threads',
+    call: () => Routes.channelThreads(C),
+  },
+  channelMessageThreads: {
+    openapi: '/channels/{channel_id}/messages/{message_id}/threads',
+    call: () => Routes.channelMessageThreads(C, M),
+  },
+  channelThreadsArchivedPublic: {
+    openapi: '/channels/{channel_id}/threads/archived/public',
+    call: () => Routes.channelThreadsArchivedPublic(C),
+  },
+  channelThreadsArchivedPrivate: {
+    openapi: '/channels/{channel_id}/threads/archived/private',
+    call: () => Routes.channelThreadsArchivedPrivate(C),
+  },
+  channelJoinedArchivedPrivateThreads: {
+    openapi: '/channels/{channel_id}/users/@me/threads/archived/private',
+    call: () => Routes.channelJoinedArchivedPrivateThreads(C),
+  },
+  channelThreadSearch: {
+    openapi: '/channels/{channel_id}/threads/search',
+    call: () => Routes.channelThreadSearch(C),
+  },
+  channelThreadMembers: {
+    openapi: '/channels/{channel_id}/thread-members',
+    call: () => Routes.channelThreadMembers(C),
+  },
+  channelThreadMemberMe: {
+    openapi: '/channels/{channel_id}/thread-members/@me',
+    call: () => Routes.channelThreadMemberMe(C),
+  },
+  channelThreadMemberMeSettings: {
+    openapi: '/channels/{channel_id}/thread-members/@me/settings',
+    call: () => Routes.channelThreadMemberMeSettings(C),
+  },
+  channelThreadMember: {
+    openapi: '/channels/{channel_id}/thread-members/{user_id}',
+    call: () => Routes.channelThreadMember(C, U),
+  },
+  channelTags: {
+    openapi: '/channels/{channel_id}/tags',
+    call: () => Routes.channelTags(C),
+  },
+  channelTag: {
+    openapi: '/channels/{channel_id}/tags/{tag_id}',
+    call: () => Routes.channelTag(C, 'tag1'),
+  },
 
   guilds: { openapi: '/guilds', call: () => Routes.guilds() },
   guild: { openapi: '/guilds/{guild_id}', call: () => Routes.guild(G) },
@@ -186,6 +234,10 @@ const ROUTE_OPENAPI: {
     call: () => Routes.guildDiscovery(G),
   },
   guildChannels: { openapi: '/guilds/{guild_id}/channels', call: () => Routes.guildChannels(G) },
+  guildActiveThreads: {
+    openapi: '/guilds/{guild_id}/threads/active',
+    call: () => Routes.guildActiveThreads(G),
+  },
   guildMembers: { openapi: '/guilds/{guild_id}/members', call: () => Routes.guildMembers(G) },
   guildMembersSearch: {
     openapi: '/guilds/{guild_id}/members-search',

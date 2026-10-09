@@ -76,6 +76,11 @@ export const guildHandlers: HandlerMap = {
     client._onGuildReceived(guild.id);
   },
 
+  /** Same snapshot as Guild Create, including `threads`. Cache only: this is not a join. */
+  GUILD_SYNC(client, d) {
+    applyGuildSnapshotFromGateway(client, d);
+  },
+
   GUILD_UPDATE(client, d) {
     const guildData = normalizeGuildUpdatePayload(d as unknown);
     if (!guildData) return;

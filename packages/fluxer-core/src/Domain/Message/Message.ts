@@ -2,6 +2,7 @@ import { EmbedBuilder } from '@fluxerjs/builders';
 import { Collection } from '@fluxerjs/collection';
 import {
   type APIAllowedMentions,
+  type APIChannel,
   type APIMessage,
   type APIMessageCall,
   type APIMessageSnapshot,
@@ -11,7 +12,11 @@ import {
 } from '@fluxerjs/types';
 import { MessageFlagsBitField } from '@fluxerjs/util';
 import type { Client } from '../../ClientCore/Client.js';
-import { toMessageAttachmentEditWire } from '../../ClientCore/SdkOptions/index.js';
+import {
+  type StartThreadFromMessageOptions,
+  toMessageAttachmentEditWire,
+  toStartThreadFromMessageBody,
+} from '../../ClientCore/SdkOptions/index.js';
 import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import {
   type MessagePrepareInput,
@@ -26,6 +31,8 @@ import {
 } from '../../Helpers/ReactionCollector.js';
 import { Base } from '../Base.js';
 import type { Channel, TextBasedChannel } from '../Channel/index.js';
+import { cacheThread } from '../Channel/ThreadCache.js';
+import type { ThreadChannel } from '../Channel/ThreadChannel.js';
 import type { GuildMember } from '../Guild/GuildMember.js';
 import type { Guild } from '../Guild/index.js';
 import type { User } from '../User.js';
@@ -143,6 +150,8 @@ export class Message extends Base {
   nonce: string | null;
   /** IDs of custom emojis in the message classified as explicit. */
   nsfwEmojis: string[];
+  /** Thread started from this message, when the payload included one. */
+  thread: ThreadChannel | null;
 
   /**
    * Cached text-capable channel (guild text, guild voice, or DM), or null if uncached / not text-based.
@@ -230,6 +239,7 @@ export class Message extends Base {
     this.mentionRoles = data.mention_roles ?? [];
     this.nonce = data.nonce ?? null;
     this.nsfwEmojis = data.nsfw_emojis ?? [];
+    this.thread = data.thread ? cacheThread(client, data.thread) : null;
   }
 
   /**
@@ -270,6 +280,7 @@ export class Message extends Base {
     this.mentionRoles = data.mention_roles ?? [];
     this.nonce = data.nonce ?? null;
     this.nsfwEmojis = data.nsfw_emojis ?? [];
+    if (data.thread) this.thread = cacheThread(this.client, data.thread);
   }
 
   /**
@@ -373,6 +384,24 @@ export class Message extends Base {
     options?: ReactionCollectorOptions & { errors?: ReactionCollectorEndReason[] },
   ): Promise<Collection<string, CollectedReaction>> {
     return ReactionCollector.awaitReactions(this.client, this.id, this.channelId, options);
+  }
+
+  /**
+   * Start a thread from this message.
+   * Fluxer chooses a public or announcement thread from the parent channel.
+   */
+  async startThread(options: StartThreadFromMessageOptions): Promise<ThreadChannel> {
+    const data = await this.client.rest.post<APIChannel>(
+      Routes.channelMessageThreads(this.channelId, this.id),
+      {
+        body: toStartThreadFromMessageBody(options),
+        auth: true,
+        ...auditReasonHeaders(options.reason),
+      },
+    );
+    const thread = cacheThread(this.client, data);
+    this.thread = thread;
+    return thread;
   }
 
   /** Fetch the latest version of this message from the API. */

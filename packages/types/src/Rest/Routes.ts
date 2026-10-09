@@ -63,6 +63,37 @@ export const Routes = {
     `/channels/${channelId}/recipients/${userId}` as const,
   channelMessageAttachment: (channelId: Snowflake, messageId: Snowflake, attachmentId: Snowflake) =>
     `/channels/${channelId}/messages/${messageId}/attachments/${attachmentId}` as const,
+  /** POST /channels/{id}/threads — start a thread, or a forum/media post. */
+  channelThreads: (id: Snowflake) => `/channels/${id}/threads` as const,
+  /** POST /channels/{id}/messages/{messageId}/threads — start a thread from a message. */
+  channelMessageThreads: (channelId: Snowflake, messageId: Snowflake) =>
+    `/channels/${channelId}/messages/${messageId}/threads` as const,
+  /** GET archived public threads in a channel. */
+  channelThreadsArchivedPublic: (id: Snowflake) =>
+    `/channels/${id}/threads/archived/public` as const,
+  /** GET archived private threads in a channel. */
+  channelThreadsArchivedPrivate: (id: Snowflake) =>
+    `/channels/${id}/threads/archived/private` as const,
+  /** GET private archived threads the current user has joined. */
+  channelJoinedArchivedPrivateThreads: (id: Snowflake) =>
+    `/channels/${id}/users/@me/threads/archived/private` as const,
+  /** GET /channels/{id}/threads/search. */
+  channelThreadSearch: (id: Snowflake) => `/channels/${id}/threads/search` as const,
+  /** GET /channels/{id}/thread-members. */
+  channelThreadMembers: (id: Snowflake) => `/channels/${id}/thread-members` as const,
+  /** PUT join or DELETE leave: /channels/{id}/thread-members/@me. */
+  channelThreadMemberMe: (id: Snowflake) => `/channels/${id}/thread-members/@me` as const,
+  /** PATCH /channels/{id}/thread-members/@me/settings. */
+  channelThreadMemberMeSettings: (id: Snowflake) =>
+    `/channels/${id}/thread-members/@me/settings` as const,
+  /** GET, PUT, or DELETE one thread member. */
+  channelThreadMember: (channelId: Snowflake, userId: Snowflake) =>
+    `/channels/${channelId}/thread-members/${userId}` as const,
+  /** POST /channels/{id}/tags — create a forum or media tag. */
+  channelTags: (id: Snowflake) => `/channels/${id}/tags` as const,
+  /** PUT or DELETE /channels/{id}/tags/{tagId}. */
+  channelTag: (channelId: Snowflake, tagId: Snowflake) =>
+    `/channels/${channelId}/tags/${tagId}` as const,
 
   // Guilds
   guilds: () => '/guilds' as const,
@@ -78,6 +109,8 @@ export const Routes = {
   guildStickersClone: (guildId: Snowflake) => `/guilds/${guildId}/stickers/clone` as const,
   guildDiscovery: (guildId: Snowflake) => `/guilds/${guildId}/discovery` as const,
   guildChannels: (id: Snowflake) => `/guilds/${id}/channels` as const,
+  /** GET /guilds/{id}/threads/active — active threads in the guild. */
+  guildActiveThreads: (id: Snowflake) => `/guilds/${id}/threads/active` as const,
   guildMembers: (id: Snowflake) => `/guilds/${id}/members` as const,
   guildMembersSearch: (id: Snowflake) => `/guilds/${id}/members-search` as const,
   guildMember: (guildId: Snowflake, userId: Snowflake) =>

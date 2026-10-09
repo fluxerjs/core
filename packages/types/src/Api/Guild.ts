@@ -156,6 +156,12 @@ export enum AuditLogActionType {
   StickerUpdate = 91,
   /** Custom sticker deleted */
   StickerDelete = 92,
+  /** Thread created */
+  ThreadCreate = 110,
+  /** Thread settings updated */
+  ThreadUpdate = 111,
+  /** Thread deleted */
+  ThreadDelete = 112,
 }
 
 /**
@@ -313,6 +319,11 @@ export interface APIGuild {
   approximate_member_count?: number;
   /** Approximate online count when `with_counts` is set on guild list. */
   approximate_presence_count?: number;
+  /**
+   * Present and true when threads, forum, and media channels are active for the
+   * requesting client. Only set on the current user's guild list.
+   */
+  threads_active?: boolean;
 }
 
 /** Audit log entry from GET /guilds/{id}/audit-logs. */

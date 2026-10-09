@@ -116,6 +116,24 @@ export const GatewayDispatchEvents = {
   /** User acknowledged viewing pinned messages. */
   ChannelPinsAck: 'CHANNEL_PINS_ACK',
 
+  // ─── Threads ───────────────────────────────────────────────────────────────
+  /** A thread was created. The payload is a thread channel. */
+  ThreadCreate: 'THREAD_CREATE',
+  /** A thread was updated. The payload is a thread channel. */
+  ThreadUpdate: 'THREAD_UPDATE',
+  /** A thread was deleted. */
+  ThreadDelete: 'THREAD_DELETE',
+  /** Active threads the current user can see were synced for one or more parents. */
+  ThreadListSync: 'THREAD_LIST_SYNC',
+  /** The current user's membership in a thread changed. */
+  ThreadMemberUpdate: 'THREAD_MEMBER_UPDATE',
+  /** Members were added to or removed from a thread. */
+  ThreadMembersUpdate: 'THREAD_MEMBERS_UPDATE',
+  /** A subscribed thread member list was resent. */
+  ThreadMemberListUpdate: 'THREAD_MEMBER_LIST_UPDATE',
+  /** Unread counts for posts in a forum or media channel. */
+  ForumUnreads: 'FORUM_UNREADS',
+
   // ─── Internal / Passive ────────────────────────────────────────────────────
   /** Passive/lazy-loaded entity updates. */
   PassiveUpdates: 'PASSIVE_UPDATES',

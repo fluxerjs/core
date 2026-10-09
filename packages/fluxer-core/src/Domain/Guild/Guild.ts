@@ -24,6 +24,10 @@ import type {
 import { cdnGuildAssetURL } from '../../Helpers/Cdn.js';
 import { Base } from '../Base.js';
 import type { GuildChannel } from '../Channel/index.js';
+import {
+  fetchActiveThreads as fetchGuildActiveThreads,
+  type FetchedThreads,
+} from '../Channel/ThreadManager.js';
 import type { Invite } from '../Invite.js';
 import type { Webhook } from '../Webhook.js';
 import * as admin from './Admin.js';
@@ -288,7 +292,7 @@ export class Guild extends Base {
   }
 
   /**
-   * Create a channel. `type`: 0=text, 2=voice, 4=category, 998=link (set `url`).
+   * Create a channel. `type`: 0=text, 2=voice, 4=category, 5=announcement, 15=forum, 16=media, 998=link (set `url`).
    * Requires Manage Channels.
    */
   createChannel(options: GuildChannelCreateOptions): Promise<GuildChannel> {
@@ -298,6 +302,11 @@ export class Guild extends Base {
   /** Fetch all channels in this guild from the API. */
   fetchChannels(): Promise<GuildChannel[]> {
     return channels.fetchChannels(this);
+  }
+
+  /** Fetch active threads in this guild. */
+  fetchActiveThreads(): Promise<FetchedThreads> {
+    return fetchGuildActiveThreads(this.client, this.id);
   }
 
   /** Update channel positions (reordering). */

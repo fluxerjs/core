@@ -12,7 +12,11 @@ import type {
   APIStickerMetadata,
   APIUserPartial,
   GatewayReceivePayload,
+  GatewayLazyRequestData,
+  GatewayLazyRequestSubscription,
   GatewayRequestChannelMemberCountsData,
+  GatewayRequestForumUnreadsData,
+  GatewayRequestForumUnreadsThread,
   GatewayRequestGuildCountsData,
   GatewayRequestGuildMembersData,
   GatewaySendPayload,
@@ -524,6 +528,78 @@ export class Client extends EventEmitter {
     if (options.channelIds !== undefined) data.channel_ids = [...new Set(options.channelIds)];
     if (options.nonce !== undefined) data.nonce = options.nonce;
     this._sendToAllShards({ op: GatewayOpcodes.RequestChannelMemberCounts, d: data });
+  }
+
+  /**
+   * Request unread counts for posts in one forum or media channel (opcode 28).
+   * Listen for `forumUnreads`. The gateway keeps at most 40 posts and ignores a channel the session cannot view.
+   */
+  requestForumUnreads(options: {
+    guildId: string;
+    channelId: string;
+    threads: Array<{ threadId: string; ackMessageId?: string }>;
+  }): void {
+    if (!options.guildId || !options.channelId) {
+      throw new FluxerError('requestForumUnreads requires guildId and channelId', {
+        code: ErrorCodes.InvalidGatewayRequest,
+      });
+    }
+    const threads: GatewayRequestForumUnreadsThread[] = [];
+    const seen = new Set<string>();
+    for (const thread of options.threads) {
+      if (!thread.threadId || seen.has(thread.threadId)) continue;
+      seen.add(thread.threadId);
+      const entry: GatewayRequestForumUnreadsThread = { thread_id: thread.threadId };
+      if (thread.ackMessageId !== undefined) entry.ack_message_id = thread.ackMessageId;
+      threads.push(entry);
+    }
+    if (!threads.length) {
+      throw new FluxerError('requestForumUnreads requires at least one thread', {
+        code: ErrorCodes.InvalidGatewayRequest,
+      });
+    }
+    if (threads.length > 40) {
+      throw new FluxerError('requestForumUnreads accepts at most 40 threads', {
+        code: ErrorCodes.InvalidGatewayRequest,
+      });
+    }
+    const data: GatewayRequestForumUnreadsData = {
+      guild_id: options.guildId,
+      channel_id: options.channelId,
+      threads,
+    };
+    this._sendToAllShards({ op: GatewayOpcodes.RequestForumUnreads, d: data });
+  }
+
+  /**
+   * Subscribe to thread traffic in a guild (opcode 14).
+   * `threads: true` receives every thread event in the guild.
+   * `threadIds` (at most 10) subscribes to those member lists. Each one arrives as `threadMemberListUpdate`.
+   */
+  subscribeThreads(options: { guildId: string; threads?: boolean; threadIds?: string[] }): void {
+    if (!options.guildId) {
+      throw new FluxerError('subscribeThreads requires guildId', {
+        code: ErrorCodes.InvalidGatewayRequest,
+      });
+    }
+    if (options.threads === undefined && options.threadIds === undefined) {
+      throw new FluxerError('subscribeThreads requires threads or threadIds', {
+        code: ErrorCodes.InvalidGatewayRequest,
+      });
+    }
+    const subscription: GatewayLazyRequestSubscription = {};
+    if (options.threads !== undefined) subscription.threads = options.threads;
+    if (options.threadIds !== undefined) {
+      const threadIds = [...new Set(options.threadIds.filter(Boolean))];
+      if (threadIds.length > 10) {
+        throw new FluxerError('subscribeThreads accepts at most 10 threadIds', {
+          code: ErrorCodes.InvalidGatewayRequest,
+        });
+      }
+      subscription.thread_member_lists = threadIds;
+    }
+    const data: GatewayLazyRequestData = { subscriptions: { [options.guildId]: subscription } };
+    this._sendToAllShards({ op: GatewayOpcodes.LazyRequest, d: data });
   }
 
   /**

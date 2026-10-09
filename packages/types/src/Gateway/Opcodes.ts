@@ -16,6 +16,7 @@
  * - `LazyRequest` — lazy load guilds/channels
  * - `RequestGuildCounts` — request guild member/online counts
  * - `RequestChannelMemberCounts` — request per-channel member counts
+ * - `RequestForumUnreads`: request unread counts for forum or media posts
  * @see https://docs.fluxer.app/gateway/opcodes
  */
 export enum GatewayOpcodes {
@@ -35,4 +36,5 @@ export enum GatewayOpcodes {
   LazyRequest = 14,
   RequestGuildCounts = 15,
   RequestChannelMemberCounts = 16,
+  RequestForumUnreads = 28,
 }

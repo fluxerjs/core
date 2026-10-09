@@ -294,5 +294,58 @@ export interface ChannelRecipientPayload {
   user: User;
 }
 
+/** Payload for {@link Events.ThreadListSync}. */
+export interface ThreadListSyncPayload {
+  guildId: string;
+  /** Parent channel IDs whose active thread lists were replaced. */
+  channelIds: string[];
+  threads: import('../Domain/Channel/ThreadChannel.js').ThreadChannel[];
+}
+
+/** Payload for {@link Events.ThreadMembersUpdate}. */
+export interface ThreadMembersUpdatePayload {
+  /** Thread ID. */
+  id: string;
+  guildId: string;
+  memberCount: number;
+  addedMembers: import('../Domain/Channel/ThreadChannel.js').ThreadMember[];
+  removedMemberIds: string[];
+}
+
+/** One member in {@link Events.ThreadMemberListUpdate}. */
+export interface ThreadMemberListEntry {
+  userId: string;
+  /** When the user joined the thread, or null when the gateway omitted it. */
+  joinTimestamp: string | null;
+  flags: number;
+  /** Cached guild member when the gateway included one, otherwise null. */
+  member: GuildMember | null;
+  /** Presence status, or null when the gateway omitted it. */
+  presence: { status: string | null } | null;
+}
+
+/** Payload for {@link Events.ThreadMemberListUpdate}. */
+export interface ThreadMemberListUpdatePayload {
+  guildId: string;
+  threadId: string;
+  members: ThreadMemberListEntry[];
+}
+
+/** One post in {@link Events.ForumUnreads}. */
+export interface ForumUnreadEntry {
+  threadId: string;
+  /** Unread messages after the sent ack, capped at 25. Null when `missing` is true. */
+  count: number | null;
+  /** True when the request sent no ack for this post. */
+  missing: boolean;
+}
+
+/** Payload for {@link Events.ForumUnreads}. */
+export interface ForumUnreadsPayload {
+  guildId: string;
+  channelId: string;
+  threads: ForumUnreadEntry[];
+}
+
 /** Re-export for presence user convenience. */
 export type { User };

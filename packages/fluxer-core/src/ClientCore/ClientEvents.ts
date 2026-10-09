@@ -8,6 +8,7 @@ import type {
   GatewayWebAuthnCredentialsUpdateDispatchData,
 } from '@fluxerjs/types';
 import type { Channel } from '../Domain/Channel/index.js';
+import type { ThreadChannel, ThreadMember } from '../Domain/Channel/ThreadChannel.js';
 import type { Guild } from '../Domain/Guild/Guild.js';
 import type { GuildBan } from '../Domain/Guild/GuildBan.js';
 import type { GuildMember } from '../Domain/Guild/GuildMember.js';
@@ -24,6 +25,10 @@ import type {
   ChannelMemberCountsUpdatePayload,
   ChannelPinsUpdatePayload,
   ChannelRecipientPayload,
+  ForumUnreadsPayload,
+  ThreadListSyncPayload,
+  ThreadMemberListUpdatePayload,
+  ThreadMembersUpdatePayload,
   GuildCountsUpdatePayload,
   GuildEmojisUpdatePayload,
   GuildMembersChunkPayload,
@@ -63,6 +68,16 @@ export interface ClientEvents {
   [Events.ChannelCreate]: [channel: Channel];
   [Events.ChannelUpdate]: [oldChannel: Channel, newChannel: Channel];
   [Events.ChannelDelete]: [channel: Channel];
+  /** Emitted when a thread is created, including when it arrives as CHANNEL_CREATE. */
+  [Events.ThreadCreate]: [thread: ThreadChannel];
+  /** `oldThread` is the cached thread from before the update. */
+  [Events.ThreadUpdate]: [oldThread: Channel, newThread: ThreadChannel];
+  [Events.ThreadDelete]: [thread: Channel];
+  [Events.ThreadListSync]: [payload: ThreadListSyncPayload];
+  [Events.ThreadMemberUpdate]: [member: ThreadMember];
+  [Events.ThreadMembersUpdate]: [payload: ThreadMembersUpdatePayload];
+  [Events.ThreadMemberListUpdate]: [payload: ThreadMemberListUpdatePayload];
+  [Events.ForumUnreads]: [payload: ForumUnreadsPayload];
   [Events.GuildMemberAdd]: [member: GuildMember];
   [Events.GuildMemberUpdate]: [oldMember: GuildMember | null, newMember: GuildMember];
   [Events.GuildMemberRemove]: [member: GuildMember | PartialGuildMember];

@@ -2,6 +2,7 @@ import type { APIChannel, APIChannelPartial } from '@fluxerjs/types';
 import { ChannelType } from '@fluxerjs/types';
 import type { Client } from '../../ClientCore/Client.js';
 import { DMChannel } from './Dm.js';
+import { ForumChannel, MediaChannel } from './Forum.js';
 import {
   AnnouncementChannel,
   CategoryChannel,
@@ -10,6 +11,7 @@ import {
   TextChannel,
   VoiceChannel,
 } from './Guild.js';
+import { ThreadChannel } from './ThreadChannel.js';
 
 type GuildFactory = (client: Client, data: APIChannel) => GuildChannel;
 
@@ -19,6 +21,11 @@ const GUILD_FACTORIES: Partial<Record<ChannelType, GuildFactory>> = {
   [ChannelType.GuildCategory]: (c, d) => new CategoryChannel(c, d),
   [ChannelType.GuildVoice]: (c, d) => new VoiceChannel(c, d),
   [ChannelType.GuildLink]: (c, d) => new LinkChannel(c, d),
+  [ChannelType.AnnouncementThread]: (c, d) => new ThreadChannel(c, d),
+  [ChannelType.PublicThread]: (c, d) => new ThreadChannel(c, d),
+  [ChannelType.PrivateThread]: (c, d) => new ThreadChannel(c, d),
+  [ChannelType.GuildForum]: (c, d) => new ForumChannel(c, d),
+  [ChannelType.GuildMedia]: (c, d) => new MediaChannel(c, d),
 };
 
 const DM_TYPES = new Set<ChannelType>([

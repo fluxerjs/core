@@ -1,6 +1,17 @@
 import type { Snowflake } from '../Common/Snowflake.js';
 import type { ContentWarningLevel } from './Guild.js';
 import type { APIMessage } from './Message.js';
+import type {
+  APIDefaultReactionEmoji,
+  APIForumTag,
+  APIForumTagUpdate,
+  APIThreadMember,
+  APIThreadMetadata,
+  ForumLayout,
+  ForumSortOrder,
+  ForumTagSetting,
+  ThreadAutoArchiveDuration,
+} from './Thread.js';
 import type { APIUser } from './User.js';
 
 /**
@@ -11,6 +22,11 @@ import type { APIUser } from './User.js';
  * - `GroupDM` — group DM with multiple users
  * - `GuildCategory` — category container for channels
  * - `GuildAnnouncement` — guild text channel whose messages can be published to followers (type 5)
+ * - `AnnouncementThread` — public thread inside an announcement channel (type 10)
+ * - `PublicThread` — public thread inside a text, forum, or media channel (type 11)
+ * - `PrivateThread` — private thread inside a text channel (type 12)
+ * - `GuildForum` — channel that only contains threads (type 15)
+ * - `GuildMedia` — gallery channel that only contains threads (type 16)
  * - `GuildLink` — Fluxer link channel (OpenAPI GUILD_LINK, type 998)
  * - `DMPersonalNotes` — Fluxer personal notes DM (OpenAPI DM_PERSONAL_NOTES, type 999)
  */
@@ -21,6 +37,11 @@ export enum ChannelType {
   GroupDM = 3,
   GuildCategory = 4,
   GuildAnnouncement = 5,
+  AnnouncementThread = 10,
+  PublicThread = 11,
+  PrivateThread = 12,
+  GuildForum = 15,
+  GuildMedia = 16,
   GuildLink = 998,
   DMPersonalNotes = 999,
 }
@@ -111,6 +132,36 @@ export interface APIChannel extends Omit<APIChannelPartial, 'name' | 'recipients
   content_warning_level?: ContentWarningLevel;
   /** Content warning custom text. */
   content_warning_text?: string | null;
+  /** Channel flags bitfield. */
+  flags?: number;
+  /** Thread-specific fields. Present on thread channels. */
+  thread_metadata?: APIThreadMetadata;
+  /** Tag IDs applied to a forum or media post (max 5). */
+  applied_tags?: Snowflake[];
+  /** Messages in the thread, excluding the starter and deleted messages. */
+  message_count?: number;
+  /** Messages ever sent in the thread. This count is never decremented. */
+  total_message_sent?: number;
+  /** Approximate number of thread members, capped at 50. */
+  member_count?: number;
+  /** Recently joined member IDs of a forum or media post, newest first. */
+  member_ids_preview?: Snowflake[];
+  /** Thread membership for the current user. */
+  member?: APIThreadMember;
+  /** Default auto-archive duration in minutes for new threads. */
+  default_auto_archive_duration?: number | null;
+  /** Slowmode in seconds copied onto new threads. */
+  default_thread_rate_limit_per_user?: number;
+  /** Tags that can be applied to posts in a forum or media channel. */
+  available_tags?: APIForumTag[];
+  /** Default reaction for new posts. */
+  default_reaction_emoji?: APIDefaultReactionEmoji | null;
+  /** Default sort order for posts. */
+  default_sort_order?: ForumSortOrder | null;
+  /** Default layout for forum posts. */
+  default_forum_layout?: ForumLayout;
+  /** Default tag search setting for a forum or media channel. */
+  default_tag_setting?: ForumTagSetting;
 }
 
 /** RTC region from GET /channels/{id}/rtc-regions. */
@@ -175,6 +226,10 @@ interface ChannelCreateShared {
   content_warning_text?: string | null;
   /** Slowmode delay in seconds (0–21600). */
   rate_limit_per_user?: number | null;
+  /** Default auto-archive duration in minutes for new threads. */
+  default_auto_archive_duration?: ThreadAutoArchiveDuration | null;
+  /** Slowmode in seconds copied onto new threads (0-21600). */
+  default_thread_rate_limit_per_user?: number | null;
   /** Channel name. */
   name: string;
 }
@@ -205,10 +260,42 @@ export interface GuildLinkChannelCreateRequest extends ChannelCreateShared {
   url?: string | null;
 }
 
+/** Fields shared by forum and media channel create bodies. */
+interface ForumChannelCreateFields {
+  /** Tags that can be applied to posts (max 20). */
+  available_tags?: APIForumTagUpdate[];
+  /** Default reaction for new posts. `null` clears it. */
+  default_reaction_emoji?: APIDefaultReactionEmoji | null;
+  /** Default sort order for posts. `null` clears it. */
+  default_sort_order?: ForumSortOrder | null;
+  /** How posts match when several tags are selected. `null` clears it. */
+  default_tag_setting?: ForumTagSetting | null;
+  /** Channel flags bitfield. */
+  flags?: number;
+}
+
+/** POST /guilds/{id}/channels — forum channel (type 15). Posts are public threads. */
+export interface GuildForumChannelCreateRequest
+  extends ChannelCreateShared,
+    ForumChannelCreateFields {
+  type: ChannelType.GuildForum;
+  /** Default layout for posts. `null` clears it. */
+  default_forum_layout?: ForumLayout | null;
+}
+
+/** POST /guilds/{id}/channels — media channel (type 16). Posts are public threads. */
+export interface GuildMediaChannelCreateRequest
+  extends ChannelCreateShared,
+    ForumChannelCreateFields {
+  type: ChannelType.GuildMedia;
+}
+
 /** Union of all valid channel create request types. */
 export type ChannelCreateRequest =
   | GuildTextChannelCreateRequest
   | GuildVoiceChannelCreateRequest
   | GuildCategoryChannelCreateRequest
   | GuildAnnouncementChannelCreateRequest
+  | GuildForumChannelCreateRequest
+  | GuildMediaChannelCreateRequest
   | GuildLinkChannelCreateRequest;

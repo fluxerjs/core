@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-06T01:43:45.319Z",
-  "typedCount": 72,
-  "handledCount": 49,
-  "unhandledCount": 23,
+  "generatedAt": "2026-10-08T20:28:47.478Z",
+  "typedCount": 80,
+  "handledCount": 58,
+  "unhandledCount": 22,
   "unhandled": [
     "AUTH_SESSION_CHANGE",
     "CALL_CREATE",
@@ -13,7 +13,6 @@
     "FAVORITE_MEME_DELETE",
     "FAVORITE_MEME_UPDATE",
     "GUILD_MEMBER_LIST_UPDATE",
-    "GUILD_SYNC",
     "MESSAGE_ACK",
     "PASSIVE_UPDATES",
     "RECENT_MENTION_DELETE",
@@ -30,5 +29,5 @@
   ],
   "missingRequired": [],
   "extraHandlers": [],
-  "coveragePct": 68.1
+  "coveragePct": 72.5
 }

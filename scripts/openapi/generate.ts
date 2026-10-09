@@ -56,10 +56,12 @@ function main(): void {
     'GuildVoiceChannelCreateRequest',
     'GuildCategoryChannelCreateRequest',
     'GuildAnnouncementChannelCreateRequest',
+    'GuildForumChannelCreateRequest',
+    'GuildMediaChannelCreateRequest',
     'GuildLinkChannelCreateRequest',
   ]) {
     const s = resolve(schemas, schemas[name]);
-    const en = s?.properties?.type?.enum;
+    const en = resolve(schemas, s?.properties?.type)?.enum;
     if (Array.isArray(en)) {
       for (const v of en) {
         if (typeof v === 'number') channelTypeValues.add(v);
@@ -68,7 +70,7 @@ function main(): void {
   }
   // Also common channel types from ChannelResponse if present
   const channelResp = resolve(schemas, schemas.ChannelResponse);
-  const respType = channelResp?.properties?.type;
+  const respType = resolve(schemas, channelResp?.properties?.type);
   if (respType?.enum) {
     for (const v of respType.enum) {
       if (typeof v === 'number') channelTypeValues.add(v);
@@ -78,12 +80,12 @@ function main(): void {
   channelTypeValues.add(999);
 
   const createTypes = [...channelTypeValues]
-    .filter((v) => [0, 2, 4, 5, 998].includes(v))
+    .filter((v) => [0, 2, 4, 5, 15, 16, 998].includes(v))
     .sort((a, b) => a - b);
   const allChannelTypes = [...channelTypeValues].sort((a, b) => a - b);
 
   const lines: string[] = [
-    '/** AUTO-GENERATED from vendor/openapi/fluxer-api.json — do not edit by hand. */',
+    '/** AUTO-GENERATED from vendor/openapi/fluxer-api.json. Do not edit by hand. */',
     '/* eslint-disable */',
     '',
     `export const RICH_EMBED_REQUEST_KEYS = ${JSON.stringify(richEmbedKeys)} as const;`,

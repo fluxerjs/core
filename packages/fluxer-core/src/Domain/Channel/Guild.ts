@@ -5,8 +5,10 @@ import type { Client } from '../../ClientCore/Client.js';
 import {
   type ChannelEditOptions,
   type ChannelInviteCreateOptions,
+  type ThreadParentEditOptions,
   toChannelEditBody,
   toChannelInviteBody,
+  toThreadParentEditBody,
 } from '../../ClientCore/SdkOptions/index.js';
 import { auditReasonHeaders } from '../../Helpers/AuditReason.js';
 import { Invite } from '../Invite.js';
@@ -14,6 +16,8 @@ import { Webhook } from '../Webhook.js';
 import { Channel } from './Base.js';
 import { PermissionOverwriteManager } from './PermissionOverwriteManager.js';
 import { TextCapable } from './TextCapable.js';
+import { threadManagerFor } from './ThreadBind.js';
+import type { ThreadManager } from './ThreadManager.js';
 
 /** A channel in a guild (text, voice, category, etc.). */
 export class GuildChannel extends Channel {
@@ -147,6 +151,10 @@ export class TextChannel extends TextCapable(GuildChannel) {
   contentWarningLevel?: number | null;
   /** Custom content warning text. */
   contentWarningText?: string | null;
+  /** Default auto-archive duration in minutes for new threads. */
+  defaultAutoArchiveDuration: number | null;
+  /** Slowmode in seconds copied onto new threads. */
+  defaultThreadRateLimitPerUser: number | null;
 
   constructor(client: Client, data: APIChannel) {
     super(client, data);
@@ -157,6 +165,13 @@ export class TextChannel extends TextCapable(GuildChannel) {
     this.lastMessageId = data.last_message_id ?? null;
     this.contentWarningLevel = data.content_warning_level ?? null;
     this.contentWarningText = data.content_warning_text ?? null;
+    this.defaultAutoArchiveDuration = data.default_auto_archive_duration ?? null;
+    this.defaultThreadRateLimitPerUser = data.default_thread_rate_limit_per_user ?? null;
+  }
+
+  /** Create, list, and search threads in this channel. */
+  get threads(): ThreadManager {
+    return threadManagerFor(this);
   }
 
   /**
@@ -179,6 +194,26 @@ export class TextChannel extends TextCapable(GuildChannel) {
     if ('content_warning_text' in data) {
       this.contentWarningText = data.content_warning_text ?? null;
     }
+    if ('default_auto_archive_duration' in data) {
+      this.defaultAutoArchiveDuration = data.default_auto_archive_duration ?? null;
+    }
+    if ('default_thread_rate_limit_per_user' in data) {
+      this.defaultThreadRateLimitPerUser = data.default_thread_rate_limit_per_user ?? null;
+    }
+  }
+
+  /**
+   * Set the auto-archive and slowmode defaults copied onto new threads.
+   * Sends only those fields. The thread-parent update body does not accept a channel rename.
+   */
+  async editThreadDefaults(options: ThreadParentEditOptions): Promise<this> {
+    const data = await this.client.rest.patch<APIChannel>(Routes.channel(this.id), {
+      body: toThreadParentEditBody(options),
+      auth: true,
+      ...auditReasonHeaders(options.reason),
+    });
+    this._patch(data);
+    return this;
   }
 }
 

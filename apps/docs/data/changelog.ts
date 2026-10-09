@@ -24,6 +24,29 @@ export interface ChangelogEntry {
 /** Hand-authored release notes for the docs site. */
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '3.3.0',
+    date: '2026-10-09',
+    github: 'https://github.com/fluxerjs/core/compare/v3.2.0...main',
+    summary:
+      'Threads, forum channels, and media channels: create them, post in them, and follow gateway updates.',
+    sections: [
+      {
+        title: 'Features',
+        items: [
+          {
+            summary: 'ThreadChannel, ForumChannel, and MediaChannel',
+            detail:
+              'Channel types 10, 11, and 12 are threads. Types 15 and 16 are forum and media parents. Create them with tags, sort, reaction, and layout. Edit those on the channel, or change one tag with createTag, editTag, and deleteTag. Posts use threads.createPost. Text and announcement channels use threads.create. message.startThread starts a thread from an existing message. guild.fetchActiveThreads lists active threads. Ready, Guild Create, and Guild Sync cache the threads array. Gateway events emit threadCreate, threadUpdate, threadDelete (including a thread that was not cached), threadListSync, threadMemberUpdate, threadMembersUpdate, threadMemberListUpdate, and forumUnreads. requestForumUnreads sends opcode 28. subscribeThreads sends the lazy-request thread options.',
+          },
+        ],
+      },
+      {
+        title: 'Packages',
+        items: ['`@fluxerjs/core` 3.3.0', '`@fluxerjs/types` 3.3.0'],
+      },
+    ],
+  },
+  {
     version: '3.2.0',
     date: '2026-10-02',
     github: 'https://github.com/fluxerjs/core/compare/v3.1.0...main',

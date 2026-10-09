@@ -5,6 +5,7 @@ import { inviteHandlers } from './Invites.js';
 import { memberHandlers } from './Members.js';
 import { messageHandlers } from './Messages.js';
 import { passthroughHandlers } from './Passthrough.js';
+import { threadHandlers } from './Threads.js';
 import { buildRegistry, type DispatchHandler } from './Types.js';
 
 export type { DispatchHandler };
@@ -18,4 +19,5 @@ export const eventHandlers = buildRegistry(
   inviteHandlers,
   guildResourceHandlers,
   passthroughHandlers,
+  threadHandlers,
 );

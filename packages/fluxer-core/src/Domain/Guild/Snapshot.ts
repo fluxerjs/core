@@ -8,7 +8,14 @@ import type {
 } from '@fluxerjs/types';
 import type { Client } from '../../ClientCore/Client.js';
 import { Events } from '../../Helpers/Events.js';
-import { mergeMembers, syncChannels, syncEmojis, syncRoles, syncStickers } from './Cache.js';
+import {
+  mergeMembers,
+  syncChannels,
+  syncEmojis,
+  syncRoles,
+  syncStickers,
+  syncThreads,
+} from './Cache.js';
 import { Guild } from './Guild.js';
 import { type GatewayGuildPayload, normalizeGuildSnapshotPayload } from './Payload.js';
 import type { GuildData } from './Types.js';
@@ -20,6 +27,8 @@ export interface GuildSnapshotResources {
   members?: Array<APIGuildMember & { user?: { id: string } }>;
   emojis?: APIEmoji[];
   stickers?: APISticker[];
+  /** Active threads. An empty array replaces the guild's cached threads. */
+  threads?: APIChannel[];
 }
 
 export type GatewayGuildSnapshotPayload = GatewayGuildPayload & {
@@ -30,6 +39,7 @@ export type GatewayGuildSnapshotPayload = GatewayGuildPayload & {
   roles?: APIRole[];
   emojis?: APIEmoji[];
   stickers?: APISticker[];
+  threads?: APIChannel[];
 };
 
 export interface UpsertGuildResult {
@@ -70,6 +80,13 @@ export function upsertGuildFromSnapshot(
 
   if (resources.roles !== undefined) syncRoles(guild, resources.roles);
   if (resources.channels !== undefined) syncChannels(guild, resources.channels);
+  if (resources.threads !== undefined) {
+    syncThreads(
+      guild,
+      resources.threads,
+      new Set((resources.channels ?? []).map((channel) => channel.id)),
+    );
+  }
   if (resources.members !== undefined) mergeMembers(guild, resources.members);
   if (resources.emojis !== undefined) syncEmojis(guild, resources.emojis);
   if (resources.stickers !== undefined) syncStickers(guild, resources.stickers);
@@ -95,6 +112,8 @@ export function applyGuildSnapshotFromGateway(
     members: g.members,
     emojis: g.emojis,
     stickers: g.stickers,
+    // A channel list without `threads` means this session has no viewable threads.
+    threads: g.channels !== undefined ? (g.threads ?? []) : g.threads,
   });
 
   if (g.voice_states?.length) {

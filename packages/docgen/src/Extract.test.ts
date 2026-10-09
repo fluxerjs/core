@@ -34,7 +34,8 @@ describe('docgen filters', () => {
   it('hides Discord ghost symbols', () => {
     expect(isGhostSymbol('Interaction')).toBe(true);
     expect(isGhostSymbol('StageChannel')).toBe(true);
-    expect(isGhostSymbol('ThreadChannel')).toBe(true);
+    expect(isGhostSymbol('NewsChannel')).toBe(true);
+    expect(isGhostSymbol('ThreadChannel')).toBe(false);
     expect(isGhostSymbol('Channel')).toBe(false);
   });
 

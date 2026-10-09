@@ -18,6 +18,14 @@ describe('ChannelType OpenAPI alignment', () => {
   it('GuildAnnouncement is canonical 5', () => {
     expect(ChannelType.GuildAnnouncement).toBe(5);
   });
+
+  it('thread and forum channel types match OpenAPI', () => {
+    expect(ChannelType.AnnouncementThread).toBe(10);
+    expect(ChannelType.PublicThread).toBe(11);
+    expect(ChannelType.PrivateThread).toBe(12);
+    expect(ChannelType.GuildForum).toBe(15);
+    expect(ChannelType.GuildMedia).toBe(16);
+  });
 });
 
 describe('wire discriminator enums', () => {
@@ -50,6 +58,11 @@ describe('wire discriminator enums', () => {
     expect(MessageFlags.VoiceMessage).toBe(8192);
     expect('CompactAttachments' in MessageFlags).toBe(false);
     expect(MessageType.Reply).toBe(19);
+    expect(MessageType.ThreadCreated).toBe(18);
+    expect(MessageType.ThreadStarterMessage).toBe(21);
+    expect(AuditLogActionType.ThreadCreate).toBe(110);
+    expect(AuditLogActionType.ThreadUpdate).toBe(111);
+    expect(AuditLogActionType.ThreadDelete).toBe(112);
     expect(AuditLogActionType.MessageDelete).toBe(72);
   });
 });

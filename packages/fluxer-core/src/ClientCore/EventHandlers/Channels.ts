@@ -17,6 +17,7 @@ export const channelHandlers: HandlerMap = {
     if (!ch) return;
     indexChannel(client, ch);
     client.emit(Events.ChannelCreate, ch);
+    if (ch.isThread()) client.emit(Events.ThreadCreate, ch);
   },
 
   CHANNEL_UPDATE(client, d) {
@@ -30,12 +31,14 @@ export const channelHandlers: HandlerMap = {
       existing._patch(data);
       indexChannel(client, existing);
       client.emit(Events.ChannelUpdate, oldCh, existing);
+      if (existing.isThread()) client.emit(Events.ThreadUpdate, oldCh, existing);
       return;
     }
     const newCh = Channel.from(client, data);
     if (!newCh) return;
     indexChannel(client, newCh);
     client.emit(Events.ChannelUpdate, existing ?? newCh, newCh);
+    if (newCh.isThread()) client.emit(Events.ThreadUpdate, existing ?? newCh, newCh);
   },
 
   CHANNEL_UPDATE_BULK(client, d) {
@@ -60,7 +63,11 @@ export const channelHandlers: HandlerMap = {
     }
     if (!channel) return;
     client.channels.delete(id);
+    if (channel.isGuild() && channel.guildId) {
+      client.guilds.get(channel.guildId)?.channels.delete(id);
+    }
     client.emit(Events.ChannelDelete, channel);
+    if (channel.isThread()) client.emit(Events.ThreadDelete, channel);
   },
 
   CHANNEL_PINS_UPDATE(client, d) {

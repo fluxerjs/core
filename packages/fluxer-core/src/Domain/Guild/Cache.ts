@@ -1,5 +1,7 @@
 import type { APIChannel, APIEmoji, APIGuildMember, APIRole, APISticker } from '@fluxerjs/types';
+import { ChannelType } from '@fluxerjs/types';
 import type { Client } from '../../ClientCore/Client.js';
+import { cacheThread } from '../Channel/ThreadCache.js';
 import type { GuildChannel } from '../Channel/index.js';
 import { Channel } from '../Channel/index.js';
 import type { Guild } from './Guild.js';
@@ -129,9 +131,43 @@ export function syncChannels(guild: Guild, channels: APIChannel[]): void {
   const keep = new Set(channels.map((c) => c.id));
   for (const data of channels) cacheChannel(guild, data);
   for (const [id, channel] of [...guild.channels.entries()]) {
-    if (keep.has(id)) continue;
+    if (keep.has(id) || channel.isThread()) continue;
     Map.prototype.delete.call(guild.channels, id);
     guild.client.cache.cascadeChannel(channel, 'guild');
+  }
+}
+
+function isThreadChannelType(type: number | undefined): boolean {
+  return (
+    type === ChannelType.AnnouncementThread ||
+    type === ChannelType.PublicThread ||
+    type === ChannelType.PrivateThread
+  );
+}
+
+/**
+ * Replace this guild's active threads.
+ * `alsoKeep` preserves threads that arrived inside the channel list.
+ */
+export function syncThreads(
+  guild: Guild,
+  threads: APIChannel[],
+  alsoKeep: ReadonlySet<string> = new Set(),
+): void {
+  const keep = new Set(alsoKeep);
+  for (const data of threads) {
+    if (!isThreadChannelType(data.type)) continue;
+    const withGuild = data.guild_id ? data : { ...data, guild_id: guild.id };
+    cacheThread(guild.client, withGuild);
+    keep.add(data.id);
+  }
+
+  const seen = new Set<string>();
+  for (const channel of [...guild.channels.values(), ...guild.client.channels.values()]) {
+    if (seen.has(channel.id)) continue;
+    seen.add(channel.id);
+    if (!channel.isThread() || channel.guildId !== guild.id || keep.has(channel.id)) continue;
+    guild.client.cache.cascadeChannel(channel);
   }
 }
 

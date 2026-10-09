@@ -14,6 +14,7 @@ export * from './Message.js';
 export * from './Role.js';
 export * from './Search.js';
 export * from './Sticker.js';
+export * from './Thread.js';
 export * from './Sudo.js';
 export * from './User.js';
 export * from './UserConnections.js';

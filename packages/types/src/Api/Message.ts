@@ -1,4 +1,5 @@
 import type { Snowflake } from '../Common/Snowflake.js';
+import type { APIChannel } from './Channel.js';
 import type { APIEmbed } from './Embed.js';
 import type { APIGuildMember, APIUser } from './User.js';
 
@@ -12,7 +13,9 @@ import type { APIGuildMember, APIUser } from './User.js';
  * - `ChannelIconChange` — channel icon updated
  * - `ChannelPinnedMessage` — message pinned
  * - `UserJoin` — member joined guild
+ * - `ThreadCreated` — a thread was started from a message
  * - `Reply` — reply to another message
+ * - `ThreadStarterMessage` — the message that started a thread, shown inside the thread
  */
 export enum MessageType {
   Default = 0,
@@ -23,7 +26,9 @@ export enum MessageType {
   ChannelIconChange = 5,
   ChannelPinnedMessage = 6,
   UserJoin = 7,
+  ThreadCreated = 18,
   Reply = 19,
+  ThreadStarterMessage = 21,
   /** Client-only system message (Fluxer `CLIENT_SYSTEM`). */
   ClientSystem = 99,
 }
@@ -269,6 +274,8 @@ export interface APIMessage {
   member?: APIGuildMember | null;
   /** IDs of custom emojis in the message classified as explicit. */
   nsfw_emojis?: Snowflake[] | null;
+  /** Thread started from this message, when the viewer can see threads. */
+  thread?: APIChannel;
 }
 
 /** Single channel window in POST /channels/messages/bulk request. */

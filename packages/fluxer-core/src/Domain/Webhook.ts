@@ -5,6 +5,7 @@ import {
   type APIWebhookUpdateRequest,
   type RESTPostAPIEmbed,
   Routes,
+  WebhookType,
 } from '@fluxerjs/types';
 
 import { SnowflakeUtil } from '@fluxerjs/util';
@@ -73,8 +74,10 @@ export class Webhook extends Base {
   readonly token: string | null;
   /** The user that created this webhook. */
   readonly user: User;
+  /** Incoming or channel-follower webhook. */
+  readonly type: WebhookType;
 
-  constructor(client: Client, data: APIWebhook & { token?: string | null }) {
+  constructor(client: Client, data: APIWebhook & { token?: string | null; type?: WebhookType }) {
     super();
     this.client = client;
     this.id = data.id;
@@ -84,6 +87,7 @@ export class Webhook extends Base {
     this.avatar = data.avatar ?? null;
     this.token = data.token ?? null;
     this.user = client.getOrCreateUser(data.user);
+    this.type = data.type ?? WebhookType.Incoming;
   }
 
   avatarURL(options?: { size?: number; extension?: string }): string | null {
@@ -223,6 +227,7 @@ export class Webhook extends Base {
       name: options?.name ?? 'Webhook',
       avatar: null,
       token,
+      type: WebhookType.Incoming,
       user: {
         id: '',
         username: 'webhook',

@@ -14,4 +14,5 @@ export * from './Messages.js';
 export * from './Presence.js';
 export * from './Profile.js';
 export * from './Sudo.js';
+export * from './Threads.js';
 export * from './Webhooks.js';

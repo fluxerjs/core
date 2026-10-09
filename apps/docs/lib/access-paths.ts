@@ -51,11 +51,8 @@ export const DISCORD_GHOST_NAMES = new Set([
   'ApplicationCommand',
   'SlashCommandBuilder',
   'StageChannel',
-  'ThreadChannel',
   'NewsChannel',
-  'ForumChannel',
   'TextBasedChannel',
-  'ThreadMember',
 ]);
 
 /** Extra search phrases for everyday bot verbs. */

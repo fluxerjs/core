@@ -1,7 +1,8 @@
 /** Channel edit / invite / RTC / slowmode SDK options. */
 
-import type { ChannelType, OverwriteType } from '@fluxerjs/types';
+import { ChannelType, type OverwriteType } from '@fluxerjs/types';
 import { type PermissionResolvable, resolvePermissionsToBitfield } from '@fluxerjs/util';
+import { type ForumParentFields, forumParentWire } from './Threads.js';
 
 /** A single permission overwrite for channel create/edit (`allow`/`deny` as {@link PermissionResolvable}). */
 export interface ChannelPermissionOverwriteOptions {
@@ -53,7 +54,7 @@ export interface ChannelEditOptions {
 }
 
 /** Options for {@link Guild.createChannel}. */
-export interface GuildChannelCreateOptions {
+export interface GuildChannelCreateOptions extends ForumParentFields {
   name: string;
   type: ChannelType;
   topic?: string | null;
@@ -125,6 +126,17 @@ export function toChannelCreateBody(options: GuildChannelCreateOptions): Record<
     body.content_warning_text = options.contentWarningText;
   }
   if (options.rateLimitPerUser !== undefined) body.rate_limit_per_user = options.rateLimitPerUser;
+  if (options.defaultAutoArchiveDuration !== undefined) {
+    body.default_auto_archive_duration = options.defaultAutoArchiveDuration;
+  }
+  if (options.defaultThreadRateLimitPerUser !== undefined) {
+    body.default_thread_rate_limit_per_user = options.defaultThreadRateLimitPerUser;
+  }
+  const forumParent =
+    options.type === ChannelType.GuildForum || options.type === ChannelType.GuildMedia;
+  if (forumParent) {
+    Object.assign(body, forumParentWire(options, options.type === ChannelType.GuildForum));
+  }
   return body;
 }
 

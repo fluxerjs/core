@@ -36,6 +36,7 @@ import { Base } from '../Base.js';
 import type { Message } from '../Message/index.js';
 import { type UploadFileForSend, uploadAttachmentsForSend } from './Attachments.js';
 import type { DMChannel } from './Dm.js';
+import type { ForumChannel, MediaChannel } from './Forum.js';
 import type {
   AnnouncementChannel,
   CategoryChannel,
@@ -44,6 +45,7 @@ import type {
   TextChannel,
   VoiceChannel,
 } from './Guild.js';
+import type { ThreadChannel } from './ThreadChannel.js';
 
 /**
  * Base class for all channel types.
@@ -116,28 +118,53 @@ export abstract class Channel extends Base {
   }
 
   /**
-   * Whether this channel type can carry messages (text, announcement, voice, DM, group DM, notes).
+   * Whether this channel type can carry messages (text, announcement, voice, threads, DM, group DM, notes).
+   * Forum and media channels contain threads and do not accept `send`.
    * Checks {@link ChannelType}, not whether `send` exists on the instance.
    */
-  isTextBased(): this is TextChannel | VoiceChannel | DMChannel {
+  isTextBased(): this is TextChannel | VoiceChannel | DMChannel | ThreadChannel {
     return (
       this.type === ChannelType.GuildText ||
       this.type === ChannelType.GuildAnnouncement ||
       this.type === ChannelType.GuildVoice ||
       this.type === ChannelType.DM ||
       this.type === ChannelType.GroupDM ||
-      this.type === ChannelType.DMPersonalNotes
+      this.type === ChannelType.DMPersonalNotes ||
+      this.type === ChannelType.AnnouncementThread ||
+      this.type === ChannelType.PublicThread ||
+      this.type === ChannelType.PrivateThread
     );
   }
-  /** Check if this is a guild channel (text, announcement, voice, category, or link). */
+  /** Check if this is a guild channel, including threads, forums, and media channels. */
   isGuild(): this is GuildChannel {
     return (
       this.type === ChannelType.GuildText ||
       this.type === ChannelType.GuildAnnouncement ||
       this.type === ChannelType.GuildVoice ||
       this.type === ChannelType.GuildCategory ||
-      this.type === ChannelType.GuildLink
+      this.type === ChannelType.GuildLink ||
+      this.type === ChannelType.AnnouncementThread ||
+      this.type === ChannelType.PublicThread ||
+      this.type === ChannelType.PrivateThread ||
+      this.type === ChannelType.GuildForum ||
+      this.type === ChannelType.GuildMedia
     );
+  }
+  /** Check if this is a thread (public, private, or announcement). */
+  isThread(): this is ThreadChannel {
+    return (
+      this.type === ChannelType.AnnouncementThread ||
+      this.type === ChannelType.PublicThread ||
+      this.type === ChannelType.PrivateThread
+    );
+  }
+  /** Check if this is a forum channel. */
+  isForum(): this is ForumChannel {
+    return this.type === ChannelType.GuildForum;
+  }
+  /** Check if this is a media channel. */
+  isMedia(): this is MediaChannel {
+    return this.type === ChannelType.GuildMedia;
   }
   /** Check if this is a guild text channel. */
   isText(): this is TextChannel {
